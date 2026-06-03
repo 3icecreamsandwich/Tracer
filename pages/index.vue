@@ -92,7 +92,7 @@
           aria-labelledby="home-create"
         >
           <h2 id="home-create" class="text-lg font-semibold">Create</h2>
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Choose a starting point.</p>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Choose a mode</p>
 
           <div class="mt-4 grid gap-3">
             <NuxtLink
@@ -101,7 +101,7 @@
             >
               <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Basic</p>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Start from scratch.
+                Start from scratch
               </p>
             </NuxtLink>
 
@@ -111,7 +111,7 @@
             >
               <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Synthesize</p>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Turn notes into a set.
+                  Combine sets
               </p>
             </NuxtLink>
 
@@ -121,7 +121,7 @@
             >
               <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Generate</p>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Create from a prompt.
+                Create from a prompt
               </p>
             </NuxtLink>
           </div>

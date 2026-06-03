@@ -354,7 +354,7 @@
                                     >
                                         <button
                                             type="button"
-                                            class="inline-flex items-center rounded-md border border-[#FFBE0B] bg-white dark:bg-slate-950 px-3 py-2 text-sm font-medium text-[#FFBE0B] shadow-sm hover:bg-slate-50"
+                                            class="inline-flex items-center rounded-md border border-[#CC8D52] bg-white dark:bg-slate-950 px-3 py-2 text-sm font-medium text-[#CC8D52] shadow-sm hover:bg-slate-50"
                                             :disabled="!currentTerm || starBusy"
                                             :aria-pressed="isCurrentStarred"
                                             @click="toggleStar"
@@ -367,7 +367,7 @@
                                         </button>
                                         <button
                                             type="button"
-                                            class="inline-flex items-center rounded-md border border-[#EF5454] bg-white px-3 py-2 text-sm font-medium text-[#EF5454] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                                            class="inline-flex items-center rounded-md border border-[#C14D4D] bg-white px-3 py-2 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                                             :disabled="!currentTerm"
                                             @click="markIncorrect"
                                         >
@@ -375,7 +375,7 @@
                                         </button>
                                         <button
                                             type="button"
-                                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
+                                            class="inline-flex items-center rounded-md border border-[#2D8210] bg-white px-3 py-2 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                                             :disabled="!currentTerm"
                                             @click="markCorrect"
                                         >

@@ -101,7 +101,7 @@
 
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex items-center rounded-md border border-[#CC8D52] bg-white dark:bg-slate-950 px-3 py-2 text-sm font-medium text-[#CC8D52] shadow-sm hover:bg-slate-50"
                         :disabled="!currentTerm || starBusy"
                         :aria-pressed="isCurrentStarred"
                         @click="toggleStar"
@@ -111,7 +111,7 @@
 
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex items-center rounded-md border border-[#C14D4D] bg-white px-3 py-2 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                         :disabled="!currentTerm"
                         @click="markIncorrect"
                     >
@@ -120,7 +120,7 @@
 
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex items-center rounded-md border border-[#2D8210] bg-white px-3 py-2 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                         :disabled="!currentTerm"
                         @click="markCorrect"
                     >

@@ -14,6 +14,13 @@ Its main features are:
 ## Installation
 Go to the latest [release](https://github.com/3icecreamsandwich/Tracer/releases) to install. Windows, macOS, and Linux are the only supported platforms.
 
+Note: for macOS, please run in Terminal:
+```zsh
+codesign --force --deep --sign - /Applications/Tracer.app
+xattr -dr com.apple.quarantine /Applications/Tracer.app
+```
+This is to override macOS's requirement for a developer certificate, which we do not have yet 😅.
+
 ## How to Use
 On first startup, provide a username, email, and password. Don't worry---everything stays local (for now), including your login details. These details are required for future features to be implemented, such as flashcard set sharing.
 
