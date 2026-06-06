@@ -1,49 +1,53 @@
 import { describe, expect, it } from 'vitest'
-import { modelMessageSchema } from 'ai'
 
 import {
-  assertGenerateModelSupportsUploadedFiles,
-  assertGenerateSourceLimits,
-  buildGeneratePromptText,
-  buildGenerateUserContent,
-  GenerateUnsupportedModelError,
+  GenerateTextRequestFormatError,
   normalizeGenerateRequestError
 } from '../../src/composables/ai/generate-request'
+import {
+  assertGenerateSourceLimits,
+  buildGenerateTextPrompt,
+  type ExtractedGenerateSource
+} from '../../src/composables/generate/source-extraction'
 
 describe('generate request helpers', () => {
-  it('builds a valid multimodal model message for the AI SDK', () => {
-    const content = buildGenerateUserContent({
-      promptText: buildGeneratePromptText('Focus on definitions.'),
-      pdfs: [{ data: new Uint8Array([1, 2, 3]), filename: 'notes.pdf' }],
-      images: [{ data: new Uint8Array([4, 5, 6]), mediaType: 'image/png' }]
-    })
+  it('builds a text-only prompt from extracted sources', () => {
+    const sources: ExtractedGenerateSource[] = [
+      {
+        id: 'pdf-1',
+        filename: 'notes.pdf',
+        kind: 'pdf',
+        pageCount: 2,
+        method: 'mixed',
+        text: '### Page 1\nPhotosynthesis converts light into chemical energy.\n\n```source fence```'
+      },
+      {
+        id: 'image-1',
+        filename: 'diagram.png',
+        kind: 'image',
+        method: 'ocr',
+        text: 'Chloroplast labels: thylakoid, stroma, granum.'
+      }
+    ]
 
-    const result = modelMessageSchema.safeParse({ role: 'user', content })
-    expect(result.success).toBe(true)
-    expect(content).toEqual([
-      expect.objectContaining({ type: 'text', text: expect.stringContaining('study_guide_md') }),
-      expect.objectContaining({ type: 'file', filename: 'notes.pdf', mediaType: 'application/pdf' }),
-      expect.objectContaining({ type: 'image', mediaType: 'image/png' })
-    ])
+    const prompt = buildGenerateTextPrompt({ instructions: 'Focus on definitions.', sources })
+
+    expect(typeof prompt).toBe('string')
+    expect(prompt).toContain('```study_guide_md')
+    expect(prompt).toContain('```flashcards_tsv')
+    expect(prompt).toContain('User instructions: Focus on definitions.')
+    expect(prompt).toContain('## Source: notes.pdf')
+    expect(prompt).toContain('Extraction: mixed')
+    expect(prompt).toContain('## Source: diagram.png')
+    expect(prompt).toContain("'''source fence'''")
+    expect(prompt).not.toContain('"type":"file"')
+    expect(prompt).not.toContain('"type":"image"')
   })
 
-  it('rejects GitHub Models for uploaded-file generation', () => {
-    expect(() => assertGenerateModelSupportsUploadedFiles('github:openai/gpt-4o-mini')).toThrow(
-      GenerateUnsupportedModelError
-    )
-    expect(() => assertGenerateModelSupportsUploadedFiles('openai:gpt-4o-mini')).not.toThrow()
-  })
-
-  it('rejects OpenAI models that are not file-capable for generation uploads', () => {
-    expect(() => assertGenerateModelSupportsUploadedFiles('openai:o3-mini')).toThrow(
-      GenerateUnsupportedModelError
-    )
-  })
-
-  it('normalizes provider invalid-message-format failures to an actionable model error', () => {
+  it('normalizes provider invalid-message-format failures to a text-request error', () => {
     const out = normalizeGenerateRequestError(new Error('invalid message format'))
-    expect(out).toBeInstanceOf(GenerateUnsupportedModelError)
-    expect((out as Error).message).toContain('file-capable model')
+    expect(out).toBeInstanceOf(GenerateTextRequestFormatError)
+    expect((out as Error).message).toContain('parsed the uploaded files into text')
   })
 
   it('validates combined Generate source limits', () => {

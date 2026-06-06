@@ -1,6 +1,64 @@
 <template>
   <main>
     <AiErrorModal :open="aiErrorOpen" :error="aiError" from="/create/generate" @close="closeAiError" />
+    <div
+      v-if="parseFailureOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Some files could not be parsed"
+      @keydown.esc="abortParseFailures"
+    >
+      <button
+        type="button"
+        class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
+        aria-label="Close parse failure modal"
+        @click="abortParseFailures"
+      />
+
+      <div
+        class="relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+      >
+        <div>
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">
+            Some files could not be parsed
+          </h2>
+          <p v-if="parseFailureCanContinue" class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            Tracer can continue with the files that were parsed successfully, or abort without generating.
+          </p>
+          <p v-else class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            None of the selected files produced readable text. Generation was not started.
+          </p>
+        </div>
+
+        <ul class="mt-4 max-h-64 space-y-2 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
+          <li v-for="failure in parseFailures" :key="failure.id" class="grid gap-1">
+            <span class="font-medium text-slate-900 dark:text-slate-50">{{ failure.filename }}</span>
+            <span class="text-slate-600 dark:text-slate-300">{{ failure.reason }}</span>
+          </li>
+        </ul>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            v-if="parseFailureCanContinue"
+            type="button"
+            class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy || parseBusy"
+            @click="continueAfterParseFailures"
+          >
+            Continue with parsed files
+          </button>
+
+          <button
+            type="button"
+            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            @click="abortParseFailures"
+          >
+            {{ parseFailureCanContinue ? 'Abort' : 'Close' }}
+          </button>
+        </div>
+      </div>
+    </div>
     <div class="mx-auto max-w-3xl p-8">
       <div class="flex items-start justify-between gap-4">
         <div>
@@ -16,7 +74,7 @@
           :disabled="generateDisabled"
           @click="onGenerate"
         >
-          {{ busy ? 'Generating…' : 'Generate' }}
+          {{ generateButtonLabel }}
         </button>
       </div>
 
@@ -44,7 +102,7 @@
                 autocomplete="off"
                 placeholder="Generated set…"
                 class="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                :disabled="busy || isWebPreview"
+                :disabled="operationBusy || isWebPreview"
               />
             </div>
 
@@ -56,7 +114,7 @@
                 rows="3"
                 placeholder="e.g. Focus on key definitions and common exam questions"
                 class="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                :disabled="busy || isWebPreview"
+                :disabled="operationBusy || isWebPreview"
               />
             </div>
 
@@ -73,7 +131,7 @@
                   <button
                     type="button"
                     class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                    :disabled="busy || isWebPreview || ingestBusy"
+                    :disabled="operationBusy || isWebPreview || ingestBusy"
                     @click="openPicker"
                   >
                     {{ ingestBusy ? 'Checking…' : 'Choose files' }}
@@ -82,7 +140,7 @@
                     v-if="pickedAny"
                     type="button"
                     class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                    :disabled="busy || isWebPreview || ingestBusy"
+                    :disabled="operationBusy || isWebPreview || ingestBusy"
                     @click="clearPicked"
                   >
                     Clear
@@ -203,13 +261,17 @@ import { parseTermsTsv, normalizeTerms } from '~/src/composables/db/validators'
 import { generateText } from 'ai'
 import { normalizeAiError, aiErrorForMissingDefaultModel, type AiErrorUx } from '~/src/composables/ai/ux-errors'
 import { parseGenerateContractOutput } from '~/src/composables/ai/generate-contract'
+import { normalizeGenerateRequestError } from '~/src/composables/ai/generate-request'
 import {
-  assertGenerateModelSupportsUploadedFiles,
   assertGenerateSourceLimits,
-  buildGeneratePromptText,
-  buildGenerateUserContent,
-  normalizeGenerateRequestError
-} from '~/src/composables/ai/generate-request'
+  buildGenerateTextPrompt,
+  createGenerateParseDecision,
+  extractGenerateSources,
+  getPdfPageCount,
+  type ExtractedGenerateSource,
+  type FailedGenerateSource,
+  type GenerateSourceFile
+} from '~/src/composables/generate/source-extraction'
 
 const router = useRouter()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
@@ -221,13 +283,14 @@ const isWebPreview = computed(() => !hasTauriInternals)
 const title = ref('')
 const instructions = ref('')
 
-type PickedPdf = { kind: 'pdf'; file: File; pages: number }
-type PickedImage = { kind: 'image'; file: File }
+type PickedPdf = { id: string; kind: 'pdf'; file: File; pages: number }
+type PickedImage = { id: string; kind: 'image'; file: File }
 
 const pickedPdfs = ref<PickedPdf[]>([])
 const pickedImages = ref<PickedImage[]>([])
 
 const ingestBusy = ref(false)
+const parseBusy = ref(false)
 const busy = ref(false)
 const formError = ref<string | null>(null)
 
@@ -238,6 +301,11 @@ const fileInputEl = ref<HTMLInputElement | null>(null)
 
 const aiError = ref<AiErrorUx | null>(null)
 const aiErrorOpen = ref(false)
+
+const parseFailureOpen = ref(false)
+const parseFailures = ref<FailedGenerateSource[]>([])
+const pendingExtractedSources = ref<ExtractedGenerateSource[]>([])
+const parseFailureCanContinue = computed(() => parseFailures.value.length > 0 && pendingExtractedSources.value.length > 0)
 
 function showAiError(err: unknown) {
   aiError.value = normalizeAiError(err)
@@ -284,38 +352,17 @@ async function copyRaw() {
   rawMessage.value = 'Select the text and copy it manually.'
 }
 
-function countPdfPagesFromText(pdfText: string): number | null {
-  const candidates: number[] = []
-  const pagesRe = /\/Type\s*\/Pages[\s\S]{0,200}?\/Count\s+(\d+)/g
-  for (;;) {
-    const m = pagesRe.exec(pdfText)
-    if (!m) break
-    const n = Number(m[1])
-    if (Number.isFinite(n) && n > 0) candidates.push(n)
-  }
-  if (candidates.length > 0) return Math.max(...candidates)
-
-  const fallbackRe = /\/Count\s+(\d+)/g
-  for (;;) {
-    const m = fallbackRe.exec(pdfText)
-    if (!m) break
-    const n = Number(m[1])
-    if (Number.isFinite(n) && n > 0) candidates.push(n)
-  }
-  if (candidates.length > 0) return Math.max(...candidates)
-  return null
+function sourceId() {
+  return crypto.randomUUID()
 }
 
-async function countPdfPages(file: File): Promise<number> {
-  const buf = await file.arrayBuffer()
-  const bytes = new Uint8Array(buf)
-  const decoder = new TextDecoder('latin1', { fatal: false })
-  const text = decoder.decode(bytes)
-  const pages = countPdfPagesFromText(text)
-  if (!pages) {
-    throw new Error(`Could not determine page count for '${file.name}'. Try exporting pages as images or splitting the PDF.`)
-  }
-  return pages
+function isPdfFile(file: File) {
+  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+}
+
+function isImageFile(file: File) {
+  const name = file.name.toLowerCase()
+  return file.type.startsWith('image/') || /\.(png|jpe?g|webp)$/.test(name)
 }
 
 const totalPdfPages = computed(() => pickedPdfs.value.reduce((sum, p) => sum + p.pages, 0))
@@ -331,8 +378,16 @@ const pickedSummary = computed(() => {
   return parts.length ? `Selected: ${parts.join(' · ')}` : ''
 })
 
+const operationBusy = computed(() => busy.value || parseBusy.value)
+
+const generateButtonLabel = computed(() => {
+  if (parseBusy.value) return 'Parsing…'
+  if (busy.value) return 'Generating…'
+  return 'Generate'
+})
+
 const generateDisabled = computed(() => {
-  if (busy.value || ingestBusy.value || isWebPreview.value) return true
+  if (operationBusy.value || ingestBusy.value || isWebPreview.value) return true
   if (!pickedAny.value) return true
   if (totalPdfPages.value > 10) return true
   if (pickedImages.value.length > 10) return true
@@ -344,10 +399,17 @@ function openPicker() {
   fileInputEl.value?.click()
 }
 
+function clearParseFailureState() {
+  parseFailureOpen.value = false
+  parseFailures.value = []
+  pendingExtractedSources.value = []
+}
+
 function clearPicked() {
   pickedPdfs.value = []
   pickedImages.value = []
   formError.value = null
+  clearParseFailureState()
   if (fileInputEl.value) fileInputEl.value.value = ''
 }
 
@@ -364,19 +426,19 @@ async function onPicked(e: Event) {
 
   ingestBusy.value = true
   try {
-    const pdfFiles = files.filter((f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'))
-    const imageFiles = files.filter((f) => f.type.startsWith('image/'))
+    const pdfFiles = files.filter(isPdfFile)
+    const imageFiles = files.filter((f) => !isPdfFile(f) && isImageFile(f))
 
     const pdfs: PickedPdf[] = []
     for (const f of pdfFiles) {
-      const pages = await countPdfPages(f)
-      pdfs.push({ kind: 'pdf', file: f, pages })
+      const pages = await getPdfPageCount(f)
+      pdfs.push({ id: sourceId(), kind: 'pdf', file: f, pages })
     }
 
     const nextPdfs = [...pickedPdfs.value, ...pdfs]
     const nextImages: PickedImage[] = [
       ...pickedImages.value,
-      ...imageFiles.map((f) => ({ kind: 'image' as const, file: f }))
+      ...imageFiles.map((f) => ({ id: sourceId(), kind: 'image' as const, file: f }))
     ]
 
     const total = nextPdfs.reduce((sum, p) => sum + p.pages, 0)
@@ -391,11 +453,6 @@ async function onPicked(e: Event) {
   }
 }
 
-async function fileToUint8Array(file: File) {
-  const buf = await file.arrayBuffer()
-  return new Uint8Array(buf)
-}
-
 function generateTitleFromFiles() {
   const t = title.value.trim()
   if (t) return t
@@ -404,34 +461,14 @@ function generateTitleFromFiles() {
   return 'Generated'
 }
 
-async function onGenerate() {
-  formError.value = null
-  rawMessage.value = null
-  rawOutput.value = null
-  aiError.value = null
-  aiErrorOpen.value = false
-  if (busy.value) return
+function selectedGenerateSources(): GenerateSourceFile[] {
+  return [
+    ...pickedPdfs.value.map((source) => ({ id: source.id, kind: 'pdf' as const, file: source.file })),
+    ...pickedImages.value.map((source) => ({ id: source.id, kind: 'image' as const, file: source.file }))
+  ]
+}
 
-  if (isWebPreview.value) {
-    formError.value = 'Generate is not available in web preview.'
-    return
-  }
-
-  if (!pickedAny.value) {
-    formError.value = 'Choose at least one PDF or image.'
-    return
-  }
-
-  if (totalPdfPages.value > 10) {
-    formError.value = `PDF page limit exceeded. Max is 10 pages total; selected PDFs contain ${totalPdfPages.value} pages.`
-    return
-  }
-
-  if (pickedImages.value.length > 10) {
-    formError.value = `Too many images selected. Max is 10; you selected ${pickedImages.value.length}.`
-    return
-  }
-
+async function saveGeneratedOutput(sourceTexts: ExtractedGenerateSource[]) {
   busy.value = true
   try {
     const db = await useTracerDb()
@@ -442,28 +479,15 @@ async function onGenerate() {
       return
     }
 
-    assertGenerateModelSupportsUploadedFiles(settings.defaultModelId)
     const model = await resolveAiModel(settings.defaultModelId)
-
-    const content = buildGenerateUserContent({
-      promptText: buildGeneratePromptText(instructions.value),
-      pdfs: await Promise.all(
-        pickedPdfs.value.map(async (p) => ({
-          data: await fileToUint8Array(p.file),
-          filename: p.file.name
-        }))
-      ),
-      images: await Promise.all(
-        pickedImages.value.map(async (img) => ({
-          data: await fileToUint8Array(img.file),
-          mediaType: img.file.type || 'image/*'
-        }))
-      )
+    const prompt = buildGenerateTextPrompt({
+      instructions: instructions.value,
+      sources: sourceTexts
     })
 
     const res = await generateText({
       model,
-      messages: [{ role: 'user', content }]
+      prompt
     })
 
     rawOutput.value = res.text ?? ''
@@ -503,6 +527,74 @@ async function onGenerate() {
   }
 
   return
+}
+
+function validateGenerateInput() {
+  if (isWebPreview.value) {
+    formError.value = 'Generate is not available in web preview.'
+    return false
+  }
+
+  if (!pickedAny.value) {
+    formError.value = 'Choose at least one PDF or image.'
+    return false
+  }
+
+  if (totalPdfPages.value > 10) {
+    formError.value = `PDF page limit exceeded. Max is 10 pages total; selected PDFs contain ${totalPdfPages.value} pages.`
+    return false
+  }
+
+  if (pickedImages.value.length > 10) {
+    formError.value = `Too many images selected. Max is 10; you selected ${pickedImages.value.length}.`
+    return false
+  }
+
+  return true
+}
+
+async function onGenerate() {
+  formError.value = null
+  rawMessage.value = null
+  rawOutput.value = null
+  aiError.value = null
+  aiErrorOpen.value = false
+  clearParseFailureState()
+
+  if (operationBusy.value) return
+  if (!validateGenerateInput()) return
+
+  parseBusy.value = true
+  try {
+    const result = await extractGenerateSources(selectedGenerateSources())
+    parseBusy.value = false
+    const decision = createGenerateParseDecision(result)
+
+    if (decision.action === 'generate') {
+      await saveGeneratedOutput(decision.extracted)
+      return
+    }
+
+    parseFailures.value = decision.failed
+    pendingExtractedSources.value = decision.extracted
+    parseFailureOpen.value = true
+  } catch (err) {
+    formError.value = toErrorMessage(err, 'Failed to parse selected files.')
+  } finally {
+    parseBusy.value = false
+  }
+}
+
+async function continueAfterParseFailures() {
+  if (!parseFailureCanContinue.value || operationBusy.value) return
+  const sources = [...pendingExtractedSources.value]
+  clearParseFailureState()
+  await saveGeneratedOutput(sources)
+}
+
+function abortParseFailures() {
+  if (operationBusy.value) return
+  clearParseFailureState()
 }
 
 onMounted(async () => {

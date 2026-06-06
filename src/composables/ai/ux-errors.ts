@@ -1,7 +1,7 @@
 import { AiRegistryError, MissingAiCredentialError } from './errors'
 import type { AiProviderId } from './ids'
 import { GenerateContractParseError } from './generate-contract'
-import { GenerateUnsupportedModelError } from './generate-request'
+import { GenerateTextRequestFormatError } from './generate-request'
 import { TermsValidationError, TsvParseError } from '../db/validators'
 import { redactSensitiveText } from '../security/redact'
 
@@ -12,7 +12,6 @@ export type AiErrorKey =
   | 'provider_rate_limited'
   | 'network_offline'
   | 'provider_error'
-  | 'unsupported_model_input'
   | 'parse_error_tsv'
 
 export type AiErrorUx = {
@@ -104,12 +103,12 @@ export function normalizeAiError(err: unknown): AiErrorUx {
     }
   }
 
-  if (err instanceof GenerateUnsupportedModelError) {
+  if (err instanceof GenerateTextRequestFormatError) {
     return {
-      key: 'unsupported_model_input',
-      title: 'Model does not support uploaded files',
+      key: 'provider_error',
+      title: 'AI request was rejected',
       message: redactSensitiveText(err.message),
-      showGoToSettings: true
+      showGoToSettings: false
     }
   }
 

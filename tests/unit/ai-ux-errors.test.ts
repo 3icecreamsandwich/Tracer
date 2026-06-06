@@ -17,7 +17,7 @@ vi.mock('../../src/composables/ai/credentials', () => {
 
 import { normalizeAiError } from '../../src/composables/ai/ux-errors'
 import { MissingAiCredentialError } from '../../src/composables/ai/errors'
-import { GenerateUnsupportedModelError } from '../../src/composables/ai/generate-request'
+import { GenerateTextRequestFormatError } from '../../src/composables/ai/generate-request'
 import { TsvParseError } from '../../src/composables/db/validators'
 
 describe('ai ux errors', () => {
@@ -34,10 +34,11 @@ describe('ai ux errors', () => {
     expect(out.showGoToSettings).toBe(false)
   })
 
-  it('maps unsupported generate model errors to settings-actionable output', () => {
-    const out = normalizeAiError(new GenerateUnsupportedModelError('Generate requires a file-capable model.'))
-    expect(out.key).toBe('unsupported_model_input')
-    expect(out.showGoToSettings).toBe(true)
+  it('maps unexpected Generate text request format errors to provider output', () => {
+    const out = normalizeAiError(new GenerateTextRequestFormatError('Parsed files into text, but provider rejected it.'))
+    expect(out.key).toBe('provider_error')
+    expect(out.title).toBe('AI request was rejected')
+    expect(out.showGoToSettings).toBe(false)
   })
 
   it('maps offline fetch failures to network_offline', () => {

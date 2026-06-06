@@ -20,7 +20,9 @@
     "@ai-sdk/openai-compatible": "^2.0.37",
     "@tauri-apps/plugin-http": "^2.5.7",
     "ai": "^6.0.141",
-    "nuxt": "^4.2.0"
+    "nuxt": "^4.2.0",
+    "pdfjs-dist": "^6.0.227",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@tauri-apps/api": "^2.0.0",
