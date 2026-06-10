@@ -143,9 +143,17 @@
                 v-model="openAiKey"
                 type="password"
                 autocomplete="off"
-                placeholder="sk-…"
+                :placeholder="providerApiKeyPlaceholder('openai', 'sk-...')"
                 class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               />
+              <button
+                type="button"
+                class="inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
+                :disabled="providerApiKeyClearDisabled('openai')"
+                @click="openProviderApiKeyClear('openai')"
+              >
+                Clear
+              </button>
             </div>
           </div>
 
@@ -157,9 +165,17 @@
                 v-model="anthropicKey"
                 type="password"
                 autocomplete="off"
-                placeholder="sk-ant-…"
+                :placeholder="providerApiKeyPlaceholder('anthropic', 'sk-ant-...')"
                 class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               />
+              <button
+                type="button"
+                class="inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
+                :disabled="providerApiKeyClearDisabled('anthropic')"
+                @click="openProviderApiKeyClear('anthropic')"
+              >
+                Clear
+              </button>
             </div>
           </div>
 
@@ -171,9 +187,17 @@
                 v-model="geminiKey"
                 type="password"
                 autocomplete="off"
-                placeholder="AIza…"
+                :placeholder="providerApiKeyPlaceholder('gemini', 'AIza...')"
                 class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               />
+              <button
+                type="button"
+                class="inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
+                :disabled="providerApiKeyClearDisabled('gemini')"
+                @click="openProviderApiKeyClear('gemini')"
+              >
+                Clear
+              </button>
             </div>
           </div>
 
@@ -195,13 +219,23 @@
                 placeholder="model-id"
                 class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               />
-              <input
-                v-model="openAiCompatKey"
-                type="password"
-                autocomplete="off"
-                placeholder="api-key"
-                class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              />
+              <div class="flex flex-wrap items-center gap-2">
+                <input
+                  v-model="openAiCompatKey"
+                  type="password"
+                  autocomplete="off"
+                  :placeholder="providerApiKeyPlaceholder('openai_compat', 'api-key')"
+                  class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                />
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
+                  :disabled="providerApiKeyClearDisabled('openai_compat')"
+                  @click="openProviderApiKeyClear('openai_compat')"
+                >
+                  Clear
+                </button>
+              </div>
             </div>
           </div>
 
@@ -437,6 +471,55 @@
         </div>
       </div>
 
+      <div
+        v-if="providerApiKeyClearTarget"
+        class="fixed inset-0 z-50 flex items-center justify-center p-6"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Clear API key"
+        @keydown.esc="closeProviderApiKeyClear"
+      >
+        <button
+          type="button"
+          class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
+          aria-label="Close clear API key confirmation"
+          @click="closeProviderApiKeyClear"
+        />
+
+        <div
+          class="relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">Clear API key?</h2>
+              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                This will remove the saved {{ providerApiKeyClearLabel }} API key from the vault.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              :disabled="busy"
+              @click="closeProviderApiKeyClear"
+            >
+              Cancel
+            </button>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              class="inline-flex items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
+              :disabled="busy"
+              @click="onConfirmProviderApiKeyClear"
+            >
+              Clear API key
+            </button>
+          </div>
+        </div>
+      </div>
+
        <div
          v-if="isGithubAuthOpen"
          class="fixed inset-0 z-50 flex items-center justify-center p-6"
@@ -556,9 +639,16 @@ import { useLockSession } from '../src/composables/lock-session'
 import { themeSetDarkMode } from '../src/composables/theme'
 import {
   aiOpenAiCompatGetConfig,
-  aiOpenAiCompatSetConfig,
-  aiSecretsSet
+  aiOpenAiCompatSetConfig
 } from '../src/composables/ai/credentials'
+import {
+  clearProviderApiKey,
+  emptyProviderApiKeyPresence,
+  loadProviderApiKeyPresence,
+  saveProviderApiKeyDrafts,
+  type ProviderApiKeyId,
+  type ProviderApiKeyPresence
+} from '../src/composables/ai/provider-settings'
 import { aiRegistryCatalog } from '../src/composables/ai/registry'
 import {
   githubDeviceCodeRequest,
@@ -612,6 +702,9 @@ const geminiKey = ref('')
 const openAiCompatBaseURL = ref('')
 const openAiCompatModelId = ref('')
 const openAiCompatKey = ref('')
+
+const providerApiKeyPresence = ref<ProviderApiKeyPresence>(emptyProviderApiKeyPresence())
+const providerApiKeyClearTarget = ref<ProviderApiKeyId | null>(null)
 
 const isGithubAuthOpen = ref(false)
 
@@ -694,6 +787,56 @@ function toErrorMessage(err: unknown, fallback: string) {
 function toSafeErrorMessage(err: unknown, fallback: string) {
   return redactSensitiveText(toErrorMessage(err, fallback))
 }
+
+const providerApiKeyLabels: Record<ProviderApiKeyId, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  gemini: 'Gemini',
+  openai_compat: 'OpenAI Compatible'
+}
+
+function providerApiKeyPlaceholder(id: ProviderApiKeyId, fallback: string) {
+  return providerApiKeyPresence.value[id] ? 'API key set' : fallback
+}
+
+function providerApiKeyClearDisabled(id: ProviderApiKeyId) {
+  return busy.value || !providerApiKeyPresence.value[id]
+}
+
+function providerApiKeyDrafts() {
+  return {
+    openai: openAiKey.value,
+    anthropic: anthropicKey.value,
+    gemini: geminiKey.value,
+    openai_compat: openAiCompatKey.value
+  }
+}
+
+function clearProviderApiKeyDraft(id?: ProviderApiKeyId) {
+  if (!id || id === 'openai') openAiKey.value = ''
+  if (!id || id === 'anthropic') anthropicKey.value = ''
+  if (!id || id === 'gemini') geminiKey.value = ''
+  if (!id || id === 'openai_compat') openAiCompatKey.value = ''
+}
+
+async function refreshProviderApiKeyPresence() {
+  providerApiKeyPresence.value = await loadProviderApiKeyPresence()
+}
+
+function openProviderApiKeyClear(id: ProviderApiKeyId) {
+  if (providerApiKeyClearDisabled(id)) return
+  providerApiKeyClearTarget.value = id
+}
+
+function closeProviderApiKeyClear() {
+  if (busy.value) return
+  providerApiKeyClearTarget.value = null
+}
+
+const providerApiKeyClearLabel = computed(() => {
+  const target = providerApiKeyClearTarget.value
+  return target ? providerApiKeyLabels[target] : 'provider'
+})
 
 function gateMessageFromQuery(): string | null {
   const reason = typeof route.query.reason === 'string' ? route.query.reason : null
@@ -1142,17 +1285,38 @@ async function onSaveProviderSecrets() {
   error.value = null
   busy.value = true
   try {
-    await aiSecretsSet('openai_api_key', openAiKey.value)
-    await aiSecretsSet('anthropic_api_key', anthropicKey.value)
-    await aiSecretsSet('gemini_api_key', geminiKey.value)
-    await aiSecretsSet('openai_compat_api_key', openAiCompatKey.value)
+    await saveProviderApiKeyDrafts(providerApiKeyDrafts())
 
     await aiOpenAiCompatSetConfig({
       baseURL: openAiCompatBaseURL.value,
       modelId: openAiCompatModelId.value
     })
+    clearProviderApiKeyDraft()
+    await refreshProviderApiKeyPresence()
   } catch (e: any) {
     error.value = toSafeErrorMessage(e, 'Failed to save provider secrets')
+  } finally {
+    busy.value = false
+  }
+}
+
+async function onConfirmProviderApiKeyClear() {
+  if (isWebPreview.value) {
+    error.value = 'Provider secrets are not available in web preview.'
+    return
+  }
+  const target = providerApiKeyClearTarget.value
+  if (!target) return
+
+  error.value = null
+  busy.value = true
+  try {
+    await clearProviderApiKey(target)
+    clearProviderApiKeyDraft(target)
+    await refreshProviderApiKeyPresence()
+    providerApiKeyClearTarget.value = null
+  } catch (e: any) {
+    error.value = toSafeErrorMessage(e, 'Failed to clear provider API key')
   } finally {
     busy.value = false
   }
@@ -1202,6 +1366,12 @@ onMounted(() => {
         }
       } else if (status.can_auto_unlock) {
         markUnlocked()
+      }
+
+      try {
+        await refreshProviderApiKeyPresence()
+      } catch (e: unknown) {
+        error.value = toSafeErrorMessage(e, 'Failed to load provider key status')
       }
 
       await githubRefreshAuthState()
