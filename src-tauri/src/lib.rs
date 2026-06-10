@@ -48,6 +48,8 @@ pub fn run() {
             ai_secrets_get,
             ai_secrets_set,
             ai_secrets_delete,
+            ai_provider_api_key_presence,
+            ai_provider_settings_save,
             ai_openai_compat_get_config,
             ai_openai_compat_set_config,
             open_external,
@@ -278,6 +280,14 @@ struct AiOpenAiCompatSetArgs {
     config_json: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct AiProviderSettingsSaveArgs {
+    #[serde(rename = "apiKeys")]
+    api_keys: Option<HashMap<String, String>>,
+    #[serde(rename = "openAiCompatConfigJson")]
+    openai_compat_config_json: Option<String>,
+}
+
 fn map_ai_kind_to_store_key(kind: &str) -> Option<&'static str> {
     match kind {
         "openai_api_key" => Some(security::STRONGHOLD_STORE_KEY_OPENAI_API_KEY),
@@ -287,6 +297,47 @@ fn map_ai_kind_to_store_key(kind: &str) -> Option<&'static str> {
         "openai_compat_api_key" => Some(security::STRONGHOLD_STORE_KEY_OPENAI_COMPAT_API_KEY),
         _ => None,
     }
+}
+
+#[tauri::command]
+async fn ai_provider_api_key_presence(
+    app: tauri::AppHandle,
+    key_state: tauri::State<'_, VaultKeyState>,
+) -> Result<security::ProviderApiKeyPresence, security::AppLockError> {
+    let stronghold = open_unlocked_stronghold(&app, &key_state)?;
+    security::stronghold_provider_api_key_presence(&stronghold)
+}
+
+#[tauri::command]
+async fn ai_provider_settings_save(
+    app: tauri::AppHandle,
+    key_state: tauri::State<'_, VaultKeyState>,
+    args: AiProviderSettingsSaveArgs,
+) -> Result<security::ProviderSettingsSaveResult, security::AppLockError> {
+    let mut api_keys: Vec<(security::ProviderApiKeyId, String)> = Vec::new();
+    for (id, value) in args.api_keys.unwrap_or_default() {
+        let provider_id = security::provider_api_key_id_from_str(&id)
+            .ok_or_else(|| security::AppLockError::new("invalid_provider", "Unknown provider"))?;
+        api_keys.push((provider_id, value));
+    }
+
+    if api_keys.iter().all(|(_, value)| value.trim().is_empty())
+        && args
+            .openai_compat_config_json
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .is_none()
+    {
+        return Ok(security::ProviderSettingsSaveResult::default());
+    }
+
+    let stronghold = open_unlocked_stronghold(&app, &key_state)?;
+    security::stronghold_provider_settings_save(
+        &stronghold,
+        &api_keys,
+        args.openai_compat_config_json.as_deref(),
+    )
 }
 
 #[tauri::command]

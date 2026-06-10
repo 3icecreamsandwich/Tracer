@@ -39,6 +39,79 @@ pub(crate) const STRONGHOLD_STORE_KEY_OPENAI_COMPAT_API_KEY: &str = "ai_openai_c
 pub(crate) const STRONGHOLD_STORE_KEY_OPENAI_COMPAT_CONFIG_JSON: &str =
     "ai_openai_compat_config_json";
 
+#[derive(Debug, Serialize, PartialEq, Eq, Default)]
+pub struct ProviderApiKeyPresence {
+    pub openai: bool,
+    pub anthropic: bool,
+    pub gemini: bool,
+    pub openai_compat: bool,
+}
+
+#[derive(Debug, Serialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ProviderSettingsSaveResult {
+    pub saved_api_key_ids: Vec<String>,
+    pub saved_open_ai_compat_config: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProviderApiKeyId {
+    OpenAi,
+    Anthropic,
+    Gemini,
+    OpenAiCompat,
+}
+
+impl ProviderApiKeyId {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ProviderApiKeyId::OpenAi => "openai",
+            ProviderApiKeyId::Anthropic => "anthropic",
+            ProviderApiKeyId::Gemini => "gemini",
+            ProviderApiKeyId::OpenAiCompat => "openai_compat",
+        }
+    }
+
+    fn store_key(self) -> &'static str {
+        match self {
+            ProviderApiKeyId::OpenAi => STRONGHOLD_STORE_KEY_OPENAI_API_KEY,
+            ProviderApiKeyId::Anthropic => STRONGHOLD_STORE_KEY_ANTHROPIC_API_KEY,
+            ProviderApiKeyId::Gemini => STRONGHOLD_STORE_KEY_GEMINI_API_KEY,
+            ProviderApiKeyId::OpenAiCompat => STRONGHOLD_STORE_KEY_OPENAI_COMPAT_API_KEY,
+        }
+    }
+}
+
+pub fn provider_api_key_id_from_str(id: &str) -> Option<ProviderApiKeyId> {
+    match id {
+        "openai" => Some(ProviderApiKeyId::OpenAi),
+        "anthropic" => Some(ProviderApiKeyId::Anthropic),
+        "gemini" => Some(ProviderApiKeyId::Gemini),
+        "openai_compat" => Some(ProviderApiKeyId::OpenAiCompat),
+        _ => None,
+    }
+}
+
+pub fn provider_api_key_presence_from_secret_bytes(
+    openai: Option<&[u8]>,
+    anthropic: Option<&[u8]>,
+    gemini: Option<&[u8]>,
+    openai_compat: Option<&[u8]>,
+) -> ProviderApiKeyPresence {
+    fn present(value: Option<&[u8]>) -> bool {
+        value
+            .map(|bytes| !String::from_utf8_lossy(bytes).trim().is_empty())
+            .unwrap_or(false)
+    }
+
+    ProviderApiKeyPresence {
+        openai: present(openai),
+        anthropic: present(anthropic),
+        gemini: present(gemini),
+        openai_compat: present(openai_compat),
+    }
+}
+
 const KEYRING_SERVICE: &str = "tracer";
 const KEYRING_ACCOUNT_APP_PASSWORD: &str = "app_password";
 
@@ -223,6 +296,97 @@ pub fn stronghold_store_get(
         .get(key.as_bytes())
         .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
     Ok(value.map(|v| String::from_utf8_lossy(&v).to_string()))
+}
+
+pub fn stronghold_provider_api_key_presence(
+    stronghold: &tauri_plugin_stronghold::stronghold::Stronghold,
+) -> Result<ProviderApiKeyPresence, AppLockError> {
+    let client = match stronghold.load_client(STRONGHOLD_CLIENT) {
+        Ok(c) => c,
+        Err(_) => return Ok(ProviderApiKeyPresence::default()),
+    };
+    let store = client.store();
+
+    let openai = store
+        .get(STRONGHOLD_STORE_KEY_OPENAI_API_KEY.as_bytes())
+        .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+    let anthropic = store
+        .get(STRONGHOLD_STORE_KEY_ANTHROPIC_API_KEY.as_bytes())
+        .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+    let gemini = store
+        .get(STRONGHOLD_STORE_KEY_GEMINI_API_KEY.as_bytes())
+        .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+    let openai_compat = store
+        .get(STRONGHOLD_STORE_KEY_OPENAI_COMPAT_API_KEY.as_bytes())
+        .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+
+    Ok(provider_api_key_presence_from_secret_bytes(
+        openai.as_deref(),
+        anthropic.as_deref(),
+        gemini.as_deref(),
+        openai_compat.as_deref(),
+    ))
+}
+
+pub fn stronghold_provider_settings_save(
+    stronghold: &tauri_plugin_stronghold::stronghold::Stronghold,
+    api_keys: &[(ProviderApiKeyId, String)],
+    openai_compat_config_json: Option<&str>,
+) -> Result<ProviderSettingsSaveResult, AppLockError> {
+    let normalized_api_keys: Vec<(ProviderApiKeyId, &str)> = api_keys
+        .iter()
+        .filter_map(|(id, value)| {
+            let trimmed = value.trim();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some((*id, trimmed))
+            }
+        })
+        .collect();
+    let normalized_config = openai_compat_config_json
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+
+    if normalized_api_keys.is_empty() && normalized_config.is_none() {
+        return Ok(ProviderSettingsSaveResult::default());
+    }
+
+    let client = stronghold
+        .load_client(STRONGHOLD_CLIENT)
+        .or_else(|_| stronghold.create_client(STRONGHOLD_CLIENT))
+        .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+    let store = client.store();
+
+    let mut result = ProviderSettingsSaveResult::default();
+    for (id, value) in normalized_api_keys {
+        store
+            .insert(
+                id.store_key().as_bytes().to_vec(),
+                value.as_bytes().to_vec(),
+                None,
+            )
+            .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+        result.saved_api_key_ids.push(id.as_str().to_string());
+    }
+
+    if let Some(config_json) = normalized_config {
+        store
+            .insert(
+                STRONGHOLD_STORE_KEY_OPENAI_COMPAT_CONFIG_JSON
+                    .as_bytes()
+                    .to_vec(),
+                config_json.as_bytes().to_vec(),
+                None,
+            )
+            .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+        result.saved_open_ai_compat_config = true;
+    }
+
+    stronghold
+        .save()
+        .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+    Ok(result)
 }
 
 pub fn set_password_verifier(
@@ -416,6 +580,47 @@ mod tests {
 
     fn assert_err_code(err: AppLockError, expected: &str) {
         assert_eq!(err.code, expected, "unexpected error: {err:?}");
+    }
+
+    #[test]
+    fn provider_api_key_presence_from_secret_bytes_trims_values() {
+        let presence = provider_api_key_presence_from_secret_bytes(
+            Some(b"sk-openai"),
+            Some(b"   "),
+            None,
+            Some(b"compat-key\n"),
+        );
+
+        assert_eq!(
+            presence,
+            ProviderApiKeyPresence {
+                openai: true,
+                anthropic: false,
+                gemini: false,
+                openai_compat: true,
+            }
+        );
+    }
+
+    #[test]
+    fn provider_api_key_id_from_str_maps_known_providers() {
+        assert_eq!(
+            provider_api_key_id_from_str("openai").map(ProviderApiKeyId::as_str),
+            Some("openai")
+        );
+        assert_eq!(
+            provider_api_key_id_from_str("anthropic").map(ProviderApiKeyId::as_str),
+            Some("anthropic")
+        );
+        assert_eq!(
+            provider_api_key_id_from_str("gemini").map(ProviderApiKeyId::as_str),
+            Some("gemini")
+        );
+        assert_eq!(
+            provider_api_key_id_from_str("openai_compat").map(ProviderApiKeyId::as_str),
+            Some("openai_compat")
+        );
+        assert_eq!(provider_api_key_id_from_str("github"), None);
     }
 
     #[test]

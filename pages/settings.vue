@@ -639,7 +639,7 @@ import { useLockSession } from '../src/composables/lock-session'
 import { themeSetDarkMode } from '../src/composables/theme'
 import {
   aiOpenAiCompatGetConfig,
-  aiOpenAiCompatSetConfig
+  type OpenAiCompatConfig
 } from '../src/composables/ai/credentials'
 import {
   clearProviderApiKey,
@@ -702,6 +702,7 @@ const geminiKey = ref('')
 const openAiCompatBaseURL = ref('')
 const openAiCompatModelId = ref('')
 const openAiCompatKey = ref('')
+const savedOpenAiCompatConfig = ref<OpenAiCompatConfig>({ baseURL: '', modelId: '' })
 
 const providerApiKeyPresence = ref<ProviderApiKeyPresence>(emptyProviderApiKeyPresence())
 const providerApiKeyClearTarget = ref<ProviderApiKeyId | null>(null)
@@ -809,6 +810,40 @@ function providerApiKeyDrafts() {
     anthropic: anthropicKey.value,
     gemini: geminiKey.value,
     openai_compat: openAiCompatKey.value
+  }
+}
+
+function normalizedOpenAiCompatConfig(config?: OpenAiCompatConfig | null): OpenAiCompatConfig {
+  return {
+    baseURL: config?.baseURL.trim() ?? '',
+    modelId: config?.modelId.trim() ?? ''
+  }
+}
+
+function currentOpenAiCompatConfig(): OpenAiCompatConfig {
+  return normalizedOpenAiCompatConfig({
+    baseURL: openAiCompatBaseURL.value,
+    modelId: openAiCompatModelId.value
+  })
+}
+
+function openAiCompatConfigChanged() {
+  const current = currentOpenAiCompatConfig()
+  const saved = savedOpenAiCompatConfig.value
+  return current.baseURL !== saved.baseURL || current.modelId !== saved.modelId
+}
+
+function markProviderApiKeysPresent(ids: ProviderApiKeyId[]) {
+  if (ids.length === 0) return
+  const next = { ...providerApiKeyPresence.value }
+  for (const id of ids) next[id] = true
+  providerApiKeyPresence.value = next
+}
+
+function markProviderApiKeyAbsent(id: ProviderApiKeyId) {
+  providerApiKeyPresence.value = {
+    ...providerApiKeyPresence.value,
+    [id]: false
   }
 }
 
@@ -1285,14 +1320,18 @@ async function onSaveProviderSecrets() {
   error.value = null
   busy.value = true
   try {
-    await saveProviderApiKeyDrafts(providerApiKeyDrafts())
-
-    await aiOpenAiCompatSetConfig({
-      baseURL: openAiCompatBaseURL.value,
-      modelId: openAiCompatModelId.value
+    const nextOpenAiCompatConfig = currentOpenAiCompatConfig()
+    const shouldSaveOpenAiCompatConfig = openAiCompatConfigChanged()
+    const result = await saveProviderApiKeyDrafts(providerApiKeyDrafts(), {
+      openAiCompatConfig: shouldSaveOpenAiCompatConfig
+        ? nextOpenAiCompatConfig
+        : undefined
     })
+    markProviderApiKeysPresent(result.savedApiKeyIds)
+    if (result.savedOpenAiCompatConfig) {
+      savedOpenAiCompatConfig.value = nextOpenAiCompatConfig
+    }
     clearProviderApiKeyDraft()
-    await refreshProviderApiKeyPresence()
   } catch (e: any) {
     error.value = toSafeErrorMessage(e, 'Failed to save provider secrets')
   } finally {
@@ -1313,7 +1352,7 @@ async function onConfirmProviderApiKeyClear() {
   try {
     await clearProviderApiKey(target)
     clearProviderApiKeyDraft(target)
-    await refreshProviderApiKeyPresence()
+    markProviderApiKeyAbsent(target)
     providerApiKeyClearTarget.value = null
   } catch (e: any) {
     error.value = toSafeErrorMessage(e, 'Failed to clear provider API key')
@@ -1352,8 +1391,10 @@ onMounted(() => {
 
       try {
         const compat = await aiOpenAiCompatGetConfig()
-        openAiCompatBaseURL.value = compat?.baseURL ?? ''
-        openAiCompatModelId.value = compat?.modelId ?? ''
+        const normalizedCompat = normalizedOpenAiCompatConfig(compat)
+        openAiCompatBaseURL.value = normalizedCompat.baseURL
+        openAiCompatModelId.value = normalizedCompat.modelId
+        savedOpenAiCompatConfig.value = normalizedCompat
       } catch {
         // ignore
       }
