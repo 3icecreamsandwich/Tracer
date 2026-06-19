@@ -90,15 +90,17 @@ The prototype treats “unlocking the app” as “unlocking access to secrets�
 
 ### Rust backend (source of truth)
 
-- `src-tauri/src/security.rs`: Security core.
+- `src-tauri/src/security/`: Security core modules.
   - Stronghold vault file lives in the app local data directory as `vault.hold`.
   - A separate salt file `stronghold_salt.txt` is stored alongside the vault.
   - Stores the user’s password verifier (Argon2) and provider credentials/tokens.
   - Optional “startup lock off” uses the OS keychain (via `keyring`) to store an obfuscated derived marker so the app can auto-unlock without prompting.
   - Reset behavior attempts to remove keychain entries, the Stronghold vault, and possible SQLite DB paths.
+  - The module is split by concern: errors/types, path resolution, keychain access, password hashing, Stronghold store helpers, provider-key persistence, and lock/reset logic.
 
-- `src-tauri/src/lib.rs`: Tauri command wiring.
+- `src-tauri/src/lib.rs` and `src-tauri/src/commands/`: Tauri app setup and command wiring.
   - Exposes invoke commands used by the frontend for: lock/unlock, password verify/set, Stronghold get/set, and GitHub OAuth helpers.
+  - Commands are grouped into lock, AI secret/provider settings, GitHub OAuth, and shared vault-key state modules while keeping command names stable.
 
 - `src-tauri/src/main.rs`: Tauri app entry (bootstraps the Rust side).
 
@@ -116,7 +118,7 @@ AI integration is done on the frontend using Vercel AI SDK providers, with HTTP 
 
 - `src/composables/ai/catalog.ts`: Curated list of available providers/models exposed to the UI.
 - `src/composables/ai/ids.ts`: Provider/model identifier helpers.
-- `src/composables/ai/registry.ts`: Provider registry.
+- `src/composables/ai/registry.ts` and `src/composables/ai/registry/`: Provider registry.
   - Resolves `provider:model` into a Vercel AI SDK model instance.
   - Enforces that the selected provider/model exists in the curated catalog.
 - `src/composables/ai/errors.ts`: Centralized error types/helpers for AI flows.
@@ -125,15 +127,16 @@ AI integration is done on the frontend using Vercel AI SDK providers, with HTTP 
 
 - `src/composables/ai/http.ts`: HTTP transport selection.
   - In Tauri runtime, uses `@tauri-apps/plugin-http` so network requests work consistently in the desktop shell.
-- `src/composables/ai/credentials.ts`: Reads/writes provider credentials.
+- `src/composables/ai/credentials.ts` and `src/composables/ai/credentials/`: Reads/writes provider credentials.
   - In desktop/Tauri, secrets are stored in Stronghold via invoke commands.
   - In web-preview mode (no Tauri runtime), may fall back to in-memory behavior (no persistent secrets).
+  - Provider-key presence/save, raw secret transport, OpenAI Compatible config, and runtime fallback state are split into focused modules.
 
 ### OAuth provider behavior (GitHub Models)
 
 GitHub Models uses OAuth instead of an API key. The flow is split between frontend helpers and Rust-side helpers.
 
-- `src/composables/ai/github-oauth.ts`: OAuth helper code.
+- `src/composables/ai/github-oauth.ts` and `src/composables/ai/github-oauth/`: OAuth helper code.
   - Supports device flow UX (URL + user code) and PKCE helpers.
   - Uses a Tauri “open external URL” command so the system browser is used.
 
@@ -148,6 +151,13 @@ On the Rust side:
 
 - `src/composables/ai/chat.ts`: Chat prompt + response flow.
 - `src/composables/ai/generate-contract.ts`: Prompt contract/format expectations for generation/synthesis.
+- `src/composables/ai/ux-errors.ts` and `src/composables/ai/ux-errors/`: Maps provider, parsing, credential, network, and rate-limit failures to user-facing AI error states.
+
+## Generate source extraction
+
+- `src/composables/generate/source-extraction.ts` and `src/composables/generate/source-extraction/`: Public Generate source extraction API plus focused modules.
+  - Keeps source limits, PDF.js extraction, OCR worker setup, extraction orchestration, text normalization, parse decisions, and prompt building separated.
+  - Calls the shared ReadableStream compatibility helper before PDF.js and OCR-related stream consumers run.
 
 ## Non-AI learning modes
 
@@ -161,7 +171,8 @@ On the Rust side:
 
 ## Markdown
 
-- `src/composables/markdown/parse.ts`: Markdown parsing/sanitization used by `MarkdownRenderer` and study guides.
+- `src/composables/markdown/parse.ts`: Markdown-to-HTML rendering used by `MarkdownRenderer` and study guides.
+  - Uses `markdown-it` with raw HTML disabled, images disabled, explicit-link attributes, and GFM-style table support.
 
 ## Tauri configuration
 

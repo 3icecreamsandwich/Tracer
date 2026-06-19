@@ -13,7 +13,7 @@
           :to="setId ? `/set/${setId}` : '/'"
           class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
         >
-          Back
+            Go to set
         </NuxtLink>
       </div>
 
@@ -103,8 +103,14 @@ onMounted(async () => {
     markdown.value = [
       '# Demo study guide',
       '',
+      'This paragraph includes **bold Markdown** and _italic text_.',
+      '',
       '- Lists render in the study guide view.',
       '- Code blocks render without executing HTML.',
+      '',
+      '| Topic | Status |',
+      '| --- | --- |',
+      '| Tables | Render correctly |',
       '',
       '```ts',
       'const demo = true',

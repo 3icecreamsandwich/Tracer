@@ -24,6 +24,27 @@ type DbSetListRow = {
   updated_at: string
 }
 
+function rowToSetListItem(row: DbSetListRow): FlashcardSetListItem {
+  return {
+    id: row.id as Uuid,
+    title: row.title,
+    description: row.description ?? null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  }
+}
+
+function rowToSet(row: DbSetRow): FlashcardSet {
+  return {
+    id: row.id as Uuid,
+    title: row.title,
+    description: row.description ?? null,
+    terms: JSON.parse(row.terms_json) as Term[],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  }
+}
+
 export function createSetsRepo(db: DbClient) {
   return {
     async list(): Promise<FlashcardSetListItem[]> {
@@ -32,13 +53,7 @@ export function createSetsRepo(db: DbClient) {
          FROM flashcard_sets
          ORDER BY updated_at DESC, created_at DESC;`
       )
-      return rows.map((r) => ({
-        id: r.id as Uuid,
-        title: r.title,
-        description: r.description ?? null,
-        createdAt: r.created_at,
-        updatedAt: r.updated_at
-      }))
+      return rows.map(rowToSetListItem)
     },
 
     async get(id: Uuid): Promise<FlashcardSet | null> {
@@ -49,16 +64,7 @@ export function createSetsRepo(db: DbClient) {
       )
       const row = rows[0]
       if (!row) return null
-
-      const terms = JSON.parse(row.terms_json) as Term[]
-      return {
-        id: row.id as Uuid,
-        title: row.title,
-        description: row.description ?? null,
-        terms,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-      }
+      return rowToSet(row)
     },
 
     async create(input: {
