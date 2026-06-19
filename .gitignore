@@ -32,4 +32,4 @@ Thumbs.db
 # Optional local/private planning notes
 .sisyphus/
 notes.md
-instruct.md
+./.agentinstruct/

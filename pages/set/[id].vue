@@ -1722,7 +1722,7 @@ function parseLearnAugmentJson(raw: string): LearnQuestion[] {
             out.push({
                 id: `ai:tf:${i}:${term}`,
                 kind: "true_false",
-                prompt: `True or False: "${term}" means "${def}".`,
+                prompt: `True or False: "${term}" corresponds with "${def}".`,
                 answer: ans,
                 termId: "ai" as Uuid,
             });
