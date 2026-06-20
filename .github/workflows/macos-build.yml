@@ -3,8 +3,8 @@ name: Build macOS Installer
 on:
   workflow_dispatch:
     inputs:
-      allow_unsigned:
-        description: Build an ad-hoc signed DMG for local testing only
+      sign_and_notarize:
+        description: Sign and notarize with Apple Developer credentials
         required: false
         type: boolean
         default: false
@@ -32,7 +32,7 @@ jobs:
           targets: x86_64-apple-darwin,aarch64-apple-darwin
 
       - name: Validate macOS signing secrets
-        if: ${{ inputs.allow_unsigned != true }}
+        if: ${{ inputs.sign_and_notarize == true }}
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -57,12 +57,12 @@ jobs:
 
           if (( ${#missing[@]} )); then
             echo "Missing required secrets for a distributable macOS DMG: ${missing[*]}" >&2
-            echo "Set Apple Developer signing/notarization secrets, or rerun with allow_unsigned=true for local-only testing." >&2
+            echo "Set Apple Developer signing/notarization secrets, or rerun with sign_and_notarize=false for local-only testing." >&2
             exit 1
           fi
 
       - name: Import Apple Developer certificate
-        if: ${{ inputs.allow_unsigned != true }}
+        if: ${{ inputs.sign_and_notarize == true }}
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -101,29 +101,34 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build signed and notarized Tauri macOS installer
-        if: ${{ inputs.allow_unsigned != true }}
+        if: ${{ inputs.sign_and_notarize == true }}
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: bun run tauri build --target universal-apple-darwin --bundles dmg
 
-      - name: Build ad-hoc signed Tauri macOS installer
-        if: ${{ inputs.allow_unsigned == true }}
-        env:
-          APPLE_SIGNING_IDENTITY: "-"
+      - name: Build unsigned Tauri macOS installer
+        if: ${{ inputs.sign_and_notarize != true }}
         run: bun run tauri build --target universal-apple-darwin --bundles dmg
 
       - name: Verify macOS app signature
+        if: ${{ inputs.sign_and_notarize == true }}
         run: |
           apps=(src-tauri/target/release/bundle/macos/*.app)
           codesign --verify --deep --strict --verbose=2 "${apps[0]}"
 
       - name: Verify Gatekeeper assessment
-        if: ${{ inputs.allow_unsigned != true }}
+        if: ${{ inputs.sign_and_notarize == true }}
         run: |
           apps=(src-tauri/target/release/bundle/macos/*.app)
           spctl --assess --type execute --verbose=4 "${apps[0]}"
+
+      - name: Note unsigned macOS artifact
+        if: ${{ inputs.sign_and_notarize != true }}
+        run: |
+          echo "Built without Apple Developer signing or notarization."
+          echo "macOS Gatekeeper may block this artifact outside local testing."
 
       - name: Upload DMG installer artifact
         uses: actions/upload-artifact@v4
