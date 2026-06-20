@@ -23,6 +23,10 @@ test('set page flashcards: tracks correct/incorrect, shows results, restarts', a
   await page.getByRole('button', { name: 'Missed it', exact: true }).click()
 
   await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible()
+  await expect(page).toHaveURL(/\/set\/demo\?mode=flashcards/)
+  await expect(
+    page.getByRole('region', { name: 'Flashcards' }).getByRole('button', { name: 'Restart', exact: true })
+  ).toHaveCount(1)
   await expect(page.locator('body')).toContainText('Accuracy:')
 
   await page.getByRole('button', { name: 'Restart', exact: true }).first().click()

@@ -33,7 +33,7 @@
             </div>
 
             <!-- Results -->
-            <div v-else-if="learnIsFinished" class="w-full max-w-2xl">
+            <div v-else-if="learnIsFinished" class="w-full max-w-2xl select-none">
                 <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">Results</h2>
                     <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
@@ -74,9 +74,9 @@
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
                         Question
                     </p>
-                    <p class="mt-4 whitespace-pre-wrap text-2xl font-medium text-slate-900 dark:text-slate-50">
-                        {{ learnCurrentQuestion.prompt }}
-                    </p>
+                    <div class="mt-4 text-2xl font-medium text-slate-900 dark:text-slate-50">
+                        <MarkdownRenderer :markdown="learnCurrentQuestion.prompt" variant="flashcard" />
+                    </div>
 
                     <div class="mt-8 grid gap-3">
                         <template v-if="learnCurrentQuestion.kind === 'true_false'">
@@ -107,7 +107,7 @@
                                 :disabled="learnBusy"
                                 @click="answerLearnMultipleChoice(idx)"
                             >
-                                {{ opt }}
+                                <MarkdownRenderer :markdown="opt" variant="compact" />
                             </button>
                         </template>
                     </div>
@@ -118,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import type { FlashcardSet, Uuid } from "~/src/composables/db/types";
 import {
     createProfileRepo,

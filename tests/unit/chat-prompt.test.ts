@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildGroundedChatSystemPrompt, buildSetTermsTsv } from '../../src/composables/ai/chat'
+import {
+  buildGroundedChatSystemPrompt,
+  buildSetTermsTsv,
+  takeNextChatRevealUnit,
+  takeRecentChatMessages
+} from '../../src/composables/ai/chat'
 
 describe('chat prompt', () => {
   it('buildSetTermsTsv produces header + rows with escaped newlines', () => {
@@ -38,5 +43,33 @@ describe('chat prompt', () => {
     expect(prompt).toContain('Set title: Biology 101')
     expect(prompt).toContain('Description: Cells')
     expect(prompt).toContain('cell\tbasic unit of life')
+    expect(prompt).toContain('LaTeX delimiters')
+  })
+
+  it('takeRecentChatMessages trims empty content and caps older history', () => {
+    const messages = [
+      { role: 'user', content: ' first ' },
+      { role: 'assistant', content: '' },
+      { role: 'assistant', content: ' second ' },
+      { role: 'user', content: ' third ' }
+    ] as const
+
+    expect(takeRecentChatMessages([...messages], 2)).toEqual([
+      { role: 'assistant', content: 'second' },
+      { role: 'user', content: 'third' }
+    ])
+  })
+
+  it('takeNextChatRevealUnit reveals only full words until the stream completes', () => {
+    expect(takeNextChatRevealUnit('Hel', false)).toBeNull()
+
+    let next = takeNextChatRevealUnit('Hello world', false)
+    expect(next).toEqual({ unit: 'Hello ', pending: 'world' })
+
+    next = takeNextChatRevealUnit(next!.pending, false)
+    expect(next).toBeNull()
+
+    next = takeNextChatRevealUnit('world', true)
+    expect(next).toEqual({ unit: 'world', pending: '' })
   })
 })

@@ -15,6 +15,7 @@
         <form class="relative" @submit.prevent="onSubmit">
           <input
             id="nav-search"
+            ref="searchInputEl"
             v-model="draft"
             type="search"
             autocomplete="off"
@@ -22,6 +23,7 @@
             class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             @focus="openSearch"
             @click="openSearch"
+            @keydown.esc.prevent="onSearchEscape"
           />
         </form>
 
@@ -84,7 +86,7 @@
         <span
           class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
         >
-          U
+          {{ avatarText }}
         </span>
         <span class="hidden sm:block">Settings</span>
       </NuxtLink>
@@ -95,6 +97,7 @@
 <script setup lang="ts">
 import {
   createSetsRepo,
+  createProfileRepo,
   createStudyGuidesRepo,
   useTracerDb,
   type FlashcardSetListItem,
@@ -110,10 +113,12 @@ import {
 
 const draft = ref('')
 const searchRootEl = ref<HTMLElement | null>(null)
+const searchInputEl = ref<HTMLInputElement | null>(null)
 const searchOpen = ref(false)
 const searchBusy = ref(false)
 const searchError = ref<string | null>(null)
 const searchItems = ref<TopbarSearchItem[]>([])
+const avatarText = ref('U')
 let searchLoaded = false
 
 const searchResults = computed(() => filterTopbarSearchItems(searchItems.value, draft.value))
@@ -193,12 +198,22 @@ function closeSearch() {
   searchOpen.value = false
 }
 
+function invalidateSearchItems() {
+  searchLoaded = false
+  searchItems.value = []
+}
+
 function selectSearchResult() {
   closeSearch()
 }
 
 function onSubmit() {
   openSearch()
+}
+
+function onSearchEscape() {
+  closeSearch()
+  searchInputEl.value?.blur()
 }
 
 function onDocumentPointerDown(event: PointerEvent) {
@@ -209,11 +224,30 @@ function onDocumentPointerDown(event: PointerEvent) {
   closeSearch()
 }
 
+async function loadAvatarText() {
+  if (!hasTauriRuntime()) {
+    avatarText.value = 'W'
+    return
+  }
+
+  try {
+    const db = await useTracerDb()
+    const profile = await createProfileRepo(db).get()
+    const first = profile?.name?.trim()?.[0]
+    avatarText.value = first ? first.toUpperCase() : 'U'
+  } catch {
+    avatarText.value = 'U'
+  }
+}
+
 onMounted(() => {
   document.addEventListener('pointerdown', onDocumentPointerDown)
+  window.addEventListener('tracer:search-items-changed', invalidateSearchItems)
+  void loadAvatarText()
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onDocumentPointerDown)
+  window.removeEventListener('tracer:search-items-changed', invalidateSearchItems)
 })
 </script>

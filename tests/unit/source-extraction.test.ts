@@ -9,6 +9,19 @@ import {
   type PdfAdapter
 } from '../../src/composables/generate/source-extraction'
 
+class TestFile extends Blob {
+  name: string
+  lastModified: number
+
+  constructor(parts: BlobPart[], name: string, options?: FilePropertyBag) {
+    super(parts, options)
+    this.name = name
+    this.lastModified = options?.lastModified ?? Date.now()
+  }
+}
+
+const File = TestFile as unknown as typeof globalThis.File
+
 function makeFile(name: string, type: string) {
   return new File(['sample'], name, { type })
 }
@@ -162,8 +175,8 @@ describe('generate source extraction', () => {
   })
 
   it('validates combined Generate source limits', () => {
-    expect(() => assertGenerateSourceLimits({ pdfPages: 10, imageCount: 10 })).not.toThrow()
-    expect(() => assertGenerateSourceLimits({ pdfPages: 11, imageCount: 0 })).toThrow(/PDF page limit exceeded/)
+    expect(() => assertGenerateSourceLimits({ pdfPages: 35, imageCount: 10 })).not.toThrow()
+    expect(() => assertGenerateSourceLimits({ pdfPages: 36, imageCount: 0 })).toThrow(/PDF page limit exceeded/)
     expect(() => assertGenerateSourceLimits({ pdfPages: 0, imageCount: 11 })).toThrow(/Too many images/)
   })
 

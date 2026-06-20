@@ -32,6 +32,18 @@ function extractFencedBlock(text: string, fenceName: string): string {
   return body
 }
 
+function extractFirstFencedBlock(text: string, fenceNames: string[]): string {
+  const errors: string[] = []
+  for (const name of fenceNames) {
+    try {
+      return extractFencedBlock(text, name)
+    } catch (err) {
+      if (err instanceof Error) errors.push(err.message)
+    }
+  }
+  throw new GenerateContractParseError(errors[0] ?? `Missing fenced block: ${fenceNames[0]}`)
+}
+
 export function parseGenerateContractOutput(raw: string): {
   studyGuideMarkdown: string
   flashcardsTsv: string
@@ -44,8 +56,8 @@ export function parseGenerateContractOutput(raw: string): {
     throw new GenerateContractParseError('Output was empty')
   }
 
-  const studyGuideMarkdown = extractFencedBlock(text, 'study_guide_md')
-  const flashcardsTsv = extractFencedBlock(text, 'flashcards_tsv')
+  const studyGuideMarkdown = extractFirstFencedBlock(text, ['study_guide_md', 'markdown', 'md'])
+  const flashcardsTsv = extractFirstFencedBlock(text, ['flashcards_tsv', 'tsv', 'csv'])
 
   return { studyGuideMarkdown, flashcardsTsv }
 }

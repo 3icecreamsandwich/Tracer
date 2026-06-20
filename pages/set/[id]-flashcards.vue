@@ -1,11 +1,11 @@
 <template>
     <main class="flex flex-col h-8/9 bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
-        <div class="border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
+        <div class="border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950 select-none">
             <div class="flex items-center justify-between gap-4">
                 <BackButton />
                 <div class="flex items-center gap-4">
-                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300 select-none">
                         {{ ratioText }}
                     </p>
                 </div>
@@ -15,28 +15,28 @@
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
             <!-- Title -->
-            <div class="mb-6 text-center">
+            <div class="mb-6 text-center select-none">
                 <h1 class="text-xl font-semibold text-slate-900 dark:text-slate-50">Flashcards</h1>
                 <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Space to flip · ←/→ to browse · Mark correct/incorrect to progress</p>
             </div>
 
             <!-- Results -->
-            <div v-if="isFinished" class="w-full max-w-2xl">
-                <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+            <div v-if="isFinished" class="w-full max-w-2xl select-none">
+                <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900 select-none">
                     <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">Results</h2>
                     <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
                         Accuracy:
                         <span class="font-medium">{{ accuracyText }}</span>
                     </p>
-                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 select-none">
                         Correct: {{ correctCount }} · Attempted: {{ attemptedCount }}
                     </p>
 
-                    <div class="mt-6 flex flex-wrap justify-center gap-2">
+                    <div class="mt-6 flex flex-wrap justify-center gap-2 select-none">
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                            :disabled="set?.terms.length === 0"
+                            class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            :disabled="allStudyTermIds.length === 0"
                             @click="restartRun"
                         >
                             Restart
@@ -59,23 +59,30 @@
                     type="button"
                     class="flex flex-col items-center justify-center w-[70vw] h-[50vh] rounded-lg border border-slate-200 bg-slate-50 px-8 py-12 text-center shadow-md hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                     :class="{ 'animate-flip': isFlipping, 'animate-slide-left': isNavigating === 'next', 'animate-slide-right': isNavigating === 'prev' }"
-                    :disabled="set?.terms.length === 0"
+                    :disabled="totalCount === 0"
                     @click="toggleFlip"
                 >
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
                         {{ isFlipped ? "Definition" : "Term" }}
                     </p>
-                    <p class="mt-4 whitespace-pre-wrap text-4xl font-medium text-slate-900 dark:text-slate-50 overflow-y-auto">
-                        {{ viewerText }}
-                    </p>
+                    <div class="mt-4 overflow-y-auto text-4xl font-medium text-slate-900 dark:text-slate-50">
+                        <MarkdownRenderer :markdown="viewerText" variant="flashcard" />
+                    </div>
                 </button>
+
+                <div
+                    v-if="isStarredOnlyEmpty"
+                    class="mt-4 w-full max-w-2xl rounded-md border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                >
+                    No starred cards
+                </div>
 
                 <!-- Controls -->
                 <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
                     <button
                         type="button"
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="set?.terms.length === 0 || cursorIndex === 0"
+                        :disabled="totalCount === 0 || cursorIndex === 0"
                         @click="goPrev"
                     >
                         ← Prev
@@ -84,7 +91,7 @@
                     <button
                         type="button"
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="set?.terms.length === 0 || cursorIndex >= (set?.terms.length ?? 0) - 1"
+                        :disabled="totalCount === 0 || cursorIndex >= totalCount - 1"
                         @click="goNext"
                     >
                         Next →
@@ -93,7 +100,7 @@
                     <button
                         type="button"
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="set?.terms.length === 0"
+                        :disabled="totalCount === 0"
                         @click="shuffleRun"
                     >
                         Shuffle
@@ -101,12 +108,32 @@
 
                     <button
                         type="button"
+                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="allStudyTermIds.length === 0"
+                        @click="restartRun"
+                    >
+                        Restart
+                    </button>
+
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="starredStudyCount === 0"
+                        :aria-pressed="starredOnly"
+                        @click="toggleStarredOnly"
+                    >
+                        {{ starredOnly ? "★" : "☆" }} Starred only
+                    </button>
+
+                    <button
+                        type="button"
                         class="inline-flex items-center rounded-md border border-[#CC8D52] bg-white dark:bg-slate-950 px-3 py-2 text-sm font-medium text-[#CC8D52] shadow-sm hover:bg-slate-50"
                         :disabled="!currentTerm || starBusy"
                         :aria-pressed="isCurrentStarred"
+                        :aria-label="isCurrentStarred ? 'Unstar card' : 'Star card'"
                         @click="toggleStar"
                     >
-                        {{ isCurrentStarred ? "Unstar" : "Star" }}
+                        {{ isCurrentStarred ? "★" : "☆" }}
                     </button>
 
                     <button
@@ -133,6 +160,7 @@
 </template>
 
 <script setup lang="ts">
+import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import type { FlashcardSet, Uuid } from "~/src/composables/db/types";
 import {
     createProfileRepo,
@@ -167,6 +195,7 @@ const answersByTermId = ref<Record<Uuid, "correct" | "incorrect">>({});
 
 const starredTermIds = ref<Set<Uuid>>(new Set());
 const starBusy = ref(false);
+const starredOnly = ref(false);
 
 const baseSeed = computed(() => {
     const raw = route.query.seed;
@@ -177,7 +206,30 @@ const baseSeed = computed(() => {
 
 const viewerButtonEl = ref<HTMLButtonElement | null>(null);
 
-const totalCount = computed(() => set.value?.terms?.length ?? 0);
+const allStudyTermIds = computed(() => {
+    const s = set.value;
+    if (!s) return [];
+    return s.terms.map((t) => t.id as Uuid);
+});
+
+const studyTermIds = computed(() => {
+    const s = set.value;
+    if (!s) return [];
+    if (!starredOnly.value) return allStudyTermIds.value;
+    return allStudyTermIds.value.filter((id) => starredTermIds.value.has(id));
+});
+
+const starredStudyCount = computed(
+    () =>
+        allStudyTermIds.value.filter((id) => starredTermIds.value.has(id))
+            .length,
+);
+
+const isStarredOnlyEmpty = computed(
+    () => starredOnly.value && starredStudyCount.value === 0,
+);
+
+const totalCount = computed(() => studyTermIds.value.length);
 
 const termById = computed(() => {
     const m = new Map<Uuid, FlashcardSet["terms"][number] & { id: Uuid }>();
@@ -279,7 +331,7 @@ function shuffle<T>(items: T[], rand: () => number) {
 function shuffleRun() {
     const s = set.value;
     if (!s) return;
-    const ids = s.terms.map((t) => t.id as Uuid);
+    const ids = studyTermIds.value;
     if (ids.length <= 1) {
         order.value = ids;
         cursorIndex.value = 0;
@@ -315,7 +367,7 @@ function startRun(options?: { resetCounter?: boolean }) {
     if (!s) return;
     if (options?.resetCounter) runCounter.value = 0;
 
-    const ids = s.terms.map((t) => t.id as Uuid);
+    const ids = studyTermIds.value;
     lastOrder.value = ids;
     order.value = ids;
     cursorIndex.value = 0;
@@ -325,8 +377,17 @@ function startRun(options?: { resetCounter?: boolean }) {
 
 function restartRun() {
     runCounter.value += 1;
+    if (isStarredOnlyEmpty.value) {
+        starredOnly.value = false;
+    }
     startRun();
     nextTick(() => viewerButtonEl.value?.focus());
+}
+
+function toggleStarredOnly() {
+    if (!starredOnly.value && starredStudyCount.value === 0) return;
+    starredOnly.value = !starredOnly.value;
+    restartRun();
 }
 
 function toggleFlip() {
@@ -441,6 +502,9 @@ async function toggleStar() {
         if (next) updated.add(t.id as Uuid);
         else updated.delete(t.id as Uuid);
         starredTermIds.value = updated;
+        if (starredOnly.value && !next) {
+            startRun();
+        }
     } finally {
         starBusy.value = false;
     }

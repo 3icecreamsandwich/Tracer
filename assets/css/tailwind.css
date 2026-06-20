@@ -2,3 +2,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #__nuxt {
+    min-height: 100%;
+    overscroll-behavior: none;
+    background: rgb(255 255 255);
+  }
+
+  html.dark,
+  html.dark body,
+  html.dark #__nuxt {
+    background: rgb(2 6 23);
+  }
+}

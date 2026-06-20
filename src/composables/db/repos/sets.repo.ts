@@ -112,6 +112,10 @@ export function createSetsRepo(db: DbClient) {
       const set = await this.get(input.id)
       if (!set) throw new Error('Failed to update set')
       return set
+    },
+
+    async delete(id: Uuid): Promise<void> {
+      await db.execute(`DELETE FROM flashcard_sets WHERE id = ?;`, [id])
     }
   }
 }

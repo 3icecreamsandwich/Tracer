@@ -116,7 +116,7 @@
           </div>
         </section>
 
-        <aside class="space-y-6">
+        <aside class="space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-auto">
           <section
             class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             aria-label="Theme"
@@ -247,7 +247,7 @@ import {
   type Uuid
 } from '~/src/composables/db'
 import { useLockSession } from '~/src/composables/lock-session'
-import { parseTermsTsv, TsvParseError, normalizeTerms, TermsValidationError } from '~/src/composables/db/validators'
+import { parseTermsDelimited, TsvParseError, normalizeTerms, TermsValidationError } from '~/src/composables/db/validators'
 import { resolveAiModel } from '~/src/composables/ai/registry'
 import { normalizeAiError, aiErrorForMissingDefaultModel, type AiErrorUx } from '~/src/composables/ai/ux-errors'
 import { hasTauriRuntime } from '~/src/composables/tauri'
@@ -378,9 +378,11 @@ function buildPrompt(args: { theme: string | null; inputTsv: string }) {
     '- Output TSV only. No prose, no markdown, no code fences.',
     '- One card per line.',
     '- Each line must contain exactly one tab separator.',
+    '- Every line must have a non-empty term and a non-empty definition.',
     '- Do not include a header row.',
     '- Do not include numbering or bullets.',
     '- Do not include tabs inside term or definition (use spaces instead).',
+    '- For math/science expressions, use LaTeX delimiters like $...$ or $$...$$.',
     themeLine.trimEnd(),
     'Input TSV (source<TAB>term<TAB>definition):',
     args.inputTsv
@@ -435,19 +437,19 @@ async function onCreate() {
   busy.value = true
   try {
     const db = await useTracerDb()
-    const settings = await createSettingsRepo(db).get()
+    const settingsPromise = createSettingsRepo(db).get()
+    const setsRepo = createSetsRepo(db)
+    const sourceSetsPromise = Promise.all(selectedIds.value.map((id) => setsRepo.get(id)))
+
+    const settings = await settingsPromise
     if (!settings.defaultModelId) {
       aiError.value = aiErrorForMissingDefaultModel()
       aiErrorOpen.value = true
       return
     }
 
-    const setsRepo = createSetsRepo(db)
-    const sourceSets: FlashcardSet[] = []
-    for (const id of selectedIds.value) {
-      const s = await setsRepo.get(id)
-      if (s) sourceSets.push(s)
-    }
+    const modelPromise = resolveAiModel(settings.defaultModelId)
+    const sourceSets = (await sourceSetsPromise).filter((s): s is FlashcardSet => !!s)
     if (sourceSets.length === 0) {
       throw new Error('Selected sets could not be loaded.')
     }
@@ -455,13 +457,13 @@ async function onCreate() {
     const inputTsv = buildInputTsv(sourceSets)
     const prompt = buildPrompt({ theme: theme.value.trim() ? theme.value.trim() : null, inputTsv })
 
-    const model = await resolveAiModel(settings.defaultModelId)
+    const model = await modelPromise
     const res = await generateText({ model, prompt })
     const text = (res.text ?? '').trim()
 
     rawOutput.value = res.text ?? ''
 
-    let termInputs = parseTermsTsv(text)
+    let termInputs = parseTermsDelimited(text, { delimiter: 'auto' })
     termInputs = termInputs.map((t) => ({
       front: t.front.split('\t').join(' ').trim(),
       back: t.back.split('\t').join(' ').trim()

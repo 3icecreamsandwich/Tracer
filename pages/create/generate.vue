@@ -60,7 +60,7 @@
       </div>
     </div>
     <div class="mx-auto max-w-3xl p-8">
-      <div class="flex items-start justify-between gap-4">
+      <div class="sticky top-16 z-20 flex items-start justify-between gap-4 rounded-md bg-white/95 py-2 backdrop-blur dark:bg-slate-950/95">
         <div>
           <h1 class="text-2xl font-semibold">Create · Generate</h1>
           <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
@@ -123,7 +123,7 @@
                 <div>
                   <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Sources</p>
                   <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                    Limits: max 10 PDF pages total, max 10 images.
+                    Limits: max {{ MAX_GENERATE_PDF_PAGES }} PDF pages total, max {{ MAX_GENERATE_IMAGES }} images.
                   </p>
                 </div>
 
@@ -162,13 +162,13 @@
                   class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
                   <p class="text-xs font-medium text-slate-500 dark:text-slate-400">PDF pages</p>
-                  <p class="mt-1 font-medium">{{ totalPdfPages }}/10</p>
+                  <p class="mt-1 font-medium">{{ totalPdfPages }}/{{ MAX_GENERATE_PDF_PAGES }}</p>
                 </div>
                 <div
                   class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
                   <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Images</p>
-                  <p class="mt-1 font-medium">{{ pickedImages.length }}/10</p>
+                  <p class="mt-1 font-medium">{{ pickedImages.length }}/{{ MAX_GENERATE_IMAGES }}</p>
                 </div>
                 <div
                   class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
@@ -257,7 +257,7 @@ import {
 import { useLockSession } from '~/src/composables/lock-session'
 import { resolveAiModel } from '~/src/composables/ai/registry'
 import { hasTauriRuntime } from '~/src/composables/tauri'
-import { parseTermsTsv, normalizeTerms } from '~/src/composables/db/validators'
+import { parseTermsDelimited, normalizeTerms } from '~/src/composables/db/validators'
 import { generateText } from 'ai'
 import { normalizeAiError, aiErrorForMissingDefaultModel, type AiErrorUx } from '~/src/composables/ai/ux-errors'
 import { parseGenerateContractOutput } from '~/src/composables/ai/generate-contract'
@@ -268,6 +268,8 @@ import {
   createGenerateParseDecision,
   extractGenerateSources,
   getPdfPageCount,
+  MAX_GENERATE_IMAGES,
+  MAX_GENERATE_PDF_PAGES,
   type ExtractedGenerateSource,
   type FailedGenerateSource,
   type GenerateSourceFile
@@ -306,6 +308,8 @@ const parseFailureOpen = ref(false)
 const parseFailures = ref<FailedGenerateSource[]>([])
 const pendingExtractedSources = ref<ExtractedGenerateSource[]>([])
 const parseFailureCanContinue = computed(() => parseFailures.value.length > 0 && pendingExtractedSources.value.length > 0)
+type GenerateModelContext = { db: Awaited<ReturnType<typeof useTracerDb>>; model: any }
+const pendingGenerateModelContext = shallowRef<Promise<GenerateModelContext | Error> | null>(null)
 
 function showAiError(err: unknown) {
   aiError.value = normalizeAiError(err)
@@ -389,8 +393,8 @@ const generateButtonLabel = computed(() => {
 const generateDisabled = computed(() => {
   if (operationBusy.value || ingestBusy.value || isWebPreview.value) return true
   if (!pickedAny.value) return true
-  if (totalPdfPages.value > 10) return true
-  if (pickedImages.value.length > 10) return true
+  if (totalPdfPages.value > MAX_GENERATE_PDF_PAGES) return true
+  if (pickedImages.value.length > MAX_GENERATE_IMAGES) return true
   return false
 })
 
@@ -403,6 +407,7 @@ function clearParseFailureState() {
   parseFailureOpen.value = false
   parseFailures.value = []
   pendingExtractedSources.value = []
+  pendingGenerateModelContext.value = null
 }
 
 function clearPicked() {
@@ -429,11 +434,14 @@ async function onPicked(e: Event) {
     const pdfFiles = files.filter(isPdfFile)
     const imageFiles = files.filter((f) => !isPdfFile(f) && isImageFile(f))
 
-    const pdfs: PickedPdf[] = []
-    for (const f of pdfFiles) {
-      const pages = await getPdfPageCount(f)
-      pdfs.push({ id: sourceId(), kind: 'pdf', file: f, pages })
-    }
+    const pdfs = await Promise.all(
+      pdfFiles.map(async (f): Promise<PickedPdf> => ({
+        id: sourceId(),
+        kind: 'pdf',
+        file: f,
+        pages: await getPdfPageCount(f)
+      }))
+    )
 
     const nextPdfs = [...pickedPdfs.value, ...pdfs]
     const nextImages: PickedImage[] = [
@@ -468,18 +476,34 @@ function selectedGenerateSources(): GenerateSourceFile[] {
   ]
 }
 
-async function saveGeneratedOutput(sourceTexts: ExtractedGenerateSource[]) {
+async function prepareGenerateModelContext(): Promise<GenerateModelContext> {
+  const db = await useTracerDb()
+  const settings = await createSettingsRepo(db).get()
+  if (!settings.defaultModelId) {
+    throw new Error('Choose a Default AI Model to use Generate.')
+  }
+  const model = await resolveAiModel(settings.defaultModelId)
+  return { db, model }
+}
+
+async function saveGeneratedOutput(
+  sourceTexts: ExtractedGenerateSource[],
+  modelContextPromise: Promise<GenerateModelContext | Error> = prepareGenerateModelContext()
+) {
   busy.value = true
   try {
-    const db = await useTracerDb()
-    const settings = await createSettingsRepo(db).get()
-    if (!settings.defaultModelId) {
+    const modelContext = await modelContextPromise
+    if (modelContext instanceof Error) {
+      throw modelContext
+    }
+
+    const { db, model } = modelContext
+    if (!model) {
       aiError.value = aiErrorForMissingDefaultModel()
       aiErrorOpen.value = true
       return
     }
 
-    const model = await resolveAiModel(settings.defaultModelId)
     const prompt = buildGenerateTextPrompt({
       instructions: instructions.value,
       sources: sourceTexts
@@ -494,7 +518,7 @@ async function saveGeneratedOutput(sourceTexts: ExtractedGenerateSource[]) {
     const text = (res.text ?? '').trim()
 
     const parsed = parseGenerateContractOutput(text)
-    let termInputs = parseTermsTsv(parsed.flashcardsTsv)
+    let termInputs = parseTermsDelimited(parsed.flashcardsTsv, { delimiter: 'auto' })
     termInputs = termInputs.map((t) => ({
       front: t.front.split('\t').join(' ').trim(),
       back: t.back.split('\t').join(' ').trim()
@@ -540,13 +564,13 @@ function validateGenerateInput() {
     return false
   }
 
-  if (totalPdfPages.value > 10) {
-    formError.value = `PDF page limit exceeded. Max is 10 pages total; selected PDFs contain ${totalPdfPages.value} pages.`
+  if (totalPdfPages.value > MAX_GENERATE_PDF_PAGES) {
+    formError.value = `PDF page limit exceeded. Max is ${MAX_GENERATE_PDF_PAGES} pages total; selected PDFs contain ${totalPdfPages.value} pages.`
     return false
   }
 
-  if (pickedImages.value.length > 10) {
-    formError.value = `Too many images selected. Max is 10; you selected ${pickedImages.value.length}.`
+  if (pickedImages.value.length > MAX_GENERATE_IMAGES) {
+    formError.value = `Too many images selected. Max is ${MAX_GENERATE_IMAGES}; you selected ${pickedImages.value.length}.`
     return false
   }
 
@@ -564,6 +588,9 @@ async function onGenerate() {
   if (operationBusy.value) return
   if (!validateGenerateInput()) return
 
+  pendingGenerateModelContext.value = prepareGenerateModelContext().catch((err) =>
+    err instanceof Error ? err : new Error(toErrorMessage(err, 'Failed to prepare AI model.'))
+  )
   parseBusy.value = true
   try {
     const result = await extractGenerateSources(selectedGenerateSources())
@@ -571,8 +598,13 @@ async function onGenerate() {
     const decision = createGenerateParseDecision(result)
 
     if (decision.action === 'generate') {
-      await saveGeneratedOutput(decision.extracted)
+      await saveGeneratedOutput(decision.extracted, pendingGenerateModelContext.value)
+      pendingGenerateModelContext.value = null
       return
+    }
+
+    if (decision.action === 'block') {
+      pendingGenerateModelContext.value = null
     }
 
     parseFailures.value = decision.failed
@@ -588,8 +620,9 @@ async function onGenerate() {
 async function continueAfterParseFailures() {
   if (!parseFailureCanContinue.value || operationBusy.value) return
   const sources = [...pendingExtractedSources.value]
+  const modelContext = pendingGenerateModelContext.value ?? prepareGenerateModelContext()
   clearParseFailureState()
-  await saveGeneratedOutput(sources)
+  await saveGeneratedOutput(sources, modelContext)
 }
 
 function abortParseFailures() {

@@ -88,7 +88,7 @@
         </section>
 
         <section
-          class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+          class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-auto"
           aria-labelledby="home-create"
         >
           <h2 id="home-create" class="text-lg font-semibold">Create</h2>

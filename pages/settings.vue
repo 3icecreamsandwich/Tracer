@@ -148,11 +148,11 @@
               />
               <button
                 type="button"
-                class="inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
-                :disabled="providerApiKeyClearDisabled('openai')"
-                @click="openProviderApiKeyClear('openai')"
+                :class="providerApiKeyActionClass('openai')"
+                :disabled="providerApiKeyActionDisabled('openai')"
+                @click="onProviderApiKeyAction('openai')"
               >
-                Clear
+                {{ providerApiKeyActionLabel('openai') }}
               </button>
             </div>
           </div>
@@ -170,11 +170,11 @@
               />
               <button
                 type="button"
-                class="inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
-                :disabled="providerApiKeyClearDisabled('anthropic')"
-                @click="openProviderApiKeyClear('anthropic')"
+                :class="providerApiKeyActionClass('anthropic')"
+                :disabled="providerApiKeyActionDisabled('anthropic')"
+                @click="onProviderApiKeyAction('anthropic')"
               >
-                Clear
+                {{ providerApiKeyActionLabel('anthropic') }}
               </button>
             </div>
           </div>
@@ -192,11 +192,11 @@
               />
               <button
                 type="button"
-                class="inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
-                :disabled="providerApiKeyClearDisabled('gemini')"
-                @click="openProviderApiKeyClear('gemini')"
+                :class="providerApiKeyActionClass('gemini')"
+                :disabled="providerApiKeyActionDisabled('gemini')"
+                @click="onProviderApiKeyAction('gemini')"
               >
-                Clear
+                {{ providerApiKeyActionLabel('gemini') }}
               </button>
             </div>
           </div>
@@ -229,11 +229,11 @@
                 />
                 <button
                   type="button"
-                  class="inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
-                  :disabled="providerApiKeyClearDisabled('openai_compat')"
-                  @click="openProviderApiKeyClear('openai_compat')"
+                  :class="providerApiKeyActionClass('openai_compat')"
+                  :disabled="providerApiKeyActionDisabled('openai_compat')"
+                  @click="onProviderApiKeyAction('openai_compat')"
                 >
-                  Clear
+                  {{ providerApiKeyActionLabel('openai_compat') }}
                 </button>
               </div>
             </div>
@@ -262,16 +262,6 @@
               </div>
             </div>
 
-          <div class="pt-2">
-            <button
-              type="button"
-              class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              :disabled="busy"
-              @click="onSaveProviderSecrets"
-            >
-              Save provider settings
-            </button>
-          </div>
         </div>
       </section>
 
@@ -804,13 +794,43 @@ function providerApiKeyClearDisabled(id: ProviderApiKeyId) {
   return busy.value || !providerApiKeyPresence.value[id]
 }
 
-function providerApiKeyDrafts() {
-  return {
-    openai: openAiKey.value,
-    anthropic: anthropicKey.value,
-    gemini: geminiKey.value,
-    openai_compat: openAiCompatKey.value
+function providerApiKeyDraftValue(id: ProviderApiKeyId) {
+  if (id === 'openai') return openAiKey.value
+  if (id === 'anthropic') return anthropicKey.value
+  if (id === 'gemini') return geminiKey.value
+  return openAiCompatKey.value
+}
+
+function providerApiKeyHasDraft(id: ProviderApiKeyId) {
+  return providerApiKeyDraftValue(id).trim().length > 0
+}
+
+function providerApiKeyHasPendingSave(id: ProviderApiKeyId) {
+  if (providerApiKeyHasDraft(id)) return true
+  return id === 'openai_compat' && openAiCompatConfigChanged()
+}
+
+function providerApiKeyActionLabel(id: ProviderApiKeyId) {
+  if (providerApiKeyHasPendingSave(id)) return 'Save'
+  if (providerApiKeyPresence.value[id]) return 'Clear'
+  return 'Save'
+}
+
+function providerApiKeyActionDisabled(id: ProviderApiKeyId) {
+  if (busy.value) return true
+  if (providerApiKeyActionLabel(id) === 'Save') return !providerApiKeyHasPendingSave(id)
+  return !providerApiKeyPresence.value[id]
+}
+
+function providerApiKeyActionClass(id: ProviderApiKeyId) {
+  if (providerApiKeyActionLabel(id) === 'Clear') {
+    return 'inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950'
   }
+  return 'inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950'
+}
+
+function providerApiKeyDraft(id: ProviderApiKeyId): ProviderApiKeyDrafts {
+  return { [id]: providerApiKeyDraftValue(id) }
 }
 
 function normalizedOpenAiCompatConfig(config?: OpenAiCompatConfig | null): OpenAiCompatConfig {
@@ -1312,17 +1332,20 @@ async function onGithubAuthStart() {
   }
 }
 
-async function onSaveProviderSecrets() {
+async function onSaveProviderSecret(id: ProviderApiKeyId) {
   if (isWebPreview.value) {
     error.value = 'Provider secrets are not available in web preview.'
     return
   }
+  if (!providerApiKeyHasPendingSave(id)) return
+
   error.value = null
   busy.value = true
   try {
     const nextOpenAiCompatConfig = currentOpenAiCompatConfig()
-    const shouldSaveOpenAiCompatConfig = openAiCompatConfigChanged()
-    const result = await saveProviderApiKeyDrafts(providerApiKeyDrafts(), {
+    const shouldSaveOpenAiCompatConfig =
+      id === 'openai_compat' && openAiCompatConfigChanged()
+    const result = await saveProviderApiKeyDrafts(providerApiKeyDraft(id), {
       openAiCompatConfig: shouldSaveOpenAiCompatConfig
         ? nextOpenAiCompatConfig
         : undefined
@@ -1331,12 +1354,20 @@ async function onSaveProviderSecrets() {
     if (result.savedOpenAiCompatConfig) {
       savedOpenAiCompatConfig.value = nextOpenAiCompatConfig
     }
-    clearProviderApiKeyDraft()
+    clearProviderApiKeyDraft(id)
   } catch (e: any) {
     error.value = toSafeErrorMessage(e, 'Failed to save provider secrets')
   } finally {
     busy.value = false
   }
+}
+
+async function onProviderApiKeyAction(id: ProviderApiKeyId) {
+  if (providerApiKeyHasPendingSave(id)) {
+    await onSaveProviderSecret(id)
+    return
+  }
+  openProviderApiKeyClear(id)
 }
 
 async function onConfirmProviderApiKeyClear() {

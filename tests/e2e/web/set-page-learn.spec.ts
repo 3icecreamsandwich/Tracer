@@ -14,6 +14,10 @@ test('set page learn: answers through questions and shows results', async ({ pag
   await page.getByRole('button', { name: 'True', exact: true }).click()
 
   await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible()
+  await expect(page).toHaveURL(/\/set\/demo\?mode=learn&seed=1/)
+  await expect(
+    page.getByRole('region', { name: 'Learn' }).getByRole('button', { name: 'Restart', exact: true })
+  ).toHaveCount(1)
   await expect(page.locator('body')).toContainText('Accuracy:')
 
   await page.getByRole('button', { name: 'Restart', exact: true }).first().click()

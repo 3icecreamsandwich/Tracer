@@ -1,6 +1,7 @@
 <template>
   <div
     class="markdown-renderer"
+    :class="`markdown-renderer--${props.variant}`"
     data-testid="markdown-renderer"
     v-html="html"
   />
@@ -9,7 +10,10 @@
 <script setup lang="ts">
 import { renderMarkdownHtml } from '~/src/composables/markdown/parse'
 
-const props = defineProps<{ markdown: string }>()
+const props = withDefaults(
+  defineProps<{ markdown: string; variant?: 'default' | 'flashcard' | 'compact' | 'tile' }>(),
+  { variant: 'default' }
+)
 
 const html = computed(() => renderMarkdownHtml(props.markdown ?? ''))
 </script>
@@ -19,6 +23,20 @@ const html = computed(() => renderMarkdownHtml(props.markdown ?? ''))
   color: rgb(51 65 85);
   font-size: 0.875rem;
   line-height: 1.625;
+}
+
+.markdown-renderer--flashcard {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.markdown-renderer--compact {
+  font-size: 0.875rem;
+}
+
+.markdown-renderer--tile {
+  font-size: 0.75rem;
+  line-height: 1.35;
 }
 
 .dark .markdown-renderer {
@@ -165,6 +183,23 @@ const html = computed(() => renderMarkdownHtml(props.markdown ?? ''))
 
 .markdown-renderer :deep(.markdown-table-wrap) {
   overflow-x: auto;
+}
+
+.markdown-renderer :deep(.math-block) {
+  overflow-x: auto;
+  padding: 0.25rem 0;
+}
+
+.markdown-renderer :deep(.math-display-inline) {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.25rem 0;
+  vertical-align: middle;
+}
+
+.markdown-renderer :deep(.katex-display) {
+  margin: 0;
 }
 
 .markdown-renderer :deep(table) {

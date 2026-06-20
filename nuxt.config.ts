@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   ignore: ['src-tauri/**'],
 
   modules: ['@nuxtjs/tailwindcss'],
-  css: ['~/assets/css/tailwind.css'],
+  css: ['~/assets/css/tailwind.css', 'katex/dist/katex.min.css'],
 
   devServer: {
     host: '127.0.0.1',

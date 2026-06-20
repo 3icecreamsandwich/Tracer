@@ -33,4 +33,13 @@ describe('parseGenerateContractOutput', () => {
     expect(() => parseGenerateContractOutput(raw)).toThrow(GenerateContractParseError)
     expect(() => parseGenerateContractOutput(raw)).toThrow('Empty fenced block: study_guide_md')
   })
+
+  it('accepts common markdown and tsv fence names', () => {
+    const raw = ['```markdown', '# Guide', '```', '```tsv', 'a\tb', '```'].join('\n')
+
+    expect(parseGenerateContractOutput(raw)).toEqual({
+      studyGuideMarkdown: '# Guide',
+      flashcardsTsv: 'a\tb'
+    })
+  })
 })

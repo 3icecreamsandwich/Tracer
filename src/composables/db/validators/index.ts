@@ -4,4 +4,4 @@ export {
   type NormalizedTerm,
   type TermInput
 } from './terms'
-export { parseTermsTsv, parseTermsCsvLike, TsvParseError } from './tsv'
+export { parseTermsTsv, parseTermsCsvLike, parseTermsDelimited, TsvParseError } from './tsv'

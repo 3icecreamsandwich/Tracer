@@ -8,6 +8,39 @@ export type ChatMessage = {
   content: string
 }
 
+export const GROUNDED_CHAT_HISTORY_MESSAGE_LIMIT = 8
+
+export function takeRecentChatMessages(
+  messages: ChatMessage[],
+  limit = GROUNDED_CHAT_HISTORY_MESSAGE_LIMIT
+) {
+  const normalized = messages
+    .map((message) => ({
+      role: message.role,
+      content: typeof message.content === 'string' ? message.content.trim() : ''
+    }))
+    .filter((message) => message.content.length > 0)
+
+  const count = Math.max(0, Math.floor(Number.isFinite(limit) ? limit : 0))
+  if (count <= 0) return []
+  return normalized.slice(-count)
+}
+
+export function takeNextChatRevealUnit(pending: string, complete: boolean) {
+  if (!pending) return null
+  const match = /^\s*\S+\s+/.exec(pending)
+  if (!match && !complete) return null
+
+  const finalMatch = match ?? /^\s*\S+/.exec(pending) ?? /^\s+/.exec(pending)
+  if (!finalMatch) return null
+
+  const unit = finalMatch[0]
+  return {
+    unit,
+    pending: pending.slice(unit.length)
+  }
+}
+
 function tsvCell(s: string) {
   return s
     .replace(/\r/g, '')
@@ -48,7 +81,8 @@ export function buildGroundedChatSystemPrompt(set: FlashcardSet) {
     '',
     'Answer style:',
     '- Be concise.',
-    '- Be professional, meaning that you should not be overly polite, excited, or rude, and you should get straight to the point (i.e., the answer).'
+    '- Be professional, meaning that you should not be overly polite, excited, or rude, and you should get straight to the point (i.e., the answer).',
+    '- For math/science expressions, use LaTeX delimiters like $...$ or $$...$$ so Tracer can render them.'
   ]
     .filter((x) => x.length > 0)
     .join('\n')

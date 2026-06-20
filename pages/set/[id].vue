@@ -1,5 +1,6 @@
 <template>
-    <main>
+    <NuxtPage v-if="isNestedSetRoute" />
+    <main v-else>
         <AiErrorModal
             :open="aiErrorOpen"
             :error="aiError"
@@ -25,7 +26,14 @@
                         </p>
                     </div>
 
-                    <div class="shrink-0">
+                    <div class="flex shrink-0 flex-wrap items-center gap-2">
+                        <NuxtLink
+                            v-if="set"
+                            :to="`/set/${set.id}/edit`"
+                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
+                        >
+                            Edit
+                        </NuxtLink>
                         <button
                             type="button"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
@@ -225,7 +233,16 @@
                                     <button
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="set.terms.length === 0"
+                                        :disabled="starredStudyCount === 0"
+                                        :aria-pressed="starredOnly"
+                                        @click="toggleStarredOnly"
+                                    >
+                                        {{ starredOnly ? "★" : "☆" }} Starred only
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        :disabled="allStudyTermIds.length === 0"
                                         @click="restartRun"
                                     >
                                         Restart
@@ -233,7 +250,7 @@
                                 </div>
                             </div>
 
-                            <div v-if="isFinished" class="mt-4">
+                            <div v-if="isFinished" class="mt-4 select-none">
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                                 >
@@ -261,14 +278,6 @@
                   >
                     Open results page
                   </NuxtLink>  -->
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center rounded-md bg-[#FB5607] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="set.terms.length === 0"
-                                        @click="restartRun"
-                                    >
-                                        Restart
-                                    </button>
                                     <NuxtLink
                                         :to="`/set/${set.id}?mode=chat`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -290,6 +299,13 @@
                                 </div>
                             </div>
 
+                            <div
+                                v-else-if="isStarredOnlyEmpty"
+                                class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                            >
+                                No starred cards
+                            </div>
+
                             <div v-else>
                                 <button
                                     ref="viewerButtonEl"
@@ -302,7 +318,7 @@
                                         'animate-slide-right':
                                             isNavigating === 'prev',
                                     }"
-                                    :disabled="set.terms.length === 0"
+                                    :disabled="totalCount === 0"
                                     @click="toggleFlip"
                                 >
                                     <p
@@ -310,11 +326,9 @@
                                     >
                                         {{ isFlipped ? "Definition" : "Term" }}
                                     </p>
-                                    <p
-                                        class="mt-3 whitespace-pre-wrap text-base font-medium text-slate-900 dark:text-slate-50"
-                                    >
-                                        {{ viewerText }}
-                                    </p>
+                                    <div class="mt-3 text-slate-900 dark:text-slate-50">
+                                        <MarkdownRenderer :markdown="viewerText" variant="flashcard" />
+                                    </div>
                                 </button>
 
                                 <div
@@ -327,7 +341,7 @@
                                             type="button"
                                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                             :disabled="
-                                                set.terms.length === 0 ||
+                                                totalCount === 0 ||
                                                 cursorIndex === 0
                                             "
                                             @click="goPrev"
@@ -339,9 +353,9 @@
                                             type="button"
                                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                             :disabled="
-                                                set.terms.length === 0 ||
+                                                totalCount === 0 ||
                                                 cursorIndex >=
-                                                    set.terms.length - 1
+                                                    totalCount - 1
                                             "
                                             @click="goNext"
                                         >
@@ -357,13 +371,10 @@
                                             class="inline-flex items-center rounded-md border border-[#CC8D52] bg-white dark:bg-slate-950 px-3 py-2 text-sm font-medium text-[#CC8D52] shadow-sm hover:bg-slate-50"
                                             :disabled="!currentTerm || starBusy"
                                             :aria-pressed="isCurrentStarred"
+                                            :aria-label="isCurrentStarred ? 'Unstar card' : 'Star card'"
                                             @click="toggleStar"
                                         >
-                                            {{
-                                                isCurrentStarred
-                                                    ? "Unstar"
-                                                    : "Star"
-                                            }}
+                                            {{ isCurrentStarred ? "★" : "☆" }}
                                         </button>
                                         <button
                                             type="button"
@@ -450,7 +461,7 @@
                                 Preparing questions…
                             </div>
 
-                            <div v-else-if="learnIsFinished" class="mt-4">
+                            <div v-else-if="learnIsFinished" class="mt-4 select-none">
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                                 >
@@ -472,16 +483,6 @@
                                 </p>
 
                                 <div class="mt-4 flex flex-wrap gap-2">
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="
-                                            !set || learnQuestions.length === 0
-                                        "
-                                        @click="restartLearnRun"
-                                    >
-                                        Restart
-                                    </button>
                                     <NuxtLink
                                         v-if="set"
                                         :to="`/set/${set.id}?mode=flashcards`"
@@ -523,11 +524,9 @@
                                     >
                                         Question
                                     </p>
-                                    <p
-                                        class="mt-3 whitespace-pre-wrap text-base font-medium text-slate-900 dark:text-slate-50"
-                                    >
-                                        {{ learnCurrentQuestion.prompt }}
-                                    </p>
+                                    <div class="mt-3 text-base font-medium text-slate-900 dark:text-slate-50">
+                                        <MarkdownRenderer :markdown="learnCurrentQuestion.prompt" variant="compact" />
+                                    </div>
 
                                     <div class="mt-4 grid gap-2">
                                         <template
@@ -573,7 +572,7 @@
                                                     )
                                                 "
                                             >
-                                                {{ opt }}
+                                                <MarkdownRenderer :markdown="opt" variant="compact" />
                                             </button>
                                         </template>
                                     </div>
@@ -643,14 +642,23 @@
                                     "
                                 >
                                     <div
-                                        class="max-w-[85%] whitespace-pre-wrap rounded-lg border px-3 py-2 shadow-sm"
+                                        class="max-w-[85%] rounded-lg border px-3 py-2 shadow-sm"
                                         :class="
                                             m.role === 'user'
                                                 ? 'border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
                                                 : 'border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50'
                                         "
                                     >
-                                        {{ m.content }}
+                                        <span
+                                            v-if="m.role === 'assistant' && chatBusy && !m.content"
+                                            class="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-700 dark:border-t-slate-200"
+                                            aria-label="Loading response"
+                                        />
+                                        <MarkdownRenderer
+                                            v-else
+                                            :markdown="m.content"
+                                            variant="compact"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -710,49 +718,6 @@
                                         toggle memory mode
                                     </p>
                                 </div>
-
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <p
-                                        class="text-xs font-medium text-slate-500 dark:text-slate-400"
-                                    >
-                                        {{ matchTopline }}
-                                    </p>
-
-                                    <NuxtLink
-                                        v-if="set"
-                                        :to="`/set/${set.id}-match`"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        title="Open fullscreen"
-                                    >
-                                        ⛶ Fullscreen
-                                    </NuxtLink>
-
-                                    <button
-                                        v-if="
-                                            !matchIsRunning && !matchIsFinished
-                                        "
-                                        type="button"
-                                        class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="
-                                            !set || set.terms.length === 0
-                                        "
-                                        @click="startMatch"
-                                    >
-                                        Start
-                                    </button>
-
-                                    <button
-                                        v-else
-                                        type="button"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="
-                                            !set || set.terms.length === 0
-                                        "
-                                        @click="restartMatchRun"
-                                    >
-                                        Restart
-                                    </button>
-                                </div>
                             </div>
 
                             <div
@@ -768,7 +733,41 @@
                                     }"
                                     @click="matchMemoryMode = !matchMemoryMode"
                                 >
-                                    {{ matchMemoryMode ? "✓" : "" }} Memory
+                                    Memory {{ matchMemoryMode ? "✓" : "" }}
+                                </button>
+                                <NuxtLink
+                                    v-if="set"
+                                    :to="`/set/${set.id}-match`"
+                                    class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    title="Open fullscreen"
+                                >
+                                    ⛶ Fullscreen
+                                </NuxtLink>
+
+                                <button
+                                    v-if="
+                                        !matchIsRunning && !matchIsFinished
+                                    "
+                                    type="button"
+                                    class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    :disabled="
+                                        !set || set.terms.length === 0
+                                    "
+                                    @click="startMatch"
+                                >
+                                    Start
+                                </button>
+
+                                <button
+                                    v-else
+                                    type="button"
+                                    class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    :disabled="
+                                        !set || set.terms.length === 0
+                                    "
+                                    @click="restartMatchRun"
+                                >
+                                    Restart
                                 </button>
                             </div>
 
@@ -779,7 +778,7 @@
                                 {{ matchError }}
                             </p>
 
-                            <div v-if="matchIsFinished" class="mt-4">
+                            <div v-if="matchIsFinished" class="mt-4 select-none">
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                                 >
@@ -856,19 +855,20 @@
                                         v-for="tile in matchTiles"
                                         :key="tile.id"
                                         type="button"
+                                        data-match-tile="true"
                                         class="relative h-24 w-full rounded-md border p-2 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950 transition-colors"
                                         :class="matchTileClass(tile)"
                                         :disabled="
                                             matchTileDisabled(tile) || matchBusy
                                         "
-                                        @click="onMatchTileClick(tile)"
+                                        @click.stop="onMatchTileClick(tile)"
                                     >
                                         <span class="sr-only">Tile</span>
                                         <span
                                             v-if="matchIsTileRevealed(tile)"
                                             class="block h-full overflow-hidden text-xs font-medium leading-snug"
                                         >
-                                            {{ tile.text }}
+                                            <MarkdownRenderer :markdown="tile.text" variant="tile" />
                                         </span>
                                     </button>
                                 </div>
@@ -954,28 +954,28 @@
                                         >
                                             {{ idx + 1 }}
                                         </p>
-                                        <p
+                                        <div
                                             class="mt-2 text-sm text-slate-700 dark:text-slate-200"
                                         >
                                             <span
                                                 class="font-medium text-slate-900 dark:text-slate-50"
                                                 >Term:
                                             </span>
-                                            <span class="whitespace-pre-wrap">{{
-                                                t.front
-                                            }}</span>
-                                        </p>
-                                        <p
+                                            <div class="mt-1">
+                                                <MarkdownRenderer :markdown="t.front" variant="compact" />
+                                            </div>
+                                        </div>
+                                        <div
                                             class="mt-2 text-sm text-slate-700 dark:text-slate-200"
                                         >
                                             <span
                                                 class="font-medium text-slate-900 dark:text-slate-50"
                                                 >Definition:
                                             </span>
-                                            <span class="whitespace-pre-wrap">{{
-                                                t.back
-                                            }}</span>
-                                        </p>
+                                            <div class="mt-1">
+                                                <MarkdownRenderer :markdown="t.back" variant="compact" />
+                                            </div>
+                                        </div>
                                     </div>
                                 </li>
                             </ul>
@@ -1079,6 +1079,7 @@
 
 <script setup lang="ts">
 import { lockGetStatus } from "~/src/composables/lock";
+import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import { useLockSession } from "~/src/composables/lock-session";
 import {
     createProfileRepo,
@@ -1099,6 +1100,8 @@ import {
     buildGroundedChatSystemPrompt,
     streamGroundedChatText,
     streamWebPreviewMockChatAnswer,
+    takeNextChatRevealUnit,
+    takeRecentChatMessages,
     type ChatMessage,
 } from "~/src/composables/ai/chat";
 import { generateText } from "ai";
@@ -1117,6 +1120,11 @@ const route = useRoute();
 const router = useRouter();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
+const isNestedSetRoute = computed(() =>
+    route.matched.some(
+        (match) => match.name === "set-id-edit" || match.name === "set-id-results",
+    ),
+);
 const isWebPreview = computed(() => !hasTauriRuntime());
 
 type SetMode = "flashcards" | "learn" | "match" | "chat";
@@ -1133,6 +1141,9 @@ const busy = ref(true);
 const loadError = ref<string | null>(null);
 const set = ref<FlashcardSet | null>(null);
 const studyGuideSetId = ref<Uuid | null>(null);
+const chatSystemPrompt = computed(() =>
+    set.value ? buildGroundedChatSystemPrompt(set.value) : "",
+);
 
 const defaultModelId = ref<string | null>(null);
 const learnHybridEnabled = ref(false);
@@ -1151,6 +1162,7 @@ const answersByTermId = ref<Record<Uuid, FlashcardsAnswer>>({});
 
 const starredTermIds = ref<Set<Uuid>>(new Set());
 const starBusy = ref(false);
+const starredOnly = ref(false);
 
 const baseSeed = computed(() => {
     const raw = route.query.seed;
@@ -1161,7 +1173,7 @@ const baseSeed = computed(() => {
 
 const viewerButtonEl = ref<HTMLButtonElement | null>(null);
 
-type UiChatMessage = ChatMessage & { id: string };
+type UiChatMessage = ChatMessage & { id: string; fullContent?: string };
 
 const chatMessages = ref<UiChatMessage[]>([]);
 const chatInput = ref("");
@@ -1174,6 +1186,149 @@ const chatTextareaEl = ref<HTMLTextAreaElement | null>(null);
 const aiError = ref<AiErrorUx | null>(null);
 const aiErrorOpen = ref(false);
 const lastChatText = ref<string | null>(null);
+const cachedChatModel = shallowRef<{ id: string; model: any } | null>(null);
+const cachedChatModelPromise = shallowRef<
+    { id: string; promise: Promise<any> } | null
+>(null);
+const chatRevealIntervalMs = 34;
+type ChatRevealJob = { complete: boolean; pending: string; timer: number | null };
+const chatRevealJobs = new Map<string, ChatRevealJob>();
+
+function updateChatMessage(
+    messageId: string,
+    update: (message: UiChatMessage) => UiChatMessage,
+) {
+    const index = chatMessages.value.findIndex((message) => message.id === messageId);
+    if (index < 0) return false;
+    const current = chatMessages.value[index];
+    if (!current) return false;
+    const next = update(current);
+    chatMessages.value = [
+        ...chatMessages.value.slice(0, index),
+        next,
+        ...chatMessages.value.slice(index + 1),
+    ];
+    return true;
+}
+
+function takeRevealUnit(job: ChatRevealJob) {
+    const next = takeNextChatRevealUnit(job.pending, job.complete);
+    if (!next) return null;
+    job.pending = next.pending;
+    return next.unit;
+}
+
+function stopChatRevealTimer(messageId: string, job: ChatRevealJob) {
+    if (job.timer !== null) {
+        window.clearInterval(job.timer);
+        job.timer = null;
+    }
+    chatRevealJobs.delete(messageId);
+}
+
+function revealNextChatUnit(messageId: string, job: ChatRevealJob) {
+    const unit = takeRevealUnit(job);
+    if (!unit) return false;
+    const didUpdate = updateChatMessage(messageId, (message) => ({
+        ...message,
+        content: `${message.content}${unit}`,
+    }));
+    if (!didUpdate) return false;
+    void nextTick().then(scrollChatToBottom);
+    return true;
+}
+
+function startChatRevealTimer(messageId: string, job: ChatRevealJob) {
+    if (job.timer !== null) return;
+
+    job.timer = window.setInterval(() => {
+        const current = chatRevealJobs.get(messageId);
+        if (!current) return;
+        revealNextChatUnit(messageId, current);
+        if (!current.pending) {
+            stopChatRevealTimer(messageId, current);
+        }
+    }, chatRevealIntervalMs);
+}
+
+function enqueueChatReveal(messageId: string, chunk: string) {
+    if (!chunk) return;
+    updateChatMessage(messageId, (message) => ({
+        ...message,
+        fullContent: `${message.fullContent ?? message.content}${chunk}`,
+    }));
+    let job = chatRevealJobs.get(messageId);
+    if (!job) {
+        job = { complete: false, pending: "", timer: null };
+        chatRevealJobs.set(messageId, job);
+    }
+    job.pending += chunk;
+    const message = chatMessages.value.find((m) => m.id === messageId);
+    if (!message?.content) {
+        revealNextChatUnit(messageId, job);
+    }
+    startChatRevealTimer(messageId, job);
+}
+
+function finishChatRevealStream(messageId: string) {
+    const job = chatRevealJobs.get(messageId);
+    if (!job) return;
+    job.complete = true;
+    if (!job.pending) {
+        stopChatRevealTimer(messageId, job);
+        return;
+    }
+    startChatRevealTimer(messageId, job);
+}
+
+function flushChatRevealJobs() {
+    for (const [messageId, job] of chatRevealJobs.entries()) {
+        if (job.pending) {
+            const pending = job.pending;
+            updateChatMessage(messageId, (message) => ({
+                ...message,
+                content: `${message.content}${pending}`,
+            }));
+            job.pending = "";
+        }
+        stopChatRevealTimer(messageId, job);
+    }
+    void nextTick().then(scrollChatToBottom);
+}
+
+function cancelChatRevealJobs() {
+    for (const job of chatRevealJobs.values()) {
+        if (job.timer !== null) window.clearInterval(job.timer);
+    }
+    chatRevealJobs.clear();
+}
+
+async function getCachedChatModel(modelId: string) {
+    const cached = cachedChatModel.value;
+    if (cached?.id === modelId) return cached.model;
+    const existing = cachedChatModelPromise.value;
+    const promise =
+        existing?.id === modelId
+            ? existing.promise
+            : resolveAiModel(modelId).finally(() => {
+                  if (cachedChatModelPromise.value?.id === modelId) {
+                      cachedChatModelPromise.value = null;
+                  }
+              });
+    if (existing?.id !== modelId) {
+        cachedChatModelPromise.value = { id: modelId, promise };
+    }
+    const model = await promise;
+    cachedChatModel.value = { id: modelId, model };
+    return model;
+}
+
+function warmChatModel() {
+    if (isWebPreview.value) return;
+    const id = defaultModelId.value;
+    if (!id) return;
+    void getCachedChatModel(id).catch(() => {});
+}
 
 function showAiError(err: unknown) {
     aiError.value = normalizeAiError(err);
@@ -1281,9 +1436,33 @@ async function initWebDemoSet() {
         viewerButtonEl.value?.focus();
     }
     window.addEventListener("keydown", onKeydown);
+    document.addEventListener("pointerdown", onDocumentMatchPointerDown);
 }
 
-const totalCount = computed(() => set.value?.terms?.length ?? 0);
+const allStudyTermIds = computed(() => {
+    const s = set.value;
+    if (!s) return [];
+    return s.terms.map((t) => t.id as Uuid);
+});
+
+const studyTermIds = computed(() => {
+    const s = set.value;
+    if (!s) return [];
+    if (!starredOnly.value) return allStudyTermIds.value;
+    return allStudyTermIds.value.filter((id) => starredTermIds.value.has(id));
+});
+
+const starredStudyCount = computed(
+    () =>
+        allStudyTermIds.value.filter((id) => starredTermIds.value.has(id))
+            .length,
+);
+
+const isStarredOnlyEmpty = computed(
+    () => starredOnly.value && starredStudyCount.value === 0,
+);
+
+const totalCount = computed(() => studyTermIds.value.length);
 
 const termById = computed(() => {
     const m = new Map<Uuid, FlashcardSet["terms"][number] & { id: Uuid }>();
@@ -1489,7 +1668,8 @@ function startMatch() {
 
 function restartMatchRun() {
     matchRunCounter.value += 1;
-    startMatch();
+    resetMatchStateForRun();
+    if (set.value) matchPrepareTiles(set.value);
 }
 
 function matchIsTileRevealed(tile: MatchTile) {
@@ -1543,7 +1723,12 @@ async function onMatchTileClick(tile: MatchTile) {
     if (!matchIsRunning.value) return;
     if (matchEndedAtMs.value !== null) return;
     if (matchMatchedPairIds.value.has(tile.pairId)) return;
-    if (matchSelectedTileIds.value.includes(tile.id)) return;
+    if (matchSelectedTileIds.value.includes(tile.id)) {
+        matchSelectedTileIds.value = matchSelectedTileIds.value.filter(
+            (id) => id !== tile.id,
+        );
+        return;
+    }
     if (matchSelectedTileIds.value.length >= 2) return;
 
     matchSelectedTileIds.value = [...matchSelectedTileIds.value, tile.id];
@@ -1581,6 +1766,15 @@ async function onMatchTileClick(tile: MatchTile) {
     matchBusy.value = true;
     await new Promise((r) => window.setTimeout(r, 550));
     matchBusy.value = false;
+    matchSelectedTileIds.value = [];
+}
+
+function onDocumentMatchPointerDown(event: PointerEvent) {
+    if (matchSelectedTileIds.value.length === 0) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest('[data-match-tile="true"]')) return;
+    if (target.closest('button,a,input,textarea,select,[role="button"]')) return;
     matchSelectedTileIds.value = [];
 }
 
@@ -1639,13 +1833,6 @@ function learnMarkAnswered(questionId: string, isCorrect: boolean) {
     };
     const next = learnFindNextUnattempted(learnCursorIndex.value + 1);
     if (next === null) {
-        const s = set.value;
-        if (!s) return;
-        const correct = learnCorrectCount.value;
-        const attempted = learnAttemptedCount.value;
-        router.replace(
-            `/set/${s.id}/results?mode=learn&correct=${correct}&attempted=${attempted}`,
-        );
         return;
     }
     learnCursorIndex.value = next;
@@ -1825,7 +2012,7 @@ function shuffle<T>(items: T[], rand: () => number) {
 function shuffleRun() {
     const s = set.value;
     if (!s) return;
-    const ids = s.terms.map((t) => t.id as Uuid);
+    const ids = studyTermIds.value;
     if (ids.length <= 1) {
         order.value = ids;
         cursorIndex.value = 0;
@@ -1861,7 +2048,7 @@ function startRun(options?: { resetCounter?: boolean }) {
     if (!s) return;
     if (options?.resetCounter) runCounter.value = 0;
 
-    const ids = s.terms.map((t) => t.id as Uuid);
+    const ids = studyTermIds.value;
     // Default run order matches the saved set order; shuffle is an explicit action.
     lastOrder.value = ids;
     order.value = ids;
@@ -1872,8 +2059,17 @@ function startRun(options?: { resetCounter?: boolean }) {
 
 function restartRun() {
     runCounter.value += 1;
+    if (isStarredOnlyEmpty.value) {
+        starredOnly.value = false;
+    }
     startRun();
     nextTick(() => viewerButtonEl.value?.focus());
+}
+
+function toggleStarredOnly() {
+    if (!starredOnly.value && starredStudyCount.value === 0) return;
+    starredOnly.value = !starredOnly.value;
+    restartRun();
 }
 
 function findNextUnattempted(fromIndex: number) {
@@ -1899,13 +2095,6 @@ function markAnswer(answer: FlashcardsAnswer) {
     isFlipped.value = false;
     const next = findNextUnattempted(cursorIndex.value + 1);
     if (next === null) {
-        const s = set.value;
-        if (!s) return;
-        const correct = correctCount.value;
-        const attempted = attemptedCount.value;
-        router.replace(
-            `/set/${s.id}/results?mode=flashcards&correct=${correct}&attempted=${attempted}`,
-        );
         return;
     }
     cursorIndex.value = next;
@@ -1954,6 +2143,9 @@ async function toggleStar() {
         if (next) updated.add(t.id as Uuid);
         else updated.delete(t.id as Uuid);
         starredTermIds.value = updated;
+        if (starredOnly.value && !next) {
+            startRun();
+        }
     } finally {
         starBusy.value = false;
     }
@@ -1975,6 +2167,9 @@ async function toggleTermStar(termId: Uuid) {
         if (next) updated.add(termId);
         else updated.delete(termId);
         starredTermIds.value = updated;
+        if (starredOnly.value) {
+            startRun();
+        }
     } finally {
         starBusy.value = false;
     }
@@ -2059,6 +2254,7 @@ function scrollChatToBottom() {
 function resetChat() {
     chatAbort.value?.abort();
     chatAbort.value = null;
+    cancelChatRevealJobs();
     chatMessages.value = [];
     chatInput.value = "";
     chatBusy.value = false;
@@ -2088,6 +2284,7 @@ async function sendChat() {
 
     const text = chatInput.value.trim();
     if (!text) return;
+    flushChatRevealJobs();
 
     if (
         typeof navigator !== "undefined" &&
@@ -2108,11 +2305,16 @@ async function sendChat() {
     chatAbort.value?.abort();
     const controller = new AbortController();
     chatAbort.value = controller;
+    const modelPromise =
+        !isWebPreview.value && defaultModelId.value
+            ? getCachedChatModel(defaultModelId.value)
+            : null;
 
     const userMsg: UiChatMessage = {
         id: newMsgId(),
         role: "user",
         content: text,
+        fullContent: text,
     };
     chatMessages.value = [...chatMessages.value, userMsg];
 
@@ -2120,6 +2322,7 @@ async function sendChat() {
         id: newMsgId(),
         role: "assistant",
         content: "",
+        fullContent: "",
     };
     chatMessages.value = [...chatMessages.value, assistantMsg];
     await nextTick();
@@ -2127,10 +2330,15 @@ async function sendChat() {
 
     chatBusy.value = true;
     try {
-        const prior: ChatMessage[] = chatMessages.value
-            .slice(0, -1)
-            .map((m) => ({ role: m.role, content: m.content }));
-        const system = buildGroundedChatSystemPrompt(s);
+        const prior: ChatMessage[] = takeRecentChatMessages(
+            chatMessages.value
+                .slice(0, -1)
+                .map((m) => ({
+                    role: m.role,
+                    content: m.fullContent ?? m.content,
+                })),
+        );
+        const system = chatSystemPrompt.value || buildGroundedChatSystemPrompt(s);
 
         if (isWebPreview.value) {
             for await (const chunk of streamWebPreviewMockChatAnswer({
@@ -2138,10 +2346,9 @@ async function sendChat() {
                 userMessage: text,
                 abortSignal: controller.signal,
             })) {
-                assistantMsg.content += chunk;
-                await nextTick();
-                scrollChatToBottom();
+                enqueueChatReveal(assistantMsg.id, chunk);
             }
+            finishChatRevealStream(assistantMsg.id);
             return;
         }
 
@@ -2151,7 +2358,7 @@ async function sendChat() {
             return;
         }
 
-        const model = await resolveAiModel(defaultModelId.value);
+        const model = await (modelPromise ?? getCachedChatModel(defaultModelId.value));
         const result = streamGroundedChatText({
             model,
             system,
@@ -2160,10 +2367,9 @@ async function sendChat() {
         });
 
         for await (const chunk of result.textStream) {
-            assistantMsg.content += chunk;
-            await nextTick();
-            scrollChatToBottom();
+            enqueueChatReveal(assistantMsg.id, chunk);
         }
+        finishChatRevealStream(assistantMsg.id);
     } catch (err) {
         if (controller.signal.aborted) return;
         if (isAiErrorCandidate(err)) {
@@ -2173,6 +2379,8 @@ async function sendChat() {
             chatError.value = toErrorMessage(err, "Failed to send message.");
         }
     } finally {
+        if (controller.signal.aborted) cancelChatRevealJobs();
+        if (chatAbort.value === controller) chatAbort.value = null;
         if (!controller.signal.aborted) {
             chatBusy.value = false;
             await nextTick();
@@ -2243,12 +2451,20 @@ function downloadExport() {
     exportMessage.value = "Downloaded.";
 }
 
-onMounted(async () => {
+async function openSetPage() {
     let lockGateEvaluated = false;
     let lockGateRequiresUnlock = false;
     let lockGateStartupLockEnabled = false;
     let lockGateUnlockedThisSession = false;
     try {
+        if (isNestedSetRoute.value) {
+            busy.value = false;
+            return;
+        }
+
+        busy.value = true;
+        loadError.value = null;
+
         if (isWebPreview.value) {
             await initWebDemoSet();
             return;
@@ -2292,6 +2508,7 @@ onMounted(async () => {
             });
             return;
         }
+        if (mode.value === "chat") warmChatModel();
 
         const idParam = route.params.id;
         if (typeof idParam !== "string" || !idParam.trim()) {
@@ -2317,6 +2534,7 @@ onMounted(async () => {
         }
 
         window.addEventListener("keydown", onKeydown);
+        document.addEventListener("pointerdown", onDocumentMatchPointerDown);
     } catch {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
@@ -2339,12 +2557,19 @@ onMounted(async () => {
         busy.value = false;
         if (!loadError.value) loadError.value = "Failed to open set.";
     }
+}
+
+onMounted(async () => {
+    await openSetPage();
 });
 
 watch(
     mode,
     async (next, prev) => {
+        if (isNestedSetRoute.value) return;
+
         if (prev === "chat" && next !== "chat") resetChat();
+        if (next === "chat") warmChatModel();
 
         if (next === "flashcards" && prev !== "flashcards") {
             startRun({ resetCounter: true });
@@ -2372,10 +2597,20 @@ watch(
     { flush: "post" },
 );
 
+watch(
+    isNestedSetRoute,
+    async (isNested, wasNested) => {
+        if (isNested || !wasNested) return;
+        await openSetPage();
+    },
+    { flush: "post" },
+);
+
 onBeforeUnmount(() => {
     resetChat();
     clearMatchTimer();
     window.removeEventListener("keydown", onKeydown);
+    document.removeEventListener("pointerdown", onDocumentMatchPointerDown);
 });
 </script>
 

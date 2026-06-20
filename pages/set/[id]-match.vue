@@ -23,7 +23,7 @@
             </p>
 
             <!-- Results -->
-            <div v-if="matchIsFinished" class="w-full max-w-2xl">
+            <div v-if="matchIsFinished" class="w-full max-w-2xl select-none">
                 <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">Results</h2>
                     <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
@@ -82,7 +82,7 @@
                             :class="{ 'bg-slate-100 dark:bg-slate-900': matchMemoryMode }"
                             @click="matchMemoryMode = !matchMemoryMode"
                         >
-                            {{ matchMemoryMode ? '✓' : '' }} Memory
+                            Memory {{ matchMemoryMode ? "✓" : "" }}
                         </button>
                     </div>
                 </div>
@@ -95,17 +95,18 @@
                         v-for="tile in matchTiles"
                         :key="tile.id"
                         type="button"
+                        data-match-tile="true"
                         class="h-24 sm:h-28 w-full rounded-md border p-2 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950 transition-colors"
                         :class="matchTileClass(tile)"
                         :disabled="matchTileDisabled(tile) || matchBusy"
-                        @click="onMatchTileClick(tile)"
+                        @click.stop="onMatchTileClick(tile)"
                     >
                         <span class="sr-only">Tile</span>
                         <span
                             v-if="matchIsTileRevealed(tile)"
                             class="block h-full overflow-hidden text-xs font-medium leading-snug flex items-center justify-center"
                         >
-                            {{ tile.text }}
+                            <MarkdownRenderer :markdown="tile.text" variant="tile" />
                         </span>
                     </button>
                 </div>
@@ -126,6 +127,7 @@
 </template>
 
 <script setup lang="ts">
+import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import type { FlashcardSet, Uuid } from "~/src/composables/db/types";
 import {
     createProfileRepo,
@@ -281,7 +283,8 @@ function startMatch() {
 
 function restartMatchRun() {
     matchRunCounter.value += 1;
-    startMatch();
+    resetMatchStateForRun();
+    if (set.value) matchPrepareTiles(set.value);
 }
 
 function matchIsTileRevealed(tile: MatchTile) {
@@ -335,7 +338,12 @@ async function onMatchTileClick(tile: MatchTile) {
     if (!matchIsRunning) return;
     if (matchEndedAtMs.value !== null) return;
     if (matchMatchedPairIds.value.has(tile.pairId)) return;
-    if (matchSelectedTileIds.value.includes(tile.id)) return;
+    if (matchSelectedTileIds.value.includes(tile.id)) {
+        matchSelectedTileIds.value = matchSelectedTileIds.value.filter(
+            (id) => id !== tile.id,
+        );
+        return;
+    }
     if (matchSelectedTileIds.value.length >= 2) return;
 
     matchSelectedTileIds.value = [...matchSelectedTileIds.value, tile.id];
@@ -373,6 +381,15 @@ async function onMatchTileClick(tile: MatchTile) {
     matchBusy.value = true;
     await new Promise((r) => window.setTimeout(r, 550));
     matchBusy.value = false;
+    matchSelectedTileIds.value = [];
+}
+
+function onDocumentMatchPointerDown(event: PointerEvent) {
+    if (matchSelectedTileIds.value.length === 0) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest('[data-match-tile="true"]')) return;
+    if (target.closest('button,a,input,textarea,select,[role="button"]')) return;
     matchSelectedTileIds.value = [];
 }
 
@@ -438,6 +455,7 @@ onMounted(async () => {
             busy.value = false;
             resetMatchStateForRun();
             if (set.value) matchPrepareTiles(set.value);
+            document.addEventListener("pointerdown", onDocumentMatchPointerDown);
             return;
         }
 
@@ -475,6 +493,7 @@ onMounted(async () => {
             resetMatchStateForRun();
             matchPrepareTiles(set.value);
         }
+        document.addEventListener("pointerdown", onDocumentMatchPointerDown);
     } catch {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
@@ -496,6 +515,7 @@ onMounted(async () => {
             busy.value = false;
             resetMatchStateForRun();
             if (set.value) matchPrepareTiles(set.value);
+            document.addEventListener("pointerdown", onDocumentMatchPointerDown);
             return;
         }
 
@@ -507,5 +527,6 @@ onMounted(async () => {
 onBeforeUnmount(() => {
     resetMatchStateForRun();
     matchMemoryMode.value = false;
+    document.removeEventListener("pointerdown", onDocumentMatchPointerDown);
 });
 </script>

@@ -46,4 +46,41 @@ describe('renderMarkdownHtml', () => {
     expect(html).toContain('target="_blank"')
     expect(html).toContain('rel="noopener noreferrer"')
   })
+
+  it('renders inline and block LaTeX with KaTeX', () => {
+    const html = renderMarkdownHtml(['Inline $E=mc^2$.', '', '$$', '\\frac{a}{b}', '$$'].join('\n'))
+
+    expect(html).toContain('katex')
+    expect(html).toContain('math-block')
+    expect(html).not.toContain('$E=mc^2$')
+  })
+
+  it('renders generated math fences and LaTeX environments with KaTeX', () => {
+    const html = renderMarkdownHtml([
+      '```latex',
+      '\\frac{a}{b}',
+      '```',
+      '',
+      '\\begin{aligned}',
+      'a &= b + c',
+      '\\end{aligned}'
+    ].join('\n'))
+
+    expect(html).toContain('katex')
+    expect(html.match(/math-block/g)?.length).toBe(2)
+    expect(html).not.toContain('<code class="language-latex">')
+  })
+
+  it('renders display math delimiters even when generated inline with text', () => {
+    const html = renderMarkdownHtml([
+      'Use \\[a^2 + b^2 = c^2\\] for right triangles.',
+      '',
+      'Also parse $$\\Delta G = -RT\\ln K$$ in a paragraph.'
+    ].join('\n'))
+
+    expect(html).toContain('katex')
+    expect(html.match(/math-display-inline/g)?.length).toBe(2)
+    expect(html).not.toContain('\\[a^2 + b^2 = c^2\\]')
+    expect(html).not.toContain('$$\\Delta G = -RT\\ln K$$')
+  })
 })

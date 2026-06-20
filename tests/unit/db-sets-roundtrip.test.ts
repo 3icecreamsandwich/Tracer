@@ -48,14 +48,14 @@ async function applyMigrations(dbPath: string) {
 function createSqliteCliDb(dbPath: string): DbClient {
   return {
     async execute(sql: string, bindValues?: unknown[]) {
-      const script = bindIntoSql(sql, bindValues)
+      const script = `PRAGMA foreign_keys = ON;\n${bindIntoSql(sql, bindValues)}`
       const res = await runSqlite(dbPath, script)
       if (res.code !== 0) throw new Error(res.stderr || 'sqlite3 execute failed')
       return undefined
     },
 
     async select<T>(sql: string, bindValues?: unknown[]) {
-      const script = ['.mode json', '.headers off', bindIntoSql(sql, bindValues)].join('\n') +
+      const script = ['PRAGMA foreign_keys = ON;', '.mode json', '.headers off', bindIntoSql(sql, bindValues)].join('\n') +
         '\n'
       const res = await runSqlite(dbPath, script)
       if (res.code !== 0) throw new Error(res.stderr || 'sqlite3 select failed')
@@ -94,6 +94,29 @@ describe('sets repo roundtrip (sqlite:tracer.db)', () => {
       expect(loaded?.terms).toEqual([
         { id: '00000000-0000-4000-8000-000000000001', front: 'a', back: 'b' }
       ])
+
+      await db.execute(
+        `INSERT INTO starred_terms (set_id, term_id) VALUES (?, ?);`,
+        [setId, '00000000-0000-4000-8000-000000000001']
+      )
+      await db.execute(
+        `INSERT INTO study_guides (id, set_id, markdown) VALUES (?, ?, ?);`,
+        ['guide-1', setId, '# Guide']
+      )
+
+      await repo.delete(setId)
+
+      expect(await repo.get(setId)).toBeNull()
+      const stars = await db.select<{ c: number }>(
+        `SELECT COUNT(1) as c FROM starred_terms WHERE set_id = ?;`,
+        [setId]
+      )
+      const guides = await db.select<{ c: number }>(
+        `SELECT COUNT(1) as c FROM study_guides WHERE set_id = ?;`,
+        [setId]
+      )
+      expect(stars[0]?.c).toBe(0)
+      expect(guides[0]?.c).toBe(0)
     } finally {
       await rm(tmpDir, { recursive: true, force: true })
     }

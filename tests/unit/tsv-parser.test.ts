@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseTermsTsv, TsvParseError } from '../../src/composables/db/validators/tsv'
+import { parseTermsDelimited, parseTermsTsv, TsvParseError } from '../../src/composables/db/validators/tsv'
 
 describe('parseTermsTsv', () => {
   it('parses valid TSV into term inputs', () => {
@@ -31,5 +31,68 @@ describe('parseTermsTsv', () => {
   it('rejects empty input after filtering empty lines', () => {
     expect(() => parseTermsTsv('\n\n\r\n')).toThrow(TsvParseError)
     expect(() => parseTermsTsv('\n\n\r\n')).toThrow('no terms found')
+  })
+})
+
+describe('parseTermsDelimited', () => {
+  it('auto-detects TSV and skips a header row', () => {
+    expect(parseTermsDelimited('term\tdefinition\nA\tB\n')).toEqual([
+      { front: 'A', back: 'B' }
+    ])
+  })
+
+  it('auto-detects CSV and supports quoted cells', () => {
+    expect(parseTermsDelimited('"hello, term","world, definition"\nfoo,bar\n')).toEqual([
+      { front: 'hello, term', back: 'world, definition' },
+      { front: 'foo', back: 'bar' }
+    ])
+  })
+
+  it('accepts generated bullets and numbering', () => {
+    expect(parseTermsDelimited('- alpha\tone\n1. beta\ttwo\n')).toEqual([
+      { front: 'alpha', back: 'one' },
+      { front: 'beta', back: 'two' }
+    ])
+  })
+
+  it('uses the first two fields when extra CSV fields are present', () => {
+    expect(parseTermsDelimited('a,b,c\n')).toEqual([{ front: 'a', back: 'b' }])
+  })
+
+  it('parses markdown table output and skips generated preamble text', () => {
+    const input = [
+      'Here are the flashcards:',
+      '| Term | Definition |',
+      '| --- | --- |',
+      '| alpha | one |',
+      '| beta | two |'
+    ].join('\n')
+
+    expect(parseTermsDelimited(input)).toEqual([
+      { front: 'alpha', back: 'one' },
+      { front: 'beta', back: 'two' }
+    ])
+  })
+
+  it('accepts colon, semicolon, and spaced dash separators from generated output', () => {
+    const input = [
+      'Flashcards:',
+      'alpha: one',
+      'beta; two',
+      'gamma - three',
+      'delta — four'
+    ].join('\n')
+
+    expect(parseTermsDelimited(input)).toEqual([
+      { front: 'alpha', back: 'one' },
+      { front: 'beta', back: 'two' },
+      { front: 'gamma', back: 'three' },
+      { front: 'delta', back: 'four' }
+    ])
+  })
+
+  it('rejects malformed rows without a delimiter', () => {
+    expect(() => parseTermsDelimited('nope\n')).toThrow(TsvParseError)
+    expect(() => parseTermsDelimited('nope\n')).toThrow('comma or tab')
   })
 })
