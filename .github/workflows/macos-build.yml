@@ -112,17 +112,37 @@ jobs:
         if: ${{ inputs.sign_and_notarize != true }}
         run: bun run tauri build --target universal-apple-darwin --bundles dmg
 
+      - name: Locate macOS app bundle
+        if: ${{ inputs.sign_and_notarize == true }}
+        run: |
+          app_path=""
+          if [[ -d src-tauri/target/universal-apple-darwin/release/bundle/macos ]]; then
+            app_path="$(find src-tauri/target/universal-apple-darwin/release/bundle/macos -name "*.app" -type d | sort | head -n 1)"
+          fi
+          if [[ -z "$app_path" && -d src-tauri/target/release/bundle/macos ]]; then
+            app_path="$(find src-tauri/target/release/bundle/macos -name "*.app" -type d | sort | head -n 1)"
+          fi
+          if [[ -z "$app_path" ]]; then
+            app_path="$(find src-tauri/target -name "*.app" -type d | sort | head -n 1)"
+          fi
+
+          if [[ -z "$app_path" ]]; then
+            echo "No macOS app bundle found under src-tauri/target." >&2
+            find src-tauri/target \( -name "*.app" -o -name "*.dmg" \) -print >&2 || true
+            exit 1
+          fi
+
+          echo "MACOS_APP_PATH=$app_path" >> "$GITHUB_ENV"
+
       - name: Verify macOS app signature
         if: ${{ inputs.sign_and_notarize == true }}
         run: |
-          apps=(src-tauri/target/release/bundle/macos/*.app)
-          codesign --verify --deep --strict --verbose=2 "${apps[0]}"
+          codesign --verify --deep --strict --verbose=2 "$MACOS_APP_PATH"
 
       - name: Verify Gatekeeper assessment
         if: ${{ inputs.sign_and_notarize == true }}
         run: |
-          apps=(src-tauri/target/release/bundle/macos/*.app)
-          spctl --assess --type execute --verbose=4 "${apps[0]}"
+          spctl --assess --type execute --verbose=4 "$MACOS_APP_PATH"
 
       - name: Note unsigned macOS artifact
         if: ${{ inputs.sign_and_notarize != true }}
@@ -134,5 +154,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tracer-macos-installer
-          path: src-tauri/target/release/bundle/dmg/*.dmg
+          path: |
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/*/release/bundle/dmg/*.dmg
           if-no-files-found: error
