@@ -1,6 +1,6 @@
 export default defineNuxtConfig({
   ssr: false,
-
+  compatibilityDate: '2026-07-10',
   ignore: ['src-tauri/**'],
 
   modules: ['@nuxtjs/tailwindcss'],
@@ -19,6 +19,18 @@ export default defineNuxtConfig({
       watch: {
         ignored: ['**/src-tauri/**']
       }
+    },
+    optimizeDeps: {
+      include: [
+        '@ai-sdk/anthropic',
+        '@ai-sdk/google',
+        '@ai-sdk/openai',
+        '@ai-sdk/openai-compatible',
+        '@tauri-apps/plugin-http',
+        'ai',
+        'pdfjs-dist',
+        'tesseract.js', // CJS
+      ]
     }
   },
 

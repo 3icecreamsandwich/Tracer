@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+import { navigateBack } from '~/src/composables/navigation/app-navigation'
+
 const router = useRouter()
 const route = useRoute()
 
@@ -21,31 +23,6 @@ const isDisabled = computed(() => {
 })
 
 function onBack() {
-  const path = route.path
-  
-  // When in fullscreen mode (/{set|study-guide}/[id]-{flashcards|learn|match}), go back to the parent page.
-  // Note: IDs may contain hyphens (e.g. UUIDs), so capture greedily up to the mode suffix.
-  const fullscreenMatch = path.match(/^\/(set|study-guide)\/(.+)-(flashcards|learn|match)\/?$/)
-  if (fullscreenMatch) {
-    const parentKind = fullscreenMatch[1]
-    const parentId = fullscreenMatch[2]
-    router.push(`/${parentKind}/${parentId}`)
-    return
-  }
-  
-  // When in a flashcard set, go back to homepage
-  if (path.startsWith('/set/')) {
-    router.push('/')
-    return
-  }
-  
-  // When in settings or other pages, go to previous page
-  if (window.history.length > 1) {
-    router.back()
-    return
-  }
-  
-  // Fallback to homepage
-  router.push('/')
+  navigateBack(router, route.path, window.history.state)
 }
 </script>

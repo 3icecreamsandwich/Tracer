@@ -263,6 +263,12 @@ function onSearchEscape() {
     searchInputEl.value?.blur();
 }
 
+function focusSearch() {
+    searchInputEl.value?.focus();
+    searchInputEl.value?.select();
+    openSearch();
+}
+
 function onDocumentPointerDown(event: PointerEvent) {
     const root = searchRootEl.value;
     if (!root) return;
@@ -294,6 +300,7 @@ onMounted(() => {
         "tracer:search-items-changed",
         invalidateSearchItems,
     );
+    window.addEventListener("tracer:focus-search", focusSearch);
     void loadAvatarText();
 });
 
@@ -303,6 +310,7 @@ onBeforeUnmount(() => {
         "tracer:search-items-changed",
         invalidateSearchItems,
     );
+    window.removeEventListener("tracer:focus-search", focusSearch);
 });
 </script>
 

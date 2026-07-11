@@ -74,6 +74,7 @@
                                     class="group rounded-md border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
                                     <NuxtLink
+                                        replace
                                         :to="`/set/${set.id}?mode=flashcards`"
                                         class="w-5/6"
                                     >
@@ -119,6 +120,7 @@
                                     class="group rounded-md border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
                                     <NuxtLink
+                                        replace
                                         :to="`/set/${set.id}?mode=learn`"
                                         class="w-5/6"
                                     >
@@ -147,6 +149,7 @@
                                     class="group rounded-md border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
                                     <NuxtLink
+                                        replace
                                         :to="`/set/${set.id}?mode=match`"
                                         class="w-5/6"
                                     >
@@ -171,6 +174,7 @@
                                     </NuxtLink>
                                 </div>
                                 <NuxtLink
+                                    replace
                                     :to="`/set/${set.id}?mode=chat`"
                                     class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
@@ -279,18 +283,21 @@
                     Open results page
                   </NuxtLink>  -->
                                     <NuxtLink
+                                        replace
                                         :to="`/set/${set.id}?mode=chat`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         Chat
                                     </NuxtLink>
                                     <NuxtLink
+                                        replace
                                         :to="`/set/${set.id}?mode=learn`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         Learn
                                     </NuxtLink>
                                     <NuxtLink
+                                        replace
                                         :to="`/set/${set.id}?mode=match`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
@@ -500,6 +507,7 @@
                                 <div class="mt-4 flex flex-wrap gap-2">
                                     <NuxtLink
                                         v-if="set"
+                                        replace
                                         :to="`/set/${set.id}?mode=flashcards`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
@@ -507,6 +515,7 @@
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
+                                        replace
                                         :to="`/set/${set.id}?mode=chat`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
@@ -514,6 +523,7 @@
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
+                                        replace
                                         :to="`/set/${set.id}?mode=match`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
@@ -834,6 +844,7 @@
                                     </button>
                                     <NuxtLink
                                         v-if="set"
+                                        replace
                                         :to="`/set/${set.id}?mode=flashcards`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
@@ -841,6 +852,7 @@
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
+                                        replace
                                         :to="`/set/${set.id}?mode=learn`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
@@ -848,6 +860,7 @@
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
+                                        replace
                                         :to="`/set/${set.id}?mode=chat`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
@@ -907,6 +920,7 @@
                             </p>
                             <div class="mt-4 flex flex-wrap gap-2">
                                 <NuxtLink
+                                    replace
                                     :to="`/set/${set.id}?mode=flashcards`"
                                     class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
@@ -2199,6 +2213,7 @@ async function toggleTermStar(termId: Uuid) {
 }
 
 function shouldIgnoreKey(e: KeyboardEvent) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return true;
     const el = e.target;
     if (!(el instanceof HTMLElement)) return false;
     const tag = el.tagName.toLowerCase();

@@ -534,6 +534,7 @@ async function toggleStar() {
 }
 
 function shouldIgnoreKey(e: KeyboardEvent) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return true;
     const el = e.target;
     if (!(el instanceof HTMLElement)) return false;
     const tag = el.tagName.toLowerCase();
