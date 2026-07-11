@@ -97,23 +97,95 @@
               <div class="mt-3 space-y-3">
                 <div>
                   <label class="block text-sm font-medium" :for="`term-${card.key}`">Term</label>
+                  <div class="mt-1 flex min-h-9 items-center gap-2">
+                    <button
+                      v-if="!card.frontImage"
+                      type="button"
+                      class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      :disabled="busy"
+                      :aria-label="`Add image to term for card ${idx + 1}`"
+                      @click="openImagePicker(card.key, 'frontImage')"
+                    >
+                      Add Image
+                    </button>
+                    <template v-else>
+                      <p
+                        class="truncate text-xs font-medium text-slate-600 dark:text-slate-300"
+                        :title="card.frontImage.filename"
+                      >
+                        {{ card.frontImage.filename }}
+                      </p>
+                      <button
+                        type="button"
+                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="busy"
+                        :aria-label="`Remove image from term for card ${idx + 1}`"
+                        @click="removeImage(card.key, 'frontImage')"
+                      >
+                        x
+                      </button>
+                    </template>
+                    <input
+                      :id="imageInputId(card.key, 'frontImage')"
+                      class="sr-only"
+                      type="file"
+                      :accept="imageAccept"
+                      @change="onImagePicked($event, card.key, 'frontImage')"
+                    />
+                  </div>
                   <input
                     :id="`term-${card.key}`"
                     v-model="card.front"
                     type="text"
                     autocomplete="off"
-                    class="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    class="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                     @keydown="onCardKeydown($event, idx)"
                   />
                 </div>
 
                 <div>
                   <label class="block text-sm font-medium" :for="`definition-${card.key}`">Definition</label>
+                  <div class="mt-1 flex min-h-9 items-center gap-2">
+                    <button
+                      v-if="!card.backImage"
+                      type="button"
+                      class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      :disabled="busy"
+                      :aria-label="`Add image to definition for card ${idx + 1}`"
+                      @click="openImagePicker(card.key, 'backImage')"
+                    >
+                      Add Image
+                    </button>
+                    <template v-else>
+                      <p
+                        class="truncate text-xs font-medium text-slate-600 dark:text-slate-300"
+                        :title="card.backImage.filename"
+                      >
+                        {{ card.backImage.filename }}
+                      </p>
+                      <button
+                        type="button"
+                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="busy"
+                        :aria-label="`Remove image from definition for card ${idx + 1}`"
+                        @click="removeImage(card.key, 'backImage')"
+                      >
+                        x
+                      </button>
+                    </template>
+                    <input
+                      :id="imageInputId(card.key, 'backImage')"
+                      class="sr-only"
+                      type="file"
+                      :accept="imageAccept"
+                      @change="onImagePicked($event, card.key, 'backImage')"
+                    />
+                  </div>
                   <textarea
                     :id="`definition-${card.key}`"
                     v-model="card.back"
                     rows="2"
-                    class="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    class="mt-2 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                     @keydown="onCardKeydown($event, idx)"
                   />
                 </div>
@@ -184,7 +256,7 @@ import { lockGetStatus } from '~/src/composables/lock'
 import { useLockSession } from '~/src/composables/lock-session'
 import { createProfileRepo, createSettingsRepo, createSetsRepo, useTracerDb } from '~/src/composables/db'
 import { normalizeTerms, type TermInput, TermsValidationError } from '~/src/composables/db/validators'
-import type { FlashcardSet, Uuid } from '~/src/composables/db/types'
+import type { FlashcardSet, TermImage, Uuid } from '~/src/composables/db/types'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 
 type DraftCardRow = {
@@ -192,7 +264,11 @@ type DraftCardRow = {
   id?: Uuid
   front: string
   back: string
+  frontImage?: TermImage | null
+  backImage?: TermImage | null
 }
+
+type CardImageSide = 'frontImage' | 'backImage'
 
 const route = useRoute()
 const router = useRouter()
@@ -207,6 +283,7 @@ const setId = computed<Uuid | null>(() => {
 const title = ref('')
 const description = ref('')
 const cards = ref<DraftCardRow[]>([{ key: crypto.randomUUID(), front: '', back: '' }])
+const imageAccept = 'image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg'
 const busy = ref(false)
 const loadError = ref<string | null>(null)
 const formError = ref<string | null>(null)
@@ -232,7 +309,9 @@ function setDraftFromSet(s: FlashcardSet) {
         key: crypto.randomUUID(),
         id: term.id as Uuid,
         front: term.front,
-        back: term.back
+        back: term.back,
+        frontImage: term.frontImage ?? null,
+        backImage: term.backImage ?? null
       }))
     : [{ key: crypto.randomUUID(), front: '', back: '' }]
 }
@@ -255,6 +334,89 @@ function removeCard(index: number) {
   cards.value = next.length ? next : [{ key: crypto.randomUUID(), front: '', back: '' }]
 }
 
+function imageInputId(cardKey: string, side: CardImageSide) {
+  return `${side}-${cardKey}`
+}
+
+function openImagePicker(cardKey: string, side: CardImageSide) {
+  formError.value = null
+  const el = document.getElementById(imageInputId(cardKey, side))
+  if (el instanceof HTMLInputElement) el.click()
+}
+
+function detectImageMimeType(file: File): string | null {
+  const declared = file.type.toLowerCase()
+  if (declared === 'image/jpg') return 'image/jpeg'
+  if (declared === 'image/png' || declared === 'image/jpeg' || declared === 'image/svg+xml') {
+    return declared
+  }
+
+  const name = file.name.toLowerCase()
+  if (name.endsWith('.png')) return 'image/png'
+  if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg'
+  if (name.endsWith('.svg')) return 'image/svg+xml'
+  return null
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer) {
+  const bytes = new Uint8Array(buffer)
+  const chunkSize = 0x8000
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
+  }
+  return btoa(binary)
+}
+
+async function fileToImageDataUrl(file: File, mimeType: string) {
+  const buffer = await file.arrayBuffer()
+  return `data:${mimeType};base64,${arrayBufferToBase64(buffer)}`
+}
+
+async function onImagePicked(e: Event, cardKey: string, side: CardImageSide) {
+  formError.value = null
+  const input = e.target
+  if (!(input instanceof HTMLInputElement)) return
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+
+  const mimeType = detectImageMimeType(file)
+  if (!mimeType) {
+    formError.value = 'Choose a PNG, JPEG, or SVG image.'
+    return
+  }
+
+  try {
+    const dataUrl = await fileToImageDataUrl(file, mimeType)
+    const next = cards.value.slice()
+    const index = next.findIndex((card) => card.key === cardKey)
+    const card = next[index]
+    if (!card) return
+    next[index] = {
+      ...card,
+      [side]: {
+        filename: file.name,
+        mimeType,
+        dataUrl
+      }
+    }
+    cards.value = next
+  } catch (err) {
+    formError.value = toErrorMessage(err, 'Failed to add image.')
+  }
+}
+
+function removeImage(cardKey: string, side: CardImageSide) {
+  formError.value = null
+  const next = cards.value.slice()
+  const index = next.findIndex((card) => card.key === cardKey)
+  const card = next[index]
+  if (!card) return
+  next[index] = { ...card, [side]: null }
+  cards.value = next
+}
+
 function isCtrlOrMetaEnter(e: KeyboardEvent) {
   return e.key === 'Enter' && (e.metaKey || e.ctrlKey)
 }
@@ -271,8 +433,14 @@ function validateInputs(): { title: string; description: string | null; termInpu
 
   const d = description.value.trim()
   const termInputs = cards.value
-    .filter((c) => c.front.trim() || c.back.trim())
-    .map((c) => ({ id: c.id ?? null, front: c.front, back: c.back }))
+    .filter((c) => c.front.trim() || c.back.trim() || c.frontImage || c.backImage)
+    .map((c) => ({
+      id: c.id ?? null,
+      front: c.front,
+      back: c.back,
+      frontImage: c.frontImage ?? null,
+      backImage: c.backImage ?? null
+    }))
 
   if (termInputs.length === 0) throw new Error('Add at least one card.')
   normalizeTerms(termInputs)

@@ -2,10 +2,18 @@ export type Uuid = string
 
 export type IsoDateTimeString = string
 
+export type TermImage = {
+  filename: string
+  mimeType: string
+  dataUrl: string
+}
+
 export type Term = {
   id: Uuid
   front: string
   back: string
+  frontImage?: TermImage | null
+  backImage?: TermImage | null
 }
 
 export type FlashcardSet = {

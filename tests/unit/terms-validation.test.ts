@@ -26,6 +26,114 @@ describe('normalizeTerms', () => {
     ])
   })
 
+  it('preserves valid per-side image metadata', () => {
+    const out = normalizeTerms(
+      [
+        {
+          id: 'term-with-images',
+          front: 'leaf',
+          back: 'plant organ',
+          frontImage: {
+            filename: 'leaf.png',
+            mimeType: 'image/png',
+            dataUrl: 'data:image/png;base64,AAAA'
+          },
+          backImage: {
+            filename: 'diagram.svg',
+            mimeType: 'image/svg+xml',
+            dataUrl: 'data:image/svg+xml;base64,PHN2Zy8+'
+          }
+        }
+      ],
+      { randomUuid: () => 'unused' }
+    )
+
+    expect(out).toEqual([
+      {
+        id: 'term-with-images',
+        front: 'leaf',
+        back: 'plant organ',
+        frontImage: {
+          filename: 'leaf.png',
+          mimeType: 'image/png',
+          dataUrl: 'data:image/png;base64,AAAA'
+        },
+        backImage: {
+          filename: 'diagram.svg',
+          mimeType: 'image/svg+xml',
+          dataUrl: 'data:image/svg+xml;base64,PHN2Zy8+'
+        }
+      }
+    ])
+  })
+
+  it('allows a side to use only image metadata', () => {
+    const out = normalizeTerms(
+      [
+        {
+          id: 'image-only-front',
+          front: '',
+          back: 'plant organ',
+          frontImage: {
+            filename: 'leaf.png',
+            mimeType: 'image/png',
+            dataUrl: 'data:image/png;base64,AAAA'
+          }
+        },
+        {
+          id: 'image-only-back',
+          front: 'stem',
+          back: '',
+          backImage: {
+            filename: 'stem.svg',
+            mimeType: 'image/svg+xml',
+            dataUrl: 'data:image/svg+xml;base64,PHN2Zy8+'
+          }
+        }
+      ],
+      { randomUuid: () => 'unused' }
+    )
+
+    expect(out).toEqual([
+      {
+        id: 'image-only-front',
+        front: '',
+        back: 'plant organ',
+        frontImage: {
+          filename: 'leaf.png',
+          mimeType: 'image/png',
+          dataUrl: 'data:image/png;base64,AAAA'
+        }
+      },
+      {
+        id: 'image-only-back',
+        front: 'stem',
+        back: '',
+        backImage: {
+          filename: 'stem.svg',
+          mimeType: 'image/svg+xml',
+          dataUrl: 'data:image/svg+xml;base64,PHN2Zy8+'
+        }
+      }
+    ])
+  })
+
+  it('rejects image metadata when the data URL does not match the mime type', () => {
+    expect(() =>
+      normalizeTerms([
+        {
+          front: 'x',
+          back: 'y',
+          frontImage: {
+            filename: 'bad.png',
+            mimeType: 'image/png',
+            dataUrl: 'data:image/jpeg;base64,AAAA'
+          }
+        }
+      ])
+    ).toThrow(TermsValidationError)
+  })
+
   it('rejects empty front', () => {
     expect(() => normalizeTerms([{ front: '  ', back: 'x' }])).toThrow(TermsValidationError)
   })

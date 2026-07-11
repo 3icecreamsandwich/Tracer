@@ -12,9 +12,16 @@
     "windows": [
       {
         "title": "Tracer",
-        "width": 1100,
+        "width": 1130,
         "height": 760,
-        "resizable": true
+        "resizable": true,
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": {
+          "x": 16,
+          "y": 18
+        }
       }
     ],
     "security": {

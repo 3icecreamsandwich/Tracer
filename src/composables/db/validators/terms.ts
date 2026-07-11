@@ -1,9 +1,11 @@
-import type { Term, Uuid } from '../types'
+import type { Term, TermImage, Uuid } from '../types'
 
 export type TermInput = {
   id?: string | null
   front: string
   back: string
+  frontImage?: TermImage | null
+  backImage?: TermImage | null
 }
 
 export type NormalizedTerm = Term
@@ -25,6 +27,29 @@ function normalizeText(s: string) {
   return s.replaceAll('\r', '').trim()
 }
 
+function normalizeImage(
+  value: unknown,
+  index: number,
+  field: 'frontImage' | 'backImage'
+): TermImage | undefined {
+  if (value === undefined || value === null) return undefined
+  if (!isRecord(value)) {
+    throw new TermsValidationError(`term[${index}].${field} must be an object`)
+  }
+
+  const filename = normalizeText(getStringProp(value, 'filename') ?? '')
+  const mimeType = normalizeText(getStringProp(value, 'mimeType') ?? '').toLowerCase()
+  const dataUrl = normalizeText(getStringProp(value, 'dataUrl') ?? '')
+
+  if (!filename) throw new TermsValidationError(`term[${index}].${field}.filename must be non-empty`)
+  if (!mimeType) throw new TermsValidationError(`term[${index}].${field}.mimeType must be non-empty`)
+  if (!dataUrl.startsWith(`data:${mimeType};`)) {
+    throw new TermsValidationError(`term[${index}].${field}.dataUrl must match mimeType`)
+  }
+
+  return { filename, mimeType, dataUrl }
+}
+
 export function normalizeTerms(
   input: TermInput[],
   opts?: { randomUuid?: () => string }
@@ -40,14 +65,24 @@ export function normalizeTerms(
       throw new TermsValidationError(`term[${i}] must be an object`)
     }
 
-    const front = normalizeText(getStringProp(t, 'front') ?? '')
-    const back = normalizeText(getStringProp(t, 'back') ?? '')
-    if (!front) throw new TermsValidationError(`term[${i}].front must be non-empty`)
-    if (!back) throw new TermsValidationError(`term[${i}].back must be non-empty`)
-
     const rawId = getStringProp(t, 'id')
     const id = rawId && rawId.trim() ? rawId.trim() : randomUuid()
-    out.push({ id: id as Uuid, front, back })
+    const front = normalizeText(getStringProp(t, 'front') ?? '')
+    const back = normalizeText(getStringProp(t, 'back') ?? '')
+    const frontImage = normalizeImage(t.frontImage, i, 'frontImage')
+    const backImage = normalizeImage(t.backImage, i, 'backImage')
+
+    if (!front && !frontImage) {
+      throw new TermsValidationError(`term[${i}].front must have text or an image`)
+    }
+    if (!back && !backImage) {
+      throw new TermsValidationError(`term[${i}].back must have text or an image`)
+    }
+
+    const normalized: NormalizedTerm = { id: id as Uuid, front, back }
+    if (frontImage) normalized.frontImage = frontImage
+    if (backImage) normalized.backImage = backImage
+    out.push(normalized)
   }
   return out
 }

@@ -83,7 +83,23 @@ describe('sets repo roundtrip (sqlite:tracer.db)', () => {
         id: setId,
         title: 'My Set',
         description: 'desc',
-        terms: [{ id: '00000000-0000-4000-8000-000000000001', front: 'a', back: 'b' }]
+        terms: [
+          {
+            id: '00000000-0000-4000-8000-000000000001',
+            front: 'a',
+            back: 'b',
+            frontImage: {
+              filename: 'front.png',
+              mimeType: 'image/png',
+              dataUrl: 'data:image/png;base64,AAAA'
+            },
+            backImage: {
+              filename: 'back.svg',
+              mimeType: 'image/svg+xml',
+              dataUrl: 'data:image/svg+xml;base64,PHN2Zy8+'
+            }
+          }
+        ]
       })
 
       const list = await repo.list()
@@ -92,7 +108,21 @@ describe('sets repo roundtrip (sqlite:tracer.db)', () => {
       const loaded = await repo.get(setId)
       expect(loaded?.title).toBe('My Set')
       expect(loaded?.terms).toEqual([
-        { id: '00000000-0000-4000-8000-000000000001', front: 'a', back: 'b' }
+        {
+          id: '00000000-0000-4000-8000-000000000001',
+          front: 'a',
+          back: 'b',
+          frontImage: {
+            filename: 'front.png',
+            mimeType: 'image/png',
+            dataUrl: 'data:image/png;base64,AAAA'
+          },
+          backImage: {
+            filename: 'back.svg',
+            mimeType: 'image/svg+xml',
+            dataUrl: 'data:image/svg+xml;base64,PHN2Zy8+'
+          }
+        }
       ])
 
       await db.execute(

@@ -65,8 +65,23 @@
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
                         {{ isFlipped ? "Definition" : "Term" }}
                     </p>
-                    <div class="mt-4 overflow-y-auto text-4xl font-medium text-slate-900 dark:text-slate-50">
-                        <MarkdownRenderer :markdown="viewerText" variant="flashcard" />
+                    <div
+                        class="flashcard-content-row mt-4 flex w-full flex-row items-center justify-center overflow-y-auto text-center text-4xl font-medium text-slate-900 dark:text-slate-50"
+                        :class="{ 'flashcard-content-row--paired': viewerImage && viewerHasText }"
+                    >
+                        <img
+                            v-if="viewerImage"
+                            class="flashcard-side-image shrink-0 border border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-950/70"
+                            :src="viewerImage.dataUrl"
+                            :alt="viewerImage.filename"
+                        />
+                        <div
+                            v-if="viewerHasText"
+                            class="flashcard-side-text"
+                            :class="{ 'flashcard-side-text--paired': viewerImage }"
+                        >
+                            <MarkdownRenderer :markdown="viewerText" variant="flashcard" />
+                        </div>
                     </div>
                 </button>
 
@@ -269,6 +284,14 @@ const viewerText = computed(() => {
     const t = currentTerm.value;
     if (!t) return "No cards.";
     return isFlipped.value ? t.back : t.front;
+});
+
+const viewerHasText = computed(() => viewerText.value.trim().length > 0);
+
+const viewerImage = computed(() => {
+    const t = currentTerm.value;
+    if (!t) return null;
+    return isFlipped.value ? t.backImage ?? null : t.frontImage ?? null;
 });
 
 const isCurrentStarred = computed(() => {
@@ -685,5 +708,33 @@ onBeforeUnmount(() => {
 
 .animate-slide-right {
     animation: slideRight 0.25s ease-in-out;
+}
+
+.flashcard-side-image {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: min(14rem, 27.5%);
+    max-height: 11rem;
+    object-fit: contain;
+    border-radius: 22%;
+    clip-path: inset(0 round 22%);
+}
+
+.flashcard-content-row {
+    gap: 0;
+}
+
+.flashcard-content-row--paired {
+    gap: clamp(2rem, 12.5%, 8rem);
+}
+
+.flashcard-side-text {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.flashcard-side-text--paired {
+    max-width: min(38rem, 60%);
 }
 </style>
