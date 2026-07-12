@@ -3,7 +3,7 @@
     <div class="mx-auto max-w-3xl p-8">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-semibold">Edit Set</h1>
+          <h1 class="text-2xl font-semibold">{{ t('common.edit') }} {{ t('home.setKind') }}</h1>
           <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
             Update the title, description, and cards in this set.
           </p>
@@ -16,7 +16,7 @@
             :disabled="busy || !setId"
             @click="openDelete"
           >
-            Delete
+            {{ t('common.delete') }}
           </button>
           <button
             type="button"
@@ -24,7 +24,7 @@
             :disabled="busy || !setId"
             @click="onUpdate"
           >
-            {{ busy ? 'Updating…' : 'Update' }}
+            {{ busy ? t('common.loading') : t('common.update') }}
           </button>
         </div>
       </div>
@@ -42,7 +42,7 @@
         </p>
 
         <div>
-          <label class="block text-sm font-medium" for="set-title">Title</label>
+          <label class="block text-sm font-medium" for="set-title">{{ t('create.title') }}</label>
           <input
             id="set-title"
             ref="titleEl"
@@ -54,7 +54,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium" for="set-description">Description</label>
+          <label class="block text-sm font-medium" for="set-description">{{ t('create.description') }}</label>
           <textarea
             id="set-description"
             v-model="description"
@@ -65,7 +65,7 @@
 
         <div class="pt-4">
           <div class="flex items-center justify-between gap-3">
-            <h2 class="text-sm font-medium text-slate-700 dark:text-slate-200">Cards</h2>
+            <h2 class="text-sm font-medium text-slate-700 dark:text-slate-200">{{ t('create.cards') }}</h2>
             <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
               {{ cards.length }}
             </span>
@@ -82,7 +82,7 @@
               class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             >
               <div class="flex items-start justify-between gap-3">
-                <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Card {{ idx + 1 }}</p>
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.card', { number: idx + 1 }) }}</p>
                 <button
                   v-if="cards.length > 1"
                   type="button"
@@ -90,13 +90,13 @@
                   :disabled="busy"
                   @click="removeCard(idx)"
                 >
-                  Remove
+                  {{ t('common.remove') }}
                 </button>
               </div>
 
               <div class="mt-3 space-y-3">
                 <div>
-                  <label class="block text-sm font-medium" :for="`term-${card.key}`">Term</label>
+                  <label class="block text-sm font-medium" :for="`term-${card.key}`">{{ t('create.term') }}</label>
                   <div class="mt-1 flex min-h-9 items-center gap-2">
                     <button
                       v-if="!card.frontImage"
@@ -106,7 +106,7 @@
                       :aria-label="`Add image to term for card ${idx + 1}`"
                       @click="openImagePicker(card.key, 'frontImage')"
                     >
-                      Add Image
+                      {{ t('create.addImage') }}
                     </button>
                     <template v-else>
                       <p
@@ -144,7 +144,7 @@
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium" :for="`definition-${card.key}`">Definition</label>
+                  <label class="block text-sm font-medium" :for="`definition-${card.key}`">{{ t('create.definition') }}</label>
                   <div class="mt-1 flex min-h-9 items-center gap-2">
                     <button
                       v-if="!card.backImage"
@@ -154,7 +154,7 @@
                       :aria-label="`Add image to definition for card ${idx + 1}`"
                       @click="openImagePicker(card.key, 'backImage')"
                     >
-                      Add Image
+                      {{ t('create.addImage') }}
                     </button>
                     <template v-else>
                       <p
@@ -212,18 +212,18 @@
       class="fixed inset-0 z-50 flex items-center justify-center p-6"
       role="dialog"
       aria-modal="true"
-      aria-label="Delete set"
+      :aria-label="t('common.delete')"
       @keydown.esc="closeDelete"
     >
       <button
         type="button"
         class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-        aria-label="Close delete confirmation"
+        :aria-label="t('common.close')"
         @click="closeDelete"
       />
 
       <div class="relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">Delete set?</h2>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('edit.deleteSet') }}</h2>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
           This removes the set, starred terms, and linked study guide from the local database.
         </p>
@@ -235,7 +235,7 @@
             :disabled="busy"
             @click="onDelete"
           >
-            Delete set
+            {{ t('common.delete') }}
           </button>
           <button
             type="button"
@@ -243,7 +243,7 @@
             :disabled="busy"
             @click="closeDelete"
           >
-            Cancel
+            {{ t('common.cancel') }}
           </button>
         </div>
       </div>
@@ -258,6 +258,7 @@ import { createProfileRepo, createSettingsRepo, createSetsRepo, useTracerDb } fr
 import { normalizeTerms, type TermInput, TermsValidationError } from '~/src/composables/db/validators'
 import type { FlashcardSet, TermImage, Uuid } from '~/src/composables/db/types'
 import { hasTauriRuntime } from '~/src/composables/tauri'
+import { useAppLanguage } from '~/src/composables/language'
 
 type DraftCardRow = {
   key: string
@@ -272,6 +273,7 @@ type CardImageSide = 'frontImage' | 'backImage'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useAppLanguage()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 const isWebPreview = computed(() => !hasTauriRuntime())
 

@@ -1,11 +1,11 @@
 <template>
   <main>
     <div class="mx-auto max-w-md p-8">
-      <h1 class="text-2xl font-semibold">Unlock Tracer</h1>
+      <h1 class="text-2xl font-semibold">{{ t('auth.unlockTitle') }}</h1>
 
       <form class="mt-6 space-y-4" @submit.prevent="onUnlock">
         <div>
-          <label class="block text-sm font-medium">Password</label>
+          <label class="block text-sm font-medium">{{ t('auth.password') }}</label>
           <input
             v-model="password"
             type="password"
@@ -21,7 +21,7 @@
           class="w-full rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           :disabled="busy"
         >
-          {{ busy ? 'Unlocking…' : 'Unlock' }}
+          {{ busy ? t('common.loading') : t('auth.unlock') }}
         </button>
       </form>
 
@@ -30,7 +30,7 @@
         :disabled="busy"
         @click="onReset"
       >
-        Reset Tracer
+        {{ t('settings.resetTracer') }}
       </button>
     </div>
   </main>
@@ -41,9 +41,11 @@ definePageMeta({ hideNavbar: true })
 
 import { lockResetTracer, lockUnlock } from '../src/composables/lock'
 import { useLockSession } from '../src/composables/lock-session'
+import { useAppLanguage } from '../src/composables/language'
 
 const router = useRouter()
 const { markLocked, markUnlocked } = useLockSession()
+const { t } = useAppLanguage()
 
 const password = ref('')
 const error = ref<string | null>(null)

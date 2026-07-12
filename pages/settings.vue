@@ -1,7 +1,7 @@
 <template>
   <main>
     <div class="mx-auto max-w-3xl p-8">
-      <h1 class="text-2xl font-semibold">Settings</h1>
+      <h1 class="text-2xl font-semibold">{{ t('settings.title') }}</h1>
 
       <div
         v-if="gateMessage"
@@ -10,7 +10,7 @@
         aria-live="polite"
       >
         <div>
-          <p class="font-medium">Action required</p>
+          <p class="font-medium">{{ t('settings.actionRequired') }}</p>
           <p class="mt-1 text-amber-800 dark:text-amber-200">
             {{ gateMessage }}
           </p>
@@ -21,13 +21,13 @@
           class="shrink-0 rounded-md border border-amber-200 bg-white px-3 py-2 text-sm font-medium text-amber-900 shadow-sm hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 dark:border-amber-900/60 dark:bg-amber-950 dark:text-amber-100 dark:hover:bg-amber-900/40 dark:focus-visible:ring-amber-600 dark:focus-visible:ring-offset-slate-950"
           @click="dismissGateMessage"
         >
-          Dismiss
+          {{ t('common.dismiss') }}
         </button>
       </div>
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        aria-label="Profile"
+        :aria-label="t('settings.profile')"
       >
         <div class="flex items-center gap-4">
           <div
@@ -39,7 +39,7 @@
 
           <div class="min-w-0">
             <p class="truncate text-sm font-medium text-slate-900 dark:text-slate-50">
-              {{ profile?.name ?? 'User' }}
+              {{ profile?.name ?? t('common.user') }}
             </p>
             <p class="truncate text-sm text-slate-600 dark:text-slate-300">
               {{ profile?.email ?? '' }}
@@ -50,13 +50,13 @@
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        aria-label="Theme"
+        :aria-label="t('settings.theme')"
       >
         <div class="flex items-center justify-between gap-4">
           <div>
-            <h2 class="text-sm font-medium">Dark mode</h2>
+            <h2 class="text-sm font-medium">{{ t('settings.darkMode') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Affects the whole app and persists on restart.
+              {{ t('settings.darkModeDescription') }}
             </p>
           </div>
 
@@ -66,25 +66,74 @@
             :disabled="busy"
             @click="onToggleDarkMode"
           >
-            {{ darkMode ? 'On' : 'Off' }}
+            {{ darkMode ? t('common.on') : t('common.off') }}
           </button>
         </div>
       </section>
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        aria-label="Default AI model"
+        :aria-label="t('settings.language')"
       >
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h2 class="text-sm font-medium">Default AI Model</h2>
+            <h2 class="text-sm font-medium">{{ t('settings.language') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Required for Synthesize, Generate, and Chat.
+              {{ t('settings.languageDescription') }}
+            </p>
+          </div>
+
+          <div ref="languageMenuRoot" class="relative shrink-0">
+            <button
+              type="button"
+              class="inline-flex min-w-40 items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              :aria-expanded="languageMenuOpen"
+              aria-haspopup="menu"
+              @click="languageMenuOpen = !languageMenuOpen"
+            >
+              <span dir="auto">{{ currentLanguageOption.nativeName }}</span>
+              <span aria-hidden="true">⌄</span>
+            </button>
+
+            <div
+              v-if="languageMenuOpen"
+              class="absolute end-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+              role="menu"
+              :aria-label="t('settings.chooseLanguage')"
+            >
+              <button
+                v-for="option in languageOptions"
+                :key="option.code"
+                type="button"
+                role="menuitemradio"
+                :aria-checked="language === option.code"
+                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500"
+                @click="onLanguageSelect(option.code)"
+              >
+                <span dir="auto">
+                  {{ option.englishName }}<template v-if="option.nativeName !== option.englishName"> · {{ option.nativeName }}</template>
+                </span>
+                <span v-if="language === option.code" aria-hidden="true">✓</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+        :aria-label="t('settings.defaultModel')"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-sm font-medium">{{ t('settings.defaultModel') }}</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              {{ t('settings.defaultModelDescription') }}
             </p>
             <p class="mt-3 text-sm text-slate-700 dark:text-slate-200">
-              <span class="font-medium text-slate-900 dark:text-slate-50">Current:</span>
+              <span class="font-medium text-slate-900 dark:text-slate-50">{{ t('common.current') }}</span>
               <span v-if="defaultModelLabel" class="ml-1">{{ defaultModelLabel }}</span>
-              <span v-else class="ml-1 text-slate-500 dark:text-slate-400">None</span>
+              <span v-else class="ml-1 text-slate-500 dark:text-slate-400">{{ t('common.none') }}</span>
             </p>
           </div>
 
@@ -94,23 +143,23 @@
             :disabled="busy"
             @click="openModelPicker"
           >
-            {{ defaultModelId ? 'Change' : 'Set' }}
+            {{ defaultModelId ? t('common.change') : t('common.set') }}
           </button>
         </div>
       </section>
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        aria-label="Learn"
+        :aria-label="t('set.learn')"
       >
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h2 class="text-sm font-medium">Learn · Hybrid (AI-augmented)</h2>
+            <h2 class="text-sm font-medium">{{ t('settings.learnHybrid') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Adds AI-generated questions in addition to the deterministic baseline.
+              {{ t('settings.learnHybridDescription') }}
             </p>
             <p v-if="!defaultModelId" class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Choose a Default AI Model to enable this.
+              {{ t('settings.chooseModelFirst') }}
             </p>
           </div>
 
@@ -120,24 +169,24 @@
             :disabled="busy || !defaultModelId"
             @click="onToggleLearnHybrid"
           >
-            {{ learnHybridEnabled ? 'On' : 'Off' }}
+            {{ learnHybridEnabled ? t('common.on') : t('common.off') }}
           </button>
         </div>
       </section>
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        aria-label="Providers"
+        :aria-label="t('settings.providers')"
       >
-        <h2 class="text-sm font-medium">Providers</h2>
+        <h2 class="text-sm font-medium">{{ t('settings.providers') }}</h2>
         <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          Provider keys and tokens are stored in the vault.
+          {{ t('settings.providersDescription') }}
         </p>
 
         <div class="mt-4 grid gap-4">
           <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <p class="text-sm font-medium text-slate-900 dark:text-slate-50">OpenAI (BYOK)</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">API key</p>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.apiKey') }}</p>
             <div class="mt-3 flex flex-wrap items-center gap-2">
               <input
                 v-model="openAiKey"
@@ -152,14 +201,14 @@
                 :disabled="providerApiKeyActionDisabled('openai')"
                 @click="onProviderApiKeyAction('openai')"
               >
-                {{ providerApiKeyActionLabel('openai') }}
+                {{ providerApiKeyActionText('openai') }}
               </button>
             </div>
           </div>
 
           <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Anthropic (BYOK)</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">API key</p>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.apiKey') }}</p>
             <div class="mt-3 flex flex-wrap items-center gap-2">
               <input
                 v-model="anthropicKey"
@@ -174,14 +223,14 @@
                 :disabled="providerApiKeyActionDisabled('anthropic')"
                 @click="onProviderApiKeyAction('anthropic')"
               >
-                {{ providerApiKeyActionLabel('anthropic') }}
+                {{ providerApiKeyActionText('anthropic') }}
               </button>
             </div>
           </div>
 
           <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Gemini (BYOK)</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">API key</p>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.apiKey') }}</p>
             <div class="mt-3 flex flex-wrap items-center gap-2">
               <input
                 v-model="geminiKey"
@@ -196,14 +245,14 @@
                 :disabled="providerApiKeyActionDisabled('gemini')"
                 @click="onProviderApiKeyAction('gemini')"
               >
-                {{ providerApiKeyActionLabel('gemini') }}
+                {{ providerApiKeyActionText('gemini') }}
               </button>
             </div>
           </div>
 
           <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <p class="text-sm font-medium text-slate-900 dark:text-slate-50">OpenAI Compatible (Advanced)</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Base URL, default model, API key</p>
+            <p class="text-sm font-medium text-slate-900 dark:text-slate-50">OpenAI {{ t('settings.compatible') }} ({{ t('settings.advanced') }})</p>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.baseUrl') }}, {{ t('settings.defaultModel') }}, {{ t('settings.apiKey') }}</p>
             <div class="mt-3 grid gap-2">
               <input
                 v-model="openAiCompatBaseURL"
@@ -233,7 +282,7 @@
                   :disabled="providerApiKeyActionDisabled('openai_compat')"
                   @click="onProviderApiKeyAction('openai_compat')"
                 >
-                  {{ providerApiKeyActionLabel('openai_compat') }}
+                  {{ providerApiKeyActionText('openai_compat') }}
                 </button>
               </div>
             </div>
@@ -241,7 +290,7 @@
 
            <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">GitHub Models (OAuth)</p>
-             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Authenticate to use GitHub Models.</p>
+             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.githubAuthenticate') }}</p>
              <div class="mt-3">
                <button
                  type="button"
@@ -249,16 +298,16 @@
                  :disabled="busy"
                  @click="openGithubAuth"
                >
-                 Authenticate
+                 {{ t('common.authenticate') }}
                </button>
              </div>
 
               <div class="mt-3 text-xs text-slate-600 dark:text-slate-300">
-                <span class="font-medium">Status:</span>
-                <span v-if="githubModelsAuthState.status === 'authenticated'" class="ml-1">Authenticated</span>
-                <span v-else-if="githubModelsAuthState.status === 'invalid'" class="ml-1">Token invalid</span>
-                <span v-else-if="githubModelsAuthState.status === 'vault_locked'" class="ml-1">Vault locked</span>
-                <span v-else class="ml-1">Not authenticated</span>
+                <span class="font-medium">{{ t('common.status') }}</span>
+                <span v-if="githubModelsAuthState.status === 'authenticated'" class="ml-1">{{ t('common.authenticated') }}</span>
+                <span v-else-if="githubModelsAuthState.status === 'invalid'" class="ml-1">{{ t('common.invalid') }}</span>
+                <span v-else-if="githubModelsAuthState.status === 'vault_locked'" class="ml-1">{{ t('common.locked') }}</span>
+                <span v-else class="ml-1">{{ t('common.notAuthenticated') }}</span>
               </div>
             </div>
 
@@ -267,13 +316,13 @@
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        aria-label="Startup lock"
+        :aria-label="t('settings.startupLock')"
       >
         <div class="flex items-center justify-between gap-4">
           <div>
-            <h2 class="text-sm font-medium">Require password on startup</h2>
+            <h2 class="text-sm font-medium">{{ t('settings.startupLock') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              When disabled, Tracer will auto-unlock using your OS keychain.
+              {{ t('settings.startupLockDescription') }}
             </p>
           </div>
 
@@ -283,13 +332,13 @@
             :disabled="busy"
             @click="onToggleStartupLock"
           >
-            {{ startupLockEnabled ? 'Enabled' : 'Disabled' }}
+            {{ startupLockEnabled ? t('common.on') : t('common.off') }}
           </button>
         </div>
 
         <div v-if="showPasswordPrompt" class="mt-4 space-y-3">
           <label class="block text-sm font-medium" for="confirm-disable-lock">
-            Confirm password to disable lock
+            {{ t('auth.confirmPassword') }}
           </label>
           <input
             id="confirm-disable-lock"
@@ -308,7 +357,7 @@
               :disabled="busy"
               @click="onConfirmDisable"
             >
-              Confirm
+              {{ t('common.confirm') }}
             </button>
             <button
               type="button"
@@ -316,16 +365,16 @@
               :disabled="busy"
               @click="onCancelDisable"
             >
-              Cancel
+              {{ t('common.cancel') }}
             </button>
           </div>
         </div>
       </section>
 
       <section class="mt-6 rounded-lg border border-red-200 bg-white p-5 shadow-sm dark:border-red-900 dark:bg-slate-950">
-        <h2 class="text-sm font-medium text-red-700 dark:text-red-300">Danger zone</h2>
+        <h2 class="text-sm font-medium text-red-700 dark:text-red-300">{{ t('settings.dangerZone') }}</h2>
         <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          Reset removes your vault and local database.
+          {{ t('settings.resetDescription') }}
         </p>
 
         <p v-if="error" class="mt-3 text-sm text-red-700 dark:text-red-300">{{ error }}</p>
@@ -336,7 +385,7 @@
           :disabled="busy"
           @click="onReset"
         >
-          Reset Tracer
+          {{ t('settings.resetTracer') }}
         </button>
       </section>
 
@@ -351,7 +400,7 @@
         <button
           type="button"
           class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-          aria-label="Close model picker"
+          :aria-label="t('common.close')"
           @click="closeModelPicker"
         />
 
@@ -361,12 +410,12 @@
         >
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">Default AI Model</h2>
+              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('settings.defaultModel') }}</h2>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Search providers first, then pick a model.
+                {{ t('nav.search') }} · {{ t('settings.providers') }}
               </p>
               <p class="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                Tip: ↑/↓ to navigate · Enter to select · Esc to close
+                ↑/↓ · Enter · Esc
               </p>
             </div>
 
@@ -376,7 +425,7 @@
                 class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                 @click="closeModelPicker"
               >
-                Cancel
+                {{ t('common.cancel') }}
               </button>
               <button
                 type="button"
@@ -384,20 +433,20 @@
                 :disabled="modelPickerEnterDisabled"
                 @click="onModelPickerEnter"
               >
-                Enter
+                {{ t('common.enter') }}
               </button>
             </div>
           </div>
 
           <div class="mt-4">
-            <label class="sr-only" for="model-picker-search">Search</label>
+            <label class="sr-only" for="model-picker-search">{{ t('nav.search') }}</label>
             <input
               id="model-picker-search"
               ref="modelPickerSearchEl"
               v-model="modelPickerQuery"
               type="search"
               autocomplete="off"
-              :placeholder="modelPickerStep === 'providers' ? 'Search providers…' : 'Search models…'"
+              :placeholder="`${t('nav.search')} · ${modelPickerStep === 'providers' ? t('settings.providers') : t('settings.defaultModel')}`"
               class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             />
           </div>
@@ -405,8 +454,8 @@
           <div class="mt-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <p class="text-xs font-medium text-slate-500 dark:text-slate-400">
-                <span v-if="modelPickerStep === 'providers'">Providers</span>
-                <span v-else>Models · {{ activeProviderLabel }}</span>
+                <span v-if="modelPickerStep === 'providers'">{{ t('settings.providers') }}</span>
+                <span v-else>{{ t('settings.models') }} · {{ activeProviderLabel }}</span>
               </p>
 
               <button
@@ -415,7 +464,7 @@
                 class="text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-50"
                 @click="backToProviders"
               >
-                ← Back to providers
+                ← {{ t('settings.backToProviders') }}
               </button>
             </div>
 
@@ -454,7 +503,7 @@
                 v-if="modelPickerItems.length === 0"
                 class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300"
               >
-                No results.
+                {{ t('nav.noResults') }}
               </li>
             </ul>
           </div>
@@ -466,13 +515,13 @@
         class="fixed inset-0 z-50 flex items-center justify-center p-6"
         role="dialog"
         aria-modal="true"
-        aria-label="Clear API key"
+        :aria-label="t('settings.clearApiKey')"
         @keydown.esc="closeProviderApiKeyClear"
       >
         <button
           type="button"
           class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-          aria-label="Close clear API key confirmation"
+          :aria-label="t('common.close')"
           @click="closeProviderApiKeyClear"
         />
 
@@ -481,9 +530,9 @@
         >
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">Clear API key?</h2>
+              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('settings.clearApiKey') }}</h2>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                This will remove the saved {{ providerApiKeyClearLabel }} API key from the vault.
+                {{ providerApiKeyClearLabel }} · {{ t('settings.apiKey') }}
               </p>
             </div>
 
@@ -493,7 +542,7 @@
               :disabled="busy"
               @click="closeProviderApiKeyClear"
             >
-              Cancel
+              {{ t('common.cancel') }}
             </button>
           </div>
 
@@ -504,7 +553,7 @@
               :disabled="busy"
               @click="onConfirmProviderApiKeyClear"
             >
-              Clear API key
+              {{ t('common.clear') }} {{ t('settings.apiKey') }}
             </button>
           </div>
         </div>
@@ -515,13 +564,13 @@
          class="fixed inset-0 z-50 flex items-center justify-center p-6"
          role="dialog"
          aria-modal="true"
-         aria-label="Authenticate GitHub Models"
+         :aria-label="t('common.authenticate')"
          @keydown.esc="closeGithubAuth"
        >
         <button
           type="button"
           class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-          aria-label="Close auth modal"
+          :aria-label="t('common.close')"
           @click="closeGithubAuth"
         />
 
@@ -531,22 +580,22 @@
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">GitHub Models</h2>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Authenticate with scope <span class="font-mono">models:read</span>.</p>
+              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('common.authenticate') }} · <span class="font-mono">models:read</span></p>
             </div>
             <button
               type="button"
               class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               @click="closeGithubAuth"
             >
-              Close
+              {{ t('common.close') }}
             </button>
           </div>
 
           <p v-if="githubAuthError" class="mt-3 text-sm text-red-700 dark:text-red-300">{{ githubAuthError }}</p>
 
           <div v-if="githubModelsAuthState.status === 'authenticated'" class="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100">
-            <p class="font-medium">Authenticated</p>
-            <p class="mt-1 text-xs">Models available: {{ githubModelsAvailableModelIds.length }}</p>
+            <p class="font-medium">{{ t('common.authenticated') }}</p>
+            <p class="mt-1 text-xs">{{ t('settings.defaultModel') }} · {{ githubModelsAvailableModelIds.length }}</p>
             <div class="mt-3 flex gap-2">
               <button
                 type="button"
@@ -554,7 +603,7 @@
                 :disabled="githubAuthBusy"
                 @click="onGithubAuthSignOut"
               >
-                Sign out
+                {{ t('common.signOut') }}
               </button>
             </div>
           </div>
@@ -566,21 +615,18 @@
               :disabled="githubAuthBusy"
               @click="onGithubAuthStart"
             >
-              {{ githubAuthBusy ? 'Working…' : 'Start authentication' }}
+              {{ githubAuthBusy ? t('common.loading') : t('common.authenticate') }}
             </button>
 
             <div
               v-if="githubAuthStep === 'device_pending' && githubAuthVerificationUri && githubAuthUserCode"
               class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             >
-              <p class="font-medium">Device code</p>
+              <p class="font-medium">{{ t('settings.deviceCode') }}</p>
               <p class="mt-2">
-                Go to <span class="font-mono">{{ githubAuthVerificationUri }}</span> and enter:
+                <span class="font-mono">{{ githubAuthVerificationUri }}</span>
               </p>
               <p class="mt-2 text-lg font-semibold tracking-widest">{{ githubAuthUserCode }}</p>
-              <p v-if="githubAuthNextPollIntervalSec" class="mt-2 text-xs">
-                Polling every {{ githubAuthNextPollIntervalSec }}s
-              </p>
 
               <div class="mt-3 flex flex-wrap gap-2">
                 <button
@@ -588,14 +634,14 @@
                   class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                   @click="onGithubAuthCopyUrl"
                 >
-                  Copy URL
+                  {{ t('common.copy') }} URL
                 </button>
                 <button
                   type="button"
                   class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                   @click="onGithubAuthCopyCode"
                 >
-                  Copy code
+                  {{ t('common.copy') }} {{ t('settings.deviceCode') }}
                 </button>
               </div>
             </div>
@@ -604,7 +650,7 @@
               v-else-if="githubAuthStep === 'pkce_pending'"
               class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             >
-              Complete sign-in in your browser. We will finish automatically when the callback is received.
+              {{ t('common.loading') }}
             </div>
           </div>
         </div>
@@ -661,9 +707,16 @@ import {
 } from '../src/composables/ai/github-state'
 import { hasTauriRuntime } from '../src/composables/tauri'
 import { redactSensitiveText } from '../src/composables/security/redact'
+import { languageOptions } from '../src/i18n/messages'
+import {
+  languageSet,
+  useAppLanguage
+} from '../src/composables/language'
+import type { AppLanguage } from '../src/composables/db/types'
 
 const router = useRouter()
 const route = useRoute()
+const { language, currentLanguageOption, t } = useAppLanguage()
 
 const hasTauriInternals = hasTauriRuntime()
 
@@ -677,6 +730,8 @@ const startupLockEnabled = ref(true)
 const darkMode = ref(false)
 const defaultModelId = ref<string | null>(null)
 const learnHybridEnabled = ref(false)
+const languageMenuOpen = ref(false)
+const languageMenuRoot = ref<HTMLElement | null>(null)
 
 const showPasswordPrompt = ref(false)
 const password = ref('')
@@ -787,7 +842,7 @@ const providerApiKeyLabels: Record<ProviderApiKeyId, string> = {
 }
 
 function providerApiKeyPlaceholder(id: ProviderApiKeyId, fallback: string) {
-  return providerApiKeyPresence.value[id] ? 'API key set' : fallback
+  return providerApiKeyPresence.value[id] ? t('settings.apiKeySet') : fallback
 }
 
 function providerApiKeyClearDisabled(id: ProviderApiKeyId) {
@@ -814,6 +869,10 @@ function providerApiKeyActionLabel(id: ProviderApiKeyId) {
   if (providerApiKeyHasPendingSave(id)) return 'Save'
   if (providerApiKeyPresence.value[id]) return 'Clear'
   return 'Save'
+}
+
+function providerApiKeyActionText(id: ProviderApiKeyId) {
+  return providerApiKeyActionLabel(id) === 'Clear' ? t('common.clear') : t('common.save')
 }
 
 function providerApiKeyActionDisabled(id: ProviderApiKeyId) {
@@ -916,6 +975,7 @@ const avatarText = computed(() => {
 })
 
 function providerLabel(providerId: string) {
+  if (providerId === 'openai_compat') return `OpenAI ${t('settings.compatible')}`
   return providerOptions.find((p) => p.id === providerId)?.label ?? providerId
 }
 
@@ -924,7 +984,7 @@ const defaultModelLabel = computed(() => {
   if (!raw) return null
   const [provider, model] = raw.split(':')
   if (!provider || !model) return raw
-  return `${providerLabel(provider)} · ${model}`
+  return `${providerLabel(provider)} · ${model === 'configured' ? t('settings.configured') : model}`
 })
 
 const activeProviderLabel = computed(() => {
@@ -962,9 +1022,9 @@ const modelPickerItems = computed<ModelPickerItem[]>(() => {
 
     return providers.map((p) => ({
       key: `provider:${p.id}`,
-      label: p.label,
-      hint: p.hint,
-      actionLabel: 'Choose',
+      label: providerLabel(p.id),
+      hint: p.id === 'openai_compat' ? t('settings.advanced') : p.hint,
+      actionLabel: t('common.choose'),
       kind: 'provider',
       providerId: p.id
     }))
@@ -984,9 +1044,9 @@ const modelPickerItems = computed<ModelPickerItem[]>(() => {
 
   return filtered.map((m) => ({
     key: `model:${providerId}:${m.id}`,
-    label: m.label,
-    hint: m.hint ?? null,
-    actionLabel: 'Select',
+    label: m.id === 'configured' ? t('settings.configured') : m.label,
+    hint: m.id === 'configured' ? t('settings.advanced') : (m.hint ?? null),
+    actionLabel: t('common.select'),
     kind: 'model',
     providerId,
     modelId: m.id
@@ -1392,7 +1452,24 @@ async function onConfirmProviderApiKeyClear() {
   }
 }
 
+function onLanguageMenuPointerDown(event: PointerEvent) {
+  const target = event.target
+  if (target instanceof Node && languageMenuRoot.value?.contains(target)) return
+  languageMenuOpen.value = false
+}
+
+async function onLanguageSelect(next: AppLanguage) {
+  languageMenuOpen.value = false
+  error.value = null
+  try {
+    await languageSet(next)
+  } catch (e: unknown) {
+    error.value = toSafeErrorMessage(e, 'Failed to update language')
+  }
+}
+
 onMounted(() => {
+  document.addEventListener('pointerdown', onLanguageMenuPointerDown)
   ;(async () => {
     if (isWebPreview.value) {
       profile.value = { id: 'web-preview', name: 'Web Preview', email: '', createdAt: '' }
@@ -1452,6 +1529,10 @@ onMounted(() => {
       await router.replace('/unlock')
     }
   })()
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', onLanguageMenuPointerDown)
 })
 
 async function onToggleDarkMode() {

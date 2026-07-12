@@ -45,7 +45,10 @@ export type AppSettings = {
   defaultModelId: string | null
   darkMode: boolean
   learnHybridEnabled: boolean
+  language: AppLanguage
 }
+
+export type AppLanguage = 'en' | 'es' | 'fr' | 'zh-CN' | 'hi' | 'ar' | 'de' | 'ru' | 'ja' | 'ko'
 
 export type StudyGuide = {
   id: Uuid

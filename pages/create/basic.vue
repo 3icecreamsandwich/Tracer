@@ -3,9 +3,9 @@
     <div class="mx-auto max-w-3xl p-8">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-semibold">Create · Basic</h1>
+          <h1 class="text-2xl font-semibold">{{ t('create.basicTitle') }}</h1>
           <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Add cards manually. Use Tab to move between fields; Ctrl/⌘ + Enter adds a new card.
+            {{ t('create.basicDescription') }}
           </p>
         </div>
 
@@ -16,7 +16,7 @@
             :disabled="busy"
             @click="openImport"
           >
-            Import
+            {{ t('common.import') }}
           </button>
           <button
             type="button"
@@ -24,14 +24,14 @@
             :disabled="busy"
             @click="onCreate"
           >
-            {{ busy ? 'Creating…' : 'Create' }}
+            {{ busy ? t('common.loading') : t('common.create') }}
           </button>
         </div>
       </div>
 
       <div class="mt-6 space-y-4">
         <div>
-          <label class="block text-sm font-medium" for="set-title">Title</label>
+          <label class="block text-sm font-medium" for="set-title">{{ t('create.title') }}</label>
           <input
             id="set-title"
             ref="titleEl"
@@ -43,7 +43,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium" for="set-description">Description</label>
+          <label class="block text-sm font-medium" for="set-description">{{ t('create.description') }}</label>
           <textarea
             id="set-description"
             v-model="description"
@@ -54,7 +54,7 @@
       </div>
 
       <div class="mt-8 space-y-4">
-        <h2 class="text-sm font-medium text-slate-700 dark:text-slate-200">Cards</h2>
+        <h2 class="text-sm font-medium text-slate-700 dark:text-slate-200">{{ t('create.cards') }}</h2>
 
         <p v-if="formError" class="text-sm text-red-700 dark:text-red-300">
           {{ formError }}
@@ -66,7 +66,7 @@
           class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         >
           <div class="flex items-start justify-between gap-3">
-            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Card {{ idx + 1 }}</p>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.card', { number: idx + 1 }) }}</p>
 
             <button
               v-if="cards.length > 1"
@@ -75,13 +75,13 @@
               :disabled="busy"
               @click="removeCard(idx)"
             >
-              Remove
+              {{ t('common.remove') }}
             </button>
           </div>
 
           <div class="mt-3 space-y-3">
             <div>
-              <label class="block text-sm font-medium" :for="`term-${card.key}`">Term</label>
+              <label class="block text-sm font-medium" :for="`term-${card.key}`">{{ t('create.term') }}</label>
               <div class="mt-1 flex min-h-9 items-center gap-2">
                 <button
                   v-if="!card.frontImage"
@@ -91,7 +91,7 @@
                   :aria-label="`Add image to term for card ${idx + 1}`"
                   @click="openImagePicker(card.key, 'frontImage')"
                 >
-                  Add Image
+                  {{ t('create.addImage') }}
                 </button>
                 <p
                   v-else
@@ -119,7 +119,7 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium" :for="`definition-${card.key}`">Definition</label>
+              <label class="block text-sm font-medium" :for="`definition-${card.key}`">{{ t('create.definition') }}</label>
               <div class="mt-1 flex min-h-9 items-center gap-2">
                 <button
                   v-if="!card.backImage"
@@ -129,7 +129,7 @@
                   :aria-label="`Add image to definition for card ${idx + 1}`"
                   @click="openImagePicker(card.key, 'backImage')"
                 >
-                  Add Image
+                  {{ t('create.addImage') }}
                 </button>
                 <p
                   v-else
@@ -175,22 +175,22 @@
       class="fixed inset-0 z-50 flex items-center justify-center p-6"
       role="dialog"
       aria-modal="true"
-      aria-label="Import cards"
+      :aria-label="`${t('common.import')} ${t('create.cards')}`"
       @keydown.esc="closeImport"
     >
       <button
         type="button"
         class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-        aria-label="Close import modal"
+        :aria-label="t('common.close')"
         @click="closeImport"
       />
 
       <div class="relative w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">Import</h2>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('common.import') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Paste CSV, TSV, or plain text with term then definition on each line.
+              CSV · TSV · {{ t('create.cards') }}
             </p>
           </div>
 
@@ -199,12 +199,12 @@
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             @click="closeImport"
           >
-            Close
+            {{ t('common.close') }}
           </button>
         </div>
 
         <div class="mt-4">
-          <label class="sr-only" for="import-cards">Cards to import</label>
+          <label class="sr-only" for="import-cards">{{ t('create.cards') }} · {{ t('common.import') }}</label>
           <textarea
             id="import-cards"
             ref="importTextareaEl"
@@ -225,7 +225,7 @@
             :disabled="busy || !importText.trim()"
             @click="importFromText"
           >
-            Import cards
+            {{ t('common.import') }} {{ t('create.cards') }}
           </button>
           <button
             type="button"
@@ -233,7 +233,7 @@
             :disabled="busy"
             @click="openImportFilePicker"
           >
-            Add from file
+            {{ t('common.add') }} {{ t('create.files') }}
           </button>
         </div>
 
@@ -253,8 +253,11 @@
 import { lockGetStatus } from '~/src/composables/lock'
 import { useLockSession } from '~/src/composables/lock-session'
 import { createProfileRepo, createSettingsRepo, createSetsRepo, useTracerDb } from '~/src/composables/db'
+import { useAppLanguage } from '~/src/composables/language'
 import { normalizeTerms, parseTermsDelimited, type TermInput, TermsValidationError } from '~/src/composables/db/validators'
 import type { TermImage } from '~/src/composables/db/types'
+
+const { t } = useAppLanguage()
 
 type DraftCardRow = {
   key: string

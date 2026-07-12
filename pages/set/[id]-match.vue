@@ -14,8 +14,8 @@
         <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
             <!-- Title -->
             <div class="mb-6 text-center">
-                <h1 class="text-xl font-semibold text-slate-900 dark:text-slate-50">Match</h1>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Match the pairs · Click "Memory" to toggle memory mode</p>
+                <h1 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('set.match') }}</h1>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('set.matchInstructions') }}</p>
             </div>
 
             <p v-if="matchError" class="text-sm text-red-700 dark:text-red-300">
@@ -25,16 +25,16 @@
             <!-- Results -->
             <div v-if="matchIsFinished" class="w-full max-w-2xl select-none">
                 <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
-                    <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">Results</h2>
+                    <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">{{ t('common.results') }}</h2>
                     <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
-                        Accuracy:
+                        {{ t('set.accuracy') }}
                         <span class="font-medium">{{ matchAccuracyText }}</span>
                     </p>
                     <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                        Matched: {{ matchMatchedPairsCount }}/{{ matchPairsTarget }} · Attempts: {{ matchAttemptsCount }}
+                        {{ t('set.matched') }} {{ matchMatchedPairsCount }}/{{ matchPairsTarget }} · {{ t('set.attempts') }} {{ matchAttemptsCount }}
                     </p>
                     <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                        Time: {{ matchTimeText }}
+                        {{ t('set.time') }} {{ matchTimeText }}
                     </p>
 
                     <div class="mt-6 flex flex-wrap justify-center gap-2">
@@ -44,14 +44,14 @@
                             :disabled="!set || set.terms.length === 0"
                             @click="restartMatchRun"
                         >
-                            Play again
+                            {{ t('set.playAgain') }}
                         </button>
                         <NuxtLink
                             v-if="set"
                             :to="`/set/${set.id}`"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
-                            Back to set
+                            {{ t('set.backToSet') }}
                         </NuxtLink>
                     </div>
                 </div>
@@ -61,7 +61,7 @@
             <div v-else-if="!matchIsRunning" class="w-full max-w-2xl text-center">
                 <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 dark:border-slate-800 dark:bg-slate-900">
                     <p class="text-sm text-slate-700 dark:text-slate-200 mb-4">
-                        Press Start to begin. Select a term tile and its matching definition tile.
+                        {{ t('set.matchInstructions') }}
                     </p>
 
                     <div class="flex flex-wrap justify-center gap-2 mb-4">
@@ -71,7 +71,7 @@
                             :disabled="!set || set.terms.length === 0"
                             @click="startMatch"
                         >
-                            Start
+                            {{ t('set.start') }}
                         </button>
                     </div>
 
@@ -82,7 +82,7 @@
                             :class="{ 'bg-slate-100 dark:bg-slate-900': matchMemoryMode }"
                             @click="matchMemoryMode = !matchMemoryMode"
                         >
-                            Memory {{ matchMemoryMode ? "✓" : "" }}
+                            {{ t('set.memory') }} {{ matchMemoryMode ? "✓" : "" }}
                         </button>
                     </div>
                 </div>
@@ -101,7 +101,7 @@
                         :disabled="matchTileDisabled(tile) || matchBusy"
                         @click.stop="onMatchTileClick(tile)"
                     >
-                        <span class="sr-only">Tile</span>
+                        <span class="sr-only">{{ t('set.tile') }}</span>
                         <span
                             v-if="matchIsTileRevealed(tile)"
                             class="block h-full overflow-hidden text-xs font-medium leading-snug flex items-center justify-center"
@@ -118,7 +118,7 @@
                         :disabled="!set || set.terms.length === 0"
                         @click="restartMatchRun"
                     >
-                        Restart
+                        {{ t('common.restart') }}
                     </button>
                 </div>
             </div>
@@ -142,9 +142,11 @@ import {
     generateMatchTiles,
     type MatchTile,
 } from "~/src/composables/match/generator";
+import { useAppLanguage } from "~/src/composables/language";
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isWebPreview = computed(() => !hasTauriRuntime());

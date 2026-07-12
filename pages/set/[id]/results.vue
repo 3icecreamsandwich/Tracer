@@ -2,9 +2,9 @@
   <main>
     <div class="mx-auto max-w-2xl p-8">
       <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">Results</h1>
+        <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">{{ t('common.results') }}</h1>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-          {{ modeLabel }} · Accuracy: <span class="font-medium">{{ accuracyText }}</span>
+          {{ modeLabel }} · {{ t('set.accuracy') }} <span class="font-medium">{{ accuracyText }}</span>
         </p>
 
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
@@ -16,7 +16,7 @@
             :to="restartHref"
             class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           >
-            Restart {{ modeLabel }}
+            {{ t('common.restart') }} {{ modeLabel }}
           </NuxtLink>
 
           <NuxtLink
@@ -24,28 +24,28 @@
             :to="`/set/${setId}?mode=flashcards`"
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           >
-            Flashcards
+            {{ t('set.flashcards') }}
           </NuxtLink>
           <NuxtLink
             replace
             :to="`/set/${setId}?mode=learn`"
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           >
-            Learn
+            {{ t('set.learn') }}
           </NuxtLink>
           <NuxtLink
             replace
             :to="`/set/${setId}?mode=match`"
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           >
-            Match
+            {{ t('set.match') }}
           </NuxtLink>
           <NuxtLink
             replace
             :to="`/set/${setId}?mode=chat`"
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           >
-            Chat
+            {{ t('set.chat') }}
           </NuxtLink>
         </div>
       </div>
@@ -54,9 +54,12 @@
 </template>
 
 <script setup lang="ts">
+import { useAppLanguage } from '~/src/composables/language'
+
 type ResultsMode = 'flashcards' | 'learn' | 'match'
 
 const route = useRoute()
+const { t } = useAppLanguage()
 
 const setId = computed(() => {
   const id = route.params.id
@@ -86,9 +89,9 @@ const accuracyText = computed(() => {
 })
 
 const modeLabel = computed(() => {
-  if (mode.value === 'flashcards') return 'Flashcards'
-  if (mode.value === 'learn') return 'Learn'
-  return 'Match'
+  if (mode.value === 'flashcards') return t('set.flashcards')
+  if (mode.value === 'learn') return t('set.learn')
+  return t('set.match')
 })
 
 const restartHref = computed(() => {

@@ -1,14 +1,14 @@
 <template>
   <main>
     <div class="mx-auto max-w-md p-8">
-      <h1 class="text-2xl font-semibold">Welcome to Tracer</h1>
+      <h1 class="text-2xl font-semibold">{{ t('auth.firstRunTitle') }}</h1>
       <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        Create your profile and set an app password.
+        {{ t('auth.firstRunDescription') }}
       </p>
 
       <form class="mt-6 space-y-4" @submit.prevent="onSubmit">
         <div>
-          <label class="block text-sm font-medium">Name</label>
+          <label class="block text-sm font-medium">{{ t('auth.name') }}</label>
           <input
             v-model="name"
             type="text"
@@ -18,7 +18,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium">Email</label>
+          <label class="block text-sm font-medium">{{ t('auth.email') }}</label>
           <input
             v-model="email"
             type="email"
@@ -28,7 +28,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium">Password</label>
+          <label class="block text-sm font-medium">{{ t('auth.password') }}</label>
           <input
             v-model="password"
             type="password"
@@ -38,7 +38,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium">Confirm password</label>
+          <label class="block text-sm font-medium">{{ t('auth.confirmPassword') }}</label>
           <input
             v-model="confirm"
             type="password"
@@ -54,7 +54,7 @@
           class="w-full rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           :disabled="busy"
         >
-          {{ busy ? 'Saving…' : 'Continue' }}
+          {{ busy ? `${t('common.save')}…` : t('common.continue') }}
         </button>
       </form>
     </div>
@@ -67,9 +67,11 @@ definePageMeta({ hideNavbar: true })
 import { lockFirstRunSetPassword } from '../src/composables/lock'
 import { createProfileRepo, useTracerDb } from '../src/composables/db'
 import { useLockSession } from '../src/composables/lock-session'
+import { useAppLanguage } from '../src/composables/language'
 
 const router = useRouter()
 const { markUnlocked } = useLockSession()
+const { t } = useAppLanguage()
 
 const name = ref('')
 const email = ref('')

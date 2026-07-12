@@ -1,6 +1,7 @@
 export { useTracerDb } from './init'
 export type {
   AppSettings,
+  AppLanguage,
   DbClient,
   FlashcardSet,
   FlashcardSetListItem,

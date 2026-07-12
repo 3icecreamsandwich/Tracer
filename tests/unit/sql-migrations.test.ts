@@ -32,8 +32,12 @@ describe('SQLite migrations (task 3)', () => {
         '001_core.sql'
       )
       const migrationSql = await readFile(migrationPath, 'utf8')
+      const languageMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '002_language.sql'),
+        'utf8'
+      )
 
-      const migrateRes = await runSqlite(dbPath, migrationSql)
+      const migrateRes = await runSqlite(dbPath, `${migrationSql}\n${languageMigrationSql}`)
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
 
@@ -60,6 +64,13 @@ describe('SQLite migrations (task 3)', () => {
       ]) {
         expect(tables).toContain(name)
       }
+
+      const languageRes = await runSqlite(
+        dbPath,
+        ['.mode list', '.headers off', 'SELECT language FROM app_settings WHERE id = 1;'].join('\n') + '\n'
+      )
+      expect(languageRes.code).toBe(0)
+      expect(languageRes.stdout.trim()).toBe('en')
 
       const invalidJsonRes = await runSqlite(
         dbPath,

@@ -16,13 +16,13 @@
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
                         <h1 class="truncate text-2xl font-semibold">
-                            {{ set?.title ?? "Set" }}
+                            {{ set?.title ?? t('home.setKind') }}
                         </h1>
                         <p
                             v-if="set?.description"
                             class="mt-2 text-sm text-slate-600 dark:text-slate-300"
                         >
-                            {{ set.description }}
+                            {{ translateAppGeneratedText(set.description) }}
                         </p>
                     </div>
 
@@ -32,7 +32,7 @@
                             :to="`/set/${set.id}/edit`"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
                         >
-                            Edit
+                            {{ t('common.edit') }}
                         </NuxtLink>
                         <button
                             type="button"
@@ -40,7 +40,7 @@
                             :disabled="busy || !set"
                             @click="openExport"
                         >
-                            Export
+                            {{ t('common.export') }}
                         </button>
                     </div>
                 </div>
@@ -57,7 +57,7 @@
                         v-else-if="busy"
                         class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                     >
-                        Loading…
+                        {{ t('common.loading') }}
                     </div>
 
                     <div
@@ -68,7 +68,7 @@
                     </div>
 
                     <div v-else class="space-y-6">
-                        <section aria-label="Study modes">
+                        <section :aria-label="t('set.studyModes')">
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <div
                                     class="group rounded-md border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -81,12 +81,12 @@
                                         <p
                                             class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                         >
-                                            Flashcards
+                                            {{ t('set.flashcards') }}
                                         </p>
                                         <p
                                             class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                         >
-                                            Quick review
+                                            {{ t('set.flashcardsHint') }}
                                         </p>
                                     </NuxtLink>
                                     <NuxtLink
@@ -107,7 +107,7 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        Study guide
+                                        {{ t('set.studyGuide') }}
                                     </p>
                                     <p
                                         class="mt-1 text-sm text-slate-600 dark:text-slate-300"
@@ -127,12 +127,12 @@
                                         <p
                                             class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                         >
-                                            Learn
+                                            {{ t('set.learn') }}
                                         </p>
                                         <p
                                             class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                         >
-                                            Quiz yourself
+                                            {{ t('set.learnHint') }}
                                         </p>
                                     </NuxtLink>
                                     <NuxtLink
@@ -156,12 +156,12 @@
                                         <p
                                             class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                         >
-                                            Match
+                                            {{ t('set.match') }}
                                         </p>
                                         <p
                                             class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                         >
-                                            Find pairs under pressure
+                                            {{ t('set.matchHint') }}
                                         </p>
                                     </NuxtLink>
                                     <NuxtLink
@@ -181,12 +181,12 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        Chat
+                                        {{ t('set.chat') }}
                                     </p>
                                     <p
                                         class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                     >
-                                        Grounded to this set
+                                        {{ t('set.chatHint') }}
                                     </p>
                                 </NuxtLink>
                             </div>
@@ -204,13 +204,12 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        Flashcards
+                                        {{ t('set.flashcards') }}
                                     </p>
                                     <p
                                         class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        Space to flip · ←/→ to browse · Mark
-                                        correct/incorrect to progress
+                                        {{ t('set.flashcardInstructions') }}
                                     </p>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
@@ -225,14 +224,14 @@
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         title="Open fullscreen"
                                     >
-                                        ⛶ Fullscreen
+                                        ⛶ {{ t('set.fullscreen') }}
                                     </NuxtLink>
                                     <button
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         @click="shuffleRun"
                                     >
-                                        Shuffle
+                                        {{ t('set.shuffle') }}
                                     </button>
                                     <button
                                         type="button"
@@ -241,7 +240,7 @@
                                         :aria-pressed="starredOnly"
                                         @click="toggleStarredOnly"
                                     >
-                                        {{ starredOnly ? "★" : "☆" }} Starred only
+                                        {{ starredOnly ? "★" : "☆" }} {{ t('set.starredOnly') }}
                                     </button>
                                     <button
                                         type="button"
@@ -249,7 +248,7 @@
                                         :disabled="allStudyTermIds.length === 0"
                                         @click="restartRun"
                                     >
-                                        Restart
+                                        {{ t('common.restart') }}
                                     </button>
                                 </div>
                             </div>
@@ -258,12 +257,12 @@
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                                 >
-                                    Results
+                                    {{ t('common.results') }}
                                 </h2>
                                 <p
                                     class="mt-2 text-sm text-slate-700 dark:text-slate-200"
                                 >
-                                    Accuracy:
+                                    {{ t('set.accuracy') }}
                                     <span class="font-medium">{{
                                         accuracyText
                                     }}</span>
@@ -287,21 +286,21 @@
                                         :to="`/set/${set.id}?mode=chat`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        Chat
+                                        {{ t('set.chat') }}
                                     </NuxtLink>
                                     <NuxtLink
                                         replace
                                         :to="`/set/${set.id}?mode=learn`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        Learn
+                                        {{ t('set.learn') }}
                                     </NuxtLink>
                                     <NuxtLink
                                         replace
                                         :to="`/set/${set.id}?mode=match`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        Match
+                                        {{ t('set.match') }}
                                     </NuxtLink>
                                 </div>
                             </div>
@@ -310,7 +309,7 @@
                                 v-else-if="isStarredOnlyEmpty"
                                 class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                             >
-                                No starred cards
+                                {{ t('set.noStarred') }}
                             </div>
 
                             <div v-else>
@@ -368,7 +367,7 @@
                                             "
                                             @click="goPrev"
                                         >
-                                            ← Prev
+                                        ← {{ t('set.previous') }}
                                         </button>
 
                                         <button
@@ -381,7 +380,7 @@
                                             "
                                             @click="goNext"
                                         >
-                                            Next →
+                                        {{ t('set.next') }} →
                                         </button>
                                     </div>
 
@@ -404,7 +403,7 @@
                                             :disabled="!currentTerm"
                                             @click="markIncorrect"
                                         >
-                                            Missed it
+                                        {{ t('set.missed') }}
                                         </button>
                                         <button
                                             type="button"
@@ -412,7 +411,7 @@
                                             :disabled="!currentTerm"
                                             @click="markCorrect"
                                         >
-                                            Got it
+                                        {{ t('set.gotIt') }}
                                         </button>
                                     </div>
                                 </div>
@@ -431,13 +430,12 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        Learn
+                                        {{ t('set.learn') }}
                                     </p>
                                     <p
                                         class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        Answer questions · Results tracked per
-                                        run
+                                        {{ t('set.learnInstructions') }}
                                     </p>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
@@ -452,7 +450,7 @@
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         title="Open fullscreen"
                                     >
-                                        ⛶ Fullscreen
+                                        ⛶ {{ t('set.fullscreen') }}
                                     </NuxtLink>
                                     <button
                                         type="button"
@@ -464,7 +462,7 @@
                                         "
                                         @click="restartLearnRun"
                                     >
-                                        Restart
+                                        {{ t('common.restart') }}
                                     </button>
                                 </div>
                             </div>
@@ -480,19 +478,19 @@
                                 v-if="learnBusy"
                                 class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                             >
-                                Preparing questions…
+                                {{ t('common.loading') }}
                             </div>
 
                             <div v-else-if="learnIsFinished" class="mt-4 select-none">
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                                 >
-                                    Results
+                                    {{ t('common.results') }}
                                 </h2>
                                 <p
                                     class="mt-2 text-sm text-slate-700 dark:text-slate-200"
                                 >
-                                    Accuracy:
+                                    {{ t('set.accuracy') }}
                                     <span class="font-medium">{{
                                         learnAccuracyText
                                     }}</span>
@@ -511,7 +509,7 @@
                                         :to="`/set/${set.id}?mode=flashcards`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        Flashcards
+                                        {{ t('set.flashcards') }}
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
@@ -519,7 +517,7 @@
                                         :to="`/set/${set.id}?mode=chat`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        Chat
+                                        {{ t('set.chat') }}
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
@@ -527,7 +525,7 @@
                                         :to="`/set/${set.id}?mode=match`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        Match
+                                        {{ t('set.match') }}
                                     </NuxtLink>
                                 </div>
                             </div>
@@ -547,7 +545,7 @@
                                     <p
                                         class="text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        Question
+                                        {{ t('set.question') }}
                                     </p>
                                     <div class="mt-3 text-base font-medium text-slate-900 dark:text-slate-50">
                                         <MarkdownRenderer :markdown="learnCurrentQuestion.prompt" variant="compact" />
@@ -617,12 +615,12 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        Chat
+                                        {{ t('set.chat') }}
                                     </p>
                                     <p
                                         class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        Prefer grounded answers from this set
+                                        {{ t('set.chatHint') }}
                                     </p>
                                 </div>
                                 <button
@@ -633,7 +631,7 @@
                                     "
                                     @click="resetChat"
                                 >
-                                    Clear
+                                    {{ t('common.clear') }}
                                 </button>
                             </div>
 
@@ -653,7 +651,7 @@
                                     v-if="chatMessages.length === 0"
                                     class="text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    Ask a question about the terms in this set.
+                                    {{ t('set.chatHint') }}
                                 </p>
 
                                 <div
@@ -689,16 +687,14 @@
                             </div>
 
                             <div class="mt-3 flex gap-2">
-                                <label class="sr-only" for="chat-input"
-                                    >Chat message</label
-                                >
+                                <label class="sr-only" for="chat-input">{{ t('set.chat') }}</label>
                                 <textarea
                                     id="chat-input"
                                     ref="chatTextareaEl"
                                     v-model="chatInput"
                                     rows="2"
                                     autocomplete="off"
-                                    placeholder="Ask about this set…"
+                                    :placeholder="t('set.chatHint')"
                                     class="w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     :disabled="chatBusy || !set"
                                     @keydown="onChatInputKeydown"
@@ -711,14 +707,14 @@
                                     "
                                     @click="sendChat"
                                 >
-                                    {{ chatBusy ? "Sending…" : "Send" }}
+                                    {{ chatBusy ? `${t('set.chat')}…` : t('set.chat') }}
                                 </button>
                             </div>
 
                             <p
                                 class="mt-2 text-xs text-slate-500 dark:text-slate-400"
                             >
-                                Enter to send · Shift+Enter for newline
+                                Enter · Shift+Enter
                             </p>
                         </section>
 
@@ -734,13 +730,12 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        Match
+                                        {{ t('set.match') }}
                                     </p>
                                     <p
                                         class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        Match the pairs · Click "Memory" to
-                                        toggle memory mode
+                                        {{ t('set.matchInstructions') }}
                                     </p>
                                 </div>
                             </div>
@@ -758,7 +753,7 @@
                                     }"
                                     @click="matchMemoryMode = !matchMemoryMode"
                                 >
-                                    Memory {{ matchMemoryMode ? "✓" : "" }}
+                                    {{ t('set.memory') }} {{ matchMemoryMode ? "✓" : "" }}
                                 </button>
                                 <NuxtLink
                                     v-if="set"
@@ -766,7 +761,7 @@
                                     class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     title="Open fullscreen"
                                 >
-                                    ⛶ Fullscreen
+                                    ⛶ {{ t('set.fullscreen') }}
                                 </NuxtLink>
 
                                 <button
@@ -780,7 +775,7 @@
                                     "
                                     @click="startMatch"
                                 >
-                                    Start
+                                    {{ t('set.start') }}
                                 </button>
 
                                 <button
@@ -792,7 +787,7 @@
                                     "
                                     @click="restartMatchRun"
                                 >
-                                    Restart
+                                    {{ t('common.restart') }}
                                 </button>
                             </div>
 
@@ -807,12 +802,12 @@
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                                 >
-                                    Results
+                                    {{ t('common.results') }}
                                 </h2>
                                 <p
                                     class="mt-2 text-sm text-slate-700 dark:text-slate-200"
                                 >
-                                    Accuracy:
+                                    {{ t('set.accuracy') }}
                                     <span class="font-medium">{{
                                         matchAccuracyText
                                     }}</span>
@@ -820,15 +815,15 @@
                                 <p
                                     class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    Matched: {{ matchMatchedPairsCount }}/{{
+                                    {{ t('set.matched') }} {{ matchMatchedPairsCount }}/{{
                                         matchPairsTarget
                                     }}
-                                    · Attempts: {{ matchAttemptsCount }}
+                                    · {{ t('set.attempts') }} {{ matchAttemptsCount }}
                                 </p>
                                 <p
                                     class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    Time: {{ matchTimeText }}
+                                    {{ t('set.time') }} {{ matchTimeText }}
                                 </p>
 
                                 <div class="mt-4 flex flex-wrap gap-2">
@@ -840,7 +835,7 @@
                                         "
                                         @click="restartMatchRun"
                                     >
-                                        Play again
+                                        {{ t('set.playAgain') }}
                                     </button>
                                     <NuxtLink
                                         v-if="set"
@@ -848,7 +843,7 @@
                                         :to="`/set/${set.id}?mode=flashcards`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        Flashcards
+                                        {{ t('set.flashcards') }}
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
@@ -856,7 +851,7 @@
                                         :to="`/set/${set.id}?mode=learn`"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        Learn
+                                        {{ t('set.learn') }}
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
@@ -874,8 +869,7 @@
                                     v-if="!matchIsRunning"
                                     class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                                 >
-                                    Press Start to begin. Select a term tile and
-                                    its matching definition tile.
+                                    {{ t('set.matchInstructions') }}
                                 </div>
 
                                 <div v-else class="grid grid-cols-4 gap-2">
@@ -891,7 +885,7 @@
                                         "
                                         @click.stop="onMatchTileClick(tile)"
                                     >
-                                        <span class="sr-only">Tile</span>
+                                        <span class="sr-only">{{ t('set.tile') }}</span>
                                         <span
                                             v-if="matchIsTileRevealed(tile)"
                                             class="block h-full overflow-hidden text-xs font-medium leading-snug"
@@ -911,12 +905,12 @@
                             <p
                                 class="text-sm font-medium text-slate-900 dark:text-slate-50"
                             >
-                                Coming soon
+                                {{ t('set.comingSoon') }}
                             </p>
                             <p
                                 class="mt-2 text-sm text-slate-600 dark:text-slate-300"
                             >
-                                This mode is not implemented yet.
+                                {{ t('set.notImplemented') }}
                             </p>
                             <div class="mt-4 flex flex-wrap gap-2">
                                 <NuxtLink
@@ -924,7 +918,7 @@
                                     :to="`/set/${set.id}?mode=flashcards`"
                                     class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
-                                    Go to Flashcards
+                                    {{ t('common.continue') }} · {{ t('set.flashcards') }}
                                 </NuxtLink>
                             </div>
                         </section>
@@ -939,7 +933,7 @@
                                 <h2
                                     class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                 >
-                                    Terms
+                                    {{ t('set.terms') }}
                                 </h2>
                                 <span
                                     class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
@@ -952,7 +946,7 @@
                                 v-if="set.terms.length === 0"
                                 class="mt-3 text-sm text-slate-700 dark:text-slate-200"
                             >
-                                No cards.
+                                {{ t('set.noCards') }}
                             </div>
 
                             <ul v-else class="mt-3 space-y-3">
@@ -988,7 +982,7 @@
                                         >
                                             <span
                                                 class="font-medium text-slate-900 dark:text-slate-50"
-                                                >Term:
+                                                >{{ t('set.termLabel') }}
                                             </span>
                                             <div class="mt-1">
                                                 <MarkdownRenderer :markdown="t.front" variant="compact" />
@@ -999,7 +993,7 @@
                                         >
                                             <span
                                                 class="font-medium text-slate-900 dark:text-slate-50"
-                                                >Definition:
+                                                >{{ t('set.definitionLabel') }}
                                             </span>
                                             <div class="mt-1">
                                                 <MarkdownRenderer :markdown="t.back" variant="compact" />
@@ -1025,7 +1019,7 @@
             <button
                 type="button"
                 class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-                aria-label="Close export modal"
+                :aria-label="t('common.close')"
                 @click="closeExport"
             />
 
@@ -1037,12 +1031,12 @@
                         <h2
                             class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                         >
-                            Export
+                            {{ t('common.export') }}
                         </h2>
                         <p
                             class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                         >
-                            Copy TSV (term ↹ definition) for import elsewhere.
+                            TSV · {{ t('common.export') }}
                         </p>
                     </div>
 
@@ -1051,12 +1045,12 @@
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         @click="closeExport"
                     >
-                        Close
+                        {{ t('common.close') }}
                     </button>
                 </div>
 
                 <div class="mt-4">
-                    <label class="sr-only" for="export-tsv">TSV export</label>
+                    <label class="sr-only" for="export-tsv">TSV {{ t('common.export') }}</label>
                     <textarea
                         id="export-tsv"
                         ref="exportTextareaEl"
@@ -1082,7 +1076,7 @@
                         :disabled="!exportTsv"
                         @click="copyExport"
                     >
-                        Copy
+                        {{ t('common.copy') }}
                     </button>
                     <button
                         type="button"
@@ -1090,7 +1084,7 @@
                         :disabled="!exportTsv"
                         @click="downloadExport"
                     >
-                        Download
+                        {{ t('common.download') }}
                     </button>
                     <button
                         type="button"
@@ -1098,7 +1092,7 @@
                         :disabled="!exportTsv"
                         @click="selectAllExport"
                     >
-                        Select all
+                        {{ t('common.selectAll') }}
                     </button>
                 </div>
             </div>
@@ -1144,9 +1138,11 @@ import {
     isAiErrorCandidate,
     type AiErrorUx,
 } from "~/src/composables/ai/ux-errors";
+import { useAppLanguage } from "~/src/composables/language";
 
 const route = useRoute();
 const router = useRouter();
+const { t, translateAppGeneratedText } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isNestedSetRoute = computed(() =>

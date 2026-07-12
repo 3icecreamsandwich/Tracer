@@ -8,9 +8,9 @@
         >
           <div class="flex items-start justify-between gap-4">
             <div>
-              <h1 id="home-sets" class="text-lg font-semibold">Sets</h1>
+              <h1 id="home-sets" class="text-lg font-semibold">{{ t('home.sets') }}</h1>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Your flashcard sets and study guides.
+                {{ t('home.subtitle') }}
               </p>
             </div>
             <!-- <NuxtLink
@@ -40,14 +40,14 @@
                 v-if="busy"
                 class="mt-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
               >
-                Loading…
+                {{ t('common.loading') }}
               </div>
 
               <div
                 v-else-if="items.length === 0"
                 class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
               >
-                No sets or study guides yet. Use Create to get started.
+                {{ t('home.noItems') }}
               </div>
 
               <ul v-else class="mt-3 space-y-3">
@@ -66,19 +66,18 @@
                           v-if="item.subtitle"
                           class="mt-1 truncate text-sm text-slate-600 dark:text-slate-300"
                         >
-                          {{ item.subtitle }}
+                          {{ translateAppGeneratedText(item.subtitle) }}
                         </p>
                       </div>
                       <span
                         class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                       >
-                        {{ item.kindLabel }}
+                        {{ item.kind === 'set' ? t('home.setKind') : t('home.studyGuide') }}
                       </span>
                     </div>
 
                     <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
-                      <span v-if="item.updatedAt">Updated {{ formatDate(item.updatedAt) }}</span>
-                      <span v-else>Created {{ formatDate(item.createdAt) }}</span>
+                      <span>{{ formatDate(item.updatedAt ?? item.createdAt) }}</span>
                     </div>
                   </NuxtLink>
                 </li>
@@ -91,17 +90,17 @@
           class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-auto"
           aria-labelledby="home-create"
         >
-          <h2 id="home-create" class="text-lg font-semibold">Create</h2>
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Choose a mode</p>
+          <h2 id="home-create" class="text-lg font-semibold">{{ t('home.create') }}</h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('home.chooseMode') }}</p>
 
           <div class="mt-4 grid gap-3">
             <NuxtLink
               to="/create/basic"
               class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             >
-              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Basic</p>
+              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('home.basic') }}</p>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Start from scratch
+                {{ t('home.basicHint') }}
               </p>
             </NuxtLink>
 
@@ -109,9 +108,9 @@
               to="/create/synthesize"
               class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             >
-              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Synthesize</p>
+              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('home.synthesize') }}</p>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                  Combine sets
+                  {{ t('home.synthesizeHint') }}
               </p>
             </NuxtLink>
 
@@ -119,9 +118,9 @@
               to="/create/generate"
               class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             >
-              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Generate</p>
+              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('home.generate') }}</p>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Create from a prompt
+                {{ t('home.generateHint') }}
               </p>
             </NuxtLink>
           </div>
@@ -144,9 +143,11 @@ import { useLockSession } from '../src/composables/lock-session'
 import type { FlashcardSetListItem, Uuid } from '../src/composables/db/types'
 import { hasTauriRuntime } from '../src/composables/tauri'
 import { filterSetSearch } from '../src/composables/search/set-search'
+import { useAppLanguage } from '../src/composables/language'
 
 const router = useRouter()
 const route = useRoute()
+const { language, t, translateAppGeneratedText } = useAppLanguage()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 
 type HomeListItem = {
@@ -211,7 +212,7 @@ function initWebDemoItems() {
 function formatDate(iso: string) {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
-  return d.toLocaleString()
+  return d.toLocaleString(language.value)
 }
 
 function sortIsoDesc(a: string, b: string) {

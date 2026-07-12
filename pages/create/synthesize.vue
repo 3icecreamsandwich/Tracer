@@ -4,9 +4,9 @@
     <div class="mx-auto max-w-3xl p-8">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-semibold">Create · Synthesize</h1>
+          <h1 class="text-2xl font-semibold">{{ t('create.synthesizeTitle') }}</h1>
           <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Combine existing sets into a new, consolidated set.
+            {{ t('create.synthesizeDescription') }}
           </p>
         </div>
 
@@ -16,7 +16,7 @@
           :disabled="createDisabled"
           @click="onCreate"
         >
-          {{ busy ? 'Creating…' : 'Create' }}
+          {{ busy ? t('common.loading') : t('common.create') }}
         </button>
       </div>
 
@@ -36,9 +36,9 @@
         >
           <div class="flex items-start justify-between gap-3">
             <div>
-              <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">Source sets</h2>
+              <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.sourceSets') }}</h2>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Search and select one or more sets to merge.
+                {{ t('create.searchAndSelect') }}
               </p>
             </div>
 
@@ -50,13 +50,13 @@
           </div>
 
           <div class="mt-4">
-            <label class="sr-only" for="synth-search">Search sets</label>
+            <label class="sr-only" for="synth-search">{{ t('nav.search') }}</label>
             <input
               id="synth-search"
               v-model="query"
               type="search"
               autocomplete="off"
-              placeholder="Search sets…"
+              :placeholder="t('nav.searchPlaceholder')"
               class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             />
           </div>
@@ -70,7 +70,7 @@
               v-else-if="loading"
               class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             >
-              Loading…
+              {{ t('common.loading') }}
             </div>
 
             <div
@@ -78,14 +78,14 @@
               class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             >
               No sets yet. Create one first.
-              <NuxtLink class="ml-1 font-medium underline" to="/create/basic">Create · Basic</NuxtLink>
+              <NuxtLink class="ml-1 font-medium underline" to="/create/basic">{{ t('create.basicTitle') }}</NuxtLink>
             </div>
 
             <div
               v-else-if="filteredSets.length === 0"
               class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             >
-              No results.
+              {{ t('nav.noResults') }}
             </div>
 
             <ul v-else class="mt-3 space-y-3">
@@ -97,7 +97,7 @@
                         {{ s.title }}
                       </p>
                       <p v-if="s.description" class="mt-1 truncate text-sm text-slate-600 dark:text-slate-300">
-                        {{ s.description }}
+                        {{ translateAppGeneratedText(s.description) }}
                       </p>
                     </div>
 
@@ -107,7 +107,7 @@
                       :disabled="busy || isWebPreview"
                       @click="toggleSelected(s.id)"
                     >
-                      {{ isSelected(s.id) ? 'Remove' : 'Add' }}
+                      {{ isSelected(s.id) ? t('common.remove') : '+' }}
                     </button>
                   </div>
                 </div>
@@ -121,19 +121,19 @@
             class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             aria-label="Theme"
           >
-            <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">Theme (optional)</h2>
+            <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.theme') }} ({{ t('common.optional') }})</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              A hint for the synthesis focus (e.g. “exam 2”, “core concepts”, “definitions only”).
+              {{ t('create.themeHint') }}
             </p>
 
             <div class="mt-3">
-              <label class="sr-only" for="synth-theme">Theme</label>
+              <label class="sr-only" for="synth-theme">{{ t('create.theme') }}</label>
               <input
                 id="synth-theme"
                 v-model="theme"
                 type="text"
                 autocomplete="off"
-                placeholder="Theme…"
+                :placeholder="t('create.themePlaceholder')"
                 class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               />
             </div>
@@ -144,7 +144,7 @@
             aria-label="Selected sets"
           >
             <div class="flex items-center justify-between gap-3">
-              <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">Selected</h2>
+              <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.selected') }}</h2>
               <span
                 class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
               >
@@ -153,7 +153,7 @@
             </div>
 
             <p v-if="selectedSets.length === 0" class="mt-3 text-sm text-slate-600 dark:text-slate-300">
-              Choose at least one set.
+              {{ t('create.searchAndSelect') }}
             </p>
 
             <ul v-else class="mt-3 space-y-2">
@@ -168,7 +168,7 @@
                     :disabled="busy || isWebPreview"
                     @click="removeSelected(s.id)"
                   >
-                    Remove
+                    {{ t('common.remove') }}
                   </button>
                 </div>
               </li>
@@ -188,7 +188,7 @@
       >
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">AI output</h2>
+            <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.aiOutput') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
               If parsing fails, copy the raw output and try again.
             </p>
@@ -201,7 +201,7 @@
               :disabled="!rawOutput"
               @click="copyRaw"
             >
-              Copy
+              {{ t('common.copy') }}
             </button>
             <button
               type="button"
@@ -209,7 +209,7 @@
               :disabled="!rawOutput"
               @click="selectAllRaw"
             >
-              Select all
+              {{ t('common.selectAll') }}
             </button>
           </div>
         </div>
@@ -219,7 +219,7 @@
         </p>
 
         <div class="mt-4">
-          <label class="sr-only" for="ai-raw-output">Raw output</label>
+          <label class="sr-only" for="ai-raw-output">{{ t('create.rawOutput') }}</label>
           <textarea
             id="ai-raw-output"
             ref="rawTextareaEl"
@@ -253,8 +253,10 @@ import { normalizeAiError, aiErrorForMissingDefaultModel, type AiErrorUx } from 
 import { hasTauriRuntime } from '~/src/composables/tauri'
 import { generateText } from 'ai'
 import { filterSetSearch } from '~/src/composables/search/set-search'
+import { useAppLanguage } from '~/src/composables/language'
 
 const router = useRouter()
+const { t, translateAppGeneratedText } = useAppLanguage()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 
 const hasTauriInternals = hasTauriRuntime()

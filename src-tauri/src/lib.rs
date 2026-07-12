@@ -14,12 +14,20 @@ pub fn run() {
     use tauri::Manager;
     use tauri_plugin_sql::{Migration, MigrationKind};
 
-    let migrations = vec![Migration {
-        version: 1,
-        description: "create_core_tables",
-        sql: include_str!("../migrations/001_core.sql"),
-        kind: MigrationKind::Up,
-    }];
+    let migrations = vec![
+        Migration {
+            version: 1,
+            description: "create_core_tables",
+            sql: include_str!("../migrations/001_core.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "add_language_setting",
+            sql: include_str!("../migrations/002_language.sql"),
+            kind: MigrationKind::Up,
+        },
+    ];
 
     tauri::Builder::default()
         .setup(|app| {

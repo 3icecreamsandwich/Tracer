@@ -10,7 +10,7 @@
     <button
       type="button"
       class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-      aria-label="Close AI error modal"
+      :aria-label="t('common.close')"
       @click="$emit('close')"
     />
 
@@ -32,7 +32,7 @@
           class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           @click="$emit('close')"
         >
-          Close
+          {{ t('common.close') }}
         </button>
       </div>
 
@@ -43,7 +43,7 @@
           class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           @click="$emit('close')"
         >
-          Go to Settings
+          {{ t('nav.settings') }}
         </NuxtLink>
 
         <button
@@ -52,7 +52,7 @@
           class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           @click="$emit('retry')"
         >
-          Retry
+          {{ t('common.retry') }}
         </button>
       </div>
     </div>
@@ -62,6 +62,9 @@
 <script setup lang="ts">
 import type { AiErrorUx } from '~/src/composables/ai/ux-errors'
 import { aiErrorSettingsReason } from '~/src/composables/ai/ux-errors'
+import { useAppLanguage } from '~/src/composables/language'
+
+const { t } = useAppLanguage()
 
 const props = defineProps<{ open: boolean; error: AiErrorUx | null; from?: string; showRetry?: boolean }>()
 

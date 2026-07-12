@@ -3,9 +3,9 @@
     <div class="mx-auto max-w-3xl p-8">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-semibold">Study guide</h1>
+          <h1 class="text-2xl font-semibold">{{ t('studyGuide.title') }}</h1>
           <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Linked to set {{ setIdLabel }}.
+            {{ t('studyGuide.linkedTo', { id: setIdLabel }) }}
           </p>
         </div>
 
@@ -13,7 +13,7 @@
           :to="setId ? `/set/${setId}` : '/'"
           class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
         >
-            Go to set
+            {{ t('studyGuide.goToSet') }}
         </NuxtLink>
       </div>
 
@@ -35,7 +35,7 @@
           v-else-if="busy"
           class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
         >
-          Loading…
+          {{ t('common.loading') }}
         </div>
 
         <div
@@ -56,10 +56,12 @@ import { createProfileRepo, createSettingsRepo, createStudyGuidesRepo, useTracer
 import type { Uuid } from '~/src/composables/db/types'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 import MarkdownRenderer from '~/components/MarkdownRenderer.vue'
+import { useAppLanguage } from '~/src/composables/language'
 
 const router = useRouter()
 const route = useRoute()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
+const { t } = useAppLanguage()
 
 const hasTauriInternals = hasTauriRuntime()
 

@@ -18,7 +18,7 @@
             </NuxtLink>
 
             <div ref="searchRootEl" class="relative min-w-0 flex-1">
-                <label class="sr-only" for="nav-search">Search</label>
+                <label class="sr-only" for="nav-search">{{ t('nav.search') }}</label>
                 <form class="relative" @submit.prevent="onSubmit">
                     <input
                         id="nav-search"
@@ -26,7 +26,7 @@
                         v-model="draft"
                         type="search"
                         autocomplete="off"
-                        placeholder="Search sets…"
+                        :placeholder="t('nav.searchPlaceholder')"
                         class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         @focus="openSearch"
                         @click="openSearch"
@@ -38,13 +38,13 @@
                     v-if="searchOpen"
                     class="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
                     role="listbox"
-                    aria-label="Search results"
+                    :aria-label="t('nav.searchResults')"
                 >
                     <div
                         v-if="searchBusy"
                         class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300"
                     >
-                        Loading…
+                        {{ t('common.loading') }}
                     </div>
                     <div
                         v-else-if="searchError"
@@ -70,19 +70,19 @@
                                     <span
                                         class="block truncate font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        {{ item.title }}
+                                        {{ searchResultTitle(item) }}
                                     </span>
                                     <span
                                         v-if="item.subtitle"
                                         class="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400"
                                     >
-                                        {{ item.subtitle }}
+                                        {{ translateAppGeneratedText(item.subtitle) }}
                                     </span>
                                 </span>
                                 <span
                                     class="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400"
                                 >
-                                    {{ item.kindLabel }}
+                                    {{ searchResultKindLabel(item) }}
                                 </span>
                             </NuxtLink>
                         </li>
@@ -91,7 +91,7 @@
                         v-else
                         class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300"
                     >
-                        No results.
+                        {{ t('nav.noResults') }}
                     </div>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                 >
                     {{ avatarText }}
                 </span>
-                <span class="hidden sm:block">Settings</span>
+                <span class="hidden sm:block">{{ t('nav.settings') }}</span>
             </NuxtLink>
 
             <div
@@ -133,6 +133,9 @@ import {
     topbarSearchItemTo,
     type TopbarSearchItem,
 } from "~/src/composables/search/topbar-search";
+import { useAppLanguage } from "~/src/composables/language";
+
+const { t, translateAppGeneratedText } = useAppLanguage();
 
 const draft = ref("");
 const searchRootEl = ref<HTMLElement | null>(null);
@@ -155,6 +158,19 @@ watch(draft, () => {
 
 function searchItemKey(item: TopbarSearchItem) {
     return `${item.kind}:${item.id}`;
+}
+
+function searchResultKindLabel(item: TopbarSearchItem) {
+    return item.kind === "set" ? t("home.setKind") : t("home.studyGuide");
+}
+
+function searchResultTitle(item: TopbarSearchItem) {
+    if (item.kind === "set") return item.title;
+    const separator = " · ";
+    const setTitle = item.title.includes(separator)
+        ? item.title.slice(item.title.indexOf(separator) + separator.length)
+        : item.title;
+    return `${t("home.studyGuide")}${separator}${setTitle}`;
 }
 
 function detectWindowControlsClass() {

@@ -14,8 +14,8 @@
         <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
             <!-- Title -->
             <div class="mb-6 text-center">
-                <h1 class="text-xl font-semibold text-slate-900 dark:text-slate-50">Learn</h1>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Answer questions · Results tracked per run</p>
+                <h1 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('set.learn') }}</h1>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('set.learnInstructions') }}</p>
             </div>
 
             <p
@@ -35,9 +35,9 @@
             <!-- Results -->
             <div v-else-if="learnIsFinished" class="w-full max-w-2xl select-none">
                 <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
-                    <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">Results</h2>
+                    <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">{{ t('common.results') }}</h2>
                     <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
-                        Accuracy:
+                        {{ t('set.accuracy') }}
                         <span class="font-medium">{{ learnAccuracyText }}</span>
                     </p>
                     <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
@@ -51,14 +51,14 @@
                             :disabled="!set || learnQuestions.length === 0"
                             @click="restartLearnRun"
                         >
-                            Restart
+                            {{ t('common.restart') }}
                         </button>
                         <NuxtLink
                             v-if="set"
                             :to="`/set/${set.id}`"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
-                            Back to set
+                            {{ t('set.backToSet') }}
                         </NuxtLink>
                     </div>
                 </div>
@@ -66,13 +66,13 @@
 
             <!-- Question -->
             <div v-else-if="!learnCurrentQuestion" class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-                No questions available.
+                {{ t('set.noQuestions') }}
             </div>
 
             <div v-else class="w-full max-w-2xl">
                 <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 dark:border-slate-800 dark:bg-slate-900">
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
-                        Question
+                        {{ t('set.question') }}
                     </p>
                     <div class="mt-4 text-2xl font-medium text-slate-900 dark:text-slate-50">
                         <MarkdownRenderer :markdown="learnCurrentQuestion.prompt" variant="flashcard" />
@@ -86,7 +86,7 @@
                                 :disabled="learnBusy"
                                 @click="answerLearnTrueFalse(true)"
                             >
-                                True
+                                {{ t('common.true') }}
                             </button>
                             <button
                                 type="button"
@@ -94,7 +94,7 @@
                                 :disabled="learnBusy"
                                 @click="answerLearnTrueFalse(false)"
                             >
-                                False
+                                {{ t('common.false') }}
                             </button>
                         </template>
 
@@ -135,9 +135,11 @@ import {
 } from "~/src/composables/learn/generator";
 import { resolveAiModel } from "~/src/composables/ai/registry";
 import { generateText } from "ai";
+import { useAppLanguage } from "~/src/composables/language";
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isWebPreview = computed(() => !hasTauriRuntime());

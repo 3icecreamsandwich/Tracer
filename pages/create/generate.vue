@@ -6,13 +6,13 @@
       class="fixed inset-0 z-50 flex items-center justify-center p-6"
       role="dialog"
       aria-modal="true"
-      aria-label="Some files could not be parsed"
+      :aria-label="`${t('create.files')} · ${t('common.invalid')}`"
       @keydown.esc="abortParseFailures"
     >
       <button
         type="button"
         class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-        aria-label="Close parse failure modal"
+        :aria-label="t('common.close')"
         @click="abortParseFailures"
       />
 
@@ -21,7 +21,7 @@
       >
         <div>
           <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">
-            Some files could not be parsed
+            {{ t('create.files') }} · {{ t('common.invalid') }}
           </h2>
           <p v-if="parseFailureCanContinue" class="mt-1 text-sm text-slate-600 dark:text-slate-300">
             Tracer can continue with the files that were parsed successfully, or abort without generating.
@@ -46,7 +46,7 @@
             :disabled="busy || parseBusy"
             @click="continueAfterParseFailures"
           >
-            Continue with parsed files
+            {{ t('common.continue') }}
           </button>
 
           <button
@@ -54,7 +54,7 @@
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             @click="abortParseFailures"
           >
-            {{ parseFailureCanContinue ? 'Abort' : 'Close' }}
+            {{ parseFailureCanContinue ? t('common.cancel') : t('common.close') }}
           </button>
         </div>
       </div>
@@ -62,9 +62,9 @@
     <div class="mx-auto max-w-3xl p-8">
       <div class="sticky top-16 z-20 flex items-start justify-between gap-4 rounded-md bg-white/95 py-2 backdrop-blur dark:bg-slate-950/95">
         <div>
-          <h1 class="text-2xl font-semibold">Create · Generate</h1>
+          <h1 class="text-2xl font-semibold">{{ t('create.generateTitle') }}</h1>
           <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Upload PDFs or images to generate a flashcard set plus a linked study guide.
+            {{ t('create.generateDescription') }}
           </p>
         </div>
 
@@ -94,25 +94,25 @@
         >
           <div class="grid gap-4">
             <div>
-              <label class="block text-sm font-medium" for="gen-title">Title (optional)</label>
+              <label class="block text-sm font-medium" for="gen-title">{{ t('create.title') }} ({{ t('common.optional') }})</label>
               <input
                 id="gen-title"
                 v-model="title"
                 type="text"
                 autocomplete="off"
-                placeholder="Generated set…"
+                :placeholder="t('create.generatedSetPlaceholder')"
                 class="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                 :disabled="operationBusy || isWebPreview"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium" for="gen-instructions">Instructions (optional)</label>
+              <label class="block text-sm font-medium" for="gen-instructions">{{ t('create.instructions') }} ({{ t('common.optional') }})</label>
               <textarea
                 id="gen-instructions"
                 v-model="instructions"
                 rows="3"
-                placeholder="e.g. Focus on key definitions and common exam questions"
+                :placeholder="t('create.instructionsPlaceholder')"
                 class="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                 :disabled="operationBusy || isWebPreview"
               />
@@ -121,9 +121,9 @@
             <div>
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Sources</p>
+                  <p class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.sources') }}</p>
                   <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                    Limits: max {{ MAX_GENERATE_PDF_PAGES }} PDF pages total, max {{ MAX_GENERATE_IMAGES }} images.
+                    {{ t('create.sourceLimits', { pages: MAX_GENERATE_PDF_PAGES, images: MAX_GENERATE_IMAGES }) }}
                   </p>
                 </div>
 
@@ -134,7 +134,7 @@
                     :disabled="operationBusy || isWebPreview || ingestBusy"
                     @click="openPicker"
                   >
-                    {{ ingestBusy ? 'Checking…' : 'Choose files' }}
+                    {{ ingestBusy ? t('create.checking') : t('create.chooseFiles') }}
                   </button>
                   <button
                     v-if="pickedAny"
@@ -143,7 +143,7 @@
                     :disabled="operationBusy || isWebPreview || ingestBusy"
                     @click="clearPicked"
                   >
-                    Clear
+                    {{ t('common.clear') }}
                   </button>
                 </div>
               </div>
@@ -161,19 +161,19 @@
                 <div
                   class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
-                  <p class="text-xs font-medium text-slate-500 dark:text-slate-400">PDF pages</p>
+                  <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.pdfPages') }}</p>
                   <p class="mt-1 font-medium">{{ totalPdfPages }}/{{ MAX_GENERATE_PDF_PAGES }}</p>
                 </div>
                 <div
                   class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
-                  <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Images</p>
+                  <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.images') }}</p>
                   <p class="mt-1 font-medium">{{ pickedImages.length }}/{{ MAX_GENERATE_IMAGES }}</p>
                 </div>
                 <div
                   class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
-                  <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Files</p>
+                  <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.files') }}</p>
                   <p class="mt-1 font-medium">{{ pickedCount }}</p>
                 </div>
               </div>
@@ -196,7 +196,7 @@
         >
           <div class="flex items-start justify-between gap-4">
             <div>
-              <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">AI output</h2>
+              <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.aiOutput') }}</h2>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
                 If parsing fails, copy the raw output and try again.
               </p>
@@ -209,7 +209,7 @@
                 :disabled="!rawOutput"
                 @click="copyRaw"
               >
-                Copy
+                {{ t('common.copy') }}
               </button>
               <button
                 type="button"
@@ -217,7 +217,7 @@
                 :disabled="!rawOutput"
                 @click="selectAllRaw"
               >
-                Select all
+                {{ t('common.selectAll') }}
               </button>
             </div>
           </div>
@@ -227,7 +227,7 @@
           </p>
 
           <div class="mt-4">
-            <label class="sr-only" for="gen-raw-output">Raw output</label>
+            <label class="sr-only" for="gen-raw-output">{{ t('create.rawOutput') }}</label>
             <textarea
               id="gen-raw-output"
               ref="rawTextareaEl"
@@ -274,8 +274,10 @@ import {
   type FailedGenerateSource,
   type GenerateSourceFile
 } from '~/src/composables/generate/source-extraction'
+import { useAppLanguage } from '~/src/composables/language'
 
 const router = useRouter()
+const { t } = useAppLanguage()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 
 const hasTauriInternals = hasTauriRuntime()
@@ -385,9 +387,9 @@ const pickedSummary = computed(() => {
 const operationBusy = computed(() => busy.value || parseBusy.value)
 
 const generateButtonLabel = computed(() => {
-  if (parseBusy.value) return 'Parsing…'
-  if (busy.value) return 'Generating…'
-  return 'Generate'
+  if (parseBusy.value) return t('create.parsing')
+  if (busy.value) return t('create.generating')
+  return t('home.generate')
 })
 
 const generateDisabled = computed(() => {
