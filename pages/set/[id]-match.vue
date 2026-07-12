@@ -143,10 +143,11 @@ import {
     type MatchTile,
 } from "~/src/composables/match/generator";
 import { useAppLanguage } from "~/src/composables/language";
+import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 
 const route = useRoute();
 const router = useRouter();
-const { t } = useAppLanguage();
+const { language, t } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isWebPreview = computed(() => !hasTauriRuntime());
@@ -437,23 +438,17 @@ async function loadSet(setId: Uuid) {
     }
 }
 
+watch(language, () => {
+    if (!isWebPreview.value) return;
+    set.value = createWebPreviewDemoSet(t, { termCount: 4 });
+    resetMatchStateForRun();
+    if (set.value) matchPrepareTiles(set.value);
+});
+
 onMounted(async () => {
     try {
         if (isWebPreview.value) {
-            const now = new Date().toISOString();
-            set.value = {
-                id: "demo" as Uuid,
-                title: "Demo set",
-                description: "Demo",
-                terms: [
-                    { id: "t-1", front: "Term 1", back: "Definition 1" },
-                    { id: "t-2", front: "Term 2", back: "Definition 2" },
-                    { id: "t-3", front: "Term 3", back: "Definition 3" },
-                    { id: "t-4", front: "Term 4", back: "Definition 4" },
-                ],
-                createdAt: now,
-                updatedAt: now,
-            };
+            set.value = createWebPreviewDemoSet(t, { termCount: 4 });
             busy.value = false;
             resetMatchStateForRun();
             if (set.value) matchPrepareTiles(set.value);
@@ -500,20 +495,7 @@ onMounted(async () => {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
         if (tauriInvoke !== "function") {
-            const now = new Date().toISOString();
-            set.value = {
-                id: "demo" as Uuid,
-                title: "Demo set",
-                description: "Demo",
-                terms: [
-                    { id: "t-1", front: "Term 1", back: "Definition 1" },
-                    { id: "t-2", front: "Term 2", back: "Definition 2" },
-                    { id: "t-3", front: "Term 3", back: "Definition 3" },
-                    { id: "t-4", front: "Term 4", back: "Definition 4" },
-                ],
-                createdAt: now,
-                updatedAt: now,
-            };
+            set.value = createWebPreviewDemoSet(t, { termCount: 4 });
             busy.value = false;
             resetMatchStateForRun();
             if (set.value) matchPrepareTiles(set.value);

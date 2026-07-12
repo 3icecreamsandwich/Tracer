@@ -270,7 +270,7 @@
                                 <p
                                     class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    Correct: {{ correctCount }} · Attempted:
+                                    {{ t('set.correct') }} {{ correctCount }} · {{ t('set.attempted') }}
                                     {{ attemptedCount }}
                                 </p>
 
@@ -316,7 +316,7 @@
                                 <button
                                     ref="viewerButtonEl"
                                     type="button"
-                                    class="mt-3 w-full rounded-md border border-slate-200 bg-slate-50 p-6 text-left shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    class="relative mt-3 w-full rounded-md border border-slate-200 bg-slate-50 p-6 text-left shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     :class="{
                                         'animate-flip': isFlipping,
                                         'animate-slide-left':
@@ -327,10 +327,16 @@
                                     :disabled="totalCount === 0"
                                     @click="toggleFlip"
                                 >
+                                    <span
+                                        v-if="isCurrentRetry"
+                                        class="absolute top-3 right-3 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100"
+                                    >
+                                        {{ t('set.tryAgain') }}
+                                    </span>
                                     <p
                                         class="text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        {{ isFlipped ? "Definition" : "Term" }}
+                                        {{ isFlipped ? t('create.definition') : t('create.term') }}
                                     </p>
                                     <div
                                         class="flashcard-content-row mt-3 flex w-full flex-row items-center justify-center text-center text-slate-900 dark:text-slate-50"
@@ -376,7 +382,7 @@
                                             :disabled="
                                                 totalCount === 0 ||
                                                 cursorIndex >=
-                                                    totalCount - 1
+                                                    order.length - 1
                                             "
                                             @click="goNext"
                                         >
@@ -498,8 +504,8 @@
                                 <p
                                     class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    Correct: {{ learnCorrectCount }} ·
-                                    Attempted: {{ learnAttemptedCount }}
+                                    {{ t('set.correct') }} {{ learnCorrectCount }} ·
+                                    {{ t('set.attempted') }} {{ learnAttemptedCount }}
                                 </p>
 
                                 <div class="mt-4 flex flex-wrap gap-2">
@@ -950,7 +956,7 @@
                             </div>
 
                             <ul v-else class="mt-3 space-y-3">
-                                <li v-for="(t, idx) in set.terms" :key="t.id">
+                                <li v-for="(term, idx) in set.terms" :key="term.id">
                                     <div
                                         class="relative rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                                     >
@@ -958,16 +964,16 @@
                                             type="button"
                                             class="absolute top-3 right-3 inline-flex items-center justify-center w-6 h-6 rounded-md text-sm transition-colors"
                                             :class="
-                                                starredTermIds.has(t.id as Uuid)
+                                                starredTermIds.has(term.id as Uuid)
                                                     ? 'text-yellow-500'
                                                     : 'border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900'
                                             "
                                             :aria-pressed="
-                                                starredTermIds.has(t.id as Uuid)
+                                                starredTermIds.has(term.id as Uuid)
                                             "
                                             :disabled="starBusy"
                                             @click="
-                                                toggleTermStar(t.id as Uuid)
+                                                toggleTermStar(term.id as Uuid)
                                             "
                                         >
                                             <span class="text-lg">★</span>
@@ -985,7 +991,7 @@
                                                 >{{ t('set.termLabel') }}
                                             </span>
                                             <div class="mt-1">
-                                                <MarkdownRenderer :markdown="t.front" variant="compact" />
+                                                <MarkdownRenderer :markdown="term.front" variant="compact" />
                                             </div>
                                         </div>
                                         <div
@@ -996,7 +1002,7 @@
                                                 >{{ t('set.definitionLabel') }}
                                             </span>
                                             <div class="mt-1">
-                                                <MarkdownRenderer :markdown="t.back" variant="compact" />
+                                                <MarkdownRenderer :markdown="term.back" variant="compact" />
                                             </div>
                                         </div>
                                     </div>
@@ -1139,10 +1145,11 @@ import {
     type AiErrorUx,
 } from "~/src/composables/ai/ux-errors";
 import { useAppLanguage } from "~/src/composables/language";
+import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 
 const route = useRoute();
 const router = useRouter();
-const { t, translateAppGeneratedText } = useAppLanguage();
+const { language, t, translateAppGeneratedText } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isNestedSetRoute = computed(() =>
@@ -1184,6 +1191,8 @@ const cursorIndex = ref(0);
 const order = ref<Uuid[]>([]);
 const lastOrder = ref<Uuid[]>([]);
 const answersByTermId = ref<Record<Uuid, FlashcardsAnswer>>({});
+const answerAttemptsCount = ref(0);
+const retryTermIds = ref<Set<Uuid>>(new Set());
 
 const starredTermIds = ref<Set<Uuid>>(new Set());
 const starBusy = ref(false);
@@ -1428,23 +1437,11 @@ async function loadSet(setId: Uuid) {
 }
 
 async function initWebDemoSet() {
-    const now = new Date().toISOString();
     const demoId =
         typeof route.params.id === "string" && route.params.id.trim()
             ? route.params.id
             : "demo";
-    set.value = {
-        id: demoId as Uuid,
-        title: "Demo set",
-        description:
-            "This is a web fallback to validate viewer keyboard behavior.",
-        terms: [
-            { id: "t-1", front: "Term 1", back: "Definition 1" },
-            { id: "t-2", front: "Term 2", back: "Definition 2" },
-        ],
-        createdAt: now,
-        updatedAt: now,
-    };
+    set.value = createWebPreviewDemoSet(t, { id: demoId as Uuid });
     // Web preview fallback: allow E2E validation of study guide navigation.
     studyGuideSetId.value = set.value.id;
     busy.value = false;
@@ -1497,9 +1494,7 @@ const termById = computed(() => {
     return m;
 });
 
-const attemptedCount = computed(
-    () => Object.keys(answersByTermId.value).length,
-);
+const attemptedCount = computed(() => answerAttemptsCount.value);
 const correctCount = computed(
     () =>
         Object.values(answersByTermId.value).filter((v) => v === "correct")
@@ -1507,13 +1502,13 @@ const correctCount = computed(
 );
 const isFinished = computed(() => {
     const total = totalCount.value;
-    return total > 0 && attemptedCount.value >= total;
+    return total > 0 && correctCount.value >= total;
 });
 
 const ratioText = computed(() => {
     const total = totalCount.value;
     if (total === 0) return "0/0";
-    return `${Math.min(attemptedCount.value, total)}/${total}`;
+    return `${Math.min(correctCount.value, total)}/${total}`;
 });
 
 const currentTerm = computed(() => {
@@ -1543,6 +1538,13 @@ const isCurrentStarred = computed(() => {
     return starredTermIds.value.has(t.id as Uuid);
 });
 
+const isCurrentRetry = computed(() => {
+    const t = currentTerm.value;
+    if (!t) return false;
+    const id = t.id as Uuid;
+    return retryTermIds.value.has(id) && answersByTermId.value[id] === "incorrect";
+});
+
 const accuracyText = computed(() => {
     const attempted = attemptedCount.value;
     if (attempted <= 0) return "0%";
@@ -1566,10 +1568,10 @@ function toggleFlip() {
 }
 
 function goPrev() {
-    if (totalCount.value === 0) return;
+    if (order.value.length === 0) return;
     const next = Math.min(
         Math.max(cursorIndex.value - 1, 0),
-        totalCount.value - 1,
+        order.value.length - 1,
     );
     if (next !== cursorIndex.value) {
         isNavigating.value = "prev";
@@ -1582,10 +1584,10 @@ function goPrev() {
 }
 
 function goNext() {
-    if (totalCount.value === 0) return;
+    if (order.value.length === 0) return;
     const next = Math.min(
         Math.max(cursorIndex.value + 1, 0),
-        totalCount.value - 1,
+        order.value.length - 1,
     );
     if (next !== cursorIndex.value) {
         isNavigating.value = "next";
@@ -2050,6 +2052,8 @@ function shuffleRun() {
         order.value = ids;
         cursorIndex.value = 0;
         answersByTermId.value = {};
+        answerAttemptsCount.value = 0;
+        retryTermIds.value = new Set();
         isFlipped.value = false;
         return;
     }
@@ -2072,6 +2076,8 @@ function shuffleRun() {
     order.value = nextOrder;
     cursorIndex.value = 0;
     answersByTermId.value = {};
+    answerAttemptsCount.value = 0;
+    retryTermIds.value = new Set();
     isFlipped.value = false;
     nextTick(() => viewerButtonEl.value?.focus());
 }
@@ -2087,6 +2093,8 @@ function startRun(options?: { resetCounter?: boolean }) {
     order.value = ids;
     cursorIndex.value = 0;
     answersByTermId.value = {};
+    answerAttemptsCount.value = 0;
+    retryTermIds.value = new Set();
     isFlipped.value = false;
 }
 
@@ -2113,7 +2121,7 @@ function findNextUnattempted(fromIndex: number) {
         const idx = (fromIndex + step) % ids.length;
         const id = ids[idx];
         if (!id) continue;
-        if (!answered[id]) return idx;
+        if (answered[id] !== "correct") return idx;
     }
     return null;
 }
@@ -2121,10 +2129,20 @@ function findNextUnattempted(fromIndex: number) {
 function markAnswer(answer: FlashcardsAnswer) {
     const t = currentTerm.value;
     if (!t) return;
+    const id = t.id as Uuid;
+    answerAttemptsCount.value += 1;
     answersByTermId.value = {
         ...answersByTermId.value,
-        [t.id as Uuid]: answer,
+        [id]: answer,
     };
+    const retries = new Set(retryTermIds.value);
+    if (answer === "incorrect") {
+        retries.add(id);
+        order.value = [...order.value, id];
+    } else {
+        retries.delete(id);
+    }
+    retryTermIds.value = retries;
     isFlipped.value = false;
     const next = findNextUnattempted(cursorIndex.value + 1);
     if (next === null) {
@@ -2630,6 +2648,11 @@ watch(
     },
     { flush: "post" },
 );
+
+watch(language, async () => {
+    if (!isWebPreview.value || isNestedSetRoute.value) return;
+    await initWebDemoSet();
+});
 
 watch(
     isNestedSetRoute,

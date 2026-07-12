@@ -248,6 +248,13 @@
         </div>
       </div>
     </div>
+
+    <DuplicateCardsDialog
+      :open="duplicateReviewOpen"
+      :issues="duplicateIssues"
+      @cancel="closeDuplicateReview"
+      @confirm="confirmDuplicateReview"
+    />
   </main>
 </template>
 
@@ -259,6 +266,11 @@ import { normalizeTerms, type TermInput, TermsValidationError } from '~/src/comp
 import type { FlashcardSet, TermImage, Uuid } from '~/src/composables/db/types'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 import { useAppLanguage } from '~/src/composables/language'
+import { createWebPreviewDemoSet } from '~/src/composables/demo-content'
+import {
+  findDuplicateCardIssues,
+  type DuplicateCardIssue
+} from '~/src/composables/cards/duplicates'
 
 type DraftCardRow = {
   key: string
@@ -273,7 +285,7 @@ type CardImageSide = 'frontImage' | 'backImage'
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useAppLanguage()
+const { language, t } = useAppLanguage()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 const isWebPreview = computed(() => !hasTauriRuntime())
 
@@ -291,6 +303,9 @@ const loadError = ref<string | null>(null)
 const formError = ref<string | null>(null)
 const deleteOpen = ref(false)
 const titleEl = ref<HTMLInputElement | null>(null)
+const duplicateReviewOpen = ref(false)
+const duplicateIssues = ref<DuplicateCardIssue[]>([])
+let duplicateReviewContinuation: (() => void) | null = null
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
@@ -334,6 +349,48 @@ function removeCard(index: number) {
   const next = cards.value.slice()
   next.splice(index, 1)
   cards.value = next.length ? next : [{ key: crypto.randomUUID(), front: '', back: '' }]
+}
+
+function ensureOneDraftCard() {
+  if (cards.value.length > 0) return
+  cards.value = [{ key: crypto.randomUUID(), front: '', back: '' }]
+}
+
+function currentDuplicateIssues() {
+  return findDuplicateCardIssues(cards.value)
+}
+
+function requestDuplicateReview(continuation?: () => void) {
+  const issues = currentDuplicateIssues()
+  if (issues.length === 0) return false
+  duplicateIssues.value = issues
+  duplicateReviewContinuation = continuation ?? null
+  duplicateReviewOpen.value = true
+  return true
+}
+
+function closeDuplicateReview() {
+  duplicateReviewOpen.value = false
+  duplicateReviewContinuation = null
+}
+
+function confirmDuplicateReview(decisions: Record<string, 'keep' | 'remove'>) {
+  const removeIndexes = new Set(
+    duplicateIssues.value
+      .filter((issue) => decisions[issue.id] === 'remove')
+      .map((issue) => issue.cardIndex)
+  )
+
+  if (removeIndexes.size > 0) {
+    cards.value = cards.value.filter((_, index) => !removeIndexes.has(index))
+    ensureOneDraftCard()
+  }
+
+  const next = duplicateReviewContinuation
+  duplicateReviewOpen.value = false
+  duplicateReviewContinuation = null
+  duplicateIssues.value = []
+  next?.()
 }
 
 function imageInputId(cardKey: string, side: CardImageSide) {
@@ -490,33 +547,31 @@ async function loadSet() {
 }
 
 async function initWebDemoSet() {
-  const now = new Date().toISOString()
   const id = setId.value ?? ('demo' as Uuid)
-  setDraftFromSet({
+  setDraftFromSet(createWebPreviewDemoSet(t, {
     id,
-    title: 'Demo set',
-    description: 'Web preview fallback. Editing requires the desktop app.',
-    terms: [
-      { id: 't-1' as Uuid, front: 'Term 1', back: 'Definition 1' },
-      { id: 't-2' as Uuid, front: 'Term 2', back: 'Definition 2' }
-    ],
-    createdAt: now,
-    updatedAt: now
-  })
+    descriptionKey: 'demo.editDescription'
+  }))
   loadError.value = null
   busy.value = false
   await nextTick()
   titleEl.value?.focus()
 }
 
-async function onUpdate() {
+watch(language, async () => {
+  if (!isWebPreview.value) return;
+  await initWebDemoSet()
+})
+
+async function onUpdate(skipDuplicateReview = false) {
   formError.value = null
   const id = setId.value
   if (!id || busy.value) return
 
-  busy.value = true
   try {
     const validated = validateInputs()
+    if (!skipDuplicateReview && requestDuplicateReview(() => void onUpdate(true))) return
+    busy.value = true
     const terms = normalizeTerms(validated.termInputs)
     if (isWebPreview.value) {
       notifySearchItemsChanged()

@@ -23,7 +23,7 @@
         role="status"
         aria-live="polite"
       >
-        Study guides require the desktop app (Tauri) for database access.
+        {{ t('studyGuide.webPreviewNotice') }}
       </div>
 
       <div class="mt-6">
@@ -42,7 +42,7 @@
           v-else
           class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         >
-          <MarkdownRenderer :markdown="markdown" />
+          <MarkdownRenderer :markdown="displayMarkdown" />
         </div>
       </div>
     </div>
@@ -70,6 +70,25 @@ const isWebPreview = computed(() => !hasTauriInternals)
 const busy = ref(true)
 const loadError = ref<string | null>(null)
 const markdown = ref('')
+const displayMarkdown = computed(() => {
+  if (!isWebPreview.value) return markdown.value
+  return [
+    `# ${t('studyGuide.demoTitle')}`,
+    '',
+    t('studyGuide.demoIntro'),
+    '',
+    `- ${t('studyGuide.demoList')}`,
+    `- ${t('studyGuide.demoCode')}`,
+    '',
+    `| ${t('studyGuide.demoTopic')} | ${t('studyGuide.demoStatus')} |`,
+    '| --- | --- |',
+    `| ${t('studyGuide.demoTables')} | ${t('studyGuide.demoRenderCorrectly')} |`,
+    '',
+    '```ts',
+    'const demo = true',
+    '```'
+  ].join('\n')
+})
 
 const setId = computed(() => {
   const id = route.params.setId
@@ -102,22 +121,6 @@ async function loadGuide(setId: Uuid) {
 onMounted(async () => {
   if (isWebPreview.value) {
     busy.value = false
-    markdown.value = [
-      '# Demo study guide',
-      '',
-      'This paragraph includes **bold Markdown** and _italic text_.',
-      '',
-      '- Lists render in the study guide view.',
-      '- Code blocks render without executing HTML.',
-      '',
-      '| Topic | Status |',
-      '| --- | --- |',
-      '| Tables | Render correctly |',
-      '',
-      '```ts',
-      'const demo = true',
-      '```'
-    ].join('\n')
     return
   }
 

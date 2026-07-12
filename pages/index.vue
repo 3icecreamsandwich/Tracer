@@ -33,7 +33,7 @@
                 role="status"
                 aria-live="polite"
               >
-                This is a web preview. Showing demo items; your full set list requires the desktop app (Tauri).
+                {{ t('demo.webPreviewNotice') }}
               </div>
 
               <div
@@ -144,6 +144,7 @@ import type { FlashcardSetListItem, Uuid } from '../src/composables/db/types'
 import { hasTauriRuntime } from '../src/composables/tauri'
 import { filterSetSearch } from '../src/composables/search/set-search'
 import { useAppLanguage } from '../src/composables/language'
+import { createDemoStudyGuideTitle } from '../src/composables/demo-content'
 
 const router = useRouter()
 const route = useRoute()
@@ -191,8 +192,8 @@ function initWebDemoItems() {
       kind: 'set',
       kindLabel: 'Set',
       id: 'demo' as Uuid,
-      title: 'Demo set',
-      subtitle: 'Web preview fallback. Full list requires desktop.',
+      title: t('demo.setTitle'),
+      subtitle: t('demo.setDescription'),
       createdAt: now,
       updatedAt: now
     },
@@ -207,6 +208,8 @@ function initWebDemoItems() {
       updatedAt: null
     }
   ]
+  const guide = items.value.find((item) => item.kind === 'study-guide')
+  if (guide) guide.title = createDemoStudyGuideTitle(t)
 }
 
 function formatDate(iso: string) {
@@ -273,6 +276,10 @@ function toSetListItem(s: FlashcardSetListItem): HomeListItem {
     updatedAt: s.updatedAt
   }
 }
+
+watch(language, () => {
+  if (!hasTauriRuntime()) initWebDemoItems()
+})
 
 onMounted(async () => {
   if (!hasTauriRuntime()) {

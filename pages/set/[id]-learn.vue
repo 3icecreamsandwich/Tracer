@@ -136,10 +136,11 @@ import {
 import { resolveAiModel } from "~/src/composables/ai/registry";
 import { generateText } from "ai";
 import { useAppLanguage } from "~/src/composables/language";
+import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 
 const route = useRoute();
 const router = useRouter();
-const { t } = useAppLanguage();
+const { language, t } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isWebPreview = computed(() => !hasTauriRuntime());
@@ -409,21 +410,16 @@ async function loadSet(setId: Uuid) {
     }
 }
 
+watch(language, async () => {
+    if (!isWebPreview.value) return;
+    set.value = createWebPreviewDemoSet(t);
+    await startLearnRun({ resetCounter: true });
+});
+
 onMounted(async () => {
     try {
         if (isWebPreview.value) {
-            const now = new Date().toISOString();
-            set.value = {
-                id: "demo" as Uuid,
-                title: "Demo set",
-                description: "Demo",
-                terms: [
-                    { id: "t-1", front: "Term 1", back: "Definition 1" },
-                    { id: "t-2", front: "Term 2", back: "Definition 2" },
-                ],
-                createdAt: now,
-                updatedAt: now,
-            };
+            set.value = createWebPreviewDemoSet(t);
             busy.value = false;
             await startLearnRun({ resetCounter: true });
             return;
@@ -469,18 +465,7 @@ onMounted(async () => {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
         if (tauriInvoke !== "function") {
-            const now = new Date().toISOString();
-            set.value = {
-                id: "demo" as Uuid,
-                title: "Demo set",
-                description: "Demo",
-                terms: [
-                    { id: "t-1", front: "Term 1", back: "Definition 1" },
-                    { id: "t-2", front: "Term 2", back: "Definition 2" },
-                ],
-                createdAt: now,
-                updatedAt: now,
-            };
+            set.value = createWebPreviewDemoSet(t);
             busy.value = false;
             await startLearnRun({ resetCounter: true });
             return;

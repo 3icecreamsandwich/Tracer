@@ -1,5 +1,8 @@
 import type { Uuid } from '../db'
+import { createDemoStudyGuideTitle } from '../demo-content'
 import { filterSetSearch, type SetSearchable } from './set-search'
+
+type Translate = (key: string, params?: Record<string, string | number>) => string
 
 export type TopbarSearchItem = SetSearchable & {
   kind: 'set' | 'study-guide'
@@ -21,22 +24,25 @@ export function topbarSearchItemTo(item: TopbarSearchItem) {
   return `/study-guide/${item.setId ?? item.id}`
 }
 
-export function createWebPreviewSearchItems(now = new Date().toISOString()): TopbarSearchItem[] {
+export function createWebPreviewSearchItems(
+  t: Translate,
+  now = new Date().toISOString()
+): TopbarSearchItem[] {
   return [
     {
       kind: 'set',
       kindLabel: 'Set',
       id: 'demo' as Uuid,
-      title: 'Demo set',
-      description: 'Web preview fallback. Full list requires desktop.',
-      subtitle: 'Web preview fallback. Full list requires desktop.'
+      title: t('demo.setTitle'),
+      description: t('demo.setDescription'),
+      subtitle: t('demo.setDescription')
     },
     {
       kind: 'study-guide',
       kindLabel: 'Study guide',
       id: 'demo-guide' as Uuid,
       setId: 'demo' as Uuid,
-      title: 'Study guide · Demo set',
+      title: createDemoStudyGuideTitle(t),
       description: `Created ${now}`,
       subtitle: null
     }

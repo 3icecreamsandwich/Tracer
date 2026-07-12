@@ -246,6 +246,13 @@
         />
       </div>
     </div>
+
+    <DuplicateCardsDialog
+      :open="duplicateReviewOpen"
+      :issues="duplicateIssues"
+      @cancel="closeDuplicateReview"
+      @confirm="confirmDuplicateReview"
+    />
   </main>
 </template>
 
@@ -256,6 +263,10 @@ import { createProfileRepo, createSettingsRepo, createSetsRepo, useTracerDb } fr
 import { useAppLanguage } from '~/src/composables/language'
 import { normalizeTerms, parseTermsDelimited, type TermInput, TermsValidationError } from '~/src/composables/db/validators'
 import type { TermImage } from '~/src/composables/db/types'
+import {
+  findDuplicateCardIssues,
+  type DuplicateCardIssue
+} from '~/src/composables/cards/duplicates'
 
 const { t } = useAppLanguage()
 
@@ -282,6 +293,9 @@ const formError = ref<string | null>(null)
 const isImportOpen = ref(false)
 const importText = ref('')
 const importError = ref<string | null>(null)
+const duplicateReviewOpen = ref(false)
+const duplicateIssues = ref<DuplicateCardIssue[]>([])
+let duplicateReviewContinuation: (() => void) | null = null
 
 const titleEl = ref<HTMLInputElement | null>(null)
 const importTextareaEl = ref<HTMLTextAreaElement | null>(null)
@@ -330,6 +344,48 @@ function appendImportedCards(termInputs: TermInput[]) {
       backImage: term.backImage ?? null
     }))
   ]
+}
+
+function ensureOneDraftCard() {
+  if (cards.value.length > 0) return
+  cards.value = [{ key: crypto.randomUUID(), front: '', back: '' }]
+}
+
+function currentDuplicateIssues() {
+  return findDuplicateCardIssues(cards.value)
+}
+
+function requestDuplicateReview(continuation?: () => void) {
+  const issues = currentDuplicateIssues()
+  if (issues.length === 0) return false
+  duplicateIssues.value = issues
+  duplicateReviewContinuation = continuation ?? null
+  duplicateReviewOpen.value = true
+  return true
+}
+
+function closeDuplicateReview() {
+  duplicateReviewOpen.value = false
+  duplicateReviewContinuation = null
+}
+
+function confirmDuplicateReview(decisions: Record<string, 'keep' | 'remove'>) {
+  const removeIndexes = new Set(
+    duplicateIssues.value
+      .filter((issue) => decisions[issue.id] === 'remove')
+      .map((issue) => issue.cardIndex)
+  )
+
+  if (removeIndexes.size > 0) {
+    cards.value = cards.value.filter((_, index) => !removeIndexes.has(index))
+    ensureOneDraftCard()
+  }
+
+  const next = duplicateReviewContinuation
+  duplicateReviewOpen.value = false
+  duplicateReviewContinuation = null
+  duplicateIssues.value = []
+  next?.()
 }
 
 function imageInputId(cardKey: string, side: CardImageSide) {
@@ -426,6 +482,7 @@ function importCardsFromRawText(raw: string) {
   appendImportedCards(rows)
   importText.value = ''
   closeImport()
+  requestDuplicateReview()
 }
 
 function importFromText() {
@@ -492,12 +549,13 @@ function validateInputs(): { title: string; description: string | null; termInpu
   return { title: t, description: desc, termInputs }
 }
 
-async function onCreate() {
+async function onCreate(skipDuplicateReview = false) {
   formError.value = null
   if (busy.value) return
-  busy.value = true
   try {
     const { title: t, description: desc, termInputs } = validateInputs()
+    if (!skipDuplicateReview && requestDuplicateReview(() => void onCreate(true))) return
+    busy.value = true
     const terms = normalizeTerms(termInputs)
     const db = await useTracerDb()
     const repo = createSetsRepo(db)

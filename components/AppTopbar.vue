@@ -135,7 +135,7 @@ import {
 } from "~/src/composables/search/topbar-search";
 import { useAppLanguage } from "~/src/composables/language";
 
-const { t, translateAppGeneratedText } = useAppLanguage();
+const { language, t, translateAppGeneratedText } = useAppLanguage();
 
 const draft = ref("");
 const searchRootEl = ref<HTMLElement | null>(null);
@@ -156,6 +156,10 @@ watch(draft, () => {
     openSearch();
 });
 
+watch(language, () => {
+    invalidateSearchItems();
+});
+
 function searchItemKey(item: TopbarSearchItem) {
     return `${item.kind}:${item.id}`;
 }
@@ -166,6 +170,7 @@ function searchResultKindLabel(item: TopbarSearchItem) {
 
 function searchResultTitle(item: TopbarSearchItem) {
     if (item.kind === "set") return item.title;
+    if (item.title.startsWith(`${t("home.studyGuide")} `)) return item.title;
     const separator = " · ";
     const setTitle = item.title.includes(separator)
         ? item.title.slice(item.title.indexOf(separator) + separator.length)
@@ -211,7 +216,7 @@ async function loadSearchItems() {
     searchError.value = null;
     try {
         if (!hasTauriRuntime()) {
-            searchItems.value = createWebPreviewSearchItems();
+            searchItems.value = createWebPreviewSearchItems(t);
             searchLoaded = true;
             return;
         }

@@ -29,7 +29,7 @@
                         <span class="font-medium">{{ accuracyText }}</span>
                     </p>
                     <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 select-none">
-                        Correct: {{ correctCount }} · Attempted: {{ attemptedCount }}
+                        {{ t('set.correct') }} {{ correctCount }} · {{ t('set.attempted') }} {{ attemptedCount }}
                     </p>
 
                     <div class="mt-6 flex flex-wrap justify-center gap-2 select-none">
@@ -57,13 +57,19 @@
                 <button
                     ref="viewerButtonEl"
                     type="button"
-                    class="flex flex-col items-center justify-center w-[70vw] h-[50vh] rounded-lg border border-slate-200 bg-slate-50 px-8 py-12 text-center shadow-md hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    class="relative flex flex-col items-center justify-center w-[70vw] h-[50vh] rounded-lg border border-slate-200 bg-slate-50 px-8 py-12 text-center shadow-md hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                     :class="{ 'animate-flip': isFlipping, 'animate-slide-left': isNavigating === 'next', 'animate-slide-right': isNavigating === 'prev' }"
                     :disabled="totalCount === 0"
                     @click="toggleFlip"
                 >
+                    <span
+                        v-if="isCurrentRetry"
+                        class="absolute top-4 right-4 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100"
+                    >
+                        {{ t('set.tryAgain') }}
+                    </span>
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
-                        {{ isFlipped ? "Definition" : "Term" }}
+                        {{ isFlipped ? t('create.definition') : t('create.term') }}
                     </p>
                     <div
                         class="flashcard-content-row mt-4 flex w-full flex-row items-center justify-center overflow-y-auto text-center text-4xl font-medium text-slate-900 dark:text-slate-50"
@@ -100,16 +106,16 @@
                         :disabled="totalCount === 0 || cursorIndex === 0"
                         @click="goPrev"
                     >
-                        ← Prev
+                        ← {{ t('set.previous') }}
                     </button>
 
                     <button
                         type="button"
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="totalCount === 0 || cursorIndex >= totalCount - 1"
+                        :disabled="totalCount === 0 || cursorIndex >= order.length - 1"
                         @click="goNext"
                     >
-                        Next →
+                        {{ t('set.next') }} →
                     </button>
 
                     <button
@@ -177,6 +183,7 @@
 <script setup lang="ts">
 import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import { useAppLanguage } from "~/src/composables/language";
+import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 import type { FlashcardSet, Uuid } from "~/src/composables/db/types";
 import {
     createProfileRepo,
@@ -189,7 +196,7 @@ import { lockGetStatus } from "~/src/composables/lock";
 import { useLockSession } from "~/src/composables/lock-session";
 import { hasTauriRuntime } from "~/src/composables/tauri";
 
-const { t } = useAppLanguage();
+const { language, t } = useAppLanguage();
 
 const route = useRoute();
 const router = useRouter();
@@ -210,6 +217,8 @@ const cursorIndex = ref(0);
 const order = ref<Uuid[]>([]);
 const lastOrder = ref<Uuid[]>([]);
 const answersByTermId = ref<Record<Uuid, "correct" | "incorrect">>({});
+const answerAttemptsCount = ref(0);
+const retryTermIds = ref<Set<Uuid>>(new Set());
 
 const starredTermIds = ref<Set<Uuid>>(new Set());
 const starBusy = ref(false);
@@ -257,9 +266,7 @@ const termById = computed(() => {
     return m;
 });
 
-const attemptedCount = computed(
-    () => Object.keys(answersByTermId.value).length,
-);
+const attemptedCount = computed(() => answerAttemptsCount.value);
 const correctCount = computed(
     () =>
         Object.values(answersByTermId.value).filter((v) => v === "correct")
@@ -267,13 +274,13 @@ const correctCount = computed(
 );
 const isFinished = computed(() => {
     const total = totalCount.value;
-    return total > 0 && attemptedCount.value >= total;
+    return total > 0 && correctCount.value >= total;
 });
 
 const ratioText = computed(() => {
     const total = totalCount.value;
     if (total === 0) return "0/0";
-    return `${Math.min(attemptedCount.value, total)}/${total}`;
+    return `${Math.min(correctCount.value, total)}/${total}`;
 });
 
 const currentTerm = computed(() => {
@@ -301,6 +308,13 @@ const isCurrentStarred = computed(() => {
     const t = currentTerm.value;
     if (!t) return false;
     return starredTermIds.value.has(t.id as Uuid);
+});
+
+const isCurrentRetry = computed(() => {
+    const t = currentTerm.value;
+    if (!t) return false;
+    const id = t.id as Uuid;
+    return retryTermIds.value.has(id) && answersByTermId.value[id] === "incorrect";
 });
 
 const accuracyText = computed(() => {
@@ -362,6 +376,8 @@ function shuffleRun() {
         order.value = ids;
         cursorIndex.value = 0;
         answersByTermId.value = {};
+        answerAttemptsCount.value = 0;
+        retryTermIds.value = new Set();
         isFlipped.value = false;
         return;
     }
@@ -384,6 +400,8 @@ function shuffleRun() {
     order.value = nextOrder;
     cursorIndex.value = 0;
     answersByTermId.value = {};
+    answerAttemptsCount.value = 0;
+    retryTermIds.value = new Set();
     isFlipped.value = false;
     nextTick(() => viewerButtonEl.value?.focus());
 }
@@ -398,6 +416,8 @@ function startRun(options?: { resetCounter?: boolean }) {
     order.value = ids;
     cursorIndex.value = 0;
     answersByTermId.value = {};
+    answerAttemptsCount.value = 0;
+    retryTermIds.value = new Set();
     isFlipped.value = false;
 }
 
@@ -426,10 +446,10 @@ function toggleFlip() {
 }
 
 function goPrev() {
-    if (totalCount.value === 0) return;
+    if (order.value.length === 0) return;
     const next = Math.min(
         Math.max(cursorIndex.value - 1, 0),
-        totalCount.value - 1,
+        order.value.length - 1,
     );
     if (next !== cursorIndex.value) {
         isNavigating.value = 'prev';
@@ -442,10 +462,10 @@ function goPrev() {
 }
 
 function goNext() {
-    if (totalCount.value === 0) return;
+    if (order.value.length === 0) return;
     const next = Math.min(
         Math.max(cursorIndex.value + 1, 0),
-        totalCount.value - 1,
+        order.value.length - 1,
     );
     if (next !== cursorIndex.value) {
         isNavigating.value = 'next';
@@ -465,7 +485,7 @@ function findNextUnattempted(fromIndex: number) {
         const idx = (fromIndex + step) % ids.length;
         const id = ids[idx];
         if (!id) continue;
-        if (!answered[id]) return idx;
+        if (answered[id] !== "correct") return idx;
     }
     return null;
 }
@@ -473,10 +493,20 @@ function findNextUnattempted(fromIndex: number) {
 function markAnswer(answer: "correct" | "incorrect") {
     const t = currentTerm.value;
     if (!t) return;
+    const id = t.id as Uuid;
+    answerAttemptsCount.value += 1;
     answersByTermId.value = {
         ...answersByTermId.value,
-        [t.id as Uuid]: answer,
+        [id]: answer,
     };
+    const retries = new Set(retryTermIds.value);
+    if (answer === "incorrect") {
+        retries.add(id);
+        order.value = [...order.value, id];
+    } else {
+        retries.delete(id);
+    }
+    retryTermIds.value = retries;
     isFlipped.value = false;
     const next = findNextUnattempted(cursorIndex.value + 1);
     if (next === null) {
@@ -567,21 +597,16 @@ function onKeydown(e: KeyboardEvent) {
     }
 }
 
+watch(language, () => {
+    if (!isWebPreview.value) return;
+    set.value = createWebPreviewDemoSet(t);
+    startRun({ resetCounter: true });
+});
+
 onMounted(async () => {
     try {
         if (isWebPreview.value) {
-            const now = new Date().toISOString();
-            set.value = {
-                id: "demo" as Uuid,
-                title: "Demo set",
-                description: "Demo",
-                terms: [
-                    { id: "t-1", front: "Term 1", back: "Definition 1" },
-                    { id: "t-2", front: "Term 2", back: "Definition 2" },
-                ],
-                createdAt: now,
-                updatedAt: now,
-            };
+            set.value = createWebPreviewDemoSet(t);
             busy.value = false;
             await loadStars(set.value.id);
             startRun({ resetCounter: true });
@@ -633,18 +658,7 @@ onMounted(async () => {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
         if (tauriInvoke !== "function") {
-            const now = new Date().toISOString();
-            set.value = {
-                id: "demo" as Uuid,
-                title: "Demo set",
-                description: "Demo",
-                terms: [
-                    { id: "t-1", front: "Term 1", back: "Definition 1" },
-                    { id: "t-2", front: "Term 2", back: "Definition 2" },
-                ],
-                createdAt: now,
-                updatedAt: now,
-            };
+            set.value = createWebPreviewDemoSet(t);
             busy.value = false;
             await loadStars(set.value.id);
             startRun({ resetCounter: true });
