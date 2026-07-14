@@ -5,17 +5,17 @@ export const languageOptions: Array<{
   englishName: string
   nativeName: string
 }> = [
-  { code: 'en', englishName: 'English', nativeName: 'English' },
-  { code: 'es', englishName: 'Spanish', nativeName: 'Español' },
-  { code: 'fr', englishName: 'French', nativeName: 'Français' },
-  { code: 'zh-CN', englishName: 'Chinese (Simplified)', nativeName: '简体中文' },
-  { code: 'hi', englishName: 'Hindi', nativeName: 'हिन्दी' },
-  { code: 'ar', englishName: 'Arabic', nativeName: 'العربية' },
-  { code: 'de', englishName: 'German', nativeName: 'Deutsch' },
-  { code: 'ru', englishName: 'Russian', nativeName: 'Русский' },
-  { code: 'ja', englishName: 'Japanese', nativeName: '日本語' },
-  { code: 'ko', englishName: 'Korean', nativeName: '한국어' },
-]
+    { code: 'en', englishName: 'English', nativeName: 'English' },
+    { code: 'es', englishName: 'Spanish', nativeName: 'Español' },
+    { code: 'fr', englishName: 'French', nativeName: 'Français' },
+    { code: 'zh-CN', englishName: 'Chinese (Simplified)', nativeName: '简体中文' },
+    { code: 'hi', englishName: 'Hindi', nativeName: 'हिन्दी' },
+    { code: 'ar', englishName: 'Arabic', nativeName: 'العربية' },
+    { code: 'de', englishName: 'German', nativeName: 'Deutsch' },
+    { code: 'ru', englishName: 'Russian', nativeName: 'Русский' },
+    { code: 'ja', englishName: 'Japanese', nativeName: '日本語' },
+    { code: 'ko', englishName: 'Korean', nativeName: '한국어' },
+  ]
 
 type Messages = Record<string, string>
 
@@ -71,10 +71,10 @@ const en: Messages = {
   'settings.resetDescription': 'Reset removes your vault and local database.',
   'settings.resetTracer': 'Reset Tracer',
   'home.sets': 'Sets',
-  'home.subtitle': 'Your flashcard sets and study guides.',
+  'home.subtitle': 'Your flashcard sets and study guides',
   'home.create': 'Create',
   'home.chooseMode': 'Choose a mode',
-  'home.noItems': 'No sets or study guides yet. Use Create to get started.',
+  'home.noItems': 'No sets or study guides yet; use Create to get started',
   'home.basic': 'Basic',
   'home.basicHint': 'Start from scratch',
   'home.synthesize': 'Synthesize',
@@ -120,7 +120,7 @@ const en: Messages = {
   'set.memory': 'Memory',
   'set.backToSet': 'Back to set',
   'studyGuide.title': 'Study guide',
-  'studyGuide.linkedTo': 'Linked to set {id}.',
+  'studyGuide.linkedTo': 'Linked to set {id}',
   'studyGuide.goToSet': 'Go to set',
   'auth.unlockTitle': 'Unlock Tracer',
   'auth.password': 'Password',
@@ -135,7 +135,7 @@ const es: Messages = {
   'common.back': 'Atrás', 'common.cancel': 'Cancelar', 'common.change': 'Cambiar', 'common.close': 'Cerrar', 'common.create': 'Crear', 'common.current': 'Actual:', 'common.delete': 'Eliminar', 'common.dismiss': 'Descartar', 'common.edit': 'Editar', 'common.export': 'Exportar', 'common.import': 'Importar', 'common.loading': 'Cargando…', 'common.none': 'Ninguno', 'common.off': 'Desactivado', 'common.on': 'Activado', 'common.remove': 'Quitar', 'common.restart': 'Reiniciar', 'common.save': 'Guardar', 'common.set': 'Establecer', 'common.update': 'Actualizar', 'common.user': 'Usuario',
   'nav.home': 'Inicio', 'nav.search': 'Buscar', 'nav.searchPlaceholder': 'Buscar conjuntos…', 'nav.searchResults': 'Resultados de búsqueda', 'nav.noResults': 'Sin resultados.', 'nav.settings': 'Configuración',
   'settings.title': 'Configuración', 'settings.actionRequired': 'Acción necesaria', 'settings.profile': 'Perfil', 'settings.theme': 'Tema', 'settings.darkMode': 'Modo oscuro', 'settings.darkModeDescription': 'Afecta a toda la aplicación y se conserva al reiniciar.', 'settings.language': 'Idioma', 'settings.languageDescription': 'Cambia el texto del sistema de Tracer. Tu contenido de estudio no se traduce.', 'settings.chooseLanguage': 'Elegir idioma', 'settings.defaultModel': 'Modelo de IA predeterminado', 'settings.defaultModelDescription': 'Necesario para Sintetizar, Generar y Chat.', 'settings.learnHybrid': 'Aprender · Híbrido (con IA)', 'settings.learnHybridDescription': 'Añade preguntas generadas por IA a la base determinista.', 'settings.chooseModelFirst': 'Elige un modelo de IA predeterminado para activarlo.', 'settings.providers': 'Proveedores', 'settings.providersDescription': 'Las claves y tokens se guardan en la bóveda.', 'settings.apiKey': 'Clave API', 'settings.startupLock': 'Solicitar contraseña al iniciar', 'settings.startupLockDescription': 'Si se desactiva, Tracer se desbloqueará con el llavero del sistema.', 'settings.dangerZone': 'Zona de peligro', 'settings.resetDescription': 'Restablecer elimina la bóveda y la base de datos local.', 'settings.resetTracer': 'Restablecer Tracer',
-  'home.sets': 'Conjuntos', 'home.subtitle': 'Tus conjuntos de tarjetas y guías de estudio.', 'home.create': 'Crear', 'home.chooseMode': 'Elige un modo', 'home.noItems': 'Aún no hay conjuntos ni guías. Usa Crear para empezar.', 'home.basic': 'Básico', 'home.basicHint': 'Empezar desde cero', 'home.synthesize': 'Sintetizar', 'home.synthesizeHint': 'Combinar conjuntos', 'home.generate': 'Generar', 'home.generateHint': 'Crear desde una indicación', 'home.studyGuide': 'Guía de estudio', 'home.setKind': 'Conjunto',
+  'home.sets': 'Conjuntos', 'home.subtitle': 'Tus conjuntos de tarjetas y guías de estudio.', 'home.create': 'Crear', 'home.chooseMode': 'Elige un modo', 'home.noItems': 'Aún no hay conjuntos ni guías; usa Crear para empezar', 'home.basic': 'Básico', 'home.basicHint': 'Empezar desde cero', 'home.synthesize': 'Sintetizar', 'home.synthesizeHint': 'Combinar conjuntos', 'home.generate': 'Generar', 'home.generateHint': 'Crear desde una indicación', 'home.studyGuide': 'Guía de estudio', 'home.setKind': 'Conjunto',
   'create.title': 'Título', 'create.description': 'Descripción', 'create.cards': 'Tarjetas', 'create.card': 'Tarjeta {number}', 'create.term': 'Término', 'create.definition': 'Definición', 'create.addImage': 'Añadir imagen', 'create.basicTitle': 'Crear · Básico', 'create.basicDescription': 'Añade tarjetas manualmente. Usa Tab para moverte y Ctrl/⌘ + Enter para añadir una tarjeta.', 'create.synthesizeTitle': 'Crear · Sintetizar', 'create.synthesizeDescription': 'Combina conjuntos existentes en uno nuevo.', 'create.generateTitle': 'Crear · Generar', 'create.generateDescription': 'Genera una guía de estudio y tarjetas desde tus fuentes.',
   'set.studyModes': 'Modos de estudio', 'set.flashcards': 'Tarjetas', 'set.flashcardsHint': 'Repaso rápido', 'set.learn': 'Aprender', 'set.learnHint': 'Ponte a prueba', 'set.match': 'Emparejar', 'set.matchHint': 'Encuentra parejas contrarreloj', 'set.chat': 'Chat', 'set.chatHint': 'Basado en este conjunto', 'set.studyGuide': 'Guía de estudio', 'set.studyGuideHint': 'Markdown', 'set.terms': 'Términos', 'set.shuffle': 'Mezclar', 'set.fullscreen': 'Pantalla completa', 'set.starredOnly': 'Solo favoritos', 'set.previous': 'Anterior', 'set.next': 'Siguiente', 'set.missed': 'No lo sabía', 'set.gotIt': 'Lo sabía', 'set.ready': 'Listo', 'set.start': 'Iniciar', 'set.memory': 'Memoria', 'set.backToSet': 'Volver al conjunto',
   'studyGuide.title': 'Guía de estudio', 'studyGuide.linkedTo': 'Vinculada al conjunto {id}.', 'studyGuide.goToSet': 'Ir al conjunto', 'auth.unlockTitle': 'Desbloquear Tracer', 'auth.password': 'Contraseña', 'auth.unlock': 'Desbloquear', 'auth.firstRunTitle': 'Configurar Tracer', 'auth.name': 'Nombre', 'auth.email': 'Correo', 'auth.confirmPassword': 'Confirmar contraseña',
@@ -706,6 +706,63 @@ const duplicateMessages: Record<AppLanguage, Messages> = {
 
 for (const language of Object.keys(duplicateMessages) as AppLanguage[]) {
   Object.assign(messageTargets[language], duplicateMessages[language])
+}
+
+const factCheckMessages: Record<AppLanguage, Messages> = {
+  en: {
+    'factCheck.title': 'Fact Check',
+    'factCheck.hint': 'Suggestions for factual corrections and important nuances.',
+    'factCheck.loading': 'Loading fact-check response'
+  },
+  es: {
+    'factCheck.title': 'Verificar hechos',
+    'factCheck.hint': 'Sugerencias de correcciones factuales y matices importantes.',
+    'factCheck.loading': 'Cargando la respuesta de verificación'
+  },
+  fr: {
+    'factCheck.title': 'Vérifier les faits',
+    'factCheck.hint': 'Suggestions de corrections factuelles et de nuances importantes.',
+    'factCheck.loading': 'Chargement de la vérification'
+  },
+  'zh-CN': {
+    'factCheck.title': '事实核查',
+    'factCheck.hint': '针对事实错误和重要细微差别的建议。',
+    'factCheck.loading': '正在加载事实核查结果'
+  },
+  hi: {
+    'factCheck.title': 'तथ्य जाँच',
+    'factCheck.hint': 'तथ्यात्मक सुधारों और महत्वपूर्ण बारीकियों के सुझाव।',
+    'factCheck.loading': 'तथ्य-जाँच प्रतिक्रिया लोड हो रही है'
+  },
+  ar: {
+    'factCheck.title': 'التحقق من الحقائق',
+    'factCheck.hint': 'اقتراحات لتصحيح الحقائق وتوضيح الفروق المهمة.',
+    'factCheck.loading': 'جارٍ تحميل نتيجة التحقق من الحقائق'
+  },
+  de: {
+    'factCheck.title': 'Fakten prüfen',
+    'factCheck.hint': 'Vorschläge für sachliche Korrekturen und wichtige Nuancen.',
+    'factCheck.loading': 'Faktenprüfung wird geladen'
+  },
+  ru: {
+    'factCheck.title': 'Проверить факты',
+    'factCheck.hint': 'Предложения по исправлению фактов и важным уточнениям.',
+    'factCheck.loading': 'Загрузка результата проверки фактов'
+  },
+  ja: {
+    'factCheck.title': 'ファクトチェック',
+    'factCheck.hint': '事実の訂正と重要なニュアンスに関する提案。',
+    'factCheck.loading': 'ファクトチェックの結果を読み込み中'
+  },
+  ko: {
+    'factCheck.title': '사실 확인',
+    'factCheck.hint': '사실 수정 및 중요한 뉘앙스에 대한 제안입니다.',
+    'factCheck.loading': '사실 확인 응답 불러오는 중'
+  }
+}
+
+for (const language of Object.keys(factCheckMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], factCheckMessages[language])
 }
 
 export const messages: Record<AppLanguage, Messages> = messageTargets

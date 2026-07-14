@@ -1,5 +1,13 @@
 <template>
   <main>
+    <AiErrorModal
+      :open="factCheckAiErrorOpen"
+      :error="factCheckAiError"
+      :from="route.fullPath"
+      :show-retry="true"
+      @close="closeFactCheckAiError"
+      @retry="retryFactCheck"
+    />
     <div class="mx-auto max-w-3xl p-8">
       <div class="flex items-start justify-between gap-4">
         <div>
@@ -12,8 +20,16 @@
         <div class="flex shrink-0 flex-wrap items-center gap-2">
           <button
             type="button"
+            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy || factCheckBusy || !setId"
+            @click="onFactCheck"
+          >
+            {{ factCheckBusy ? `${t('factCheck.title')}…` : t('factCheck.title') }}
+          </button>
+          <button
+            type="button"
             class="inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy || !setId"
+            :disabled="busy || factCheckBusy || !setId"
             @click="openDelete"
           >
             {{ t('common.delete') }}
@@ -21,7 +37,7 @@
           <button
             type="button"
             class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy || !setId"
+            :disabled="busy || factCheckBusy || !setId"
             @click="onUpdate"
           >
             {{ busy ? t('common.loading') : t('common.update') }}
@@ -62,6 +78,11 @@
             class="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           />
         </div>
+
+        <FactCheckPanel
+          :busy="factCheckBusy"
+          :response="factCheckResponse"
+        />
 
         <div class="pt-4">
           <div class="flex items-center justify-between gap-3">
@@ -271,6 +292,7 @@ import {
   findDuplicateCardIssues,
   type DuplicateCardIssue
 } from '~/src/composables/cards/duplicates'
+import { useFactCheck } from '~/src/composables/ai/use-fact-check'
 
 type DraftCardRow = {
   key: string
@@ -299,6 +321,7 @@ const description = ref('')
 const cards = ref<DraftCardRow[]>([{ key: crypto.randomUUID(), front: '', back: '' }])
 const imageAccept = 'image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg'
 const busy = ref(false)
+const defaultModelId = ref<string | null>(null)
 const loadError = ref<string | null>(null)
 const formError = ref<string | null>(null)
 const deleteOpen = ref(false)
@@ -306,6 +329,16 @@ const titleEl = ref<HTMLInputElement | null>(null)
 const duplicateReviewOpen = ref(false)
 const duplicateIssues = ref<DuplicateCardIssue[]>([])
 let duplicateReviewContinuation: (() => void) | null = null
+
+const {
+  busy: factCheckBusy,
+  response: factCheckResponse,
+  aiError: factCheckAiError,
+  aiErrorOpen: factCheckAiErrorOpen,
+  run: runFactCheck,
+  retry: retryFactCheck,
+  closeAiError: closeFactCheckAiError
+} = useFactCheck({ language, defaultModelId })
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
@@ -316,6 +349,14 @@ function toErrorMessage(err: unknown, fallback: string) {
   if (err instanceof Error && typeof err.message === 'string') return err.message
   if (isRecord(err) && typeof err.message === 'string') return err.message
   return fallback
+}
+
+async function onFactCheck() {
+  await runFactCheck({
+    title: title.value,
+    description: description.value,
+    cards: cards.value.map((card) => ({ front: card.front, back: card.back }))
+  })
 }
 
 function setDraftFromSet(s: FlashcardSet) {
@@ -640,6 +681,7 @@ onMounted(async () => {
     }
 
     const settings = await createSettingsRepo(db).get()
+    defaultModelId.value = settings.defaultModelId
     if (settings.startupLockEnabled && status.requires_unlock) {
       if (!unlockedThisSession.value) {
         markLocked()

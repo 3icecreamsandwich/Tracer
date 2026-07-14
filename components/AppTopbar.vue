@@ -2,11 +2,11 @@
     <header
         class="app-topbar sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:border-slate-800/70 dark:bg-slate-950/75 dark:supports-[backdrop-filter]:bg-slate-950/60"
         :class="windowControlsClass"
+        @pointerdown="onTopbarPointerDown"
     >
         <div class="flex h-14 w-11/12 items-center gap-3 px-6">
             <div
                 class="native-window-controls-spacer native-window-controls-spacer-left"
-                data-tauri-drag-region
                 aria-hidden="true"
             />
 
@@ -110,7 +110,6 @@
 
             <div
                 class="native-window-controls-spacer native-window-controls-spacer-right"
-                data-tauri-drag-region
                 aria-hidden="true"
             />
         </div>
@@ -127,6 +126,7 @@ import {
     type Uuid,
 } from "~/src/composables/db";
 import { hasTauriRuntime } from "~/src/composables/tauri";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
     createWebPreviewSearchItems,
     filterTopbarSearchItems,
@@ -296,6 +296,23 @@ function onDocumentPointerDown(event: PointerEvent) {
     const target = event.target;
     if (target instanceof Node && root.contains(target)) return;
     closeSearch();
+}
+
+function onTopbarPointerDown(event: PointerEvent) {
+    if (!hasTauriRuntime() || event.button !== 0) return;
+
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (
+        target.closest(
+            'a, button, input, textarea, select, form, label, [role], [contenteditable="true"]',
+        )
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+    void getCurrentWindow().startDragging();
 }
 
 async function loadAvatarText() {

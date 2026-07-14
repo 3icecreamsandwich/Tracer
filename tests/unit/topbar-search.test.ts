@@ -8,6 +8,13 @@ import {
 } from '../../src/composables/search/topbar-search'
 
 describe('topbar search', () => {
+  const translations: Record<string, string> = {
+    'demo.setTitle': 'Demo set',
+    'demo.setDescription': 'Web preview fallback.',
+    'home.studyGuide': 'Study guide'
+  }
+  const t = (key: string) => translations[key] ?? key
+
   it('returns all items for an empty query and filters suggestions by query', () => {
     const items: TopbarSearchItem[] = [
       {
@@ -44,7 +51,9 @@ describe('topbar search', () => {
   })
 
   it('maps results to their destination pages', () => {
-    expect(topbarSearchItemTo(createWebPreviewSearchItems()[0])).toBe('/set/demo')
-    expect(topbarSearchItemTo(createWebPreviewSearchItems()[1])).toBe('/study-guide/demo')
+    const items = createWebPreviewSearchItems(t)
+
+    expect(topbarSearchItemTo(items[0])).toBe('/set/demo')
+    expect(topbarSearchItemTo(items[1])).toBe('/study-guide/demo')
   })
 })
