@@ -75,7 +75,7 @@
                         </button>
                     </div>
 
-                    <div class="flex items-center justify-center">
+                    <!-- <div class="flex items-center justify-center">
                         <button
                             type="button"
                             class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -84,7 +84,7 @@
                         >
                             {{ t('set.memory') }} {{ matchMemoryMode ? "✓" : "" }}
                         </button>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 

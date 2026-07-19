@@ -1,3 +1,5 @@
+export { createChatsRepo } from './chats.repo'
+export { createFoldersRepo } from './folders.repo'
 export { createProfileRepo } from './profile.repo'
 export { createSettingsRepo } from './settings.repo'
 export { createSetsRepo } from './sets.repo'

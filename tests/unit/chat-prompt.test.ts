@@ -1,13 +1,25 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  buildChatTitlePrompt,
   buildGroundedChatSystemPrompt,
+  normalizeGeneratedChatTitle,
   buildSetTermsTsv,
   takeNextChatRevealUnit,
   takeRecentChatMessages
 } from '../../src/composables/ai/chat'
 
 describe('chat prompt', () => {
+  it('builds and normalizes a title request from the first user question', () => {
+    expect(buildChatTitlePrompt('  What is cellular respiration?  ')).toContain(
+      'User question: What is cellular respiration?'
+    )
+    expect(normalizeGeneratedChatTitle('## “Cellular Respiration Basics”\nExtra')).toBe(
+      'Cellular Respiration Basics'
+    )
+    expect(normalizeGeneratedChatTitle('')).toBe('')
+  })
+
   it('buildSetTermsTsv produces header + rows with escaped newlines', () => {
     const set = {
       id: 's-1',

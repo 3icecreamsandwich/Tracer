@@ -36,8 +36,19 @@ describe('SQLite migrations (task 3)', () => {
         path.resolve(process.cwd(), 'src-tauri', 'migrations', '002_language.sql'),
         'utf8'
       )
+      const chatsMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '003_chats.sql'),
+        'utf8'
+      )
+      const foldersMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '004_folders.sql'),
+        'utf8'
+      )
 
-      const migrateRes = await runSqlite(dbPath, `${migrationSql}\n${languageMigrationSql}`)
+      const migrateRes = await runSqlite(
+        dbPath,
+        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}`
+      )
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
 
@@ -60,7 +71,9 @@ describe('SQLite migrations (task 3)', () => {
         'flashcard_sets',
         'starred_terms',
         'study_guides',
-        'app_settings'
+        'app_settings',
+        'chats',
+        'folders'
       ]) {
         expect(tables).toContain(name)
       }
@@ -120,6 +133,17 @@ describe('SQLite migrations (task 3)', () => {
       expect(rows[0]?.id).toBe('set-2')
       expect(rows[0]?.title).toBe('Good')
       expect(JSON.parse(rows[0]!.terms_json)).toEqual(JSON.parse(termsJson))
+
+      const invalidChatJsonRes = await runSqlite(
+        dbPath,
+        [
+          'BEGIN;',
+          "INSERT INTO chats (id, set_id, title, messages_json) VALUES ('chat-1', 'set-2', 'Bad', 'not-json');",
+          'COMMIT;'
+        ].join('\n') + '\n'
+      )
+      expect(invalidChatJsonRes.code).not.toBe(0)
+      expect(invalidChatJsonRes.stderr.toLowerCase()).toContain('constraint')
     } finally {
       await rm(tmpDir, { recursive: true, force: true })
     }

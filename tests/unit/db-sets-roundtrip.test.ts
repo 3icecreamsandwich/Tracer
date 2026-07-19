@@ -41,7 +41,11 @@ function runSqlite(dbPath: string, script: string) {
 async function applyMigrations(dbPath: string) {
   const migrationPath = path.resolve(process.cwd(), 'src-tauri', 'migrations', '001_core.sql')
   const migrationSql = await readFile(migrationPath, 'utf8')
-  const res = await runSqlite(dbPath, migrationSql)
+  const foldersMigrationSql = await readFile(
+    path.resolve(process.cwd(), 'src-tauri', 'migrations', '004_folders.sql'),
+    'utf8'
+  )
+  const res = await runSqlite(dbPath, `${migrationSql}\n${foldersMigrationSql}`)
   if (res.code !== 0) throw new Error(`sqlite3 migrations failed: ${res.stderr}`)
 }
 

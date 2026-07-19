@@ -120,7 +120,7 @@ const en: Messages = {
   'set.memory': 'Memory',
   'set.backToSet': 'Back to set',
   'studyGuide.title': 'Study guide',
-  'studyGuide.linkedTo': 'Linked to set {id}',
+  'studyGuide.linkedTo': 'Linked to set {title}',
   'studyGuide.goToSet': 'Go to set',
   'auth.unlockTitle': 'Unlock Tracer',
   'auth.password': 'Password',
@@ -138,7 +138,7 @@ const es: Messages = {
   'home.sets': 'Conjuntos', 'home.subtitle': 'Tus conjuntos de tarjetas y guías de estudio.', 'home.create': 'Crear', 'home.chooseMode': 'Elige un modo', 'home.noItems': 'Aún no hay conjuntos ni guías; usa Crear para empezar', 'home.basic': 'Básico', 'home.basicHint': 'Empezar desde cero', 'home.synthesize': 'Sintetizar', 'home.synthesizeHint': 'Combinar conjuntos', 'home.generate': 'Generar', 'home.generateHint': 'Crear desde una indicación', 'home.studyGuide': 'Guía de estudio', 'home.setKind': 'Conjunto',
   'create.title': 'Título', 'create.description': 'Descripción', 'create.cards': 'Tarjetas', 'create.card': 'Tarjeta {number}', 'create.term': 'Término', 'create.definition': 'Definición', 'create.addImage': 'Añadir imagen', 'create.basicTitle': 'Crear · Básico', 'create.basicDescription': 'Añade tarjetas manualmente. Usa Tab para moverte y Ctrl/⌘ + Enter para añadir una tarjeta.', 'create.synthesizeTitle': 'Crear · Sintetizar', 'create.synthesizeDescription': 'Combina conjuntos existentes en uno nuevo.', 'create.generateTitle': 'Crear · Generar', 'create.generateDescription': 'Genera una guía de estudio y tarjetas desde tus fuentes.',
   'set.studyModes': 'Modos de estudio', 'set.flashcards': 'Tarjetas', 'set.flashcardsHint': 'Repaso rápido', 'set.learn': 'Aprender', 'set.learnHint': 'Ponte a prueba', 'set.match': 'Emparejar', 'set.matchHint': 'Encuentra parejas contrarreloj', 'set.chat': 'Chat', 'set.chatHint': 'Basado en este conjunto', 'set.studyGuide': 'Guía de estudio', 'set.studyGuideHint': 'Markdown', 'set.terms': 'Términos', 'set.shuffle': 'Mezclar', 'set.fullscreen': 'Pantalla completa', 'set.starredOnly': 'Solo favoritos', 'set.previous': 'Anterior', 'set.next': 'Siguiente', 'set.missed': 'No lo sabía', 'set.gotIt': 'Lo sabía', 'set.ready': 'Listo', 'set.start': 'Iniciar', 'set.memory': 'Memoria', 'set.backToSet': 'Volver al conjunto',
-  'studyGuide.title': 'Guía de estudio', 'studyGuide.linkedTo': 'Vinculada al conjunto {id}.', 'studyGuide.goToSet': 'Ir al conjunto', 'auth.unlockTitle': 'Desbloquear Tracer', 'auth.password': 'Contraseña', 'auth.unlock': 'Desbloquear', 'auth.firstRunTitle': 'Configurar Tracer', 'auth.name': 'Nombre', 'auth.email': 'Correo', 'auth.confirmPassword': 'Confirmar contraseña',
+  'studyGuide.title': 'Guía de estudio', 'studyGuide.linkedTo': 'Vinculada al conjunto {title}.', 'studyGuide.goToSet': 'Ir al conjunto', 'auth.unlockTitle': 'Desbloquear Tracer', 'auth.password': 'Contraseña', 'auth.unlock': 'Desbloquear', 'auth.firstRunTitle': 'Configurar Tracer', 'auth.name': 'Nombre', 'auth.email': 'Correo', 'auth.confirmPassword': 'Confirmar contraseña',
 }
 
 const fr: Messages = {
@@ -148,7 +148,7 @@ const fr: Messages = {
   'home.sets': 'Ensembles', 'home.subtitle': 'Vos ensembles de cartes et guides d’étude.', 'home.create': 'Créer', 'home.chooseMode': 'Choisissez un mode', 'home.noItems': 'Aucun ensemble ou guide. Utilisez Créer pour commencer.', 'home.basic': 'Basique', 'home.basicHint': 'Partir de zéro', 'home.synthesize': 'Synthétiser', 'home.synthesizeHint': 'Combiner des ensembles', 'home.generate': 'Générer', 'home.generateHint': 'Créer depuis une consigne', 'home.studyGuide': 'Guide d’étude', 'home.setKind': 'Ensemble',
   'create.title': 'Titre', 'create.description': 'Description', 'create.cards': 'Cartes', 'create.card': 'Carte {number}', 'create.term': 'Terme', 'create.definition': 'Définition', 'create.addImage': 'Ajouter une image', 'create.basicTitle': 'Créer · Basique', 'create.basicDescription': 'Ajoutez les cartes manuellement. Tab pour naviguer, Ctrl/⌘ + Entrée pour ajouter.', 'create.synthesizeTitle': 'Créer · Synthétiser', 'create.synthesizeDescription': 'Combinez des ensembles existants en un nouvel ensemble.', 'create.generateTitle': 'Créer · Générer', 'create.generateDescription': 'Générez un guide et des cartes à partir de vos sources.',
   'set.studyModes': 'Modes d’étude', 'set.flashcards': 'Cartes', 'set.flashcardsHint': 'Révision rapide', 'set.learn': 'Apprendre', 'set.learnHint': 'Testez-vous', 'set.match': 'Associer', 'set.matchHint': 'Trouvez les paires rapidement', 'set.chat': 'Chat', 'set.chatHint': 'Basé sur cet ensemble', 'set.studyGuide': 'Guide d’étude', 'set.studyGuideHint': 'Markdown', 'set.terms': 'Termes', 'set.shuffle': 'Mélanger', 'set.fullscreen': 'Plein écran', 'set.starredOnly': 'Favoris uniquement', 'set.previous': 'Précédent', 'set.next': 'Suivant', 'set.missed': 'Raté', 'set.gotIt': 'Trouvé', 'set.ready': 'Prêt', 'set.start': 'Démarrer', 'set.memory': 'Mémoire', 'set.backToSet': 'Retour à l’ensemble',
-  'studyGuide.title': 'Guide d’étude', 'studyGuide.linkedTo': 'Lié à l’ensemble {id}.', 'studyGuide.goToSet': 'Aller à l’ensemble', 'auth.unlockTitle': 'Déverrouiller Tracer', 'auth.password': 'Mot de passe', 'auth.unlock': 'Déverrouiller', 'auth.firstRunTitle': 'Configurer Tracer', 'auth.name': 'Nom', 'auth.email': 'E-mail', 'auth.confirmPassword': 'Confirmer le mot de passe',
+  'studyGuide.title': 'Guide d’étude', 'studyGuide.linkedTo': 'Lié à l’ensemble {title}.', 'studyGuide.goToSet': 'Aller à l’ensemble', 'auth.unlockTitle': 'Déverrouiller Tracer', 'auth.password': 'Mot de passe', 'auth.unlock': 'Déverrouiller', 'auth.firstRunTitle': 'Configurer Tracer', 'auth.name': 'Nom', 'auth.email': 'E-mail', 'auth.confirmPassword': 'Confirmer le mot de passe',
 }
 
 const zhCN: Messages = {
@@ -158,7 +158,7 @@ const zhCN: Messages = {
   'home.sets': '卡片集', 'home.subtitle': '你的卡片集和学习指南。', 'home.create': '创建', 'home.chooseMode': '选择一种模式', 'home.noItems': '还没有卡片集或学习指南。请使用“创建”开始。', 'home.basic': '基础', 'home.basicHint': '从头开始', 'home.synthesize': '综合', 'home.synthesizeHint': '合并卡片集', 'home.generate': '生成', 'home.generateHint': '根据提示创建', 'home.studyGuide': '学习指南', 'home.setKind': '卡片集',
   'create.title': '标题', 'create.description': '描述', 'create.cards': '卡片', 'create.card': '卡片 {number}', 'create.term': '术语', 'create.definition': '定义', 'create.addImage': '添加图片', 'create.basicTitle': '创建 · 基础', 'create.basicDescription': '手动添加卡片。使用 Tab 切换字段，Ctrl/⌘ + Enter 添加新卡片。', 'create.synthesizeTitle': '创建 · 综合', 'create.synthesizeDescription': '将现有卡片集合并为一个新集合。', 'create.generateTitle': '创建 · 生成', 'create.generateDescription': '根据你的资料生成学习指南和卡片。',
   'set.studyModes': '学习模式', 'set.flashcards': '闪卡', 'set.flashcardsHint': '快速复习', 'set.learn': '学习', 'set.learnHint': '自我测验', 'set.match': '配对', 'set.matchHint': '限时寻找配对', 'set.chat': '聊天', 'set.chatHint': '基于此卡片集', 'set.studyGuide': '学习指南', 'set.studyGuideHint': 'Markdown', 'set.terms': '术语', 'set.shuffle': '随机排序', 'set.fullscreen': '全屏', 'set.starredOnly': '仅收藏', 'set.previous': '上一张', 'set.next': '下一张', 'set.missed': '没记住', 'set.gotIt': '记住了', 'set.ready': '准备就绪', 'set.start': '开始', 'set.memory': '记忆模式', 'set.backToSet': '返回卡片集',
-  'studyGuide.title': '学习指南', 'studyGuide.linkedTo': '已关联卡片集 {id}。', 'studyGuide.goToSet': '前往卡片集', 'auth.unlockTitle': '解锁 Tracer', 'auth.password': '密码', 'auth.unlock': '解锁', 'auth.firstRunTitle': '设置 Tracer', 'auth.name': '姓名', 'auth.email': '电子邮件', 'auth.confirmPassword': '确认密码',
+  'studyGuide.title': '学习指南', 'studyGuide.linkedTo': '已关联卡片集 {title}。', 'studyGuide.goToSet': '前往卡片集', 'auth.unlockTitle': '解锁 Tracer', 'auth.password': '密码', 'auth.unlock': '解锁', 'auth.firstRunTitle': '设置 Tracer', 'auth.name': '姓名', 'auth.email': '电子邮件', 'auth.confirmPassword': '确认密码',
 }
 
 const hi: Messages = {
@@ -168,7 +168,7 @@ const hi: Messages = {
   'home.sets': 'सेट', 'home.subtitle': 'आपके फ्लैशकार्ड सेट और अध्ययन गाइड।', 'home.create': 'बनाएँ', 'home.chooseMode': 'मोड चुनें', 'home.noItems': 'अभी कोई सेट या गाइड नहीं है। शुरू करने के लिए बनाएँ चुनें।', 'home.basic': 'बेसिक', 'home.basicHint': 'शुरू से बनाएँ', 'home.synthesize': 'सिंथेसाइज़', 'home.synthesizeHint': 'सेट मिलाएँ', 'home.generate': 'जेनरेट', 'home.generateHint': 'प्रॉम्प्ट से बनाएँ', 'home.studyGuide': 'अध्ययन गाइड', 'home.setKind': 'सेट',
   'create.title': 'शीर्षक', 'create.description': 'विवरण', 'create.cards': 'कार्ड', 'create.card': 'कार्ड {number}', 'create.term': 'शब्द', 'create.definition': 'परिभाषा', 'create.addImage': 'चित्र जोड़ें', 'create.basicTitle': 'बनाएँ · बेसिक', 'create.basicDescription': 'कार्ड हाथ से जोड़ें। फ़ील्ड बदलने के लिए Tab और नया कार्ड जोड़ने के लिए Ctrl/⌘ + Enter दबाएँ।', 'create.synthesizeTitle': 'बनाएँ · सिंथेसाइज़', 'create.synthesizeDescription': 'मौजूदा सेटों को नए सेट में मिलाएँ।', 'create.generateTitle': 'बनाएँ · जेनरेट', 'create.generateDescription': 'अपने स्रोतों से अध्ययन गाइड और फ्लैशकार्ड बनाएँ।',
   'set.studyModes': 'अध्ययन मोड', 'set.flashcards': 'फ्लैशकार्ड', 'set.flashcardsHint': 'त्वरित अभ्यास', 'set.learn': 'सीखें', 'set.learnHint': 'खुद को जाँचें', 'set.match': 'मिलान', 'set.matchHint': 'समय में जोड़ियाँ खोजें', 'set.chat': 'चैट', 'set.chatHint': 'इस सेट पर आधारित', 'set.studyGuide': 'अध्ययन गाइड', 'set.studyGuideHint': 'Markdown', 'set.terms': 'शब्द', 'set.shuffle': 'फेंटें', 'set.fullscreen': 'पूर्ण स्क्रीन', 'set.starredOnly': 'केवल पसंदीदा', 'set.previous': 'पिछला', 'set.next': 'अगला', 'set.missed': 'नहीं आया', 'set.gotIt': 'आ गया', 'set.ready': 'तैयार', 'set.start': 'शुरू करें', 'set.memory': 'मेमोरी', 'set.backToSet': 'सेट पर वापस',
-  'studyGuide.title': 'अध्ययन गाइड', 'studyGuide.linkedTo': 'सेट {id} से जुड़ा है।', 'studyGuide.goToSet': 'सेट पर जाएँ', 'auth.unlockTitle': 'Tracer अनलॉक करें', 'auth.password': 'पासवर्ड', 'auth.unlock': 'अनलॉक', 'auth.firstRunTitle': 'Tracer सेट करें', 'auth.name': 'नाम', 'auth.email': 'ईमेल', 'auth.confirmPassword': 'पासवर्ड की पुष्टि करें',
+  'studyGuide.title': 'अध्ययन गाइड', 'studyGuide.linkedTo': 'सेट {title} से जुड़ा है।', 'studyGuide.goToSet': 'सेट पर जाएँ', 'auth.unlockTitle': 'Tracer अनलॉक करें', 'auth.password': 'पासवर्ड', 'auth.unlock': 'अनलॉक', 'auth.firstRunTitle': 'Tracer सेट करें', 'auth.name': 'नाम', 'auth.email': 'ईमेल', 'auth.confirmPassword': 'पासवर्ड की पुष्टि करें',
 }
 
 const ar: Messages = {
@@ -178,7 +178,7 @@ const ar: Messages = {
   'home.sets': 'المجموعات', 'home.subtitle': 'مجموعات بطاقاتك وأدلة الدراسة.', 'home.create': 'إنشاء', 'home.chooseMode': 'اختر وضعًا', 'home.noItems': 'لا توجد مجموعات أو أدلة بعد. استخدم إنشاء للبدء.', 'home.basic': 'أساسي', 'home.basicHint': 'البدء من الصفر', 'home.synthesize': 'توليف', 'home.synthesizeHint': 'دمج المجموعات', 'home.generate': 'توليد', 'home.generateHint': 'الإنشاء من مطالبة', 'home.studyGuide': 'دليل الدراسة', 'home.setKind': 'مجموعة',
   'create.title': 'العنوان', 'create.description': 'الوصف', 'create.cards': 'البطاقات', 'create.card': 'البطاقة {number}', 'create.term': 'المصطلح', 'create.definition': 'التعريف', 'create.addImage': 'إضافة صورة', 'create.basicTitle': 'إنشاء · أساسي', 'create.basicDescription': 'أضف البطاقات يدويًا. استخدم Tab للتنقل وCtrl/⌘ + Enter لإضافة بطاقة.', 'create.synthesizeTitle': 'إنشاء · توليف', 'create.synthesizeDescription': 'ادمج المجموعات الحالية في مجموعة جديدة.', 'create.generateTitle': 'إنشاء · توليد', 'create.generateDescription': 'أنشئ دليل دراسة وبطاقات من مصادرك.',
   'set.studyModes': 'أوضاع الدراسة', 'set.flashcards': 'البطاقات التعليمية', 'set.flashcardsHint': 'مراجعة سريعة', 'set.learn': 'تعلّم', 'set.learnHint': 'اختبر نفسك', 'set.match': 'مطابقة', 'set.matchHint': 'اعثر على الأزواج بسرعة', 'set.chat': 'دردشة', 'set.chatHint': 'مرتكزة على هذه المجموعة', 'set.studyGuide': 'دليل الدراسة', 'set.studyGuideHint': 'Markdown', 'set.terms': 'المصطلحات', 'set.shuffle': 'خلط', 'set.fullscreen': 'ملء الشاشة', 'set.starredOnly': 'المفضلة فقط', 'set.previous': 'السابق', 'set.next': 'التالي', 'set.missed': 'لم أعرفها', 'set.gotIt': 'عرفتها', 'set.ready': 'جاهز', 'set.start': 'بدء', 'set.memory': 'الذاكرة', 'set.backToSet': 'العودة إلى المجموعة',
-  'studyGuide.title': 'دليل الدراسة', 'studyGuide.linkedTo': 'مرتبط بالمجموعة {id}.', 'studyGuide.goToSet': 'الانتقال إلى المجموعة', 'auth.unlockTitle': 'فتح Tracer', 'auth.password': 'كلمة المرور', 'auth.unlock': 'فتح', 'auth.firstRunTitle': 'إعداد Tracer', 'auth.name': 'الاسم', 'auth.email': 'البريد الإلكتروني', 'auth.confirmPassword': 'تأكيد كلمة المرور',
+  'studyGuide.title': 'دليل الدراسة', 'studyGuide.linkedTo': 'مرتبط بالمجموعة {title}.', 'studyGuide.goToSet': 'الانتقال إلى المجموعة', 'auth.unlockTitle': 'فتح Tracer', 'auth.password': 'كلمة المرور', 'auth.unlock': 'فتح', 'auth.firstRunTitle': 'إعداد Tracer', 'auth.name': 'الاسم', 'auth.email': 'البريد الإلكتروني', 'auth.confirmPassword': 'تأكيد كلمة المرور',
 }
 
 const de: Messages = {
@@ -188,7 +188,7 @@ const de: Messages = {
   'home.sets': 'Sets', 'home.subtitle': 'Deine Karteikarten-Sets und Lernleitfäden.', 'home.create': 'Erstellen', 'home.chooseMode': 'Modus auswählen', 'home.noItems': 'Noch keine Sets oder Lernleitfäden. Nutze Erstellen.', 'home.basic': 'Basis', 'home.basicHint': 'Neu beginnen', 'home.synthesize': 'Synthetisieren', 'home.synthesizeHint': 'Sets kombinieren', 'home.generate': 'Generieren', 'home.generateHint': 'Aus einer Eingabe erstellen', 'home.studyGuide': 'Lernleitfaden', 'home.setKind': 'Set',
   'create.title': 'Titel', 'create.description': 'Beschreibung', 'create.cards': 'Karten', 'create.card': 'Karte {number}', 'create.term': 'Begriff', 'create.definition': 'Definition', 'create.addImage': 'Bild hinzufügen', 'create.basicTitle': 'Erstellen · Basis', 'create.basicDescription': 'Karten manuell hinzufügen. Tab wechselt Felder, Strg/⌘ + Enter fügt eine Karte hinzu.', 'create.synthesizeTitle': 'Erstellen · Synthetisieren', 'create.synthesizeDescription': 'Vorhandene Sets zu einem neuen Set kombinieren.', 'create.generateTitle': 'Erstellen · Generieren', 'create.generateDescription': 'Lernleitfaden und Karten aus Quellen generieren.',
   'set.studyModes': 'Lernmodi', 'set.flashcards': 'Karteikarten', 'set.flashcardsHint': 'Schnelle Wiederholung', 'set.learn': 'Lernen', 'set.learnHint': 'Teste dich', 'set.match': 'Zuordnen', 'set.matchHint': 'Paare unter Zeitdruck finden', 'set.chat': 'Chat', 'set.chatHint': 'Auf diesem Set basierend', 'set.studyGuide': 'Lernleitfaden', 'set.studyGuideHint': 'Markdown', 'set.terms': 'Begriffe', 'set.shuffle': 'Mischen', 'set.fullscreen': 'Vollbild', 'set.starredOnly': 'Nur Favoriten', 'set.previous': 'Zurück', 'set.next': 'Weiter', 'set.missed': 'Nicht gewusst', 'set.gotIt': 'Gewusst', 'set.ready': 'Bereit', 'set.start': 'Start', 'set.memory': 'Memory', 'set.backToSet': 'Zurück zum Set',
-  'studyGuide.title': 'Lernleitfaden', 'studyGuide.linkedTo': 'Mit Set {id} verknüpft.', 'studyGuide.goToSet': 'Zum Set', 'auth.unlockTitle': 'Tracer entsperren', 'auth.password': 'Passwort', 'auth.unlock': 'Entsperren', 'auth.firstRunTitle': 'Tracer einrichten', 'auth.name': 'Name', 'auth.email': 'E-Mail', 'auth.confirmPassword': 'Passwort bestätigen',
+  'studyGuide.title': 'Lernleitfaden', 'studyGuide.linkedTo': 'Mit Set {title} verknüpft.', 'studyGuide.goToSet': 'Zum Set', 'auth.unlockTitle': 'Tracer entsperren', 'auth.password': 'Passwort', 'auth.unlock': 'Entsperren', 'auth.firstRunTitle': 'Tracer einrichten', 'auth.name': 'Name', 'auth.email': 'E-Mail', 'auth.confirmPassword': 'Passwort bestätigen',
 }
 
 const ru: Messages = {
@@ -198,7 +198,7 @@ const ru: Messages = {
   'home.sets': 'Наборы', 'home.subtitle': 'Ваши наборы карточек и учебные руководства.', 'home.create': 'Создать', 'home.chooseMode': 'Выберите режим', 'home.noItems': 'Наборов и руководств пока нет. Нажмите «Создать».', 'home.basic': 'Базовый', 'home.basicHint': 'Начать с нуля', 'home.synthesize': 'Синтез', 'home.synthesizeHint': 'Объединить наборы', 'home.generate': 'Генерация', 'home.generateHint': 'Создать по запросу', 'home.studyGuide': 'Учебное руководство', 'home.setKind': 'Набор',
   'create.title': 'Название', 'create.description': 'Описание', 'create.cards': 'Карточки', 'create.card': 'Карточка {number}', 'create.term': 'Термин', 'create.definition': 'Определение', 'create.addImage': 'Добавить изображение', 'create.basicTitle': 'Создать · Базовый', 'create.basicDescription': 'Добавляйте карточки вручную. Tab переключает поля, Ctrl/⌘ + Enter добавляет карточку.', 'create.synthesizeTitle': 'Создать · Синтез', 'create.synthesizeDescription': 'Объедините существующие наборы в новый.', 'create.generateTitle': 'Создать · Генерация', 'create.generateDescription': 'Создайте руководство и карточки из источников.',
   'set.studyModes': 'Режимы обучения', 'set.flashcards': 'Карточки', 'set.flashcardsHint': 'Быстрое повторение', 'set.learn': 'Обучение', 'set.learnHint': 'Проверьте себя', 'set.match': 'Соответствия', 'set.matchHint': 'Найдите пары на время', 'set.chat': 'Чат', 'set.chatHint': 'На основе этого набора', 'set.studyGuide': 'Учебное руководство', 'set.studyGuideHint': 'Markdown', 'set.terms': 'Термины', 'set.shuffle': 'Перемешать', 'set.fullscreen': 'Полный экран', 'set.starredOnly': 'Только избранные', 'set.previous': 'Назад', 'set.next': 'Далее', 'set.missed': 'Не знал', 'set.gotIt': 'Знал', 'set.ready': 'Готово', 'set.start': 'Начать', 'set.memory': 'Память', 'set.backToSet': 'К набору',
-  'studyGuide.title': 'Учебное руководство', 'studyGuide.linkedTo': 'Связано с набором {id}.', 'studyGuide.goToSet': 'Перейти к набору', 'auth.unlockTitle': 'Разблокировать Tracer', 'auth.password': 'Пароль', 'auth.unlock': 'Разблокировать', 'auth.firstRunTitle': 'Настроить Tracer', 'auth.name': 'Имя', 'auth.email': 'Эл. почта', 'auth.confirmPassword': 'Подтвердите пароль',
+  'studyGuide.title': 'Учебное руководство', 'studyGuide.linkedTo': 'Связано с набором {title}.', 'studyGuide.goToSet': 'Перейти к набору', 'auth.unlockTitle': 'Разблокировать Tracer', 'auth.password': 'Пароль', 'auth.unlock': 'Разблокировать', 'auth.firstRunTitle': 'Настроить Tracer', 'auth.name': 'Имя', 'auth.email': 'Эл. почта', 'auth.confirmPassword': 'Подтвердите пароль',
 }
 
 const ja: Messages = {
@@ -208,7 +208,7 @@ const ja: Messages = {
   'home.sets': 'セット', 'home.subtitle': 'フラッシュカードセットと学習ガイド。', 'home.create': '作成', 'home.chooseMode': 'モードを選択', 'home.noItems': 'セットやガイドはまだありません。「作成」から始めてください。', 'home.basic': '基本', 'home.basicHint': '一から作成', 'home.synthesize': '統合', 'home.synthesizeHint': 'セットを結合', 'home.generate': '生成', 'home.generateHint': 'プロンプトから作成', 'home.studyGuide': '学習ガイド', 'home.setKind': 'セット',
   'create.title': 'タイトル', 'create.description': '説明', 'create.cards': 'カード', 'create.card': 'カード {number}', 'create.term': '用語', 'create.definition': '定義', 'create.addImage': '画像を追加', 'create.basicTitle': '作成 · 基本', 'create.basicDescription': 'カードを手動で追加します。Tab で移動し、Ctrl/⌘ + Enter でカードを追加します。', 'create.synthesizeTitle': '作成 · 統合', 'create.synthesizeDescription': '既存のセットを新しいセットにまとめます。', 'create.generateTitle': '作成 · 生成', 'create.generateDescription': '資料から学習ガイドとカードを生成します。',
   'set.studyModes': '学習モード', 'set.flashcards': 'フラッシュカード', 'set.flashcardsHint': 'クイック復習', 'set.learn': '学習', 'set.learnHint': '理解度を確認', 'set.match': 'マッチ', 'set.matchHint': '時間内にペアを探す', 'set.chat': 'チャット', 'set.chatHint': 'このセットに基づく', 'set.studyGuide': '学習ガイド', 'set.studyGuideHint': 'Markdown', 'set.terms': '用語', 'set.shuffle': 'シャッフル', 'set.fullscreen': '全画面', 'set.starredOnly': 'お気に入りのみ', 'set.previous': '前へ', 'set.next': '次へ', 'set.missed': '不正解', 'set.gotIt': '正解', 'set.ready': '準備完了', 'set.start': '開始', 'set.memory': 'メモリー', 'set.backToSet': 'セットに戻る',
-  'studyGuide.title': '学習ガイド', 'studyGuide.linkedTo': 'セット {id} にリンクされています。', 'studyGuide.goToSet': 'セットへ移動', 'auth.unlockTitle': 'Tracer をロック解除', 'auth.password': 'パスワード', 'auth.unlock': 'ロック解除', 'auth.firstRunTitle': 'Tracer を設定', 'auth.name': '名前', 'auth.email': 'メール', 'auth.confirmPassword': 'パスワードを確認',
+  'studyGuide.title': '学習ガイド', 'studyGuide.linkedTo': 'セット {title} にリンクされています。', 'studyGuide.goToSet': 'セットへ移動', 'auth.unlockTitle': 'Tracer をロック解除', 'auth.password': 'パスワード', 'auth.unlock': 'ロック解除', 'auth.firstRunTitle': 'Tracer を設定', 'auth.name': '名前', 'auth.email': 'メール', 'auth.confirmPassword': 'パスワードを確認',
 }
 
 const ko: Messages = {
@@ -218,7 +218,7 @@ const ko: Messages = {
   'home.sets': '세트', 'home.subtitle': '플래시카드 세트와 학습 가이드.', 'home.create': '만들기', 'home.chooseMode': '모드 선택', 'home.noItems': '아직 세트나 가이드가 없습니다. 만들기로 시작하세요.', 'home.basic': '기본', 'home.basicHint': '처음부터 시작', 'home.synthesize': '합성', 'home.synthesizeHint': '세트 결합', 'home.generate': '생성', 'home.generateHint': '프롬프트로 만들기', 'home.studyGuide': '학습 가이드', 'home.setKind': '세트',
   'create.title': '제목', 'create.description': '설명', 'create.cards': '카드', 'create.card': '카드 {number}', 'create.term': '용어', 'create.definition': '정의', 'create.addImage': '이미지 추가', 'create.basicTitle': '만들기 · 기본', 'create.basicDescription': '카드를 직접 추가합니다. Tab으로 이동하고 Ctrl/⌘ + Enter로 카드를 추가합니다.', 'create.synthesizeTitle': '만들기 · 합성', 'create.synthesizeDescription': '기존 세트를 새 세트로 결합합니다.', 'create.generateTitle': '만들기 · 생성', 'create.generateDescription': '자료에서 학습 가이드와 카드를 생성합니다.',
   'set.studyModes': '학습 모드', 'set.flashcards': '플래시카드', 'set.flashcardsHint': '빠른 복습', 'set.learn': '학습', 'set.learnHint': '스스로 테스트', 'set.match': '맞추기', 'set.matchHint': '시간 안에 짝 찾기', 'set.chat': '채팅', 'set.chatHint': '이 세트를 기반으로 함', 'set.studyGuide': '학습 가이드', 'set.studyGuideHint': 'Markdown', 'set.terms': '용어', 'set.shuffle': '섞기', 'set.fullscreen': '전체 화면', 'set.starredOnly': '즐겨찾기만', 'set.previous': '이전', 'set.next': '다음', 'set.missed': '틀림', 'set.gotIt': '맞음', 'set.ready': '준비', 'set.start': '시작', 'set.memory': '메모리', 'set.backToSet': '세트로 돌아가기',
-  'studyGuide.title': '학습 가이드', 'studyGuide.linkedTo': '세트 {id}에 연결됨.', 'studyGuide.goToSet': '세트로 이동', 'auth.unlockTitle': 'Tracer 잠금 해제', 'auth.password': '비밀번호', 'auth.unlock': '잠금 해제', 'auth.firstRunTitle': 'Tracer 설정', 'auth.name': '이름', 'auth.email': '이메일', 'auth.confirmPassword': '비밀번호 확인',
+  'studyGuide.title': '학습 가이드', 'studyGuide.linkedTo': '세트 {title}에 연결됨.', 'studyGuide.goToSet': '세트로 이동', 'auth.unlockTitle': 'Tracer 잠금 해제', 'auth.password': '비밀번호', 'auth.unlock': '잠금 해제', 'auth.firstRunTitle': 'Tracer 설정', 'auth.name': '이름', 'auth.email': '이메일', 'auth.confirmPassword': '비밀번호 확인',
 }
 
 const supplementalMessages: Record<AppLanguage, Messages> = {
@@ -226,21 +226,21 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'common.add': 'Add', 'common.results': 'Results', 'common.optional': 'optional', 'common.status': 'Status:', 'common.authenticated': 'Authenticated', 'common.notAuthenticated': 'Not authenticated', 'common.invalid': 'Token invalid', 'common.locked': 'Vault locked', 'common.retry': 'Retry', 'common.continue': 'Continue', 'common.true': 'True', 'common.false': 'False',
     'common.clear': 'Clear', 'common.copy': 'Copy', 'common.download': 'Download', 'common.selectAll': 'Select all', 'common.confirm': 'Confirm', 'common.authenticate': 'Authenticate', 'common.signOut': 'Sign out', 'set.noStarred': 'No starred cards', 'set.comingSoon': 'Coming soon', 'set.notImplemented': 'This mode is not implemented yet.', 'set.noCards': 'No cards.', 'auth.firstRunDescription': 'Create your profile and set an app password.',
     'create.sourceSets': 'Source sets', 'create.searchAndSelect': 'Search and select one or more sets to merge.', 'create.selected': 'Selected', 'create.theme': 'Theme', 'create.aiOutput': 'AI output', 'create.rawOutput': 'Raw output', 'create.sources': 'Sources', 'create.instructions': 'Instructions', 'create.pdfPages': 'PDF pages', 'create.images': 'Images', 'create.files': 'Files',
-    'set.flashcardInstructions': 'Space to flip · ←/→ to browse · Mark correct/incorrect to progress', 'set.learnInstructions': 'Answer questions · Results tracked per run', 'set.matchInstructions': 'Match the pairs · Use Memory to toggle memory mode', 'set.accuracy': 'Accuracy:', 'set.correct': 'Correct:', 'set.attempted': 'Attempted:', 'set.matched': 'Matched:', 'set.attempts': 'Attempts:', 'set.time': 'Time:', 'set.playAgain': 'Play again', 'set.noQuestions': 'No questions available.', 'set.question': 'Question', 'set.tile': 'Tile',
+    'set.flashcardInstructions': 'Space to flip · ←/→ to browse · Mark correct/incorrect to progress', 'set.learnInstructions': 'Answer questions · Results tracked per run', 'set.matchInstructions': 'Match the pairs', 'set.accuracy': 'Accuracy:', 'set.correct': 'Correct:', 'set.attempted': 'Attempted:', 'set.matched': 'Matched:', 'set.attempts': 'Attempts:', 'set.time': 'Time:', 'set.playAgain': 'Play again', 'set.noQuestions': 'No questions available.', 'set.question': 'Question', 'set.tile': 'Tile',
     'settings.githubAuthenticate': 'Authenticate to use GitHub Models.', 'settings.clearApiKey': 'Clear API key?', 'settings.deviceCode': 'Device code', 'edit.deleteSet': 'Delete set?',
   },
   es: {
     'common.add': 'Añadir', 'common.results': 'Resultados', 'common.optional': 'opcional', 'common.status': 'Estado:', 'common.authenticated': 'Autenticado', 'common.notAuthenticated': 'Sin autenticar', 'common.invalid': 'Token no válido', 'common.locked': 'Bóveda bloqueada', 'common.retry': 'Reintentar', 'common.continue': 'Continuar', 'common.true': 'Verdadero', 'common.false': 'Falso',
     'common.clear': 'Limpiar', 'common.copy': 'Copiar', 'common.download': 'Descargar', 'common.selectAll': 'Seleccionar todo', 'common.confirm': 'Confirmar', 'common.authenticate': 'Autenticar', 'common.signOut': 'Cerrar sesión', 'set.noStarred': 'No hay tarjetas favoritas', 'set.comingSoon': 'Próximamente', 'set.notImplemented': 'Este modo aún no está implementado.', 'set.noCards': 'No hay tarjetas.', 'auth.firstRunDescription': 'Crea tu perfil y establece una contraseña para la aplicación.',
     'create.sourceSets': 'Conjuntos de origen', 'create.searchAndSelect': 'Busca y selecciona uno o más conjuntos para combinar.', 'create.selected': 'Seleccionados', 'create.theme': 'Tema', 'create.aiOutput': 'Salida de IA', 'create.rawOutput': 'Salida sin procesar', 'create.sources': 'Fuentes', 'create.instructions': 'Instrucciones', 'create.pdfPages': 'Páginas PDF', 'create.images': 'Imágenes', 'create.files': 'Archivos',
-    'set.flashcardInstructions': 'Espacio para girar · ←/→ para navegar · Marca correcto o incorrecto', 'set.learnInstructions': 'Responde preguntas · Resultados por sesión', 'set.matchInstructions': 'Empareja las parejas · Usa Memoria para cambiar el modo', 'set.accuracy': 'Precisión:', 'set.correct': 'Correctas:', 'set.attempted': 'Intentos:', 'set.matched': 'Emparejadas:', 'set.attempts': 'Intentos:', 'set.time': 'Tiempo:', 'set.playAgain': 'Jugar de nuevo', 'set.noQuestions': 'No hay preguntas disponibles.', 'set.question': 'Pregunta', 'set.tile': 'Ficha',
+    'set.flashcardInstructions': 'Espacio para girar · ←/→ para navegar · Marca correcto o incorrecto', 'set.learnInstructions': 'Responde preguntas · Resultados por sesión', 'set.matchInstructions': 'Empareja las parejas', 'set.accuracy': 'Precisión:', 'set.correct': 'Correctas:', 'set.attempted': 'Intentos:', 'set.matched': 'Emparejadas:', 'set.attempts': 'Intentos:', 'set.time': 'Tiempo:', 'set.playAgain': 'Jugar de nuevo', 'set.noQuestions': 'No hay preguntas disponibles.', 'set.question': 'Pregunta', 'set.tile': 'Ficha',
     'settings.githubAuthenticate': 'Autentícate para usar GitHub Models.', 'settings.clearApiKey': '¿Borrar la clave API?', 'settings.deviceCode': 'Código del dispositivo', 'edit.deleteSet': '¿Eliminar el conjunto?',
   },
   fr: {
     'common.add': 'Ajouter', 'common.results': 'Résultats', 'common.optional': 'facultatif', 'common.status': 'État :', 'common.authenticated': 'Authentifié', 'common.notAuthenticated': 'Non authentifié', 'common.invalid': 'Jeton invalide', 'common.locked': 'Coffre verrouillé', 'common.retry': 'Réessayer', 'common.continue': 'Continuer', 'common.true': 'Vrai', 'common.false': 'Faux',
     'common.clear': 'Effacer', 'common.copy': 'Copier', 'common.download': 'Télécharger', 'common.selectAll': 'Tout sélectionner', 'common.confirm': 'Confirmer', 'common.authenticate': 'S’authentifier', 'common.signOut': 'Se déconnecter', 'set.noStarred': 'Aucune carte favorite', 'set.comingSoon': 'Bientôt disponible', 'set.notImplemented': 'Ce mode n’est pas encore disponible.', 'set.noCards': 'Aucune carte.', 'auth.firstRunDescription': 'Créez votre profil et définissez un mot de passe.',
     'create.sourceSets': 'Ensembles sources', 'create.searchAndSelect': 'Recherchez et sélectionnez les ensembles à fusionner.', 'create.selected': 'Sélectionnés', 'create.theme': 'Thème', 'create.aiOutput': 'Sortie IA', 'create.rawOutput': 'Sortie brute', 'create.sources': 'Sources', 'create.instructions': 'Instructions', 'create.pdfPages': 'Pages PDF', 'create.images': 'Images', 'create.files': 'Fichiers',
-    'set.flashcardInstructions': 'Espace pour retourner · ←/→ pour naviguer · Marquez juste ou faux', 'set.learnInstructions': 'Répondez aux questions · Résultats par session', 'set.matchInstructions': 'Associez les paires · Utilisez Mémoire pour changer de mode', 'set.accuracy': 'Précision :', 'set.correct': 'Correct :', 'set.attempted': 'Tentatives :', 'set.matched': 'Associées :', 'set.attempts': 'Tentatives :', 'set.time': 'Temps :', 'set.playAgain': 'Rejouer', 'set.noQuestions': 'Aucune question disponible.', 'set.question': 'Question', 'set.tile': 'Tuile',
+    'set.flashcardInstructions': 'Espace pour retourner · ←/→ pour naviguer · Marquez juste ou faux', 'set.learnInstructions': 'Répondez aux questions · Résultats par session', 'set.matchInstructions': 'Associez les paires', 'set.accuracy': 'Précision :', 'set.correct': 'Correct :', 'set.attempted': 'Tentatives :', 'set.matched': 'Associées :', 'set.attempts': 'Tentatives :', 'set.time': 'Temps :', 'set.playAgain': 'Rejouer', 'set.noQuestions': 'Aucune question disponible.', 'set.question': 'Question', 'set.tile': 'Tuile',
     'settings.githubAuthenticate': 'Authentifiez-vous pour utiliser GitHub Models.', 'settings.clearApiKey': 'Effacer la clé API ?', 'settings.deviceCode': 'Code appareil', 'edit.deleteSet': 'Supprimer l’ensemble ?',
   },
   'zh-CN': {
@@ -254,42 +254,42 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'common.add': 'जोड़ें', 'common.results': 'परिणाम', 'common.optional': 'वैकल्पिक', 'common.status': 'स्थिति:', 'common.authenticated': 'प्रमाणित', 'common.notAuthenticated': 'प्रमाणित नहीं', 'common.invalid': 'टोकन अमान्य', 'common.locked': 'वॉल्ट लॉक है', 'common.retry': 'फिर प्रयास करें', 'common.continue': 'जारी रखें', 'common.true': 'सही', 'common.false': 'गलत',
     'common.clear': 'साफ़ करें', 'common.copy': 'कॉपी करें', 'common.download': 'डाउनलोड', 'common.selectAll': 'सभी चुनें', 'common.confirm': 'पुष्टि करें', 'common.authenticate': 'प्रमाणित करें', 'common.signOut': 'साइन आउट', 'set.noStarred': 'कोई पसंदीदा कार्ड नहीं', 'set.comingSoon': 'जल्द आ रहा है', 'set.notImplemented': 'यह मोड अभी उपलब्ध नहीं है।', 'set.noCards': 'कोई कार्ड नहीं।', 'auth.firstRunDescription': 'अपनी प्रोफ़ाइल बनाएँ और ऐप पासवर्ड सेट करें।',
     'create.sourceSets': 'स्रोत सेट', 'create.searchAndSelect': 'मिलाने के लिए एक या अधिक सेट चुनें।', 'create.selected': 'चुने गए', 'create.theme': 'विषय', 'create.aiOutput': 'AI आउटपुट', 'create.rawOutput': 'मूल आउटपुट', 'create.sources': 'स्रोत', 'create.instructions': 'निर्देश', 'create.pdfPages': 'PDF पृष्ठ', 'create.images': 'चित्र', 'create.files': 'फ़ाइलें',
-    'set.flashcardInstructions': 'पलटने के लिए Space · देखने के लिए ←/→ · सही या गलत चिह्नित करें', 'set.learnInstructions': 'प्रश्नों के उत्तर दें · हर दौर के परिणाम', 'set.matchInstructions': 'जोड़ियाँ मिलाएँ · मेमोरी मोड बदलें', 'set.accuracy': 'सटीकता:', 'set.correct': 'सही:', 'set.attempted': 'प्रयास:', 'set.matched': 'मिले:', 'set.attempts': 'प्रयास:', 'set.time': 'समय:', 'set.playAgain': 'फिर खेलें', 'set.noQuestions': 'कोई प्रश्न उपलब्ध नहीं।', 'set.question': 'प्रश्न', 'set.tile': 'टाइल',
+    'set.flashcardInstructions': 'पलटने के लिए Space · देखने के लिए ←/→ · सही या गलत चिह्नित करें', 'set.learnInstructions': 'प्रश्नों के उत्तर दें · हर दौर के परिणाम', 'set.matchInstructions': 'जोड़ियाँ मिलाएँ', 'set.accuracy': 'सटीकता:', 'set.correct': 'सही:', 'set.attempted': 'प्रयास:', 'set.matched': 'मिले:', 'set.attempts': 'प्रयास:', 'set.time': 'समय:', 'set.playAgain': 'फिर खेलें', 'set.noQuestions': 'कोई प्रश्न उपलब्ध नहीं।', 'set.question': 'प्रश्न', 'set.tile': 'टाइल',
     'settings.githubAuthenticate': 'GitHub Models के लिए प्रमाणित करें।', 'settings.clearApiKey': 'API कुंजी साफ़ करें?', 'settings.deviceCode': 'डिवाइस कोड', 'edit.deleteSet': 'सेट हटाएँ?',
   },
   ar: {
     'common.add': 'إضافة', 'common.results': 'النتائج', 'common.optional': 'اختياري', 'common.status': 'الحالة:', 'common.authenticated': 'تمت المصادقة', 'common.notAuthenticated': 'غير مصادق', 'common.invalid': 'الرمز غير صالح', 'common.locked': 'الخزنة مقفلة', 'common.retry': 'إعادة المحاولة', 'common.continue': 'متابعة', 'common.true': 'صحيح', 'common.false': 'خطأ',
     'common.clear': 'مسح', 'common.copy': 'نسخ', 'common.download': 'تنزيل', 'common.selectAll': 'تحديد الكل', 'common.confirm': 'تأكيد', 'common.authenticate': 'مصادقة', 'common.signOut': 'تسجيل الخروج', 'set.noStarred': 'لا توجد بطاقات مفضلة', 'set.comingSoon': 'قريبًا', 'set.notImplemented': 'هذا الوضع غير متاح بعد.', 'set.noCards': 'لا توجد بطاقات.', 'auth.firstRunDescription': 'أنشئ ملفك الشخصي وعيّن كلمة مرور للتطبيق.',
     'create.sourceSets': 'المجموعات المصدر', 'create.searchAndSelect': 'ابحث وحدد مجموعة أو أكثر لدمجها.', 'create.selected': 'المحدد', 'create.theme': 'الموضوع', 'create.aiOutput': 'مخرجات الذكاء الاصطناعي', 'create.rawOutput': 'المخرجات الخام', 'create.sources': 'المصادر', 'create.instructions': 'التعليمات', 'create.pdfPages': 'صفحات PDF', 'create.images': 'الصور', 'create.files': 'الملفات',
-    'set.flashcardInstructions': 'مسافة للقلب · ←/→ للتصفح · حدّد صحيح أو خطأ', 'set.learnInstructions': 'أجب عن الأسئلة · تُتبع النتائج لكل جولة', 'set.matchInstructions': 'طابق الأزواج · استخدم الذاكرة لتغيير الوضع', 'set.accuracy': 'الدقة:', 'set.correct': 'صحيح:', 'set.attempted': 'المحاولات:', 'set.matched': 'المطابق:', 'set.attempts': 'المحاولات:', 'set.time': 'الوقت:', 'set.playAgain': 'اللعب مجددًا', 'set.noQuestions': 'لا توجد أسئلة.', 'set.question': 'السؤال', 'set.tile': 'بطاقة',
+    'set.flashcardInstructions': 'مسافة للقلب · ←/→ للتصفح · حدّد صحيح أو خطأ', 'set.learnInstructions': 'أجب عن الأسئلة · تُتبع النتائج لكل جولة', 'set.matchInstructions': 'طابق الأزواج', 'set.accuracy': 'الدقة:', 'set.correct': 'صحيح:', 'set.attempted': 'المحاولات:', 'set.matched': 'المطابق:', 'set.attempts': 'المحاولات:', 'set.time': 'الوقت:', 'set.playAgain': 'اللعب مجددًا', 'set.noQuestions': 'لا توجد أسئلة.', 'set.question': 'السؤال', 'set.tile': 'بطاقة',
     'settings.githubAuthenticate': 'صادق لاستخدام GitHub Models.', 'settings.clearApiKey': 'مسح مفتاح API؟', 'settings.deviceCode': 'رمز الجهاز', 'edit.deleteSet': 'حذف المجموعة؟',
   },
   de: {
     'common.add': 'Hinzufügen', 'common.results': 'Ergebnisse', 'common.optional': 'optional', 'common.status': 'Status:', 'common.authenticated': 'Authentifiziert', 'common.notAuthenticated': 'Nicht authentifiziert', 'common.invalid': 'Token ungültig', 'common.locked': 'Tresor gesperrt', 'common.retry': 'Erneut versuchen', 'common.continue': 'Weiter', 'common.true': 'Wahr', 'common.false': 'Falsch',
     'common.clear': 'Leeren', 'common.copy': 'Kopieren', 'common.download': 'Herunterladen', 'common.selectAll': 'Alles auswählen', 'common.confirm': 'Bestätigen', 'common.authenticate': 'Authentifizieren', 'common.signOut': 'Abmelden', 'set.noStarred': 'Keine Favoriten', 'set.comingSoon': 'Demnächst', 'set.notImplemented': 'Dieser Modus ist noch nicht verfügbar.', 'set.noCards': 'Keine Karten.', 'auth.firstRunDescription': 'Erstelle dein Profil und lege ein App-Passwort fest.',
     'create.sourceSets': 'Quell-Sets', 'create.searchAndSelect': 'Sets zum Zusammenführen suchen und auswählen.', 'create.selected': 'Ausgewählt', 'create.theme': 'Thema', 'create.aiOutput': 'KI-Ausgabe', 'create.rawOutput': 'Rohausgabe', 'create.sources': 'Quellen', 'create.instructions': 'Anweisungen', 'create.pdfPages': 'PDF-Seiten', 'create.images': 'Bilder', 'create.files': 'Dateien',
-    'set.flashcardInstructions': 'Leertaste zum Wenden · ←/→ zum Blättern · Richtig oder falsch markieren', 'set.learnInstructions': 'Fragen beantworten · Ergebnisse pro Runde', 'set.matchInstructions': 'Paare zuordnen · Memory-Modus umschalten', 'set.accuracy': 'Genauigkeit:', 'set.correct': 'Richtig:', 'set.attempted': 'Versucht:', 'set.matched': 'Zugeordnet:', 'set.attempts': 'Versuche:', 'set.time': 'Zeit:', 'set.playAgain': 'Noch einmal', 'set.noQuestions': 'Keine Fragen verfügbar.', 'set.question': 'Frage', 'set.tile': 'Kachel',
+    'set.flashcardInstructions': 'Leertaste zum Wenden · ←/→ zum Blättern · Richtig oder falsch markieren', 'set.learnInstructions': 'Fragen beantworten · Ergebnisse pro Runde', 'set.matchInstructions': 'Paare zuordnen', 'set.accuracy': 'Genauigkeit:', 'set.correct': 'Richtig:', 'set.attempted': 'Versucht:', 'set.matched': 'Zugeordnet:', 'set.attempts': 'Versuche:', 'set.time': 'Zeit:', 'set.playAgain': 'Noch einmal', 'set.noQuestions': 'Keine Fragen verfügbar.', 'set.question': 'Frage', 'set.tile': 'Kachel',
     'settings.githubAuthenticate': 'Für GitHub Models authentifizieren.', 'settings.clearApiKey': 'API-Schlüssel löschen?', 'settings.deviceCode': 'Gerätecode', 'edit.deleteSet': 'Set löschen?',
   },
   ru: {
     'common.add': 'Добавить', 'common.results': 'Результаты', 'common.optional': 'необязательно', 'common.status': 'Статус:', 'common.authenticated': 'Выполнен вход', 'common.notAuthenticated': 'Вход не выполнен', 'common.invalid': 'Токен недействителен', 'common.locked': 'Хранилище заблокировано', 'common.retry': 'Повторить', 'common.continue': 'Продолжить', 'common.true': 'Верно', 'common.false': 'Неверно',
     'common.clear': 'Очистить', 'common.copy': 'Копировать', 'common.download': 'Скачать', 'common.selectAll': 'Выбрать всё', 'common.confirm': 'Подтвердить', 'common.authenticate': 'Войти', 'common.signOut': 'Выйти', 'set.noStarred': 'Нет избранных карточек', 'set.comingSoon': 'Скоро', 'set.notImplemented': 'Этот режим ещё не реализован.', 'set.noCards': 'Нет карточек.', 'auth.firstRunDescription': 'Создайте профиль и задайте пароль приложения.',
     'create.sourceSets': 'Исходные наборы', 'create.searchAndSelect': 'Найдите и выберите наборы для объединения.', 'create.selected': 'Выбрано', 'create.theme': 'Тема', 'create.aiOutput': 'Ответ ИИ', 'create.rawOutput': 'Исходный ответ', 'create.sources': 'Источники', 'create.instructions': 'Инструкции', 'create.pdfPages': 'Страницы PDF', 'create.images': 'Изображения', 'create.files': 'Файлы',
-    'set.flashcardInstructions': 'Пробел — перевернуть · ←/→ — листать · Отметьте результат', 'set.learnInstructions': 'Отвечайте на вопросы · Результаты каждой сессии', 'set.matchInstructions': 'Найдите пары · Переключайте режим памяти', 'set.accuracy': 'Точность:', 'set.correct': 'Верно:', 'set.attempted': 'Попытки:', 'set.matched': 'Найдено:', 'set.attempts': 'Попытки:', 'set.time': 'Время:', 'set.playAgain': 'Играть снова', 'set.noQuestions': 'Нет доступных вопросов.', 'set.question': 'Вопрос', 'set.tile': 'Плитка',
+    'set.flashcardInstructions': 'Пробел — перевернуть · ←/→ — листать · Отметьте результат', 'set.learnInstructions': 'Отвечайте на вопросы · Результаты каждой сессии', 'set.matchInstructions': 'Найдите пары', 'set.accuracy': 'Точность:', 'set.correct': 'Верно:', 'set.attempted': 'Попытки:', 'set.matched': 'Найдено:', 'set.attempts': 'Попытки:', 'set.time': 'Время:', 'set.playAgain': 'Играть снова', 'set.noQuestions': 'Нет доступных вопросов.', 'set.question': 'Вопрос', 'set.tile': 'Плитка',
     'settings.githubAuthenticate': 'Войдите для использования GitHub Models.', 'settings.clearApiKey': 'Удалить ключ API?', 'settings.deviceCode': 'Код устройства', 'edit.deleteSet': 'Удалить набор?',
   },
   ja: {
     'common.add': '追加', 'common.results': '結果', 'common.optional': '任意', 'common.status': '状態：', 'common.authenticated': '認証済み', 'common.notAuthenticated': '未認証', 'common.invalid': 'トークンが無効', 'common.locked': '保管庫はロック中', 'common.retry': '再試行', 'common.continue': '続行', 'common.true': '正しい', 'common.false': '誤り',
     'common.clear': 'クリア', 'common.copy': 'コピー', 'common.download': 'ダウンロード', 'common.selectAll': 'すべて選択', 'common.confirm': '確認', 'common.authenticate': '認証', 'common.signOut': 'サインアウト', 'set.noStarred': 'お気に入りのカードはありません', 'set.comingSoon': '近日公開', 'set.notImplemented': 'このモードはまだ実装されていません。', 'set.noCards': 'カードがありません。', 'auth.firstRunDescription': 'プロフィールを作成し、アプリのパスワードを設定します。',
     'create.sourceSets': '元のセット', 'create.searchAndSelect': '結合するセットを検索して選択します。', 'create.selected': '選択済み', 'create.theme': 'テーマ', 'create.aiOutput': 'AI 出力', 'create.rawOutput': '生の出力', 'create.sources': '資料', 'create.instructions': '指示', 'create.pdfPages': 'PDF ページ', 'create.images': '画像', 'create.files': 'ファイル',
-    'set.flashcardInstructions': 'Space で反転 · ←/→ で移動 · 正誤を記録', 'set.learnInstructions': '質問に回答 · セッションごとに結果を記録', 'set.matchInstructions': 'ペアを合わせる · メモリーモードを切替', 'set.accuracy': '正答率：', 'set.correct': '正解：', 'set.attempted': '回答済み：', 'set.matched': '一致：', 'set.attempts': '試行：', 'set.time': '時間：', 'set.playAgain': 'もう一度', 'set.noQuestions': '利用できる質問がありません。', 'set.question': '質問', 'set.tile': 'タイル',
+    'set.flashcardInstructions': 'Space で反転 · ←/→ で移動 · 正誤を記録', 'set.learnInstructions': '質問に回答 · セッションごとに結果を記録', 'set.matchInstructions': 'ペアを合わせる', 'set.accuracy': '正答率：', 'set.correct': '正解：', 'set.attempted': '回答済み：', 'set.matched': '一致：', 'set.attempts': '試行：', 'set.time': '時間：', 'set.playAgain': 'もう一度', 'set.noQuestions': '利用できる質問がありません。', 'set.question': '質問', 'set.tile': 'タイル',
     'settings.githubAuthenticate': 'GitHub Models を使用するには認証してください。', 'settings.clearApiKey': 'API キーを消去しますか？', 'settings.deviceCode': 'デバイスコード', 'edit.deleteSet': 'セットを削除しますか？',
   },
   ko: {
     'common.add': '추가', 'common.results': '결과', 'common.optional': '선택 사항', 'common.status': '상태:', 'common.authenticated': '인증됨', 'common.notAuthenticated': '인증되지 않음', 'common.invalid': '토큰이 유효하지 않음', 'common.locked': '보관함 잠김', 'common.retry': '다시 시도', 'common.continue': '계속', 'common.true': '참', 'common.false': '거짓',
     'common.clear': '지우기', 'common.copy': '복사', 'common.download': '다운로드', 'common.selectAll': '모두 선택', 'common.confirm': '확인', 'common.authenticate': '인증', 'common.signOut': '로그아웃', 'set.noStarred': '즐겨찾기 카드가 없습니다', 'set.comingSoon': '출시 예정', 'set.notImplemented': '이 모드는 아직 구현되지 않았습니다.', 'set.noCards': '카드가 없습니다.', 'auth.firstRunDescription': '프로필을 만들고 앱 비밀번호를 설정하세요.',
     'create.sourceSets': '원본 세트', 'create.searchAndSelect': '결합할 세트를 검색하고 선택하세요.', 'create.selected': '선택됨', 'create.theme': '주제', 'create.aiOutput': 'AI 출력', 'create.rawOutput': '원본 출력', 'create.sources': '자료', 'create.instructions': '지침', 'create.pdfPages': 'PDF 페이지', 'create.images': '이미지', 'create.files': '파일',
-    'set.flashcardInstructions': 'Space로 뒤집기 · ←/→로 이동 · 정답 여부 표시', 'set.learnInstructions': '질문에 답하기 · 실행별 결과 기록', 'set.matchInstructions': '짝 맞추기 · 메모리 모드 전환', 'set.accuracy': '정확도:', 'set.correct': '정답:', 'set.attempted': '시도:', 'set.matched': '맞춘 수:', 'set.attempts': '시도:', 'set.time': '시간:', 'set.playAgain': '다시 하기', 'set.noQuestions': '사용 가능한 질문이 없습니다.', 'set.question': '질문', 'set.tile': '타일',
+    'set.flashcardInstructions': 'Space로 뒤집기 · ←/→로 이동 · 정답 여부 표시', 'set.learnInstructions': '질문에 답하기 · 실행별 결과 기록', 'set.matchInstructions': '짝 맞추기', 'set.accuracy': '정확도:', 'set.correct': '정답:', 'set.attempted': '시도:', 'set.matched': '맞춘 수:', 'set.attempts': '시도:', 'set.time': '시간:', 'set.playAgain': '다시 하기', 'set.noQuestions': '사용 가능한 질문이 없습니다.', 'set.question': '질문', 'set.tile': '타일',
     'settings.githubAuthenticate': 'GitHub Models를 사용하려면 인증하세요.', 'settings.clearApiKey': 'API 키를 지울까요?', 'settings.deviceCode': '기기 코드', 'edit.deleteSet': '세트를 삭제할까요?',
   },
 }
@@ -706,6 +706,260 @@ const duplicateMessages: Record<AppLanguage, Messages> = {
 
 for (const language of Object.keys(duplicateMessages) as AppLanguage[]) {
   Object.assign(messageTargets[language], duplicateMessages[language])
+}
+
+const chatHistoryMessages: Record<AppLanguage, Messages> = {
+  en: {
+    'chat.history': 'History',
+    'chat.saving': 'Saving…',
+    'chat.saved': 'Chat saved',
+    'chat.noHistory': 'No saved chats for this set.',
+    'chat.deleteNamed': 'Delete {title}',
+    'chat.deleteTitle': 'Delete saved chat?',
+    'chat.deleteDescription': 'This permanently deletes “{title}”.',
+    'chat.saveFailed': 'Failed to save chat.',
+    'chat.historyFailed': 'Failed to load chat history.',
+    'chat.openFailed': 'Failed to open saved chat.',
+    'chat.deleteFailed': 'Failed to delete saved chat.'
+  },
+  es: {
+    'chat.history': 'Historial',
+    'chat.saving': 'Guardando…',
+    'chat.saved': 'Chat guardado',
+    'chat.noHistory': 'No hay chats guardados para este conjunto.',
+    'chat.deleteNamed': 'Eliminar {title}',
+    'chat.deleteTitle': '¿Eliminar el chat guardado?',
+    'chat.deleteDescription': 'Esto eliminará permanentemente “{title}”.',
+    'chat.saveFailed': 'No se pudo guardar el chat.',
+    'chat.historyFailed': 'No se pudo cargar el historial de chats.',
+    'chat.openFailed': 'No se pudo abrir el chat guardado.',
+    'chat.deleteFailed': 'No se pudo eliminar el chat guardado.'
+  },
+  fr: {
+    'chat.history': 'Historique',
+    'chat.saving': 'Enregistrement…',
+    'chat.saved': 'Chat enregistré',
+    'chat.noHistory': 'Aucun chat enregistré pour cet ensemble.',
+    'chat.deleteNamed': 'Supprimer {title}',
+    'chat.deleteTitle': 'Supprimer le chat enregistré ?',
+    'chat.deleteDescription': 'Cette action supprimera définitivement « {title} ».',
+    'chat.saveFailed': 'Impossible d’enregistrer le chat.',
+    'chat.historyFailed': 'Impossible de charger l’historique des chats.',
+    'chat.openFailed': 'Impossible d’ouvrir le chat enregistré.',
+    'chat.deleteFailed': 'Impossible de supprimer le chat enregistré.'
+  },
+  'zh-CN': {
+    'chat.history': '历史记录',
+    'chat.saving': '正在保存…',
+    'chat.saved': '聊天已保存',
+    'chat.noHistory': '此卡片集没有已保存的聊天。',
+    'chat.deleteNamed': '删除 {title}',
+    'chat.deleteTitle': '删除已保存的聊天？',
+    'chat.deleteDescription': '这将永久删除“{title}”。',
+    'chat.saveFailed': '无法保存聊天。',
+    'chat.historyFailed': '无法加载聊天历史记录。',
+    'chat.openFailed': '无法打开已保存的聊天。',
+    'chat.deleteFailed': '无法删除已保存的聊天。'
+  },
+  hi: {
+    'chat.history': 'इतिहास',
+    'chat.saving': 'सहेजा जा रहा है…',
+    'chat.saved': 'चैट सहेजी गई',
+    'chat.noHistory': 'इस सेट के लिए कोई सहेजी गई चैट नहीं है।',
+    'chat.deleteNamed': '{title} हटाएँ',
+    'chat.deleteTitle': 'सहेजी गई चैट हटाएँ?',
+    'chat.deleteDescription': 'यह “{title}” को स्थायी रूप से हटा देगा।',
+    'chat.saveFailed': 'चैट सहेजी नहीं जा सकी।',
+    'chat.historyFailed': 'चैट इतिहास लोड नहीं हो सका।',
+    'chat.openFailed': 'सहेजी गई चैट खोली नहीं जा सकी।',
+    'chat.deleteFailed': 'सहेजी गई चैट हटाई नहीं जा सकी।'
+  },
+  ar: {
+    'chat.history': 'السجل',
+    'chat.saving': 'جارٍ الحفظ…',
+    'chat.saved': 'تم حفظ الدردشة',
+    'chat.noHistory': 'لا توجد دردشات محفوظة لهذه المجموعة.',
+    'chat.deleteNamed': 'حذف {title}',
+    'chat.deleteTitle': 'حذف الدردشة المحفوظة؟',
+    'chat.deleteDescription': 'سيؤدي هذا إلى حذف “{title}” نهائيًا.',
+    'chat.saveFailed': 'تعذر حفظ الدردشة.',
+    'chat.historyFailed': 'تعذر تحميل سجل الدردشات.',
+    'chat.openFailed': 'تعذر فتح الدردشة المحفوظة.',
+    'chat.deleteFailed': 'تعذر حذف الدردشة المحفوظة.'
+  },
+  de: {
+    'chat.history': 'Verlauf',
+    'chat.saving': 'Wird gespeichert…',
+    'chat.saved': 'Chat gespeichert',
+    'chat.noHistory': 'Keine gespeicherten Chats für dieses Set.',
+    'chat.deleteNamed': '{title} löschen',
+    'chat.deleteTitle': 'Gespeicherten Chat löschen?',
+    'chat.deleteDescription': '„{title}“ wird dadurch dauerhaft gelöscht.',
+    'chat.saveFailed': 'Chat konnte nicht gespeichert werden.',
+    'chat.historyFailed': 'Chatverlauf konnte nicht geladen werden.',
+    'chat.openFailed': 'Gespeicherter Chat konnte nicht geöffnet werden.',
+    'chat.deleteFailed': 'Gespeicherter Chat konnte nicht gelöscht werden.'
+  },
+  ru: {
+    'chat.history': 'История',
+    'chat.saving': 'Сохранение…',
+    'chat.saved': 'Чат сохранён',
+    'chat.noHistory': 'Для этого набора нет сохранённых чатов.',
+    'chat.deleteNamed': 'Удалить {title}',
+    'chat.deleteTitle': 'Удалить сохранённый чат?',
+    'chat.deleteDescription': 'Чат «{title}» будет удалён навсегда.',
+    'chat.saveFailed': 'Не удалось сохранить чат.',
+    'chat.historyFailed': 'Не удалось загрузить историю чатов.',
+    'chat.openFailed': 'Не удалось открыть сохранённый чат.',
+    'chat.deleteFailed': 'Не удалось удалить сохранённый чат.'
+  },
+  ja: {
+    'chat.history': '履歴',
+    'chat.saving': '保存中…',
+    'chat.saved': 'チャットを保存しました',
+    'chat.noHistory': 'このセットに保存済みのチャットはありません。',
+    'chat.deleteNamed': '{title} を削除',
+    'chat.deleteTitle': '保存済みチャットを削除しますか？',
+    'chat.deleteDescription': '「{title}」は完全に削除されます。',
+    'chat.saveFailed': 'チャットを保存できませんでした。',
+    'chat.historyFailed': 'チャット履歴を読み込めませんでした。',
+    'chat.openFailed': '保存済みチャットを開けませんでした。',
+    'chat.deleteFailed': '保存済みチャットを削除できませんでした。'
+  },
+  ko: {
+    'chat.history': '기록',
+    'chat.saving': '저장 중…',
+    'chat.saved': '채팅 저장됨',
+    'chat.noHistory': '이 세트에 저장된 채팅이 없습니다.',
+    'chat.deleteNamed': '{title} 삭제',
+    'chat.deleteTitle': '저장된 채팅을 삭제할까요?',
+    'chat.deleteDescription': '“{title}” 채팅이 영구적으로 삭제됩니다.',
+    'chat.saveFailed': '채팅을 저장하지 못했습니다.',
+    'chat.historyFailed': '채팅 기록을 불러오지 못했습니다.',
+    'chat.openFailed': '저장된 채팅을 열지 못했습니다.',
+    'chat.deleteFailed': '저장된 채팅을 삭제하지 못했습니다.'
+  }
+}
+
+for (const language of Object.keys(chatHistoryMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], chatHistoryMessages[language])
+}
+
+const folderMessages: Record<AppLanguage, Messages> = {
+  en: {
+    'home.addFolder': 'Add Folder',
+    'home.untitledFolder': 'Untitled Folder',
+    'home.folderName': 'Folder name',
+    'home.emptyFolder': 'This folder is empty.',
+    'home.rootDropArea': 'Move sets out of folders',
+    'home.setsSelected': '{count} set(s)',
+    'home.folderCreateFailed': 'Failed to create folder.',
+    'home.folderRenameFailed': 'Failed to rename folder.',
+    'home.folderMoveFailed': 'Failed to move sets.'
+  },
+  es: {
+    'home.addFolder': 'Añadir carpeta',
+    'home.untitledFolder': 'Carpeta sin título',
+    'home.folderName': 'Nombre de la carpeta',
+    'home.emptyFolder': 'Esta carpeta está vacía.',
+    'home.rootDropArea': 'Mover conjuntos fuera de las carpetas',
+    'home.setsSelected': '{count} conjunto(s)',
+    'home.folderCreateFailed': 'No se pudo crear la carpeta.',
+    'home.folderRenameFailed': 'No se pudo cambiar el nombre de la carpeta.',
+    'home.folderMoveFailed': 'No se pudieron mover los conjuntos.'
+  },
+  fr: {
+    'home.addFolder': 'Ajouter un dossier',
+    'home.untitledFolder': 'Dossier sans titre',
+    'home.folderName': 'Nom du dossier',
+    'home.emptyFolder': 'Ce dossier est vide.',
+    'home.rootDropArea': 'Déplacer les ensembles hors des dossiers',
+    'home.setsSelected': '{count} ensemble(s)',
+    'home.folderCreateFailed': 'Impossible de créer le dossier.',
+    'home.folderRenameFailed': 'Impossible de renommer le dossier.',
+    'home.folderMoveFailed': 'Impossible de déplacer les ensembles.'
+  },
+  'zh-CN': {
+    'home.addFolder': '添加文件夹',
+    'home.untitledFolder': '未命名文件夹',
+    'home.folderName': '文件夹名称',
+    'home.emptyFolder': '此文件夹为空。',
+    'home.rootDropArea': '将卡片集移出文件夹',
+    'home.setsSelected': '{count} 个卡片集',
+    'home.folderCreateFailed': '无法创建文件夹。',
+    'home.folderRenameFailed': '无法重命名文件夹。',
+    'home.folderMoveFailed': '无法移动卡片集。'
+  },
+  hi: {
+    'home.addFolder': 'फ़ोल्डर जोड़ें',
+    'home.untitledFolder': 'शीर्षकहीन फ़ोल्डर',
+    'home.folderName': 'फ़ोल्डर का नाम',
+    'home.emptyFolder': 'यह फ़ोल्डर खाली है।',
+    'home.rootDropArea': 'सेट को फ़ोल्डर से बाहर ले जाएँ',
+    'home.setsSelected': '{count} सेट',
+    'home.folderCreateFailed': 'फ़ोल्डर नहीं बनाया जा सका।',
+    'home.folderRenameFailed': 'फ़ोल्डर का नाम नहीं बदला जा सका।',
+    'home.folderMoveFailed': 'सेट नहीं ले जाए जा सके।'
+  },
+  ar: {
+    'home.addFolder': 'إضافة مجلد',
+    'home.untitledFolder': 'مجلد بلا عنوان',
+    'home.folderName': 'اسم المجلد',
+    'home.emptyFolder': 'هذا المجلد فارغ.',
+    'home.rootDropArea': 'نقل المجموعات خارج المجلدات',
+    'home.setsSelected': '{count} مجموعة',
+    'home.folderCreateFailed': 'تعذر إنشاء المجلد.',
+    'home.folderRenameFailed': 'تعذر تغيير اسم المجلد.',
+    'home.folderMoveFailed': 'تعذر نقل المجموعات.'
+  },
+  de: {
+    'home.addFolder': 'Ordner hinzufügen',
+    'home.untitledFolder': 'Unbenannter Ordner',
+    'home.folderName': 'Ordnername',
+    'home.emptyFolder': 'Dieser Ordner ist leer.',
+    'home.rootDropArea': 'Sets aus Ordnern verschieben',
+    'home.setsSelected': '{count} Set(s)',
+    'home.folderCreateFailed': 'Ordner konnte nicht erstellt werden.',
+    'home.folderRenameFailed': 'Ordner konnte nicht umbenannt werden.',
+    'home.folderMoveFailed': 'Sets konnten nicht verschoben werden.'
+  },
+  ru: {
+    'home.addFolder': 'Добавить папку',
+    'home.untitledFolder': 'Папка без названия',
+    'home.folderName': 'Название папки',
+    'home.emptyFolder': 'Эта папка пуста.',
+    'home.rootDropArea': 'Переместить наборы из папок',
+    'home.setsSelected': '{count} набор(а)',
+    'home.folderCreateFailed': 'Не удалось создать папку.',
+    'home.folderRenameFailed': 'Не удалось переименовать папку.',
+    'home.folderMoveFailed': 'Не удалось переместить наборы.'
+  },
+  ja: {
+    'home.addFolder': 'フォルダーを追加',
+    'home.untitledFolder': '名称未設定フォルダー',
+    'home.folderName': 'フォルダー名',
+    'home.emptyFolder': 'このフォルダーは空です。',
+    'home.rootDropArea': 'セットをフォルダーの外へ移動',
+    'home.setsSelected': '{count} 件のセット',
+    'home.folderCreateFailed': 'フォルダーを作成できませんでした。',
+    'home.folderRenameFailed': 'フォルダー名を変更できませんでした。',
+    'home.folderMoveFailed': 'セットを移動できませんでした。'
+  },
+  ko: {
+    'home.addFolder': '폴더 추가',
+    'home.untitledFolder': '제목 없는 폴더',
+    'home.folderName': '폴더 이름',
+    'home.emptyFolder': '이 폴더는 비어 있습니다.',
+    'home.rootDropArea': '세트를 폴더 밖으로 이동',
+    'home.setsSelected': '세트 {count}개',
+    'home.folderCreateFailed': '폴더를 만들지 못했습니다.',
+    'home.folderRenameFailed': '폴더 이름을 바꾸지 못했습니다.',
+    'home.folderMoveFailed': '세트를 이동하지 못했습니다.'
+  }
+}
+
+for (const language of Object.keys(folderMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], folderMessages[language])
 }
 
 const factCheckMessages: Record<AppLanguage, Messages> = {

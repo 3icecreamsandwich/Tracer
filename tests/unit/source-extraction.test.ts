@@ -175,8 +175,8 @@ describe('generate source extraction', () => {
   })
 
   it('validates combined Generate source limits', () => {
-    expect(() => assertGenerateSourceLimits({ pdfPages: 35, imageCount: 10 })).not.toThrow()
-    expect(() => assertGenerateSourceLimits({ pdfPages: 36, imageCount: 0 })).toThrow(/PDF page limit exceeded/)
+    expect(() => assertGenerateSourceLimits({ pdfPages: 50, imageCount: 10 })).not.toThrow()
+    expect(() => assertGenerateSourceLimits({ pdfPages: 51, imageCount: 0 })).toThrow(/PDF page limit exceeded/)
     expect(() => assertGenerateSourceLimits({ pdfPages: 0, imageCount: 11 })).toThrow(/Too many images/)
   })
 

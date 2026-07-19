@@ -57,6 +57,12 @@ This prototype uses SQLite for persistent local storage.
   - `starred_terms`: per-set starred terms.
   - `study_guides`: markdown content for a set.
   - `app_settings`: singleton settings row (`id = 1`), including default model selection.
+- `src-tauri/migrations/003_chats.sql`: Adds explicitly saved, per-set chat history.
+  - `chats`: generated title, versioned `messages_json`, and created/updated/last-opened timestamps.
+  - `messages_json` is guarded with `CHECK (json_valid(messages_json))`.
+- `src-tauri/migrations/004_folders.sql`: Adds flat homepage folders and nullable set membership.
+  - `folders`: persistent folder names and timestamps.
+  - `flashcard_sets.folder_id`: links a set to at most one folder and returns it to root when that folder is removed.
 
 ### Typed DB access (frontend)
 
@@ -75,6 +81,8 @@ Repositories:
 - `src/composables/db/repos/stars.repo.ts`: CRUD for `starred_terms`.
 - `src/composables/db/repos/profile.repo.ts`: CRUD for `profile`.
 - `src/composables/db/repos/settings.repo.ts`: CRUD for `app_settings` (singleton).
+- `src/composables/db/repos/chats.repo.ts`: CRUD, ordering, and JSON serialization for saved chats.
+- `src/composables/db/repos/folders.repo.ts`: CRUD for folders and batch set moves.
 - `src/composables/db/repos/index.ts`: Repo exports.
 
 Validation/parsing:

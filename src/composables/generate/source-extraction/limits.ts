@@ -1,4 +1,4 @@
-export const MAX_GENERATE_PDF_PAGES = 35
+export const MAX_GENERATE_PDF_PAGES = 50
 export const MAX_GENERATE_IMAGES = 10
 
 export function assertGenerateSourceLimits(input: { pdfPages: number; imageCount: number }) {

@@ -10,6 +10,32 @@ export type ChatMessage = {
 
 export const GROUNDED_CHAT_HISTORY_MESSAGE_LIMIT = 8
 
+export function buildChatTitlePrompt(firstQuestion: string) {
+  return [
+    'Create a short title for a saved study chat based only on the user question below.',
+    'Use the same language as the question.',
+    'Return only the title, with no quotation marks, markdown, or ending punctuation.',
+    'Use 3 to 8 words when the language normally separates words with spaces.',
+    'Keep the title under 80 characters.',
+    '',
+    `User question: ${firstQuestion.trim()}`
+  ].join('\n')
+}
+
+export function normalizeGeneratedChatTitle(raw: string) {
+  const firstLine = raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find(Boolean)
+  if (!firstLine) return ''
+
+  const withoutMarkdown = firstLine.replace(/^#{1,6}\s*/, '').trim()
+  const withoutQuotes = withoutMarkdown
+    .replace(/^["'“‘`]([\s\S]*)["'”’`]$/, '$1')
+    .trim()
+  return Array.from(withoutQuotes).slice(0, 80).join('').trim()
+}
+
 export function takeRecentChatMessages(
   messages: ChatMessage[],
   limit = GROUNDED_CHAT_HISTORY_MESSAGE_LIMIT

@@ -18,6 +18,7 @@ export type Term = {
 
 export type FlashcardSet = {
   id: Uuid
+  folderId: Uuid | null
   title: string
   description: string | null
   terms: Term[]
@@ -27,6 +28,7 @@ export type FlashcardSet = {
 
 export type FlashcardSetListItem = {
   id: Uuid
+  folderId: Uuid | null
   title: string
   description: string | null
   createdAt: IsoDateTimeString
@@ -38,6 +40,13 @@ export type Profile = {
   name: string
   email: string
   createdAt: IsoDateTimeString
+}
+
+export type SetFolder = {
+  id: Uuid
+  name: string
+  createdAt: IsoDateTimeString
+  updatedAt: IsoDateTimeString
 }
 
 export type AppSettings = {
@@ -55,6 +64,29 @@ export type StudyGuide = {
   setId: Uuid
   markdown: string
   createdAt: IsoDateTimeString
+}
+
+export type SavedChatMessage = {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export type SavedChatPayload = {
+  version: 1
+  messages: SavedChatMessage[]
+}
+
+export type SavedChatListItem = {
+  id: Uuid
+  setId: Uuid
+  title: string
+  createdAt: IsoDateTimeString
+  updatedAt: IsoDateTimeString
+  lastOpenedAt: IsoDateTimeString
+}
+
+export type SavedChat = SavedChatListItem & {
+  payload: SavedChatPayload
 }
 
 export type DbClient = {

@@ -9,6 +9,7 @@ test('study guide: navigates from set page and renders markdown blocks', async (
   await expect(page).toHaveURL(/\/study-guide\//)
 
   await expect(page.getByRole('heading', { name: 'Study guide', exact: true })).toBeVisible()
+  await expect(page.getByText('Linked to set Demo set', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Demo study guide' })).toBeVisible()
   await expect(page.locator('[data-testid="markdown-renderer"] strong')).toContainText('bold Markdown')
   await expect(page.getByText('**bold Markdown**')).toHaveCount(0)
@@ -19,7 +20,20 @@ test('study guide: navigates from set page and renders markdown blocks', async (
   const table = page.getByRole('table')
   await expect(table).toBeVisible()
   await expect(table.getByRole('columnheader', { name: 'Topic' })).toBeVisible()
-  await expect(table.getByRole('cell', { name: 'Render correctly' })).toBeVisible()
+  const tableCell = table.getByRole('cell', { name: 'Render correctly' })
+  await expect(tableCell).toBeVisible()
+  await expect.poll(() => tableCell.evaluate((cell) => {
+    const styles = getComputedStyle(cell)
+    return {
+      minWidth: styles.minWidth,
+      overflowWrap: styles.overflowWrap,
+      wordBreak: styles.wordBreak
+    }
+  })).toEqual({
+    minWidth: '128px',
+    overflowWrap: 'break-word',
+    wordBreak: 'normal'
+  })
 
   const code = page.locator('pre code')
   await expect(code).toBeVisible()

@@ -7,7 +7,7 @@
             :from="route.fullPath"
             :show-retry="true"
             @close="closeAiError"
-            @retry="retryChat"
+            @retry="retryAiRequest"
         />
         <div class="mx-auto max-w-3xl p-8">
             <div
@@ -316,7 +316,7 @@
                                 <button
                                     ref="viewerButtonEl"
                                     type="button"
-                                    class="relative mt-3 w-full rounded-md border border-slate-200 bg-slate-50 p-6 text-left shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    class="relative mt-3 flex min-h-36 w-full items-center justify-center rounded-md border border-slate-200 bg-slate-50 p-6 text-left shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     :class="{
                                         'animate-flip': isFlipping,
                                         'animate-slide-left':
@@ -334,12 +334,12 @@
                                         {{ t('set.tryAgain') }}
                                     </span>
                                     <p
-                                        class="text-xs font-medium text-slate-500 dark:text-slate-400"
+                                        class="absolute top-6 left-6 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
                                         {{ isFlipped ? t('create.definition') : t('create.term') }}
                                     </p>
                                     <div
-                                        class="flashcard-content-row mt-3 flex w-full flex-row items-center justify-center text-center text-slate-900 dark:text-slate-50"
+                                        class="flashcard-content-row flex w-full flex-row items-center justify-center text-center text-slate-900 dark:text-slate-50"
                                         :class="{ 'flashcard-content-row--paired': viewerImage && viewerHasText }"
                                     >
                                         <img
@@ -629,16 +629,50 @@
                                         {{ t('set.chatHint') }}
                                     </p>
                                 </div>
-                                <button
-                                    type="button"
-                                    class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                    :disabled="
-                                        chatBusy || chatMessages.length === 0
-                                    "
-                                    @click="resetChat"
-                                >
-                                    {{ t('common.clear') }}
-                                </button>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        :disabled="chatBusy || chatSaveBusy || !set || isWebPreview"
+                                        @click="openChatHistory"
+                                    >
+                                        {{ t('chat.history') }}
+                                    </button>
+                                    <div class="inline-flex items-center gap-1.5">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                            :disabled="
+                                                chatBusy ||
+                                                chatSaveBusy ||
+                                                chatIsSaved ||
+                                                !firstChatQuestion ||
+                                                isWebPreview
+                                            "
+                                            @click="saveChat"
+                                        >
+                                            {{ chatSaveBusy ? t('chat.saving') : t('common.save') }}
+                                        </button>
+                                        <span
+                                            v-if="chatSavedFeedback"
+                                            class="text-sm font-semibold text-emerald-600 dark:text-emerald-400"
+                                            :aria-label="t('chat.saved')"
+                                            aria-live="polite"
+                                        >
+                                            ✓
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        :disabled="
+                                            chatBusy || chatSaveBusy || chatMessages.length === 0
+                                        "
+                                        @click="resetChat"
+                                    >
+                                        {{ t('common.clear') }}
+                                    </button>
+                                </div>
                             </div>
 
                             <div
@@ -702,14 +736,14 @@
                                     autocomplete="off"
                                     :placeholder="t('set.chatHint')"
                                     class="w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                    :disabled="chatBusy || !set"
+                                    :disabled="chatBusy || chatSaveBusy || !set"
                                     @keydown="onChatInputKeydown"
                                 />
                                 <button
                                     type="button"
                                     class="inline-flex shrink-0 items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     :disabled="
-                                        chatBusy || !set || !chatInput.trim()
+                                        chatBusy || chatSaveBusy || !set || !chatInput.trim()
                                     "
                                     @click="sendChat"
                                 >
@@ -750,7 +784,7 @@
                                 v-if="!matchIsRunning && !matchIsFinished"
                                 class="mt-3 flex items-center gap-2"
                             >
-                                <button
+                                <!-- <button
                                     type="button"
                                     class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     :class="{
@@ -760,7 +794,7 @@
                                     @click="matchMemoryMode = !matchMemoryMode"
                                 >
                                     {{ t('set.memory') }} {{ matchMemoryMode ? "✓" : "" }}
-                                </button>
+                                </button> -->
                                 <NuxtLink
                                     v-if="set"
                                     :to="`/set/${set.id}-match`"
@@ -1015,6 +1049,151 @@
         </div>
 
         <div
+            v-if="chatHistoryOpen"
+            class="fixed inset-0 z-50 flex items-center justify-center p-6"
+            role="dialog"
+            aria-modal="true"
+            :aria-label="t('chat.history')"
+            @keydown.esc="closeChatHistory"
+        >
+            <button
+                type="button"
+                class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
+                :aria-label="t('common.close')"
+                @click="closeChatHistory"
+            />
+
+            <div
+                class="relative w-full max-w-xl rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">
+                            {{ t('chat.history') }}
+                        </h2>
+                        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                            {{ set?.title }}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        @click="closeChatHistory"
+                    >
+                        {{ t('common.close') }}
+                    </button>
+                </div>
+
+                <div class="mt-4 max-h-[26rem] overflow-y-auto">
+                    <p
+                        v-if="chatHistoryError"
+                        class="text-sm text-red-700 dark:text-red-300"
+                    >
+                        {{ chatHistoryError }}
+                    </p>
+                    <p
+                        v-else-if="chatHistoryBusy"
+                        class="text-sm text-slate-600 dark:text-slate-300"
+                    >
+                        {{ t('common.loading') }}
+                    </p>
+                    <p
+                        v-else-if="savedChats.length === 0"
+                        class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                    >
+                        {{ t('chat.noHistory') }}
+                    </p>
+                    <ul v-else class="space-y-2">
+                        <li
+                            v-for="savedChat in savedChats"
+                            :key="savedChat.id"
+                            class="group relative"
+                        >
+                            <button
+                                type="button"
+                                class="w-full rounded-md border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                :disabled="chatHistoryBusy || chatDeleteBusy"
+                                @click="openSavedChat(savedChat.id)"
+                            >
+                                <span class="block truncate text-sm font-medium text-slate-900 dark:text-slate-50">
+                                    {{ savedChat.title }}
+                                </span>
+                                <span class="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400">
+                                    {{ set?.title }} · {{ formatSavedChatDate(savedChat.lastOpenedAt) }}
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                class="absolute top-1/2 right-3 inline-flex -translate-y-1/2 items-center justify-center rounded-md p-2 text-slate-500 opacity-0 hover:bg-red-50 hover:text-red-700 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                                :aria-label="t('chat.deleteNamed', { title: savedChat.title })"
+                                :disabled="chatDeleteBusy"
+                                @click.stop="requestDeleteChat(savedChat)"
+                            >
+                                <svg
+                                    aria-hidden="true"
+                                    viewBox="0 0 24 24"
+                                    class="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <path d="M3 6h18" />
+                                    <path d="M8 6V4h8v2" />
+                                    <path d="M19 6l-1 14H6L5 6" />
+                                    <path d="M10 11v5M14 11v5" />
+                                </svg>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div
+            v-if="chatDeleteTarget"
+            class="fixed inset-0 z-[60] flex items-center justify-center p-6"
+            role="dialog"
+            aria-modal="true"
+            :aria-label="t('chat.deleteTitle')"
+            @keydown.esc="cancelDeleteChat"
+        >
+            <button
+                type="button"
+                class="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
+                :aria-label="t('common.cancel')"
+                @click="cancelDeleteChat"
+            />
+            <div
+                class="relative w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+            >
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">
+                    {{ t('chat.deleteTitle') }}
+                </h2>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                    {{ t('chat.deleteDescription', { title: chatDeleteTarget.title }) }}
+                </p>
+                <div class="mt-5 flex justify-end gap-2">
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="chatDeleteBusy"
+                        @click="cancelDeleteChat"
+                    >
+                        {{ t('common.cancel') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="chatDeleteBusy"
+                        @click="confirmDeleteChat"
+                    >
+                        {{ t('common.delete') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div
             v-if="isExportOpen"
             class="fixed inset-0 z-50 flex items-center justify-center p-6"
             role="dialog"
@@ -1111,6 +1290,7 @@ import { lockGetStatus } from "~/src/composables/lock";
 import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import { useLockSession } from "~/src/composables/lock-session";
 import {
+    createChatsRepo,
     createProfileRepo,
     createSettingsRepo,
     createSetsRepo,
@@ -1118,7 +1298,12 @@ import {
     createStudyGuidesRepo,
     useTracerDb,
 } from "~/src/composables/db";
-import type { FlashcardSet, Uuid } from "~/src/composables/db/types";
+import type {
+    FlashcardSet,
+    SavedChatListItem,
+    SavedChatPayload,
+    Uuid,
+} from "~/src/composables/db/types";
 import { resolveAiModel } from "~/src/composables/ai/registry";
 import { hasTauriRuntime } from "~/src/composables/tauri";
 import {
@@ -1126,7 +1311,9 @@ import {
     type LearnQuestion,
 } from "~/src/composables/learn/generator";
 import {
+    buildChatTitlePrompt,
     buildGroundedChatSystemPrompt,
+    normalizeGeneratedChatTitle,
     streamGroundedChatText,
     streamWebPreviewMockChatAnswer,
     takeNextChatRevealUnit,
@@ -1216,9 +1403,29 @@ const chatError = ref<string | null>(null);
 const chatAbort = shallowRef<AbortController | null>(null);
 const chatLogEl = ref<HTMLDivElement | null>(null);
 const chatTextareaEl = ref<HTMLTextAreaElement | null>(null);
+const activeSavedChatId = ref<Uuid | null>(null);
+const chatSaveBusy = ref(false);
+const chatSaveAbort = shallowRef<AbortController | null>(null);
+const chatSavedFeedback = ref(false);
+let chatSavedFeedbackTimer: number | null = null;
+const chatHistoryOpen = ref(false);
+const chatHistoryBusy = ref(false);
+const chatHistoryError = ref<string | null>(null);
+const savedChats = ref<SavedChatListItem[]>([]);
+const chatDeleteTarget = ref<SavedChatListItem | null>(null);
+const chatDeleteBusy = ref(false);
+
+const firstChatQuestion = computed(
+    () =>
+        chatMessages.value.find(
+            (message) => message.role === "user" && message.content.trim(),
+        )?.content.trim() ?? "",
+);
+const chatIsSaved = computed(() => activeSavedChatId.value !== null);
 
 const aiError = ref<AiErrorUx | null>(null);
 const aiErrorOpen = ref(false);
+const aiRetryAction = ref<"chat" | "save">("chat");
 const lastChatText = ref<string | null>(null);
 const cachedChatModel = shallowRef<{ id: string; model: any } | null>(null);
 const cachedChatModelPromise = shallowRef<
@@ -1364,7 +1571,8 @@ function warmChatModel() {
     void getCachedChatModel(id).catch(() => {});
 }
 
-function showAiError(err: unknown) {
+function showAiError(err: unknown, retryAction: "chat" | "save" = "chat") {
+    aiRetryAction.value = retryAction;
     aiError.value = normalizeAiError(err);
     aiErrorOpen.value = true;
 }
@@ -1379,6 +1587,15 @@ async function retryChat() {
     if (!text) return;
     chatInput.value = text;
     await sendChat();
+}
+
+async function retryAiRequest() {
+    if (aiRetryAction.value === "save") {
+        closeAiError();
+        await saveChat();
+        return;
+    }
+    await retryChat();
 }
 
 const learnBusy = ref(false);
@@ -2303,14 +2520,225 @@ function scrollChatToBottom() {
     el.scrollTop = el.scrollHeight;
 }
 
+function currentSavedChatPayload(): SavedChatPayload {
+    return {
+        version: 1,
+        messages: chatMessages.value
+            .map((message) => ({
+                role: message.role,
+                content: message.fullContent ?? message.content,
+            }))
+            .filter((message) => message.content.trim().length > 0),
+    };
+}
+
+function clearChatSavedFeedback() {
+    chatSavedFeedback.value = false;
+    if (chatSavedFeedbackTimer !== null) {
+        window.clearTimeout(chatSavedFeedbackTimer);
+        chatSavedFeedbackTimer = null;
+    }
+}
+
+function showChatSavedFeedback() {
+    clearChatSavedFeedback();
+    chatSavedFeedback.value = true;
+    chatSavedFeedbackTimer = window.setTimeout(() => {
+        chatSavedFeedback.value = false;
+        chatSavedFeedbackTimer = null;
+    }, 1500);
+}
+
+async function saveChat() {
+    const s = set.value;
+    const firstQuestion = firstChatQuestion.value;
+    if (!s || !firstQuestion || chatBusy.value || chatSaveBusy.value) return;
+    if (activeSavedChatId.value || isWebPreview.value) return;
+
+    if (!defaultModelId.value) {
+        aiRetryAction.value = "save";
+        aiError.value = aiErrorForMissingDefaultModel();
+        aiErrorOpen.value = true;
+        return;
+    }
+
+    flushChatRevealJobs();
+    chatError.value = null;
+    const controller = new AbortController();
+    chatSaveAbort.value?.abort();
+    chatSaveAbort.value = controller;
+    chatSaveBusy.value = true;
+
+    try {
+        const model = await getCachedChatModel(defaultModelId.value);
+        const result = await generateText({
+            model,
+            prompt: buildChatTitlePrompt(firstQuestion),
+            abortSignal: controller.signal,
+        });
+        if (controller.signal.aborted) return;
+
+        const title = normalizeGeneratedChatTitle(result.text);
+        if (!title) throw new Error("The AI model returned an empty chat title.");
+
+        const db = await useTracerDb();
+        const saved = await createChatsRepo(db).create({
+            id: newMsgId() as Uuid,
+            setId: s.id,
+            title,
+            payload: currentSavedChatPayload(),
+        });
+        if (controller.signal.aborted) return;
+
+        activeSavedChatId.value = saved.id;
+        showChatSavedFeedback();
+    } catch (err) {
+        if (controller.signal.aborted) return;
+        if (isAiErrorCandidate(err)) {
+            showAiError(err, "save");
+        } else {
+            chatError.value = toErrorMessage(err, t("chat.saveFailed"));
+        }
+    } finally {
+        if (chatSaveAbort.value === controller) {
+            chatSaveAbort.value = null;
+            chatSaveBusy.value = false;
+        }
+    }
+}
+
+async function persistActiveSavedChat() {
+    const id = activeSavedChatId.value;
+    if (!id || isWebPreview.value) return;
+    try {
+        const db = await useTracerDb();
+        await createChatsRepo(db).updateMessages(
+            id,
+            currentSavedChatPayload(),
+        );
+    } catch (err) {
+        chatError.value = toErrorMessage(err, t("chat.saveFailed"));
+    }
+}
+
+function formatSavedChatDate(value: string) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return new Intl.DateTimeFormat(language.value, {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(date);
+}
+
+async function loadSavedChats() {
+    const s = set.value;
+    if (!s || isWebPreview.value) return;
+    chatHistoryBusy.value = true;
+    chatHistoryError.value = null;
+    try {
+        const db = await useTracerDb();
+        savedChats.value = await createChatsRepo(db).listBySet(s.id);
+    } catch (err) {
+        chatHistoryError.value = toErrorMessage(err, t("chat.historyFailed"));
+    } finally {
+        chatHistoryBusy.value = false;
+    }
+}
+
+async function openChatHistory() {
+    if (!set.value || chatBusy.value || chatSaveBusy.value || isWebPreview.value)
+        return;
+    chatHistoryOpen.value = true;
+    await loadSavedChats();
+}
+
+function closeChatHistory() {
+    if (chatDeleteBusy.value) return;
+    chatHistoryOpen.value = false;
+    chatDeleteTarget.value = null;
+}
+
+async function openSavedChat(id: Uuid) {
+    if (chatHistoryBusy.value || chatDeleteBusy.value || isWebPreview.value) return;
+    chatHistoryBusy.value = true;
+    chatHistoryError.value = null;
+    try {
+        const db = await useTracerDb();
+        const repo = createChatsRepo(db);
+        const saved = await repo.get(id);
+        if (!saved) {
+            await loadSavedChats();
+            return;
+        }
+        await repo.touchOpened(id);
+
+        resetChat();
+        chatMessages.value = saved.payload.messages.map((message) => ({
+            id: newMsgId(),
+            role: message.role,
+            content: message.content,
+            fullContent: message.content,
+        }));
+        activeSavedChatId.value = saved.id;
+        lastChatText.value =
+            [...saved.payload.messages]
+                .reverse()
+                .find((message) => message.role === "user")?.content ?? null;
+        chatHistoryOpen.value = false;
+        await nextTick();
+        scrollChatToBottom();
+        chatTextareaEl.value?.focus();
+    } catch (err) {
+        chatHistoryError.value = toErrorMessage(err, t("chat.openFailed"));
+    } finally {
+        chatHistoryBusy.value = false;
+    }
+}
+
+function requestDeleteChat(savedChat: SavedChatListItem) {
+    chatDeleteTarget.value = savedChat;
+}
+
+function cancelDeleteChat() {
+    if (chatDeleteBusy.value) return;
+    chatDeleteTarget.value = null;
+}
+
+async function confirmDeleteChat() {
+    const target = chatDeleteTarget.value;
+    if (!target || chatDeleteBusy.value || isWebPreview.value) return;
+    chatDeleteBusy.value = true;
+    chatHistoryError.value = null;
+    try {
+        const db = await useTracerDb();
+        await createChatsRepo(db).delete(target.id);
+        savedChats.value = savedChats.value.filter(
+            (savedChat) => savedChat.id !== target.id,
+        );
+        if (activeSavedChatId.value === target.id) resetChat();
+        chatDeleteTarget.value = null;
+    } catch (err) {
+        chatHistoryError.value = toErrorMessage(err, t("chat.deleteFailed"));
+        chatDeleteTarget.value = null;
+    } finally {
+        chatDeleteBusy.value = false;
+    }
+}
+
 function resetChat() {
     chatAbort.value?.abort();
     chatAbort.value = null;
+    chatSaveAbort.value?.abort();
+    chatSaveAbort.value = null;
     cancelChatRevealJobs();
+    clearChatSavedFeedback();
     chatMessages.value = [];
     chatInput.value = "";
     chatBusy.value = false;
+    chatSaveBusy.value = false;
     chatError.value = null;
+    activeSavedChatId.value = null;
+    lastChatText.value = null;
 }
 
 function onChatInputKeydown(e: KeyboardEvent) {
@@ -2351,6 +2779,7 @@ async function sendChat() {
     lastChatText.value = text;
     chatInput.value = "";
     chatError.value = null;
+    aiRetryAction.value = "chat";
     aiError.value = null;
     aiErrorOpen.value = false;
 
@@ -2422,6 +2851,7 @@ async function sendChat() {
             enqueueChatReveal(assistantMsg.id, chunk);
         }
         finishChatRevealStream(assistantMsg.id);
+        await persistActiveSavedChat();
     } catch (err) {
         if (controller.signal.aborted) return;
         if (isAiErrorCandidate(err)) {

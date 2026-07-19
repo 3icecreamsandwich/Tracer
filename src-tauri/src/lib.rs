@@ -27,6 +27,18 @@ pub fn run() {
             sql: include_str!("../migrations/002_language.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 3,
+            description: "add_saved_chats",
+            sql: include_str!("../migrations/003_chats.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 4,
+            description: "add_set_folders",
+            sql: include_str!("../migrations/004_folders.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

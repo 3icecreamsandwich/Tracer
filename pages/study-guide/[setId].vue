@@ -4,8 +4,8 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <h1 class="text-2xl font-semibold">{{ t('studyGuide.title') }}</h1>
-          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            {{ t('studyGuide.linkedTo', { id: setIdLabel }) }}
+          <p v-if="setTitle" class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            {{ t('studyGuide.linkedTo', { title: setTitle }) }}
           </p>
         </div>
 
@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { lockGetStatus } from '~/src/composables/lock'
 import { useLockSession } from '~/src/composables/lock-session'
-import { createProfileRepo, createSettingsRepo, createStudyGuidesRepo, useTracerDb } from '~/src/composables/db'
+import { createProfileRepo, createSettingsRepo, createSetsRepo, createStudyGuidesRepo, useTracerDb } from '~/src/composables/db'
 import type { Uuid } from '~/src/composables/db/types'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 import MarkdownRenderer from '~/components/MarkdownRenderer.vue'
@@ -70,6 +70,8 @@ const isWebPreview = computed(() => !hasTauriInternals)
 const busy = ref(true)
 const loadError = ref<string | null>(null)
 const markdown = ref('')
+const linkedSetTitle = ref('')
+const setTitle = computed(() => isWebPreview.value ? t('demo.setTitle') : linkedSetTitle.value)
 const displayMarkdown = computed(() => {
   if (!isWebPreview.value) return markdown.value
   return [
@@ -96,20 +98,21 @@ const setId = computed(() => {
   return null
 })
 
-const setIdLabel = computed(() => setId.value ?? '(missing)')
-
 async function loadGuide(setId: Uuid) {
   busy.value = true
   loadError.value = null
   try {
     const db = await useTracerDb()
-    const repo = createStudyGuidesRepo(db)
-    const guide = await repo.getBySetId(setId)
+    const [guide, linkedSet] = await Promise.all([
+      createStudyGuidesRepo(db).getBySetId(setId),
+      createSetsRepo(db).get(setId)
+    ])
     if (!guide) {
       markdown.value = ''
       loadError.value = 'Study guide not found.'
       return
     }
+    linkedSetTitle.value = linkedSet?.title ?? ''
     markdown.value = guide.markdown
   } catch {
     loadError.value = 'Failed to load study guide.'

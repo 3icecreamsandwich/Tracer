@@ -182,6 +182,7 @@ const html = computed(() => renderMarkdownHtml(props.markdown ?? ''))
 }
 
 .markdown-renderer :deep(.markdown-table-wrap) {
+  max-width: 100%;
   overflow-x: auto;
 }
 
@@ -210,9 +211,18 @@ const html = computed(() => renderMarkdownHtml(props.markdown ?? ''))
 .markdown-renderer :deep(th),
 .markdown-renderer :deep(td) {
   border: 1px solid rgb(226 232 240);
+  min-width: 8rem;
+  overflow-wrap: break-word;
   padding: 0.5rem 0.75rem;
   text-align: left;
   vertical-align: top;
+  word-break: normal;
+}
+
+.markdown-renderer :deep(th *),
+.markdown-renderer :deep(td *) {
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .dark .markdown-renderer :deep(th),

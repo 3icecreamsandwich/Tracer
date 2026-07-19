@@ -20,6 +20,7 @@ export function createWebPreviewDemoSet(
   const now = new Date().toISOString()
   return {
     id: options?.id ?? ('demo' as Uuid),
+    folderId: null,
     title: t('demo.setTitle'),
     description: t(options?.descriptionKey ?? 'demo.setDescription'),
     terms: createDemoTerms(t, options?.termCount ?? 2),

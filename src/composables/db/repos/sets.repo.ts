@@ -9,6 +9,7 @@ import { nowIsoSql } from '../sql'
 
 type DbSetRow = {
   id: string
+  folder_id: string | null
   title: string
   description: string | null
   terms_json: string
@@ -18,6 +19,7 @@ type DbSetRow = {
 
 type DbSetListRow = {
   id: string
+  folder_id: string | null
   title: string
   description: string | null
   created_at: string
@@ -27,6 +29,7 @@ type DbSetListRow = {
 function rowToSetListItem(row: DbSetListRow): FlashcardSetListItem {
   return {
     id: row.id as Uuid,
+    folderId: row.folder_id as Uuid | null,
     title: row.title,
     description: row.description ?? null,
     createdAt: row.created_at,
@@ -37,6 +40,7 @@ function rowToSetListItem(row: DbSetListRow): FlashcardSetListItem {
 function rowToSet(row: DbSetRow): FlashcardSet {
   return {
     id: row.id as Uuid,
+    folderId: row.folder_id as Uuid | null,
     title: row.title,
     description: row.description ?? null,
     terms: JSON.parse(row.terms_json) as Term[],
@@ -49,7 +53,7 @@ export function createSetsRepo(db: DbClient) {
   return {
     async list(): Promise<FlashcardSetListItem[]> {
       const rows = await db.select<DbSetListRow>(
-        `SELECT id, title, description, created_at, updated_at
+        `SELECT id, folder_id, title, description, created_at, updated_at
          FROM flashcard_sets
          ORDER BY updated_at DESC, created_at DESC;`
       )
@@ -58,7 +62,7 @@ export function createSetsRepo(db: DbClient) {
 
     async get(id: Uuid): Promise<FlashcardSet | null> {
       const rows = await db.select<DbSetRow>(
-        `SELECT id, title, description, terms_json, created_at, updated_at
+        `SELECT id, folder_id, title, description, terms_json, created_at, updated_at
          FROM flashcard_sets WHERE id = ? LIMIT 1;`,
         [id]
       )
