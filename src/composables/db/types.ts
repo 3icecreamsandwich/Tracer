@@ -66,6 +66,31 @@ export type StudyGuide = {
   createdAt: IsoDateTimeString
 }
 
+export type LinkedFolderStatus = 'synced' | 'pending' | 'syncing' | 'error'
+
+export type LinkedFolderFileStatus = 'processed' | 'ignored' | 'failed'
+
+export type LinkedFolder = {
+  setId: Uuid
+  path: string
+  status: LinkedFolderStatus
+  lastError: string | null
+  lastScanAt: IsoDateTimeString | null
+  createdAt: IsoDateTimeString
+  updatedAt: IsoDateTimeString
+}
+
+export type LinkedFolderFile = {
+  setId: Uuid
+  relativePath: string
+  sizeBytes: number
+  contentHash: string | null
+  status: LinkedFolderFileStatus
+  error: string | null
+  discoveredAt: IsoDateTimeString
+  processedAt: IsoDateTimeString | null
+}
+
 export type SavedChatMessage = {
   role: 'user' | 'assistant'
   content: string

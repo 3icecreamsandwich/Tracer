@@ -10,16 +10,257 @@ const markdown = new MarkdownIt({
 
 markdown.disable('image')
 
+export type RenderMarkdownOptions = {
+  repairMath?: boolean
+}
+
+const standaloneLatexCommand =
+  /^\\(?:begin|displaystyle|left)(?![A-Za-z])/
+
+const implicitLatexCommand =
+  /\\(?:sum|prod|int|oint|lim|frac|dfrac|tfrac|sqrt|Delta|delta|theta|alpha|beta|gamma|pi|infty|partial|nabla|pm|mp|times|cdot|div|leq?|geq?|neq|approx|equiv|to|Rightarrow|Leftarrow|iff|text|operatorname|vec|mathbf|mathrm|mathbb|mathcal|overline|underline)(?![A-Za-z])|\\\|/g
+
+const implicitLatexStopWords = [
+  ' and ',
+  ' approximating ',
+  ' exists',
+  ' where ',
+  ' when ',
+  ' which ',
+  ' used ',
+  ' means ',
+  ' is ',
+  ' are ',
+  ' gives ',
+  ' denotes ',
+  ' provided '
+]
+
+function isEscapedAt(source: string, index: number) {
+  let backslashCount = 0
+  for (let i = index - 1; i >= 0 && source[i] === '\\'; i -= 1) {
+    backslashCount += 1
+  }
+  return backslashCount % 2 === 1
+}
+
+function singleDollarIndexes(source: string) {
+  const indexes: number[] = []
+  for (let i = 0; i < source.length; i += 1) {
+    if (source[i] !== '$' || isEscapedAt(source, i)) continue
+    if (source[i - 1] === '$' || source[i + 1] === '$') continue
+    indexes.push(i)
+  }
+  return indexes
+}
+
+function looksLikeLatex(source: string) {
+  return (
+    /\\(?:begin|displaystyle|dfrac|frac|tfrac|lim|sum|prod|int|oint|sqrt|text|operatorname|left|right|pm|infty|to|vec|mathbf|mathrm|mathbb|mathcal|overline|underline|partial|nabla)(?![A-Za-z])/.test(source) ||
+    /(?:[_^]\s*(?:\{|\w)|\\[a-zA-Z]+\s*\{)/.test(source)
+  )
+}
+
+function implicitLatexEnd(source: string, commandStart: number) {
+  if (source.startsWith('\\|', commandStart)) {
+    const pairedDelimiter = source.indexOf('\\|', commandStart + 2)
+    if (pairedDelimiter >= 0) return pairedDelimiter + 2
+  }
+
+  let braceDepth = 0
+  for (let i = commandStart; i < source.length; i += 1) {
+    const ch = source[i]
+    if (ch === '{' && !isEscapedAt(source, i)) {
+      braceDepth += 1
+      continue
+    }
+    if (ch === '}' && !isEscapedAt(source, i)) {
+      braceDepth = Math.max(0, braceDepth - 1)
+      continue
+    }
+    if (braceDepth > 0) continue
+
+    if (ch === ',' || ch === ';' || ch === '.') return i
+    const rest = source.slice(i).toLowerCase()
+    if (implicitLatexStopWords.some((word) => rest.startsWith(word))) return i
+  }
+  return source.length
+}
+
+function wrapImplicitLatex(source: string) {
+  let output = ''
+  let cursor = 0
+  implicitLatexCommand.lastIndex = 0
+
+  while (true) {
+    const match = implicitLatexCommand.exec(source)
+    if (!match) break
+    if (match.index < cursor) continue
+
+    let start = match.index
+    while (start > cursor && /[A-Za-z0-9_()[\]{}.+\-*/=<>|']/.test(source[start - 1] ?? '')) {
+      start -= 1
+    }
+
+    const end = implicitLatexEnd(source, match.index)
+    const expression = source.slice(start, end).trimEnd()
+    if (!expression) continue
+
+    output += source.slice(cursor, start)
+    output += `$${expression}$`
+    cursor = start + expression.length
+    implicitLatexCommand.lastIndex = Math.max(end, cursor)
+  }
+
+  output += source.slice(cursor)
+  return output
+}
+
+function repairMathTextSegment(source: string) {
+  // A recurring malformed model response leaves "$\" at the end of the term
+  // and begins its definition with the actual LaTeX command.
+  let repaired = source.replace(/\s+\$\\\s*$/, '')
+  const dollars = singleDollarIndexes(repaired)
+
+  if (dollars.length === 0) {
+    const leadingWhitespace = repaired.match(/^\s*/)?.[0] ?? ''
+    const trimmed = repaired.trim()
+    if (standaloneLatexCommand.test(trimmed)) {
+      return `${leadingWhitespace}$${trimmed}$`
+    }
+    return wrapImplicitLatex(repaired)
+  }
+
+  if (dollars.length !== 1) return repaired
+
+  const dollarIndex = dollars[0]!
+  const before = repaired.slice(0, dollarIndex)
+  const after = repaired.slice(dollarIndex + 1)
+
+  if (!after.trim()) {
+    const commandIndex = before.search(/\\(?:begin|displaystyle|dfrac|frac|tfrac|lim|sum|prod|int|oint|sqrt|text|operatorname|left|vec|mathbf|mathrm|mathbb|mathcal|overline|underline|partial|nabla)(?![A-Za-z])/)
+    if (commandIndex >= 0 && looksLikeLatex(before.slice(commandIndex))) {
+      return `${before.slice(0, commandIndex)}$${before.slice(commandIndex)}$`
+    }
+    return repaired
+  }
+
+  if (looksLikeLatex(after)) {
+    return `${repaired}$`
+  }
+
+  return repaired
+}
+
+function repairMathOutsideInlineCode(line: string) {
+  let repaired = ''
+  let textStart = 0
+  let codeStart = -1
+
+  for (let i = 0; i < line.length; i += 1) {
+    if (line[i] !== '`' || isEscapedAt(line, i)) continue
+    if (codeStart < 0) {
+      repaired += repairMathTextSegment(line.slice(textStart, i))
+      codeStart = i
+    } else {
+      repaired += line.slice(codeStart, i + 1)
+      codeStart = -1
+      textStart = i + 1
+    }
+  }
+
+  if (codeStart >= 0) {
+    repaired += line.slice(codeStart)
+  } else {
+    repaired += repairMathTextSegment(line.slice(textStart))
+  }
+  return repaired
+}
+
+export function repairStudyMathMarkdown(source: string) {
+  let fenceMarker: '`' | '~' | null = null
+
+  return source
+    .split('\n')
+    .map((line) => {
+      const fence = /^\s*(`{3,}|~{3,})/.exec(line)
+      if (fence) {
+        const marker = fence[1]![0] as '`' | '~'
+        if (fenceMarker === null) fenceMarker = marker
+        else if (fenceMarker === marker) fenceMarker = null
+        return line
+      }
+      return fenceMarker === null ? repairMathOutsideInlineCode(line) : line
+    })
+    .join('\n')
+}
+
+function balanceLatexBraces(source: string) {
+  let depth = 0
+  let repaired = ''
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i]!
+    if (ch === '{' && !isEscapedAt(source, i)) {
+      depth += 1
+      repaired += ch
+      continue
+    }
+    if (ch === '}' && !isEscapedAt(source, i)) {
+      if (depth === 0) continue
+      depth -= 1
+      repaired += ch
+      continue
+    }
+    repaired += ch
+  }
+  return `${repaired}${'}'.repeat(depth)}`
+}
+
+function repairLatexSyntax(source: string) {
+  let repaired = balanceLatexBraces(source.trim())
+
+  const leftCount = repaired.match(/\\left\b/g)?.length ?? 0
+  const rightCount = repaired.match(/\\right\b/g)?.length ?? 0
+  if (leftCount !== rightCount) {
+    repaired = repaired.replace(/\\(?:left|right)\b/g, '')
+  }
+
+  const begins = [...repaired.matchAll(/\\begin\{([a-zA-Z*]+)\}/g)].map((match) => match[1]!)
+  for (const environment of begins.reverse()) {
+    const end = `\\end{${environment}}`
+    if (!repaired.includes(end)) repaired += end
+  }
+
+  return repaired
+}
+
 function renderMath(source: string, displayMode: boolean) {
+  const options = {
+    displayMode,
+    strict: 'ignore' as const,
+    trust: false,
+    maxExpand: 10_000
+  }
+  const repaired = repairLatexSyntax(source)
+  const candidates = repaired === source.trim() ? [source] : [source, repaired]
+
+  for (const candidate of candidates) {
+    try {
+      return katex.renderToString(candidate, {
+        ...options,
+        throwOnError: true
+      })
+    } catch {
+    }
+  }
+
   try {
-    return katex.renderToString(source, {
-      displayMode,
-      throwOnError: false,
-      strict: 'ignore',
-      trust: false
+    return katex.renderToString(repaired, {
+      ...options,
+      throwOnError: false
     })
   } catch {
-    return `<code>${markdown.utils.escapeHtml(source)}</code>`
+    return `<code>${markdown.utils.escapeHtml(repaired)}</code>`
   }
 }
 
@@ -239,6 +480,10 @@ markdown.renderer.rules.table_close = (tokens, idx, options, env, self) => {
   return `${renderedTable}</div>`
 }
 
-export function renderMarkdownHtml(markdownSource: string): string {
-  return markdown.render(markdownSource ?? '')
+export function renderMarkdownHtml(
+  markdownSource: string,
+  options: RenderMarkdownOptions = {}
+): string {
+  const source = markdownSource ?? ''
+  return markdown.render(options.repairMath ? repairStudyMathMarkdown(source) : source)
 }

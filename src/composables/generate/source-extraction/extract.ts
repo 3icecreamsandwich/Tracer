@@ -96,49 +96,99 @@ async function extractImageSource(source: GenerateSourceFile, getOcr: () => Prom
   }
 }
 
+async function extractTextSource(source: GenerateSourceFile): Promise<ExtractedGenerateSource> {
+  const text = normalizeExtractedText(await source.file.text())
+  if (!isMeaningfulExtractedText(text)) {
+    throw new Error('No readable text found in this file.')
+  }
+  return {
+    id: source.id,
+    filename: sourceFilename(source.file),
+    kind: 'text',
+    text,
+    method: 'text'
+  }
+}
+
+async function mapWithConcurrency<T, R>(
+  values: T[],
+  concurrency: number,
+  mapper: (value: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(values.length)
+  let nextIndex = 0
+
+  async function worker() {
+    while (nextIndex < values.length) {
+      const index = nextIndex
+      nextIndex += 1
+      results[index] = await mapper(values[index]!, index)
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(Math.max(1, concurrency), values.length) }, () => worker())
+  )
+  return results
+}
+
 export async function extractGenerateSources(
   files: GenerateSourceFile[],
   adapters: SourceExtractionAdapters = {}
 ): Promise<ExtractGenerateSourcesResult> {
   const pdf = adapters.pdf ?? createDefaultPdfAdapter()
   let ownedOcr: OcrAdapter | null = null
+  let ocrQueue = Promise.resolve()
 
-  const getOcr = async () => {
+  const getRawOcr = async () => {
     if (adapters.ocr) return adapters.ocr
     if (!ownedOcr) ownedOcr = await createDefaultOcrAdapter()
     return ownedOcr
   }
 
-  const extracted: ExtractedGenerateSource[] = []
-  const failed: FailedGenerateSource[] = []
+  const serializedOcr: OcrAdapter = {
+    recognize(input) {
+      const job = ocrQueue.then(async () => (await getRawOcr()).recognize(input))
+      ocrQueue = job.then(() => undefined, () => undefined)
+      return job
+    }
+  }
+  const getOcr = async () => serializedOcr
 
   try {
-    for (const source of files) {
+    const results = await mapWithConcurrency(files, 2, async (source) => {
       try {
         if (source.kind === 'pdf') {
-          extracted.push(await extractPdfSource(source, pdf, getOcr))
-        } else {
-          extracted.push(await extractImageSource(source, getOcr))
+          return { extracted: await extractPdfSource(source, pdf, getOcr) }
         }
+        if (source.kind === 'image') {
+          return { extracted: await extractImageSource(source, getOcr) }
+        }
+        return { extracted: await extractTextSource(source) }
       } catch (err) {
-        failed.push({
-          id: source.id,
-          filename: sourceFilename(source.file),
-          kind: source.kind,
-          reason: cleanFailureReason(err, 'Could not parse this file.')
-        })
+        return {
+          failed: {
+            id: source.id,
+            filename: sourceFilename(source.file),
+            kind: source.kind,
+            reason: cleanFailureReason(err, 'Could not parse this file.')
+          } satisfies FailedGenerateSource
+        }
       }
+    })
+    return {
+      extracted: results.flatMap((result) => result.extracted ? [result.extracted] : []),
+      failed: results.flatMap((result) => result.failed ? [result.failed] : [])
     }
   } finally {
-    if (ownedOcr?.terminate) {
+    const ocrToTerminate = ownedOcr as OcrAdapter | null
+    if (ocrToTerminate?.terminate) {
       try {
-        await ownedOcr.terminate()
+        await ocrToTerminate.terminate()
       } catch {
       }
     }
   }
-
-  return { extracted, failed }
 }
 
 export function createGenerateParseDecision(result: ExtractGenerateSourcesResult): GenerateParseDecision {

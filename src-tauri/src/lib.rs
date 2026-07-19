@@ -39,6 +39,12 @@ pub fn run() {
             sql: include_str!("../migrations/004_folders.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 5,
+            description: "add_linked_folders",
+            sql: include_str!("../migrations/005_linked_folders.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()
@@ -55,6 +61,9 @@ pub fn run() {
             app.manage(GithubPkceState::default());
             Ok(())
         })
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_persisted_scope::init())
         .plugin(tauri_plugin_http::init())
         .plugin(
             tauri_plugin_sql::Builder::default()

@@ -83,4 +83,80 @@ describe('renderMarkdownHtml', () => {
     expect(html).not.toContain('\\[a^2 + b^2 = c^2\\]')
     expect(html).not.toContain('$$\\Delta G = -RT\\ln K$$')
   })
+
+  it('repairs generated study-card LaTeX with a missing opening delimiter', () => {
+    const html = renderMarkdownHtml(
+      '\\displaystyle\\lim_{h\\to0}\\frac{f(x_0+h)-f(x_0)}{h}=\\pm\\infty$',
+      { repairMath: true }
+    )
+
+    expect(html).toContain('katex')
+    expect(html).toMatch(/^<p><span class="katex"/)
+  })
+
+  it('renders standalone LaTeX commands in study-card content', () => {
+    const html = renderMarkdownHtml('\\frac{a}{b}', { repairMath: true })
+
+    expect(html).toContain('katex')
+    expect(html).toMatch(/^<p><span class="katex"/)
+  })
+
+  it('removes a dangling model-generated math fragment from a term', () => {
+    const html = renderMarkdownHtml('Vertical tangent definition $\\', {
+      repairMath: true
+    })
+
+    expect(html).toContain('Vertical tangent definition')
+    expect(html).not.toContain('$')
+    expect(html).not.toContain('\\')
+  })
+
+  it('does not repair currency or LaTeX inside inline code', () => {
+    const html = renderMarkdownHtml('It costs $5 and use `\\frac{a}{b}` literally.', {
+      repairMath: true
+    })
+
+    expect(html).toContain('It costs $5')
+    expect(html).toContain('<code>\\frac{a}{b}</code>')
+  })
+
+  it('renders undelimited LaTeX command spans inside later-card prose', () => {
+    const html = renderMarkdownHtml(
+      'A sum of the form \\sum_{k=1}^{n} f(c_k)\\Delta x_k approximating area under a curve.',
+      { repairMath: true }
+    )
+
+    expect(html).toContain('katex')
+    expect(html).toContain('approximating area under a curve')
+    expect(html).not.toContain('katex-error')
+  })
+
+  it('renders multiple undelimited formula spans without swallowing connecting prose', () => {
+    const html = renderMarkdownHtml(
+      '\\sum_{i=1}^{n} c a_i = c\\sum_{i=1}^{n} a_i and \\sum_{i=1}^{n}(a_i\\pm b_i)=\\sum a_i\\pm\\sum b_i.',
+      { repairMath: true }
+    )
+
+    expect(html.match(/class="katex"/g)?.length).toBe(2)
+    expect(html).toContain(' and ')
+    expect(html).not.toContain('katex-error')
+  })
+
+  it('repairs missing braces and unmatched scalable delimiters before rendering', () => {
+    const html = renderMarkdownHtml(
+      '$\\text{If } f(x)=\\left(\\frac{x}{2}\\text{ then the expression is defined$',
+      { repairMath: true }
+    )
+
+    expect(html).toContain('katex')
+    expect(html).not.toContain('katex-error')
+  })
+
+  it('renders long formulas beyond the previous macro-expansion allowance', () => {
+    const expression = Array.from({ length: 2_000 }, (_, index) => `x_{${index}}`).join('+')
+    const html = renderMarkdownHtml(`$${expression}$`, { repairMath: true })
+
+    expect(html).toContain('katex')
+    expect(html).not.toContain('katex-error')
+  })
 })

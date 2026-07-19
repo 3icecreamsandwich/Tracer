@@ -45,6 +45,55 @@
                     </div>
                 </div>
 
+                <div
+                    v-if="linkedFolder"
+                    class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900"
+                >
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span aria-hidden="true">📁</span>
+                                <p class="truncate font-medium text-slate-900 dark:text-slate-50">
+                                    {{ linkedFolderName }}
+                                </p>
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-xs font-medium"
+                                    :class="linkedFolderStatusClass"
+                                >
+                                    {{ linkedFolderStatusLabel }}
+                                </span>
+                            </div>
+                            <p class="mt-1 truncate text-xs text-slate-500 dark:text-slate-400" :title="linkedFolder.path">
+                                {{ linkedFolder.path }}
+                            </p>
+                            <p
+                                v-if="linkedFolder.lastError"
+                                class="mt-1 text-xs text-red-700 dark:text-red-300"
+                            >
+                                {{ linkedFolder.lastError }}
+                            </p>
+                        </div>
+                        <div class="flex shrink-0 flex-wrap gap-2">
+                            <button
+                                type="button"
+                                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800"
+                                :disabled="linkedFolderBusy || linkedFolder.status === 'syncing'"
+                                @click="syncLinkedFolderNow"
+                            >
+                                {{ t('linkedFolder.syncNow') }}
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800"
+                                :disabled="linkedFolderBusy || linkedFolder.status === 'syncing'"
+                                @click="unlinkCurrentFolder"
+                            >
+                                {{ t('linkedFolder.unlink') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-5">
                     <p
                         v-if="loadError"
@@ -1291,6 +1340,7 @@ import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import { useLockSession } from "~/src/composables/lock-session";
 import {
     createChatsRepo,
+    createLinkedFoldersRepo,
     createProfileRepo,
     createSettingsRepo,
     createSetsRepo,
@@ -1300,6 +1350,7 @@ import {
 } from "~/src/composables/db";
 import type {
     FlashcardSet,
+    LinkedFolder,
     SavedChatListItem,
     SavedChatPayload,
     Uuid,
@@ -1333,6 +1384,11 @@ import {
 } from "~/src/composables/ai/ux-errors";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
+import {
+    LINKED_FOLDER_STATUS_EVENT,
+    syncLinkedFolder,
+    unlinkFolder,
+} from "~/src/composables/generate/linked-folders";
 
 const route = useRoute();
 const router = useRouter();
@@ -1360,6 +1416,22 @@ const busy = ref(true);
 const loadError = ref<string | null>(null);
 const set = ref<FlashcardSet | null>(null);
 const studyGuideSetId = ref<Uuid | null>(null);
+const linkedFolder = ref<LinkedFolder | null>(null);
+const linkedFolderBusy = ref(false);
+const linkedFolderName = computed(() => {
+    const path = linkedFolder.value?.path ?? "";
+    return path.split(/[\\/]/).filter(Boolean).at(-1) || t("create.linkFolder");
+});
+const linkedFolderStatusLabel = computed(() =>
+    t(`linkedFolder.status.${linkedFolder.value?.status ?? "synced"}`),
+);
+const linkedFolderStatusClass = computed(() => {
+    const status = linkedFolder.value?.status;
+    if (status === "error") return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200";
+    if (status === "pending" || status === "syncing")
+        return "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200";
+    return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200";
+});
 const chatSystemPrompt = computed(() =>
     set.value ? buildGroundedChatSystemPrompt(set.value) : "",
 );
@@ -1638,7 +1710,12 @@ async function loadSet(setId: Uuid) {
     loadError.value = null;
     try {
         const db = await useTracerDb();
-        set.value = await createSetsRepo(db).get(setId);
+        const [loadedSet, loadedLinkedFolder] = await Promise.all([
+            createSetsRepo(db).get(setId),
+            createLinkedFoldersRepo(db).getBySetId(setId),
+        ]);
+        set.value = loadedSet;
+        linkedFolder.value = loadedLinkedFolder;
 
         if (set.value) {
             const guide = await createStudyGuidesRepo(db).getBySetId(setId);
@@ -1650,6 +1727,49 @@ async function loadSet(setId: Uuid) {
         loadError.value = "Failed to load set.";
     } finally {
         busy.value = false;
+    }
+}
+
+async function syncLinkedFolderNow() {
+    const setId = set.value?.id;
+    if (!setId || linkedFolderBusy.value) return;
+    linkedFolderBusy.value = true;
+    try {
+        await syncLinkedFolder(setId);
+        await loadSet(setId);
+    } catch {
+    } finally {
+        linkedFolderBusy.value = false;
+    }
+}
+
+async function unlinkCurrentFolder() {
+    const setId = set.value?.id;
+    if (!setId || linkedFolderBusy.value) return;
+    linkedFolderBusy.value = true;
+    try {
+        await unlinkFolder(setId);
+        linkedFolder.value = null;
+    } finally {
+        linkedFolderBusy.value = false;
+    }
+}
+
+async function onLinkedFolderStatus(event: Event) {
+    const detail = (event as CustomEvent<{ setId: Uuid; linkedFolder: LinkedFolder | null }>).detail;
+    if (!set.value || detail?.setId !== set.value.id) return;
+    const previousStatus = linkedFolder.value?.status;
+    linkedFolder.value = detail.linkedFolder;
+    if (
+        detail.linkedFolder &&
+        (detail.linkedFolder.status === "synced" || detail.linkedFolder.status === "error") &&
+        (previousStatus === "pending" || previousStatus === "syncing")
+    ) {
+        const db = await useTracerDb();
+        const refreshed = await createSetsRepo(db).get(detail.setId);
+        if (refreshed) set.value = refreshed;
+        const guide = await createStudyGuidesRepo(db).getBySetId(detail.setId);
+        studyGuideSetId.value = guide ? detail.setId : null;
     }
 }
 
@@ -3016,6 +3136,7 @@ async function openSetPage() {
         }
 
         window.addEventListener("keydown", onKeydown);
+        window.addEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus);
         document.addEventListener("pointerdown", onDocumentMatchPointerDown);
     } catch {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
@@ -3097,6 +3218,7 @@ onBeforeUnmount(() => {
     resetChat();
     clearMatchTimer();
     window.removeEventListener("keydown", onKeydown);
+    window.removeEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus);
     document.removeEventListener("pointerdown", onDocumentMatchPointerDown);
 });
 </script>

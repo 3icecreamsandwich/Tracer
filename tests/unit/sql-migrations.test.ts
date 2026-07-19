@@ -44,10 +44,14 @@ describe('SQLite migrations (task 3)', () => {
         path.resolve(process.cwd(), 'src-tauri', 'migrations', '004_folders.sql'),
         'utf8'
       )
+      const linkedFoldersMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '005_linked_folders.sql'),
+        'utf8'
+      )
 
       const migrateRes = await runSqlite(
         dbPath,
-        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}`
+        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}`
       )
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
@@ -73,7 +77,9 @@ describe('SQLite migrations (task 3)', () => {
         'study_guides',
         'app_settings',
         'chats',
-        'folders'
+        'folders',
+        'linked_folders',
+        'linked_folder_files'
       ]) {
         expect(tables).toContain(name)
       }

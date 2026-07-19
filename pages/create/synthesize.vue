@@ -465,7 +465,10 @@ async function onCreate() {
 
     rawOutput.value = res.text ?? ''
 
-    let termInputs = parseTermsDelimited(text, { delimiter: 'auto' })
+    let termInputs = parseTermsDelimited(text, {
+      delimiter: 'tab',
+      allowContinuationLines: true
+    })
     termInputs = termInputs.map((t) => ({
       front: t.front.split('\t').join(' ').trim(),
       back: t.back.split('\t').join(' ').trim()

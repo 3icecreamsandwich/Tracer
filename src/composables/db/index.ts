@@ -5,6 +5,10 @@ export type {
   DbClient,
   FlashcardSet,
   FlashcardSetListItem,
+  LinkedFolder,
+  LinkedFolderFile,
+  LinkedFolderFileStatus,
+  LinkedFolderStatus,
   Profile,
   SavedChat,
   SavedChatListItem,
@@ -19,6 +23,7 @@ export type {
 export {
   createChatsRepo,
   createFoldersRepo,
+  createLinkedFoldersRepo,
   createProfileRepo,
   createSettingsRepo,
   createSetsRepo,

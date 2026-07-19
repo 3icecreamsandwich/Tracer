@@ -15,7 +15,11 @@ const props = withDefaults(
   { variant: 'default' }
 )
 
-const html = computed(() => renderMarkdownHtml(props.markdown ?? ''))
+const html = computed(() =>
+  renderMarkdownHtml(props.markdown ?? '', {
+    repairMath: props.variant !== 'default'
+  })
+)
 </script>
 
 <style scoped>

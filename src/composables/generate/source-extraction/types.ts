@@ -1,4 +1,4 @@
-export type GenerateSourceKind = 'pdf' | 'image'
+export type GenerateSourceKind = 'pdf' | 'image' | 'text'
 
 export type GenerateSourceFile = {
   id: string
@@ -12,7 +12,7 @@ export type ExtractedGenerateSource = {
   kind: GenerateSourceKind
   text: string
   pageCount?: number
-  method: 'pdf-text' | 'ocr' | 'mixed'
+  method: 'pdf-text' | 'ocr' | 'mixed' | 'text'
 }
 
 export type FailedGenerateSource = {

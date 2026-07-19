@@ -1,7 +1,7 @@
 import type { TermInput } from './terms'
 
 export class TsvParseError extends Error {
-  name = 'TsvParseError'
+  override name = 'TsvParseError'
 }
 
 type TermsDelimiter = 'tab' | 'comma' | 'pipe' | 'semicolon' | 'colon' | 'dash'
@@ -218,7 +218,11 @@ export function parseTermsCsvLike(csv: string): TermInput[] {
 
 export function parseTermsDelimited(
   input: string,
-  opts?: { delimiter?: TermsDelimiter | 'auto'; skipHeader?: boolean }
+  opts?: {
+    delimiter?: TermsDelimiter | 'auto'
+    skipHeader?: boolean
+    allowContinuationLines?: boolean
+  }
 ): TermInput[] {
   if (typeof input !== 'string') throw new TsvParseError('input must be a string')
 
@@ -244,6 +248,11 @@ export function parseTermsDelimited(
     const fields = parseDelimitedLineWithFallbacks(line, preferred, lineNumber)
 
     if (fields.length < 2) {
+      const previous = terms.at(-1)
+      if (opts?.allowContinuationLines && previous) {
+        previous.back = `${previous.back}\n${line}`.trim()
+        continue
+      }
       throw new TsvParseError(`line ${lineNumber} must contain a comma or tab separator, Markdown table pipe, colon, semicolon, or spaced dash`)
     }
 

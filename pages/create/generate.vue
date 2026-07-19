@@ -68,14 +68,24 @@
           </p>
         </div>
 
-        <button
-          type="button"
-          class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-          :disabled="generateDisabled"
-          @click="onGenerate"
-        >
-          {{ generateButtonLabel }}
-        </button>
+        <div class="shrink-0 flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :disabled="operationBusy || ingestBusy || isWebPreview"
+            @click="onLinkFolder"
+          >
+            {{ linkBusy ? t('create.linkingFolder') : t('create.linkFolder') }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :disabled="generateDisabled"
+            @click="onGenerate"
+          >
+            {{ generateButtonLabel }}
+          </button>
+        </div>
       </div>
 
       <div
@@ -274,7 +284,9 @@ import {
   type FailedGenerateSource,
   type GenerateSourceFile
 } from '~/src/composables/generate/source-extraction'
+import { createSetFromLinkedFolder } from '~/src/composables/generate/linked-folders'
 import { useAppLanguage } from '~/src/composables/language'
+import { open } from '@tauri-apps/plugin-dialog'
 
 const router = useRouter()
 const { t } = useAppLanguage()
@@ -296,6 +308,7 @@ const pickedImages = ref<PickedImage[]>([])
 const ingestBusy = ref(false)
 const parseBusy = ref(false)
 const busy = ref(false)
+const linkBusy = ref(false)
 const formError = ref<string | null>(null)
 
 const rawOutput = ref<string | null>(null)
@@ -384,7 +397,7 @@ const pickedSummary = computed(() => {
   return parts.length ? `Selected: ${parts.join(' · ')}` : ''
 })
 
-const operationBusy = computed(() => busy.value || parseBusy.value)
+const operationBusy = computed(() => busy.value || parseBusy.value || linkBusy.value)
 
 const generateButtonLabel = computed(() => {
   if (parseBusy.value) return t('create.parsing')
@@ -403,6 +416,38 @@ const generateDisabled = computed(() => {
 function openPicker() {
   formError.value = null
   fileInputEl.value?.click()
+}
+
+async function onLinkFolder() {
+  if (operationBusy.value || ingestBusy.value || isWebPreview.value) return
+  formError.value = null
+  aiError.value = null
+  aiErrorOpen.value = false
+
+  try {
+    const path = await open({
+      directory: true,
+      multiple: false,
+      recursive: true,
+      fileAccessMode: 'scoped',
+      title: t('create.linkFolder')
+    })
+    if (!path) return
+
+    linkBusy.value = true
+    const result = await createSetFromLinkedFolder({
+      path,
+      title: title.value,
+      instructions: instructions.value
+    })
+    rawOutput.value = result.rawOutput
+    if (result.warning) formError.value = result.warning
+    await router.replace(`/set/${result.setId}`)
+  } catch (error) {
+    showAiError(normalizeGenerateRequestError(error))
+  } finally {
+    linkBusy.value = false
+  }
 }
 
 function clearParseFailureState() {
@@ -520,7 +565,10 @@ async function saveGeneratedOutput(
     const text = (res.text ?? '').trim()
 
     const parsed = parseGenerateContractOutput(text)
-    let termInputs = parseTermsDelimited(parsed.flashcardsTsv, { delimiter: 'auto' })
+    let termInputs = parseTermsDelimited(parsed.flashcardsTsv, {
+      delimiter: 'tab',
+      allowContinuationLines: true
+    })
     termInputs = termInputs.map((t) => ({
       front: t.front.split('\t').join(' ').trim(),
       back: t.back.split('\t').join(' ').trim()

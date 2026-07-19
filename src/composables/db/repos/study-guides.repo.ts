@@ -38,6 +38,30 @@ export function createStudyGuidesRepo(db: DbClient) {
         markdown: row.markdown,
         createdAt: row.created_at
       }
+    },
+
+    async update(input: { id: Uuid; markdown: string }): Promise<StudyGuide> {
+      await db.execute(
+        `UPDATE study_guides
+         SET markdown = ?
+         WHERE id = ?;`,
+        [input.markdown, input.id]
+      )
+      const rows = await db.select<DbStudyGuideRow>(
+        `SELECT id, set_id, markdown, created_at
+         FROM study_guides
+         WHERE id = ?
+         LIMIT 1;`,
+        [input.id]
+      )
+      const row = rows[0]
+      if (!row) throw new Error('Failed to update study guide')
+      return {
+        id: row.id as Uuid,
+        setId: row.set_id as Uuid,
+        markdown: row.markdown,
+        createdAt: row.created_at
+      }
     }
   }
 }

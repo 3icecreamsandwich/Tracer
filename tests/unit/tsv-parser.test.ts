@@ -41,6 +41,24 @@ describe('parseTermsDelimited', () => {
     ])
   })
 
+  it('keeps commas inside generated LaTeX when tab is the required separator', () => {
+    const input = [
+      'Differentiable on $[a,b]$\t$f$ is differentiable on $(a,b)$ and continuous on $[a,b]$',
+      'Point $(x_0,y_0)$\tThe point has coordinates $(x_0,y_0)$'
+    ].join('\n')
+
+    expect(parseTermsDelimited(input, { delimiter: 'tab' })).toEqual([
+      {
+        front: 'Differentiable on $[a,b]$',
+        back: '$f$ is differentiable on $(a,b)$ and continuous on $[a,b]$'
+      },
+      {
+        front: 'Point $(x_0,y_0)$',
+        back: 'The point has coordinates $(x_0,y_0)$'
+      }
+    ])
+  })
+
   it('auto-detects CSV and supports quoted cells', () => {
     expect(parseTermsDelimited('"hello, term","world, definition"\nfoo,bar\n')).toEqual([
       { front: 'hello, term', back: 'world, definition' },
@@ -94,5 +112,25 @@ describe('parseTermsDelimited', () => {
   it('rejects malformed rows without a delimiter', () => {
     expect(() => parseTermsDelimited('nope\n')).toThrow(TsvParseError)
     expect(() => parseTermsDelimited('nope\n')).toThrow('comma or tab')
+  })
+
+  it('can append delimiterless continuation lines for generated math definitions', () => {
+    const input = [
+      'Derivative\tThe instantaneous rate of change is $$',
+      '\\\\frac{dy}{dx}',
+      '$$ at a point.',
+      'Integral\tAccumulated change.'
+    ].join('\n')
+
+    expect(parseTermsDelimited(input, {
+      delimiter: 'auto',
+      allowContinuationLines: true
+    })).toEqual([
+      {
+        front: 'Derivative',
+        back: 'The instantaneous rate of change is $$\n\\\\frac{dy}{dx}\n$$ at a point.'
+      },
+      { front: 'Integral', back: 'Accumulated change.' }
+    ])
   })
 })

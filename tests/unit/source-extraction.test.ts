@@ -116,6 +116,61 @@ describe('generate source extraction', () => {
     )
   })
 
+  it('reads UTF-8 text sources directly without OCR', async () => {
+    const ocr: OcrAdapter = {
+      recognize: vi.fn(async () => 'unused')
+    }
+
+    const result = await extractGenerateSources(
+      [{
+        id: 'text-1',
+        kind: 'text',
+        file: new File(['Readable UTF-8 notes.'], 'notes.txt', { type: 'text/plain' })
+      }],
+      { ocr }
+    )
+
+    expect(result.failed).toEqual([])
+    expect(result.extracted[0]).toEqual(
+      expect.objectContaining({
+        id: 'text-1',
+        kind: 'text',
+        method: 'text',
+        text: 'Readable UTF-8 notes.'
+      })
+    )
+    expect(ocr.recognize).not.toHaveBeenCalled()
+  })
+
+  it('keeps result order while extracting independent PDFs concurrently', async () => {
+    let active = 0
+    let maxActive = 0
+    const pdf: PdfAdapter = {
+      getPageCount: vi.fn(async () => 1),
+      extract: vi.fn(async (file) => {
+        active += 1
+        maxActive = Math.max(maxActive, active)
+        await new Promise((resolve) => setTimeout(resolve, file.name === 'first.pdf' ? 15 : 1))
+        active -= 1
+        return {
+          pageCount: 1,
+          pages: [{ pageNumber: 1, text: `Readable text from ${file.name}.` }]
+        }
+      })
+    }
+
+    const result = await extractGenerateSources(
+      [
+        { id: 'first', kind: 'pdf', file: makeFile('first.pdf', 'application/pdf') },
+        { id: 'second', kind: 'pdf', file: makeFile('second.pdf', 'application/pdf') }
+      ],
+      { pdf }
+    )
+
+    expect(maxActive).toBe(2)
+    expect(result.extracted.map((source) => source.id)).toEqual(['first', 'second'])
+  })
+
   it('records all-failed extraction so Generate can block AI generation', async () => {
     const pdf: PdfAdapter = {
       getPageCount: vi.fn(async () => 1),

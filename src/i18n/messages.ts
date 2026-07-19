@@ -1019,4 +1019,66 @@ for (const language of Object.keys(factCheckMessages) as AppLanguage[]) {
   Object.assign(messageTargets[language], factCheckMessages[language])
 }
 
+const linkedFolderMessages: Record<AppLanguage, Messages> = {
+  en: {
+    'create.linkFolder': 'Link Folder',
+    'create.linkingFolder': 'Linking…',
+    'linkedFolder.status.synced': 'Synced',
+    'linkedFolder.status.pending': 'Pending',
+    'linkedFolder.status.syncing': 'Syncing…',
+    'linkedFolder.status.error': 'Error',
+    'linkedFolder.syncNow': 'Sync now',
+    'linkedFolder.unlink': 'Unlink'
+  },
+  es: {
+    'create.linkFolder': 'Vincular carpeta',
+    'create.linkingFolder': 'Vinculando…',
+    'linkedFolder.status.synced': 'Sincronizada', 'linkedFolder.status.pending': 'Pendiente', 'linkedFolder.status.syncing': 'Sincronizando…', 'linkedFolder.status.error': 'Error', 'linkedFolder.syncNow': 'Sincronizar ahora', 'linkedFolder.unlink': 'Desvincular'
+  },
+  fr: {
+    'create.linkFolder': 'Lier un dossier',
+    'create.linkingFolder': 'Liaison…',
+    'linkedFolder.status.synced': 'Synchronisé', 'linkedFolder.status.pending': 'En attente', 'linkedFolder.status.syncing': 'Synchronisation…', 'linkedFolder.status.error': 'Erreur', 'linkedFolder.syncNow': 'Synchroniser', 'linkedFolder.unlink': 'Dissocier'
+  },
+  'zh-CN': {
+    'create.linkFolder': '链接文件夹',
+    'create.linkingFolder': '正在链接…',
+    'linkedFolder.status.synced': '已同步', 'linkedFolder.status.pending': '待处理', 'linkedFolder.status.syncing': '正在同步…', 'linkedFolder.status.error': '错误', 'linkedFolder.syncNow': '立即同步', 'linkedFolder.unlink': '取消链接'
+  },
+  hi: {
+    'create.linkFolder': 'फ़ोल्डर लिंक करें',
+    'create.linkingFolder': 'लिंक हो रहा है…',
+    'linkedFolder.status.synced': 'सिंक किया गया', 'linkedFolder.status.pending': 'लंबित', 'linkedFolder.status.syncing': 'सिंक हो रहा है…', 'linkedFolder.status.error': 'त्रुटि', 'linkedFolder.syncNow': 'अभी सिंक करें', 'linkedFolder.unlink': 'लिंक हटाएँ'
+  },
+  ar: {
+    'create.linkFolder': 'ربط مجلد',
+    'create.linkingFolder': 'جارٍ الربط…',
+    'linkedFolder.status.synced': 'متزامن', 'linkedFolder.status.pending': 'قيد الانتظار', 'linkedFolder.status.syncing': 'جارٍ التزامن…', 'linkedFolder.status.error': 'خطأ', 'linkedFolder.syncNow': 'زامن الآن', 'linkedFolder.unlink': 'إلغاء الربط'
+  },
+  de: {
+    'create.linkFolder': 'Ordner verknüpfen',
+    'create.linkingFolder': 'Wird verknüpft…',
+    'linkedFolder.status.synced': 'Synchronisiert', 'linkedFolder.status.pending': 'Ausstehend', 'linkedFolder.status.syncing': 'Synchronisierung…', 'linkedFolder.status.error': 'Fehler', 'linkedFolder.syncNow': 'Jetzt synchronisieren', 'linkedFolder.unlink': 'Verknüpfung lösen'
+  },
+  ru: {
+    'create.linkFolder': 'Связать папку',
+    'create.linkingFolder': 'Связывание…',
+    'linkedFolder.status.synced': 'Синхронизировано', 'linkedFolder.status.pending': 'Ожидание', 'linkedFolder.status.syncing': 'Синхронизация…', 'linkedFolder.status.error': 'Ошибка', 'linkedFolder.syncNow': 'Синхронизировать', 'linkedFolder.unlink': 'Отвязать'
+  },
+  ja: {
+    'create.linkFolder': 'フォルダーをリンク',
+    'create.linkingFolder': 'リンク中…',
+    'linkedFolder.status.synced': '同期済み', 'linkedFolder.status.pending': '保留中', 'linkedFolder.status.syncing': '同期中…', 'linkedFolder.status.error': 'エラー', 'linkedFolder.syncNow': '今すぐ同期', 'linkedFolder.unlink': 'リンク解除'
+  },
+  ko: {
+    'create.linkFolder': '폴더 연결',
+    'create.linkingFolder': '연결 중…',
+    'linkedFolder.status.synced': '동기화됨', 'linkedFolder.status.pending': '대기 중', 'linkedFolder.status.syncing': '동기화 중…', 'linkedFolder.status.error': '오류', 'linkedFolder.syncNow': '지금 동기화', 'linkedFolder.unlink': '연결 해제'
+  }
+}
+
+for (const language of Object.keys(linkedFolderMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], linkedFolderMessages[language])
+}
+
 export const messages: Record<AppLanguage, Messages> = messageTargets
