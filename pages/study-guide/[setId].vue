@@ -9,7 +9,7 @@
             <NuxtLink
               :to="`/set/${setId}`"
               data-testid="linked-set-link"
-              class="inline-flex items-center gap-1 rounded-md bg-[#FFF3F4] px-2 py-1 font-medium text-[#A83F49] underline decoration-[#D98A91] decoration-1 underline-offset-2 transition hover:bg-[#FFE7E9] hover:text-[#923640] focus-visible:bg-[#FFE7E9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E6A8AD] dark:bg-red-950/20 dark:text-red-300 dark:hover:bg-red-950/40"
+              class="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-1 font-medium text-orange-700 underline decoration-orange-400 decoration-1 underline-offset-2 transition hover:bg-orange-100 hover:text-orange-800 focus-visible:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:bg-orange-950/25 dark:text-orange-300 dark:hover:bg-orange-950/45"
             >
               {{ setTitle }}
             </NuxtLink>
@@ -18,7 +18,7 @@
 
         <NuxtLink
           :to="setId ? `/set/${setId}` : '/'"
-          class="inline-flex items-center gap-2 rounded-md border border-[#C95C66] bg-[#FFF3F4] px-3 py-2 text-sm font-medium text-[#A83F49] shadow-sm transition hover:border-[#B94B56] hover:bg-[#FFE7E9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E6A8AD] dark:border-red-800 dark:bg-red-950/25 dark:text-red-300"
+          class="inline-flex items-center gap-2 rounded-md border border-orange-300 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-700 shadow-sm transition hover:border-orange-400 hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:border-orange-500/70 dark:bg-orange-950/25 dark:text-orange-300 dark:hover:border-orange-400 dark:hover:bg-orange-950/45"
         >
           {{ t('studyGuide.goToSet') }}
           <svg aria-hidden="true" viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4h5v5M9 11l7-7M16 11v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h4" /></svg>
