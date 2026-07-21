@@ -9,7 +9,9 @@ test('study guide: navigates from set page and renders markdown blocks', async (
   await expect(page).toHaveURL(/\/study-guide\//)
 
   await expect(page.getByRole('heading', { name: 'Study guide', exact: true })).toBeVisible()
-  await expect(page.getByText('Linked to set Demo set', { exact: true })).toBeVisible()
+  await expect(page.getByText('Linked to set', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('linked-set-link')).toHaveText(/Demo set/)
+  await expect(page.getByTestId('linked-set-link')).toHaveAttribute('href', '/set/demo')
   await expect(page.getByRole('heading', { name: 'Demo study guide' })).toBeVisible()
   await expect(page.locator('[data-testid="markdown-renderer"] strong')).toContainText('bold Markdown')
   await expect(page.getByText('**bold Markdown**')).toHaveCount(0)

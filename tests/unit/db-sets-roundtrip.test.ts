@@ -45,7 +45,15 @@ async function applyMigrations(dbPath: string) {
     path.resolve(process.cwd(), 'src-tauri', 'migrations', '004_folders.sql'),
     'utf8'
   )
-  const res = await runSqlite(dbPath, `${migrationSql}\n${foldersMigrationSql}`)
+  const iconsMigrationSql = await readFile(
+    path.resolve(process.cwd(), 'src-tauri', 'migrations', '006_set_icons.sql'),
+    'utf8'
+  )
+  const iconToneMigrationSql = await readFile(
+    path.resolve(process.cwd(), 'src-tauri', 'migrations', '008_set_icon_tone.sql'),
+    'utf8'
+  )
+  const res = await runSqlite(dbPath, `${migrationSql}\n${foldersMigrationSql}\n${iconsMigrationSql}\n${iconToneMigrationSql}`)
   if (res.code !== 0) throw new Error(`sqlite3 migrations failed: ${res.stderr}`)
 }
 
@@ -87,6 +95,8 @@ describe('sets repo roundtrip (sqlite:tracer.db)', () => {
         id: setId,
         title: 'My Set',
         description: 'desc',
+        iconKey: 'biology',
+        iconTone: 'blue',
         terms: [
           {
             id: '00000000-0000-4000-8000-000000000001',
@@ -111,6 +121,8 @@ describe('sets repo roundtrip (sqlite:tracer.db)', () => {
 
       const loaded = await repo.get(setId)
       expect(loaded?.title).toBe('My Set')
+      expect(loaded?.iconKey).toBe('biology')
+      expect(loaded?.iconTone).toBe('blue')
       expect(loaded?.terms).toEqual([
         {
           id: '00000000-0000-4000-8000-000000000001',

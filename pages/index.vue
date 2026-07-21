@@ -1,21 +1,21 @@
 <template>
   <main>
-    <div class="mx-auto max-w-5xl px-6 py-8">
-      <div class="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div class="mx-auto max-w-[1380px] px-8 pb-28 pt-12">
+      <div class="grid items-stretch gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
         <section
-          class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+          class="min-h-[calc(100vh-13rem)] rounded-xl border border-slate-200 bg-white p-7 text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           aria-labelledby="home-sets"
         >
           <div class="flex items-start justify-between gap-4">
             <div>
-              <h1 id="home-sets" class="text-lg font-semibold">{{ t('home.sets') }}</h1>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              <h1 id="home-sets" class="text-2xl font-semibold">{{ t('home.sets') }}</h1>
+              <p class="mt-1 text-base text-slate-950 dark:text-slate-100">
                 {{ t('home.subtitle') }}
               </p>
             </div>
             <button
               type="button"
-              class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               :disabled="busy || !hasTauriRuntime()"
               @click="addFolder"
             >
@@ -23,7 +23,16 @@
             </button>
           </div>
 
-          <div class="mt-5">
+          <div class="mt-7 inline-flex overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800" role="tablist" aria-label="Library type">
+            <button type="button" role="tab" :aria-selected="activeLibraryKind === 'set'" class="min-w-40 px-6 py-2.5 text-sm font-medium text-slate-950 transition dark:text-white" :class="activeLibraryKind === 'set' ? 'bg-white shadow-sm dark:bg-slate-800' : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-900'" @click="activeLibraryKind = 'set'">
+              Flashcards
+            </button>
+            <button type="button" role="tab" :aria-selected="activeLibraryKind === 'study-guide'" class="min-w-40 border-l border-slate-200 px-6 py-2.5 text-sm font-medium text-slate-950 transition dark:border-slate-800 dark:text-white" :class="activeLibraryKind === 'study-guide' ? 'bg-white shadow-sm dark:bg-slate-800' : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-900'" @click="activeLibraryKind = 'study-guide'">
+              Study guides
+            </button>
+          </div>
+
+          <div class="mt-7">
             <p v-if="loadError" class="text-sm text-red-700 dark:text-red-300">
               {{ loadError }}
             </p>
@@ -55,23 +64,34 @@
               <div
                 v-else
                 data-root-drop-zone
-                class="mt-3 rounded-md transition"
+                class="mt-3 flex flex-col gap-3 rounded-md transition"
                 :class="
                   dragState.active && dragState.overRoot
                     ? 'bg-slate-100/80 ring-2 ring-inset ring-slate-300 dark:bg-slate-900/70 dark:ring-slate-700'
                     : ''
                 "
               >
-                <ul v-if="visibleFolders.length > 0" class="space-y-3">
+                <ul v-if="visibleFolders.length > 0" class="contents">
                   <li
                     v-for="folder in visibleFolders"
                     :key="folder.id"
-                    :data-folder-drop-id="folder.id"
-                    class="rounded-md"
+                    :data-folder-reorder-id="folder.id"
+                    data-root-entry-kind="folder"
+                    :data-root-entry-id="folder.id"
+                    :style="{ order: rootEntryPosition('folder', folder.id) }"
+                    class="relative rounded-md transition"
+                    :class="folderDragId === folder.id ? 'opacity-50' : ''"
                   >
+                    <div
+                      v-if="rootDropIndicator('folder', folder.id) === 'before'"
+                      class="pointer-events-none absolute -top-2 left-0 right-0 z-10 h-1.5 rounded-full bg-[#C75F5F] shadow-sm"
+                      aria-hidden="true"
+                    />
                     <div
                       role="button"
                       tabindex="0"
+                      data-root-entry-hit="true"
+                      :data-folder-drop-id="folder.id"
                       class="flex min-h-12 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                       :class="folderRowClass(folder.id)"
                       @click="selectFolder(folder.id, $event)"
@@ -79,10 +99,21 @@
                       @keydown.enter.prevent="beginFolderRename(folder)"
                       @keydown.space.prevent="toggleFolder(folder.id)"
                     >
+                      <button
+                        type="button"
+                        :draggable="false"
+                        class="touch-none select-none cursor-grab rounded p-1 text-slate-950 hover:bg-slate-100 active:cursor-grabbing dark:text-white dark:hover:bg-slate-800"
+                        aria-label="Drag folder"
+                        @click.stop
+                        @dblclick.stop
+                        @pointerdown.stop.prevent="onFolderPointerDown(folder.id, $event)"
+                      >
+                        <svg aria-hidden="true" viewBox="0 0 16 20" class="h-5 w-4" fill="currentColor"><circle cx="5" cy="4" r="1.3"/><circle cx="11" cy="4" r="1.3"/><circle cx="5" cy="10" r="1.3"/><circle cx="11" cy="10" r="1.3"/><circle cx="5" cy="16" r="1.3"/><circle cx="11" cy="16" r="1.3"/></svg>
+                      </button>
                       <svg
                         aria-hidden="true"
                         viewBox="0 0 24 24"
-                        class="h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400"
+                        class="h-6 w-7 shrink-0 text-slate-500 dark:text-slate-400"
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.8"
@@ -110,9 +141,27 @@
                         {{ folder.name }}
                       </span>
 
-                      <span class="shrink-0 text-xs text-slate-500 dark:text-slate-400 select-none">
+                      <span class="shrink-0 text-sm font-medium text-slate-500 dark:text-slate-400 select-none">
                         {{ folderSetCount(folder.id) }}
                       </span>
+                      <button
+                        type="button"
+                        class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                        aria-label="Edit folder name"
+                        @click.stop="beginFolderRename(folder)"
+                        @dblclick.stop
+                      >
+                        <svg aria-hidden="true" viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m13.5 4.5 2 2M5 15l1-4 7.8-7.8a1.4 1.4 0 0 1 2 2L8 13l-3 2Z" /></svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-950 transition hover:bg-red-50 hover:text-red-700 dark:text-white dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                        aria-label="Delete folder"
+                        @click.stop="deleteFolder(folder)"
+                        @dblclick.stop
+                      >
+                        <svg aria-hidden="true" viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 6.5h9M8 4h4M7 6.5l.6 9h4.8l.6-9" /></svg>
+                      </button>
                       <svg
                         aria-hidden="true"
                         viewBox="0 0 20 20"
@@ -128,6 +177,17 @@
                       </svg>
                     </div>
 
+                    <div
+                      v-if="dragState.active"
+                      :data-folder-drop-id="folder.id"
+                      class="ms-6 mt-2 rounded-md border border-dashed px-3 py-2 text-center text-xs font-semibold transition"
+                      :class="dragState.dropFolderId === folder.id
+                        ? 'border-[#C75F5F] bg-red-50 text-[#A93F3F] dark:bg-red-950/30 dark:text-red-200'
+                        : 'border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'"
+                    >
+                      Move to {{ folder.name }}
+                    </div>
+
                     <ul
                       v-if="folderIsOpen(folder.id)"
                       class="ms-6 mt-2 space-y-3 border-s border-slate-200 ps-3 dark:border-slate-800"
@@ -139,6 +199,7 @@
                         :item="item"
                         :to="itemTo(item)"
                         :formatted-date="formatDate(item.updatedAt ?? item.createdAt)"
+                        :dense="denseLibrary"
                         :selected="item.kind === 'set' && selectedSetIds.has(item.id)"
                         @item-click="onItemClick(item, $event)"
                         @item-pointerdown="onItemPointerDown(item, $event)"
@@ -150,13 +211,17 @@
                         {{ t('home.emptyFolder') }}
                       </li>
                     </ul>
+                    <div
+                      v-if="rootDropIndicator('folder', folder.id) === 'after'"
+                      class="pointer-events-none absolute -bottom-2 left-0 right-0 z-10 h-1.5 rounded-full bg-[#C75F5F] shadow-sm"
+                      aria-hidden="true"
+                    />
                   </li>
                 </ul>
 
                 <ul
                   v-if="rootItems.length > 0"
-                  class="space-y-3"
-                  :class="{ 'mt-3': visibleFolders.length > 0 }"
+                  class="contents"
                 >
                   <HomeLibraryItem
                     v-for="item in rootItems"
@@ -164,7 +229,11 @@
                     :item="item"
                     :to="itemTo(item)"
                     :formatted-date="formatDate(item.updatedAt ?? item.createdAt)"
+                    :dense="denseLibrary"
                     :selected="item.kind === 'set' && selectedSetIds.has(item.id)"
+                    root-entry
+                    :order="rootEntryPosition('set', item.setId ?? item.id)"
+                    :drop-indicator="rootDropIndicator('set', item.setId ?? item.id)"
                     @item-click="onItemClick(item, $event)"
                     @item-pointerdown="onItemPointerDown(item, $event)"
                   />
@@ -177,10 +246,18 @@
                   {{ t('nav.noResults') }}
                 </p>
                 <div
-                  v-else
-                  class="mt-3 min-h-8 rounded-md border border-dashed border-transparent"
+                  v-if="dragState.active || folderDragId"
+                  data-root-drop-zone
+                  class="rounded-md border border-dashed px-3 py-2 text-center text-xs font-semibold transition"
+                  :style="{ order: 1000000 }"
+                  :class="(dragState.active && dragState.overRoot) || (folderDragId && rootDropTarget?.anchor === null)
+                    ? 'border-[#C75F5F] bg-red-50 text-[#A93F3F] dark:bg-red-950/30 dark:text-red-200'
+                    : 'border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'"
                   :aria-label="t('home.rootDropArea')"
-                />
+                >
+                  {{ folderDragId ? 'Move here' : 'Move outside folders' }}
+                </div>
+                <div v-else class="min-h-8" :style="{ order: 1000000 }" />
               </div>
             </div>
           </div>
@@ -199,41 +276,38 @@
         </Teleport>
 
         <section
-          class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-auto"
+          class="min-h-[calc(100vh-13rem)] rounded-xl border border-slate-200 bg-white p-7 text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           aria-labelledby="home-create"
         >
-          <h2 id="home-create" class="text-lg font-semibold">{{ t('home.create') }}</h2>
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('home.chooseMode') }}</p>
+          <h2 id="home-create" class="text-2xl font-semibold">{{ t('home.create') }}</h2>
+          <p class="mt-1 text-base text-slate-950 dark:text-slate-100">{{ t('home.chooseMode') }}</p>
 
-          <div class="mt-4 grid gap-3">
+          <div class="mt-8 grid gap-6">
             <NuxtLink
               to="/create/basic"
-              class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="group flex min-h-[112px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
             >
-              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('home.basic') }}</p>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                {{ t('home.basicHint') }}
-              </p>
+              <img :src="basicIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+              <div class="min-w-0 flex-1"><p class="text-base font-medium">{{ t('home.basic') }}</p><p class="mt-1 text-sm">{{ t('home.basicHint') }}</p></div>
+              <CreateChevron />
             </NuxtLink>
 
             <NuxtLink
               to="/create/synthesize"
-              class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="group flex min-h-[112px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
             >
-              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('home.synthesize') }}</p>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                  {{ t('home.synthesizeHint') }}
-              </p>
+              <img :src="synthesizeIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+              <div class="min-w-0 flex-1"><p class="text-base font-medium">{{ t('home.synthesize') }}</p><p class="mt-1 text-sm">{{ t('home.synthesizeHint') }}</p></div>
+              <CreateChevron />
             </NuxtLink>
 
             <NuxtLink
               to="/create/generate"
-              class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="group flex min-h-[112px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
             >
-              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('home.generate') }}</p>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                {{ t('home.generateHint') }}
-              </p>
+              <img :src="generateIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+              <div class="min-w-0 flex-1"><p class="text-base font-medium">{{ t('home.generate') }}</p><p class="mt-1 text-sm">{{ t('home.generateHint') }}</p></div>
+              <CreateChevron />
             </NuxtLink>
           </div>
         </section>
@@ -243,6 +317,9 @@
 </template>
 
 <script setup lang="ts">
+import basicIcon from '../assets/icons/create-basic.png'
+import synthesizeIcon from '../assets/icons/create-synthesize.png'
+import generateIcon from '../assets/icons/create-generate.png'
 import { lockGetStatus } from '../src/composables/lock'
 import {
   createFoldersRepo,
@@ -282,17 +359,36 @@ type HomeListItem = {
   folderId: Uuid | null
   title: string
   subtitle: string | null
+  iconKey?: string | null
+  iconTone?: string | null
+  cardCount?: number
   createdAt: string
   updatedAt: string | null
+}
+
+type HomeOrderEntry = {
+  kind: 'folder' | 'set'
+  id: Uuid
+  sortOrder: number
+}
+
+type RootEntryKey = Pick<HomeOrderEntry, 'kind' | 'id'>
+
+type RootDropTarget = {
+  anchor: RootEntryKey | null
+  placement: 'before' | 'after'
 }
 
 const busy = ref(true)
 const loadError = ref<string | null>(null)
 const items = ref<HomeListItem[]>([])
+const activeLibraryKind = ref<'set' | 'study-guide'>('set')
 const folders = ref<SetFolder[]>([])
+const homeOrder = ref<HomeOrderEntry[]>([])
 const expandedFolderIds = ref(new Set<Uuid>())
 const selectedSetIds = ref(new Set<Uuid>())
 const selectedFolderId = ref<Uuid | null>(null)
+const folderDragId = ref<Uuid | null>(null)
 const selectionAnchorId = ref<Uuid | null>(null)
 const editingFolderId = ref<Uuid | null>(null)
 const folderNameDraft = ref('')
@@ -322,7 +418,16 @@ type PointerCandidate = {
   startY: number
 }
 
+type FolderPointerCandidate = {
+  folderId: Uuid
+  pointerId: number
+  startX: number
+  startY: number
+}
+
 let pointerCandidate: PointerCandidate | null = null
+let folderPointerCandidate: FolderPointerCandidate | null = null
+const rootDropTarget = ref<RootDropTarget | null>(null)
 let suppressNextSetClickId: Uuid | null = null
 let dragHoverFolderId: Uuid | null = null
 let dragHoverTimer: number | null = null
@@ -333,8 +438,13 @@ const query = computed(() => (typeof route.query.q === 'string' ? route.query.q 
 const normalizedQuery = computed(() => query.value.trim().toLowerCase())
 
 const rootItems = computed(() => {
-  return items.value.filter((item) => item.folderId === null && itemMatchesQuery(item))
+  return items.value.filter((item) => item.kind === activeLibraryKind.value && item.folderId === null && itemMatchesQuery(item))
 })
+
+const visibleLibraryCount = computed(() =>
+  items.value.filter((item) => item.kind === activeLibraryKind.value && itemMatchesQuery(item)).length
+)
+const denseLibrary = computed(() => visibleLibraryCount.value >= 4)
 
 const visibleFolders = computed(() => {
   const q = normalizedQuery.value
@@ -347,6 +457,40 @@ const visibleFolders = computed(() => {
     )
   })
 })
+
+function rootKeyEquals(left: RootEntryKey | null, right: RootEntryKey) {
+  return left?.kind === right.kind && left.id === right.id
+}
+
+function rootEntryPosition(kind: 'folder' | 'set', id: Uuid) {
+  const storedIndex = homeOrder.value.findIndex(
+    (entry) => entry.kind === kind && entry.id === id
+  )
+  if (storedIndex >= 0) return storedIndex
+  if (kind === 'folder') return -2000 + folders.value.findIndex((folder) => folder.id === id)
+  const setIndex = items.value.findIndex((item) => item.kind === 'set' && item.id === id)
+  return -1000 + Math.max(0, setIndex)
+}
+
+function rootDropIndicator(kind: 'folder' | 'set', id: Uuid) {
+  if (!rootDropTarget.value?.anchor) return null
+  return rootKeyEquals(rootDropTarget.value.anchor, { kind, id })
+    ? rootDropTarget.value.placement
+    : null
+}
+
+function orderedRootKeys() {
+  const keys: RootEntryKey[] = [
+    ...folders.value.map((folder) => ({ kind: 'folder' as const, id: folder.id })),
+    ...items.value
+      .filter((item) => item.kind === 'set' && item.folderId === null)
+      .map((item) => ({ kind: 'set' as const, id: item.id }))
+  ]
+  return keys.sort(
+    (left, right) =>
+      rootEntryPosition(left.kind, left.id) - rootEntryPosition(right.kind, right.id)
+  )
+}
 
 const visibleSetIds = computed(() => {
   const ids: Uuid[] = []
@@ -385,6 +529,7 @@ function itemsForFolder(folderId: Uuid) {
     folder?.name.toLowerCase().includes(normalizedQuery.value)
   return items.value.filter(
     (item) =>
+      item.kind === activeLibraryKind.value &&
       item.folderId === folderId &&
       (folderMatches || itemMatchesQuery(item))
   )
@@ -415,8 +560,10 @@ function initWebDemoItems() {
       folderId: null,
       title: t('demo.setTitle'),
       subtitle: t('demo.setDescription'),
+      iconKey: null,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      cardCount: 2
     },
     {
       kind: 'study-guide',
@@ -437,7 +584,17 @@ function initWebDemoItems() {
 function formatDate(iso: string) {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
-  return d.toLocaleString(language.value)
+  const elapsedSeconds = Math.round((d.getTime() - Date.now()) / 1000)
+  const ranges: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+    ['year', 31_536_000], ['month', 2_592_000], ['week', 604_800],
+    ['day', 86_400], ['hour', 3_600], ['minute', 60]
+  ]
+  const formatter = new Intl.RelativeTimeFormat(language.value, { numeric: 'auto' })
+  const range = ranges.find(([, seconds]) => Math.abs(elapsedSeconds) >= seconds)
+  const relative = range
+    ? formatter.format(Math.round(elapsedSeconds / range[1]), range[0])
+    : formatter.format(0, 'second')
+  return `Updated ${relative}`
 }
 
 function sortIsoDesc(a: string, b: string) {
@@ -454,9 +611,10 @@ async function loadHomeList() {
     const guidesRepo = createStudyGuidesRepo(db)
     const foldersRepo = createFoldersRepo(db)
 
-    const [sets, nextFolders] = await Promise.all([
+    const [sets, nextFolders, nextHomeOrder] = await Promise.all([
       setsRepo.list(),
-      foldersRepo.list()
+      foldersRepo.list(),
+      foldersRepo.listHomeOrder()
     ])
     const next: HomeListItem[] = []
 
@@ -486,6 +644,7 @@ async function loadHomeList() {
     next.sort((a, b) => sortIsoDesc(a.updatedAt ?? a.createdAt, b.updatedAt ?? b.createdAt))
     items.value = next
     folders.value = nextFolders
+    homeOrder.value = nextHomeOrder
   } catch {
     loadError.value = 'Failed to load sets and study guides.'
   } finally {
@@ -501,6 +660,9 @@ function toSetListItem(s: FlashcardSetListItem): HomeListItem {
     folderId: s.folderId,
     title: s.title,
     subtitle: s.description,
+    iconKey: s.iconKey,
+    iconTone: s.iconTone,
+    cardCount: s.cardCount,
     createdAt: s.createdAt,
     updatedAt: s.updatedAt
   }
@@ -523,6 +685,9 @@ function folderSetCount(folderId: Uuid) {
 }
 
 function folderRowClass(folderId: Uuid) {
+  if (folderDragId.value && rootKeyEquals(rootDropTarget.value?.anchor ?? null, { kind: 'folder', id: folderId })) {
+    return 'bg-red-50 ring-2 ring-inset ring-red-300 dark:bg-red-950/20 dark:ring-red-800'
+  }
   if (dragState.active && dragState.dropFolderId === folderId) {
     return 'bg-slate-100 ring-2 ring-inset ring-slate-400 dark:bg-slate-900 dark:ring-slate-600'
   }
@@ -629,6 +794,7 @@ async function addFolder() {
       name: t('home.untitledFolder')
     })
     folders.value = [folder, ...folders.value]
+    await persistHomeOrder(orderedRootKeys())
     selectedFolderId.value = folder.id
     const nextExpanded = new Set(expandedFolderIds.value)
     nextExpanded.add(folder.id)
@@ -636,6 +802,99 @@ async function addFolder() {
     await beginFolderRename(folder)
   } catch {
     loadError.value = t('home.folderCreateFailed')
+  }
+}
+
+function onFolderPointerDown(folderId: Uuid, event: PointerEvent) {
+  if (event.button !== 0 || !event.isPrimary || editingFolderId.value === folderId) return
+  const handle = event.currentTarget
+  if (handle instanceof HTMLElement) handle.setPointerCapture(event.pointerId)
+  folderPointerCandidate = {
+    folderId,
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY
+  }
+  rootDropTarget.value = {
+    anchor: { kind: 'folder', id: folderId },
+    placement: 'before'
+  }
+}
+
+function rootHitAt(clientX: number, clientY: number) {
+  const hit = document
+    .elementsFromPoint(clientX, clientY)
+    .map((element) => element.closest<HTMLElement>('[data-root-entry-hit]'))
+    .find(Boolean)
+  const entry = hit?.closest<HTMLElement>('[data-root-entry-kind][data-root-entry-id]')
+  const kind = entry?.dataset.rootEntryKind
+  const id = entry?.dataset.rootEntryId as Uuid | undefined
+  if (!hit || !id || (kind !== 'folder' && kind !== 'set')) return null
+  const rect = hit.getBoundingClientRect()
+  return {
+    key: { kind, id } as RootEntryKey,
+    placement: clientY < rect.top + rect.height / 2 ? 'before' as const : 'after' as const,
+    edgeRatio: rect.height > 0 ? (clientY - rect.top) / rect.height : 0.5
+  }
+}
+
+function updateFolderReorderTarget(clientX: number, clientY: number) {
+  const hit = rootHitAt(clientX, clientY)
+  if (hit) {
+    rootDropTarget.value = { anchor: hit.key, placement: hit.placement }
+    return
+  }
+  const overRoot = document
+    .elementsFromPoint(clientX, clientY)
+    .some((element) => element.closest('[data-root-drop-zone]') !== null)
+  rootDropTarget.value = overRoot ? { anchor: null, placement: 'after' } : null
+}
+
+function reorderedRootKeys(dragged: RootEntryKey[], target: RootDropTarget | null) {
+  const draggedIds = new Set(dragged.map((entry) => `${entry.kind}:${entry.id}`))
+  if (target?.anchor && draggedIds.has(`${target.anchor.kind}:${target.anchor.id}`)) {
+    return orderedRootKeys()
+  }
+  const next = orderedRootKeys().filter((entry) => !draggedIds.has(`${entry.kind}:${entry.id}`))
+  if (!target?.anchor) return [...next, ...dragged]
+  const anchorIndex = next.findIndex((entry) => rootKeyEquals(entry, target.anchor as RootEntryKey))
+  const insertAt = anchorIndex < 0
+    ? next.length
+    : anchorIndex + (target.placement === 'after' ? 1 : 0)
+  next.splice(insertAt, 0, ...dragged)
+  return next
+}
+
+async function persistHomeOrder(keys: RootEntryKey[]) {
+  homeOrder.value = keys.map((entry, sortOrder) => ({ ...entry, sortOrder }))
+  if (!hasTauriRuntime()) return
+  const db = await useTracerDb()
+  await createFoldersRepo(db).reorderHome(keys)
+}
+
+async function reorderRootEntry(dragged: RootEntryKey, target: RootDropTarget | null) {
+  if (target?.anchor && rootKeyEquals(target.anchor, dragged)) return
+  try {
+    await persistHomeOrder(reorderedRootKeys([dragged], target))
+  } catch {
+    loadError.value = 'Failed to reorder the home library.'
+    await loadHomeList()
+  }
+}
+
+async function deleteFolder(folder: SetFolder) {
+  if (!window.confirm(`Delete “${folder.name}”? Sets inside it will stay in your library.`)) return
+  loadError.value = null
+  try {
+    const db = await useTracerDb()
+    await createFoldersRepo(db).delete(folder.id)
+    folders.value = folders.value.filter((candidate) => candidate.id !== folder.id)
+    items.value = items.value.map((item) => item.folderId === folder.id ? { ...item, folderId: null } : item)
+    await createFoldersRepo(db).reorderHome(orderedRootKeys())
+    homeOrder.value = orderedRootKeys().map((entry, sortOrder) => ({ ...entry, sortOrder }))
+    if (selectedFolderId.value === folder.id) selectedFolderId.value = null
+  } catch {
+    loadError.value = 'Failed to delete folder.'
   }
 }
 
@@ -762,12 +1021,27 @@ function scheduleFolderExpansion(folderId: Uuid) {
 
 function updateDropTarget(clientX: number, clientY: number) {
   const elements = document.elementsFromPoint(clientX, clientY)
+  const rootHit = rootHitAt(clientX, clientY)
+  const rootInsertion = rootHit && (
+    rootHit.key.kind === 'set' ||
+    rootHit.edgeRatio <= 0.28 ||
+    rootHit.edgeRatio >= 0.72
+  )
+  if (rootInsertion) {
+    clearDragHoverTimer()
+    dragState.dropFolderId = null
+    dragState.overRoot = true
+    rootDropTarget.value = { anchor: rootHit.key, placement: rootHit.placement }
+    return
+  }
+
   for (const element of elements) {
     const folderTarget = element.closest<HTMLElement>('[data-folder-drop-id]')
     const folderId = folderTarget?.dataset.folderDropId as Uuid | undefined
     if (folderId && folders.value.some((folder) => folder.id === folderId)) {
       dragState.dropFolderId = folderId
       dragState.overRoot = false
+      rootDropTarget.value = null
       scheduleFolderExpansion(folderId)
       return
     }
@@ -778,6 +1052,9 @@ function updateDropTarget(clientX: number, clientY: number) {
   dragState.overRoot = elements.some(
     (element) => element.closest('[data-root-drop-zone]') !== null
   )
+  rootDropTarget.value = dragState.overRoot
+    ? { anchor: null, placement: 'after' }
+    : null
 }
 
 function startPointerDrag(candidate: PointerCandidate) {
@@ -791,6 +1068,19 @@ function startPointerDrag(candidate: PointerCandidate) {
 }
 
 function onWindowPointerMove(event: PointerEvent) {
+  const folderCandidate = folderPointerCandidate
+  if (folderCandidate && event.pointerId === folderCandidate.pointerId) {
+    const distance = Math.hypot(
+      event.clientX - folderCandidate.startX,
+      event.clientY - folderCandidate.startY
+    )
+    if (!folderDragId.value && distance < 5) return
+    folderDragId.value = folderCandidate.folderId
+    event.preventDefault()
+    updateFolderReorderTarget(event.clientX, event.clientY)
+    return
+  }
+
   const candidate = pointerCandidate
   if (!candidate || event.pointerId !== candidate.pointerId) return
   const distance = Math.hypot(
@@ -812,16 +1102,30 @@ function resetDragState() {
   dragState.setIds = []
   dragState.dropFolderId = null
   dragState.overRoot = false
+  rootDropTarget.value = null
   pointerCandidate = null
 }
 
-async function moveSelectedSets(setIds: Uuid[], folderId: Uuid | null) {
+async function moveSelectedSets(
+  setIds: Uuid[],
+  folderId: Uuid | null,
+  target: RootDropTarget | null = null
+) {
   if (setIds.length === 0) return
   loadError.value = null
   try {
     const db = await useTracerDb()
-    await createFoldersRepo(db).moveSets(setIds, folderId)
+    const foldersRepo = createFoldersRepo(db)
+    await foldersRepo.moveSets(setIds, folderId)
     items.value = assignHomeItemsToFolder(items.value, setIds, folderId)
+    const movedKeys = setIds.map((id) => ({ kind: 'set' as const, id }))
+    const nextOrder = folderId
+      ? orderedRootKeys().filter(
+          (entry) => !setIds.some((id) => entry.kind === 'set' && entry.id === id)
+        )
+      : reorderedRootKeys(movedKeys, target)
+    homeOrder.value = nextOrder.map((entry, sortOrder) => ({ ...entry, sortOrder }))
+    await foldersRepo.reorderHome(nextOrder)
     replaceSelectedSets(new Set())
     selectionAnchorId.value = null
     if (folderId) {
@@ -835,12 +1139,24 @@ async function moveSelectedSets(setIds: Uuid[], folderId: Uuid | null) {
 }
 
 function onWindowPointerUp(event: PointerEvent) {
+  const folderCandidate = folderPointerCandidate
+  if (folderCandidate && event.pointerId === folderCandidate.pointerId) {
+    const wasDragging = folderDragId.value === folderCandidate.folderId
+    const target = rootDropTarget.value
+    folderPointerCandidate = null
+    folderDragId.value = null
+    rootDropTarget.value = null
+    if (wasDragging && target) void reorderRootEntry({ kind: 'folder', id: folderCandidate.folderId }, target)
+    return
+  }
+
   const candidate = pointerCandidate
   if (!candidate || event.pointerId !== candidate.pointerId) return
   const wasDragging = dragState.active
   const draggedSetIds = [...dragState.setIds]
   const dropFolderId = dragState.dropFolderId
   const overRoot = dragState.overRoot
+  const rootTarget = rootDropTarget.value
   if (wasDragging) {
     event.preventDefault()
     suppressNextSetClickId = candidate.setId
@@ -856,11 +1172,17 @@ function onWindowPointerUp(event: PointerEvent) {
   if (dropFolderId) {
     void moveSelectedSets(draggedSetIds, dropFolderId)
   } else if (overRoot) {
-    void moveSelectedSets(draggedSetIds, null)
+    void moveSelectedSets(draggedSetIds, null, rootTarget)
   }
 }
 
 function onWindowPointerCancel(event: PointerEvent) {
+  if (folderPointerCandidate && event.pointerId === folderPointerCandidate.pointerId) {
+    folderPointerCandidate = null
+    folderDragId.value = null
+    rootDropTarget.value = null
+    return
+  }
   if (!pointerCandidate || event.pointerId !== pointerCandidate.pointerId) return
   if (dragState.active) {
     const cancelledSetId = pointerCandidate.setId

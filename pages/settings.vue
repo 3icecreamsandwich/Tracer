@@ -50,6 +50,36 @@
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+        aria-label="Text size"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-5">
+          <div>
+            <h2 class="text-sm font-medium">Text size</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Adjust text and interface sizing throughout Tracer.</p>
+          </div>
+          <div class="w-full max-w-sm">
+            <div class="flex items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200">
+              <span>Small</span>
+              <span>Medium</span>
+              <span>Extra large</span>
+            </div>
+            <input
+              v-model.number="textScale"
+              type="range"
+              min="0"
+              max="3"
+              step="1"
+              class="mt-3 w-full accent-red-500"
+              aria-label="Text size"
+              @input="onTextScalePreview"
+              @change="onTextScaleChange"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         :aria-label="t('settings.theme')"
       >
         <div class="flex items-center justify-between gap-4">
@@ -713,6 +743,7 @@ import {
   useAppLanguage
 } from '../src/composables/language'
 import type { AppLanguage } from '../src/composables/db/types'
+import { applyTextScale, textScaleSet } from '../src/composables/text-scale'
 
 const router = useRouter()
 const route = useRoute()
@@ -730,6 +761,7 @@ const startupLockEnabled = ref(true)
 const darkMode = ref(false)
 const defaultModelId = ref<string | null>(null)
 const learnHybridEnabled = ref(false)
+const textScale = ref(0)
 const languageMenuOpen = ref(false)
 const languageMenuRoot = ref<HTMLElement | null>(null)
 
@@ -1477,6 +1509,7 @@ onMounted(() => {
       startupLockEnabled.value = false
       defaultModelId.value = null
       learnHybridEnabled.value = false
+      textScale.value = Number(document.documentElement.dataset.textScale || 0)
       return
     }
     try {
@@ -1496,6 +1529,8 @@ onMounted(() => {
       darkMode.value = settings.darkMode
       defaultModelId.value = settings.defaultModelId
       learnHybridEnabled.value = settings.learnHybridEnabled
+      textScale.value = settings.textScale
+      applyTextScale(settings.textScale)
 
       try {
         const compat = await aiOpenAiCompatGetConfig()
@@ -1553,6 +1588,19 @@ async function onToggleDarkMode() {
   }
 }
 
+function onTextScalePreview() {
+  applyTextScale(textScale.value)
+}
+
+async function onTextScaleChange() {
+  error.value = null
+  try {
+    textScale.value = await textScaleSet(textScale.value)
+  } catch (e: unknown) {
+    error.value = toSafeErrorMessage(e, 'Failed to update text size')
+  }
+}
+
 async function onToggleLearnHybrid() {
   if (!defaultModelId.value) return
   if (isWebPreview.value) {
@@ -1568,7 +1616,7 @@ async function onToggleLearnHybrid() {
     const updated = await repo.set({ learnHybridEnabled: next })
     learnHybridEnabled.value = updated.learnHybridEnabled
   } catch (e: unknown) {
-    error.value = toSafeErrorMessage(e, 'Failed to update Learn settings')
+    error.value = toSafeErrorMessage(e, 'Failed to update Practice settings')
   } finally {
     busy.value = false
   }

@@ -1,19 +1,27 @@
 <template>
   <main>
     <div class="mx-auto max-w-3xl p-8">
-      <div class="flex items-start justify-between gap-4">
+      <div class="flex items-start justify-between gap-4 text-slate-950 dark:text-white">
         <div>
           <h1 class="text-2xl font-semibold">{{ t('studyGuide.title') }}</h1>
-          <p v-if="setTitle" class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            {{ t('studyGuide.linkedTo', { title: setTitle }) }}
-          </p>
+          <div v-if="setTitle && setId" class="mt-2 flex flex-wrap items-center gap-1 text-sm text-slate-950 dark:text-white">
+            <span>{{ linkedToLabel }}</span>
+            <NuxtLink
+              :to="`/set/${setId}`"
+              data-testid="linked-set-link"
+              class="inline-flex items-center gap-1 rounded-md bg-[#FFF3F4] px-2 py-1 font-medium text-[#A83F49] underline decoration-[#D98A91] decoration-1 underline-offset-2 transition hover:bg-[#FFE7E9] hover:text-[#923640] focus-visible:bg-[#FFE7E9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E6A8AD] dark:bg-red-950/20 dark:text-red-300 dark:hover:bg-red-950/40"
+            >
+              {{ setTitle }}
+            </NuxtLink>
+          </div>
         </div>
 
         <NuxtLink
           :to="setId ? `/set/${setId}` : '/'"
-          class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          class="inline-flex items-center gap-2 rounded-md border border-[#C95C66] bg-[#FFF3F4] px-3 py-2 text-sm font-medium text-[#A83F49] shadow-sm transition hover:border-[#B94B56] hover:bg-[#FFE7E9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E6A8AD] dark:border-red-800 dark:bg-red-950/25 dark:text-red-300"
         >
-            {{ t('studyGuide.goToSet') }}
+          {{ t('studyGuide.goToSet') }}
+          <svg aria-hidden="true" viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4h5v5M9 11l7-7M16 11v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h4" /></svg>
         </NuxtLink>
       </div>
 
@@ -72,6 +80,7 @@ const loadError = ref<string | null>(null)
 const markdown = ref('')
 const linkedSetTitle = ref('')
 const setTitle = computed(() => isWebPreview.value ? t('demo.setTitle') : linkedSetTitle.value)
+const linkedToLabel = computed(() => t('studyGuide.linkedTo', { title: '' }).trim())
 const displayMarkdown = computed(() => {
   if (!isWebPreview.value) return markdown.value
   return [

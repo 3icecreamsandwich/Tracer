@@ -17,11 +17,23 @@ export type LearnMultipleChoiceQuestion = {
   termId: Uuid
 }
 
-export type LearnQuestion = LearnTrueFalseQuestion | LearnMultipleChoiceQuestion
+export type LearnWrittenQuestion = {
+  id: string
+  kind: 'written'
+  prompt: string
+  answer: string
+  termId: Uuid
+}
+
+export type LearnQuestionKind = LearnTrueFalseQuestion['kind'] | LearnMultipleChoiceQuestion['kind'] | LearnWrittenQuestion['kind']
+
+export type LearnQuestion = LearnTrueFalseQuestion | LearnMultipleChoiceQuestion | LearnWrittenQuestion
 
 export type LearnGeneratorOptions = {
   seed: number
   maxQuestions?: number
+  questionTypes?: LearnQuestionKind[]
+  shuffle?: boolean
 }
 
 function makePrng(seed: number) {
@@ -80,6 +92,10 @@ export function generateLearnQuestions(terms: Term[], options: LearnGeneratorOpt
   const seed = Number.isFinite(options.seed) ? Math.floor(options.seed) : 1
   const maxQuestions = clampMaxQuestions(options.maxQuestions)
   const rand = makePrng(seed)
+  const requestedTypes = new Set<LearnQuestionKind>(
+    options.questionTypes?.length ? options.questionTypes : ['true_false', 'multiple_choice']
+  )
+  const requestedTypeList = Array.from(requestedTypes)
 
   const normalizedTerms = terms
     .map((t) => ({ ...t, front: normalizeCell(t.front), back: normalizeCell(t.back) }))
@@ -94,60 +110,76 @@ export function generateLearnQuestions(terms: Term[], options: LearnGeneratorOpt
 
   const questions: LearnQuestion[] = []
 
-  for (const t of normalizedTerms) {
-    const truth = rand() < 0.5
+  for (let termIndex = 0; termIndex < normalizedTerms.length; termIndex += 1) {
+    const t = normalizedTerms[termIndex]!
+    const termQuestions: LearnQuestion[] = []
+    if (requestedTypes.has('true_false')) {
+      const truth = rand() < 0.5
 
-    let shownBack = t.back
-    let backSourceId: string = t.id
-    let answer = true
+      let shownBack = t.back
+      let backSourceId: string = t.id
+      let answer = true
 
-    if (!truth) {
-      const candidates = uniqueBackTerms.filter((x) => x.id !== t.id && x.back !== t.back)
-      if (candidates.length > 0) {
-        const wrong = candidates[Math.floor(rand() * candidates.length)]!
-        shownBack = wrong.back
-        backSourceId = wrong.id
-        answer = false
-      } else {
-        shownBack = t.back
-        backSourceId = t.id
-        answer = true
+      if (!truth) {
+        const candidates = uniqueBackTerms.filter((x) => x.id !== t.id && x.back !== t.back)
+        if (candidates.length > 0) {
+          const wrong = candidates[Math.floor(rand() * candidates.length)]!
+          shownBack = wrong.back
+          backSourceId = wrong.id
+          answer = false
+        }
+      }
+
+      termQuestions.push({
+        id: `tf:${t.id}:${answer ? 't' : 'f'}:${backSourceId}`,
+        kind: 'true_false',
+        prompt: formatTfPrompt(t.front, shownBack),
+        answer,
+        termId: t.id as Uuid
+      })
+    }
+
+    if (requestedTypes.has('multiple_choice')) {
+      const distractorCandidates = uniqueBackTerms
+        .filter((x) => x.id !== t.id && x.back !== t.back)
+        .map((x) => x.back)
+
+      if (distractorCandidates.length >= 3) {
+        const shuffled = shuffle(distractorCandidates, rand)
+        const distractors = shuffled.slice(0, 3)
+        const rawOptions = [t.back, ...distractors]
+        const choices = shuffle(rawOptions, rand)
+        const answerIndex = choices.indexOf(t.back)
+        const unique = new Set(choices)
+
+        if (unique.size === choices.length && answerIndex >= 0) {
+          termQuestions.push({
+            id: `mc:${t.id}`,
+            kind: 'multiple_choice',
+            prompt: formatMcPrompt(t.front),
+            options: choices,
+            answerIndex,
+            termId: t.id as Uuid
+          })
+        }
       }
     }
 
-    questions.push({
-      id: `tf:${t.id}:${answer ? 't' : 'f'}:${backSourceId}`,
-      kind: 'true_false',
-      prompt: formatTfPrompt(t.front, shownBack),
-      answer,
-      termId: t.id as Uuid
-    })
-
-    const distractorCandidates = uniqueBackTerms
-      .filter((x) => x.id !== t.id && x.back !== t.back)
-      .map((x) => x.back)
-
-    if (distractorCandidates.length >= 3) {
-      const shuffled = shuffle(distractorCandidates, rand)
-      const distractors = shuffled.slice(0, 3)
-      const rawOptions = [t.back, ...distractors]
-      const options = shuffle(rawOptions, rand)
-      const answerIndex = options.indexOf(t.back)
-      const unique = new Set(options)
-
-      if (unique.size === options.length && answerIndex >= 0) {
-        questions.push({
-          id: `mc:${t.id}`,
-          kind: 'multiple_choice',
-          prompt: formatMcPrompt(t.front),
-          options,
-          answerIndex,
-          termId: t.id as Uuid
-        })
-      }
+    if (requestedTypes.has('written')) {
+      termQuestions.push({
+        id: `written:${t.id}`,
+        kind: 'written',
+        prompt: `Write the definition of "${t.front}".`,
+        answer: t.back,
+        termId: t.id as Uuid
+      })
     }
+
+    const preferredKind = requestedTypeList[termIndex % requestedTypeList.length]
+    const selected = termQuestions.find((question) => question.kind === preferredKind) ?? termQuestions[0]
+    if (selected) questions.push(selected)
   }
 
-  const mixed = shuffle(questions, rand)
+  const mixed = options.shuffle === false ? questions : shuffle(questions, rand)
   return mixed.slice(0, Math.min(maxQuestions, mixed.length))
 }

@@ -48,10 +48,30 @@ describe('SQLite migrations (task 3)', () => {
         path.resolve(process.cwd(), 'src-tauri', 'migrations', '005_linked_folders.sql'),
         'utf8'
       )
+      const setIconsMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '006_set_icons.sql'),
+        'utf8'
+      )
+      const folderOrderMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '007_folder_order.sql'),
+        'utf8'
+      )
+      const setIconToneMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '008_set_icon_tone.sql'),
+        'utf8'
+      )
+      const textScaleMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '009_text_scale.sql'),
+        'utf8'
+      )
+      const homeLibraryOrderMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '010_home_library_order.sql'),
+        'utf8'
+      )
 
       const migrateRes = await runSqlite(
         dbPath,
-        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}`
+        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}`
       )
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
@@ -77,6 +97,7 @@ describe('SQLite migrations (task 3)', () => {
         'study_guides',
         'app_settings',
         'chats',
+        'home_library_order',
         'folders',
         'linked_folders',
         'linked_folder_files'

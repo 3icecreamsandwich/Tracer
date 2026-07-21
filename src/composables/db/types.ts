@@ -21,6 +21,8 @@ export type FlashcardSet = {
   folderId: Uuid | null
   title: string
   description: string | null
+  iconKey?: string | null
+  iconTone?: string | null
   terms: Term[]
   createdAt: IsoDateTimeString
   updatedAt: IsoDateTimeString
@@ -31,6 +33,9 @@ export type FlashcardSetListItem = {
   folderId: Uuid | null
   title: string
   description: string | null
+  iconKey?: string | null
+  iconTone?: string | null
+  cardCount: number
   createdAt: IsoDateTimeString
   updatedAt: IsoDateTimeString
 }
@@ -45,6 +50,7 @@ export type Profile = {
 export type SetFolder = {
   id: Uuid
   name: string
+  sortOrder: number
   createdAt: IsoDateTimeString
   updatedAt: IsoDateTimeString
 }
@@ -55,6 +61,7 @@ export type AppSettings = {
   darkMode: boolean
   learnHybridEnabled: boolean
   language: AppLanguage
+  textScale: number
 }
 
 export type AppLanguage = 'en' | 'es' | 'fr' | 'zh-CN' | 'hi' | 'ar' | 'de' | 'ru' | 'ja' | 'ko'

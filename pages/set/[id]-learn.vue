@@ -1,21 +1,67 @@
 <template>
-    <main class="flex flex-col h-8/9 bg-white dark:bg-slate-950">
+    <main class="flex min-h-screen flex-col bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
         <div class="border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
             <div class="flex items-center justify-between gap-4">
                 <BackButton />
-                <p class="text-sm font-medium text-slate-600 dark:text-slate-300">
-                    {{ learnRatioText }}
-                </p>
+                <div class="flex items-center gap-2">
+                    <span v-if="practiceTimed && !learnIsFinished" class="rounded-md bg-amber-50 px-2.5 py-2 text-sm font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">{{ practiceTimerText }}</span>
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ learnRatioText }}</p>
+                    <button type="button" class="inline-flex items-center gap-2 rounded-md border border-rose-200 bg-amber-50/60 px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:border-rose-300 hover:bg-amber-50 active:bg-amber-100 dark:border-rose-900 dark:bg-amber-950/20 dark:text-white" :aria-expanded="practiceSettingsOpen" @click="openPracticeSettings">
+                        <span aria-hidden="true">⚙</span> Settings
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
+        <div class="flex flex-1 flex-col items-center px-6 py-8" :class="practiceSettingsOpen ? 'justify-start' : 'justify-center'">
             <!-- Title -->
             <div class="mb-6 text-center">
                 <h1 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('set.learn') }}</h1>
                 <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('set.learnInstructions') }}</p>
+            </div>
+
+            <div v-if="practiceSettingsOpen" class="mb-6 w-full max-w-4xl rounded-2xl border border-rose-200 bg-amber-50/40 p-5 shadow-sm dark:border-rose-900 dark:bg-amber-950/10">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-950 dark:text-white">Practice settings</h2>
+                        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Choose how this session should work.</p>
+                    </div>
+                    <div class="inline-flex rounded-lg border border-rose-200 bg-white p-1 dark:border-rose-900 dark:bg-slate-950">
+                        <button v-for="choice in practiceSessionChoices" :key="choice" type="button" class="rounded-md px-4 py-2 text-sm font-semibold capitalize transition" :class="practiceSessionMode === choice ? 'bg-amber-400 text-slate-950 shadow-sm' : 'text-slate-600 hover:bg-amber-50 dark:text-slate-300'" @click="practiceSessionMode = choice">{{ choice }}</button>
+                    </div>
+                </div>
+
+                <div class="mt-5 grid gap-6 md:grid-cols-2">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white">Question types</p>
+                        <div class="mt-2 grid gap-2 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3">
+                            <button v-for="item in practiceQuestionTypeChoices" :key="item.kind" type="button" class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition" :class="practiceQuestionTypes[item.kind] ? 'border-rose-300 bg-amber-50 text-slate-950 dark:border-rose-800 dark:bg-amber-950/20 dark:text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-rose-200 hover:bg-amber-50/50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300'" :aria-pressed="practiceQuestionTypes[item.kind]" @click="togglePracticeQuestionType(item.kind)">
+                                {{ item.label }}
+                                <span class="relative h-5 w-9 shrink-0 rounded-full transition" :class="practiceQuestionTypes[item.kind] ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700'"><span class="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all" :class="practiceQuestionTypes[item.kind] ? 'left-[18px]' : 'left-0.5'" /></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <label class="block">
+                            <span class="flex items-center justify-between text-sm font-semibold text-slate-900 dark:text-white">Questions <span class="rounded-md bg-white px-2 py-1 text-amber-700 shadow-sm dark:bg-slate-950 dark:text-amber-300">{{ practiceQuestionCount }}</span></span>
+                            <input v-model.number="practiceQuestionCount" type="range" min="1" :max="practiceQuestionLimit" class="mt-3 w-full accent-amber-500" />
+                        </label>
+                        <button type="button" class="flex w-full items-center justify-between text-left" :aria-pressed="practiceShuffle" @click="practiceShuffle = !practiceShuffle">
+                            <span><span class="block text-sm font-semibold text-slate-900 dark:text-white">Shuffle questions</span><span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">Mix question types and terms</span></span>
+                            <span class="relative h-6 w-11 rounded-full transition" :class="practiceShuffle ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700'"><span class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all" :class="practiceShuffle ? 'left-6' : 'left-1'" /></span>
+                        </button>
+                        <button type="button" class="flex w-full items-center justify-between text-left" :aria-pressed="practiceTimed" @click="practiceTimed = !practiceTimed">
+                            <span><span class="block text-sm font-semibold text-slate-900 dark:text-white">Time limit</span><span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">Finish before the countdown ends</span></span>
+                            <span class="relative h-6 w-11 rounded-full transition" :class="practiceTimed ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700'"><span class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all" :class="practiceTimed ? 'left-6' : 'left-1'" /></span>
+                        </button>
+                        <label v-if="practiceTimed" class="block"><span class="flex items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200">Minutes <span>{{ practiceTimeLimitMinutes }}</span></span><input v-model.number="practiceTimeLimitMinutes" type="range" min="1" max="60" class="mt-2 w-full accent-amber-500" /></label>
+                    </div>
+                </div>
+
+                <div class="mt-5 flex justify-end"><button type="button" class="rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-amber-300 disabled:opacity-60" :disabled="learnBusy || enabledPracticeQuestionTypes().length === 0" @click="applyPracticeSettings">Restart {{ practiceSessionMode === 'test' ? 'test' : 'practice' }}</button></div>
             </div>
 
             <p
@@ -36,6 +82,7 @@
             <div v-else-if="learnIsFinished" class="w-full max-w-2xl select-none">
                 <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">{{ t('common.results') }}</h2>
+                    <p v-if="practiceTimedOut" class="mt-3 text-sm font-semibold text-amber-700 dark:text-amber-300">Time is up. Unanswered questions were counted as missed.</p>
                     <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
                         {{ t('set.accuracy') }}
                         <span class="font-medium">{{ learnAccuracyText }}</span>
@@ -98,7 +145,7 @@
                             </button>
                         </template>
 
-                        <template v-else>
+                        <template v-else-if="learnCurrentQuestion.kind === 'multiple_choice'">
                             <button
                                 v-for="(opt, idx) in learnCurrentQuestion.options"
                                 :key="`${learnCurrentQuestion.id}:${idx}`"
@@ -110,6 +157,11 @@
                                 <MarkdownRenderer :markdown="opt" variant="compact" />
                             </button>
                         </template>
+                        <form v-else class="grid gap-3" @submit.prevent="answerLearnWritten">
+                            <label for="fullscreen-written-answer" class="text-sm font-medium text-slate-700 dark:text-slate-200">Your answer</label>
+                            <textarea id="fullscreen-written-answer" v-model="practiceWrittenAnswer" rows="5" autofocus class="w-full resize-y rounded-lg border border-rose-200 bg-white px-3 py-3 text-sm text-slate-950 shadow-sm outline-none focus:border-rose-300 focus:ring-2 focus:ring-amber-200 dark:border-rose-900 dark:bg-slate-950 dark:text-white" placeholder="Type the definition..." />
+                            <button type="submit" class="justify-self-end rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-50" :disabled="!practiceWrittenAnswer.trim()">Submit answer</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -132,6 +184,7 @@ import { hasTauriRuntime } from "~/src/composables/tauri";
 import {
     generateLearnQuestions,
     type LearnQuestion,
+    type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
 import { resolveAiModel } from "~/src/composables/ai/registry";
 import { generateText } from "ai";
@@ -158,6 +211,27 @@ const learnRunCounter = ref(0);
 const learnCursorIndex = ref(0);
 const learnQuestions = ref<LearnQuestion[]>([]);
 const learnAnswersByQuestionId = ref<Record<string, boolean>>({});
+const practiceSettingsOpen = ref(false);
+const practiceSessionChoices = ["practice", "test"] as const;
+const practiceQuestionTypeChoices: { kind: LearnQuestionKind; label: string }[] = [
+    { kind: "multiple_choice", label: "Multiple choice" },
+    { kind: "true_false", label: "True / false" },
+    { kind: "written", label: "Written" },
+];
+const practiceSessionMode = ref<"practice" | "test">("practice");
+const practiceQuestionTypes = reactive<Record<LearnQuestionKind, boolean>>({
+    multiple_choice: true,
+    true_false: true,
+    written: false,
+});
+const practiceQuestionCount = ref(10);
+const practiceShuffle = ref(true);
+const practiceTimed = ref(false);
+const practiceTimeLimitMinutes = ref(10);
+const practiceSecondsRemaining = ref(10 * 60);
+const practiceTimedOut = ref(false);
+const practiceWrittenAnswer = ref("");
+const practiceTimerHandle = shallowRef<number | null>(null);
 
 const baseSeed = computed(() => {
     const raw = route.query.seed;
@@ -212,6 +286,65 @@ const learnCurrentQuestion = computed(() => {
     return learnQuestions.value[learnCursorIndex.value] ?? null;
 });
 
+const practiceQuestionLimit = computed(() => {
+    const terms = set.value?.terms.length ?? 1;
+    return Math.max(1, Math.min(60, terms));
+});
+
+const practiceTimerText = computed(() => {
+    const seconds = Math.max(0, practiceSecondsRemaining.value);
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+});
+
+function enabledPracticeQuestionTypes(): LearnQuestionKind[] {
+    return (Object.keys(practiceQuestionTypes) as LearnQuestionKind[]).filter(
+        (kind) => practiceQuestionTypes[kind],
+    );
+}
+
+function togglePracticeQuestionType(kind: LearnQuestionKind) {
+    if (practiceQuestionTypes[kind] && enabledPracticeQuestionTypes().length === 1) {
+        learnError.value = "Choose at least one question type.";
+        return;
+    }
+    practiceQuestionTypes[kind] = !practiceQuestionTypes[kind];
+    practiceQuestionCount.value = Math.min(practiceQuestionCount.value, practiceQuestionLimit.value);
+    learnError.value = null;
+}
+
+function clearPracticeTimer() {
+    if (practiceTimerHandle.value !== null) {
+        window.clearInterval(practiceTimerHandle.value);
+        practiceTimerHandle.value = null;
+    }
+}
+
+function openPracticeSettings() {
+    practiceSettingsOpen.value = !practiceSettingsOpen.value;
+    if (practiceSettingsOpen.value) clearPracticeTimer();
+}
+
+function expirePracticeSession() {
+    clearPracticeTimer();
+    practiceTimedOut.value = true;
+    const answers = { ...learnAnswersByQuestionId.value };
+    for (const question of learnQuestions.value) {
+        if (answers[question.id] === undefined) answers[question.id] = false;
+    }
+    learnAnswersByQuestionId.value = answers;
+}
+
+function startPracticeTimer() {
+    clearPracticeTimer();
+    practiceTimedOut.value = false;
+    practiceSecondsRemaining.value = practiceTimeLimitMinutes.value * 60;
+    if (!practiceTimed.value) return;
+    practiceTimerHandle.value = window.setInterval(() => {
+        practiceSecondsRemaining.value -= 1;
+        if (practiceSecondsRemaining.value <= 0) expirePracticeSession();
+    }, 1000);
+}
+
 function learnFindNextUnattempted(fromIndex: number) {
     const list = learnQuestions.value;
     if (list.length === 0) return null;
@@ -232,6 +365,7 @@ function learnMarkAnswered(questionId: string, isCorrect: boolean) {
     };
     const next = learnFindNextUnattempted(learnCursorIndex.value + 1);
     if (next === null) {
+        clearPracticeTimer();
         return;
     }
     learnCursorIndex.value = next;
@@ -247,6 +381,17 @@ function answerLearnMultipleChoice(selectedIndex: number) {
     const q = learnCurrentQuestion.value;
     if (!q || q.kind !== "multiple_choice") return;
     learnMarkAnswered(q.id, selectedIndex === q.answerIndex);
+}
+
+function normalizeWrittenAnswer(value: string) {
+    return value.toLocaleLowerCase().replace(/[`*_~#[\]()]/g, "").replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+}
+
+function answerLearnWritten() {
+    const q = learnCurrentQuestion.value;
+    if (!q || q.kind !== "written" || !practiceWrittenAnswer.value.trim()) return;
+    learnMarkAnswered(q.id, normalizeWrittenAnswer(practiceWrittenAnswer.value) === normalizeWrittenAnswer(q.answer));
+    practiceWrittenAnswer.value = "";
 }
 
 function parseLearnAugmentJson(raw: string): LearnQuestion[] {
@@ -344,9 +489,12 @@ function buildLearnAugmentPrompt(args: {
 
 async function buildLearnQuestionsForSet(s: FlashcardSet) {
     const seed = learnSeed();
+    const selectedTypes = enabledPracticeQuestionTypes();
     const baseline = generateLearnQuestions(s.terms, {
         seed,
-        maxQuestions: 40,
+        maxQuestions: Math.min(practiceQuestionCount.value, practiceQuestionLimit.value),
+        questionTypes: selectedTypes,
+        shuffle: practiceShuffle.value,
     });
     if (!learnHybridEnabled.value) return baseline;
     if (!defaultModelId.value) return baseline;
@@ -362,8 +510,8 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
             count: 10,
         });
         const res = await generateText({ model, prompt });
-        const extra = parseLearnAugmentJson(res.text ?? "");
-        return [...baseline, ...extra].slice(0, 60);
+        const extra = parseLearnAugmentJson(res.text ?? "").filter((question) => selectedTypes.includes(question.kind));
+        return [...baseline, ...extra].slice(0, Math.min(practiceQuestionCount.value, practiceQuestionLimit.value));
     } catch {
         return baseline;
     } finally {
@@ -371,7 +519,7 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
     }
 }
 
-async function startLearnRun(options?: { resetCounter?: boolean }) {
+async function startLearnRun(options?: { resetCounter?: boolean; startTimer?: boolean }) {
     const s = set.value;
     if (!s) return;
     if (options?.resetCounter) learnRunCounter.value = 0;
@@ -382,6 +530,8 @@ async function startLearnRun(options?: { resetCounter?: boolean }) {
         learnQuestions.value = list;
         learnCursorIndex.value = 0;
         learnAnswersByQuestionId.value = {};
+        practiceWrittenAnswer.value = "";
+        if (options?.startTimer && list.length > 0) startPracticeTimer();
     } catch {
         learnError.value = "Failed to generate questions.";
         learnQuestions.value = [];
@@ -394,7 +544,13 @@ async function startLearnRun(options?: { resetCounter?: boolean }) {
 
 function restartLearnRun() {
     learnRunCounter.value += 1;
-    void startLearnRun();
+    void startLearnRun({ startTimer: true });
+}
+
+function applyPracticeSettings() {
+    practiceSettingsOpen.value = false;
+    learnRunCounter.value += 1;
+    void startLearnRun({ startTimer: true });
 }
 
 async function loadSet(setId: Uuid) {
@@ -414,6 +570,14 @@ watch(language, async () => {
     if (!isWebPreview.value) return;
     set.value = createWebPreviewDemoSet(t);
     await startLearnRun({ resetCounter: true });
+});
+
+watch(learnCurrentQuestion, () => {
+    practiceWrittenAnswer.value = "";
+});
+
+watch(practiceTimed, (enabled) => {
+    if (!enabled) clearPracticeTimer();
 });
 
 onMounted(async () => {
@@ -474,5 +638,9 @@ onMounted(async () => {
         busy.value = false;
         if (!loadError.value) loadError.value = "Failed to open set.";
     }
+});
+
+onBeforeUnmount(() => {
+    clearPracticeTimer();
 });
 </script>

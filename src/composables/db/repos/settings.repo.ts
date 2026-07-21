@@ -6,6 +6,7 @@ type DbSettingsRow = {
   dark_mode: number
   learn_hybrid_enabled: number
   language: string
+  text_scale: number
 }
 
 function toBool(v: unknown) {
@@ -25,7 +26,7 @@ export function createSettingsRepo(db: DbClient) {
   return {
     async get(): Promise<AppSettings> {
       const rows = await db.select<DbSettingsRow>(
-        `SELECT startup_lock_enabled, default_model_id, dark_mode, learn_hybrid_enabled, language
+        `SELECT startup_lock_enabled, default_model_id, dark_mode, learn_hybrid_enabled, language, text_scale
          FROM app_settings WHERE id = 1 LIMIT 1;`
       )
       const row = rows[0]
@@ -35,7 +36,8 @@ export function createSettingsRepo(db: DbClient) {
           defaultModelId: null,
           darkMode: false,
           learnHybridEnabled: false,
-          language: 'en'
+          language: 'en',
+          textScale: 0
         }
       }
 
@@ -44,7 +46,8 @@ export function createSettingsRepo(db: DbClient) {
         defaultModelId: row.default_model_id ?? null,
         darkMode: toBool(row.dark_mode),
         learnHybridEnabled: toBool(row.learn_hybrid_enabled),
-        language: toLanguage(row.language)
+        language: toLanguage(row.language),
+        textScale: Math.min(3, Math.max(0, Math.round(Number(row.text_scale) || 0)))
       }
     },
 
@@ -56,7 +59,8 @@ export function createSettingsRepo(db: DbClient) {
           patch.defaultModelId === undefined ? current.defaultModelId : patch.defaultModelId,
         darkMode: patch.darkMode ?? current.darkMode,
         learnHybridEnabled: patch.learnHybridEnabled ?? current.learnHybridEnabled,
-        language: patch.language ?? current.language
+        language: patch.language ?? current.language,
+        textScale: patch.textScale ?? current.textScale
       }
 
       await db.execute(
@@ -65,14 +69,16 @@ export function createSettingsRepo(db: DbClient) {
              default_model_id = ?,
              dark_mode = ?,
              learn_hybrid_enabled = ?,
-             language = ?
+             language = ?,
+             text_scale = ?
          WHERE id = 1;`,
         [
           next.startupLockEnabled ? 1 : 0,
           next.defaultModelId,
           next.darkMode ? 1 : 0,
           next.learnHybridEnabled ? 1 : 0,
-          next.language
+          next.language,
+          next.textScale
         ]
       )
 

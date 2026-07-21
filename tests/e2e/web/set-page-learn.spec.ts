@@ -4,7 +4,7 @@ test('set page learn: answers through questions and shows results', async ({ pag
   await page.goto('/set/demo?mode=learn&seed=1')
 
   await expect(page.getByRole('heading', { name: 'Demo set' })).toBeVisible()
-  await expect(page.getByRole('region', { name: 'Learn' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Practice' })).toBeVisible()
 
   await expect(page.getByText('0/2')).toBeVisible()
 
@@ -16,7 +16,7 @@ test('set page learn: answers through questions and shows results', async ({ pag
   await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible()
   await expect(page).toHaveURL(/\/set\/demo\?mode=learn&seed=1/)
   await expect(
-    page.getByRole('region', { name: 'Learn' }).getByRole('button', { name: 'Restart', exact: true })
+    page.getByRole('region', { name: 'Practice' }).getByRole('button', { name: 'Restart', exact: true })
   ).toHaveCount(1)
   await expect(page.locator('body')).toContainText('Accuracy:')
 

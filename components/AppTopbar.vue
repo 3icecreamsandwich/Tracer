@@ -1,10 +1,10 @@
 <template>
     <header
-        class="app-topbar sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:border-slate-800/70 dark:bg-slate-950/75 dark:supports-[backdrop-filter]:bg-slate-950/60"
+        class="app-topbar sticky top-0 z-40 border-b border-slate-200/70 bg-white/95 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/90"
         :class="windowControlsClass"
         @pointerdown="onTopbarPointerDown"
     >
-        <div class="flex h-14 w-11/12 items-center gap-3 px-6">
+        <div class="mx-auto flex h-20 w-full max-w-[1480px] items-center gap-6 px-8">
             <div
                 class="native-window-controls-spacer native-window-controls-spacer-left"
                 aria-hidden="true"
@@ -12,9 +12,10 @@
 
             <NuxtLink
                 to="/"
-                class="inline-flex shrink-0 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
+                class="inline-flex shrink-0 items-center gap-3 rounded-lg text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-white"
             >
-                <span class="text-base">⌂</span>
+                <img :src="tracerLogo" alt="" class="h-10 w-10 rounded-[10px] object-cover" />
+                <span class="text-2xl font-semibold tracking-tight">Tracer</span>
             </NuxtLink>
 
             <div ref="searchRootEl" class="relative min-w-0 flex-1">
@@ -27,7 +28,7 @@
                         type="search"
                         autocomplete="off"
                         :placeholder="t('nav.searchPlaceholder')"
-                        class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-950 placeholder:text-slate-500 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-400"
                         @focus="openSearch"
                         @click="openSearch"
                         @keydown.esc.prevent="onSearchEscape"
@@ -98,10 +99,10 @@
 
             <NuxtLink
                 to="/settings"
-                class="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
+                class="inline-flex h-12 shrink-0 items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 text-base font-medium text-slate-950 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
             >
                 <span
-                    class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 text-sm font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
                 >
                     {{ avatarText }}
                 </span>
@@ -117,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+import tracerLogo from "~/assets/icons/tracer-logo.png";
 import {
     createSetsRepo,
     createProfileRepo,
@@ -363,10 +365,10 @@ onBeforeUnmount(() => {
 }
 
 .app-topbar--windows .native-window-controls-spacer-right {
-    flex-basis: 150px;
+    flex-basis: 0;
 }
 
 .app-topbar--linux .native-window-controls-spacer-right {
-    flex-basis: 160px;
+    flex-basis: 0;
 }
 </style>

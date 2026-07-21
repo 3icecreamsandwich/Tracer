@@ -25,7 +25,7 @@ const html = computed(() =>
 <style scoped>
 .markdown-renderer {
   color: rgb(51 65 85);
-  font-size: 0.875rem;
+  font-size: var(--tracer-text-sm, 0.875rem);
   line-height: 1.625;
 }
 
@@ -35,11 +35,11 @@ const html = computed(() =>
 }
 
 .markdown-renderer--compact {
-  font-size: 0.875rem;
+  font-size: var(--tracer-text-sm, 0.875rem);
 }
 
 .markdown-renderer--tile {
-  font-size: 0.75rem;
+  font-size: var(--tracer-text-xs, 0.75rem);
   line-height: 1.35;
 }
 
@@ -76,21 +76,21 @@ const html = computed(() =>
 }
 
 .markdown-renderer :deep(h1) {
-  font-size: 1.25rem;
+  font-size: var(--tracer-text-xl, 1.25rem);
 }
 
 .markdown-renderer :deep(h2) {
-  font-size: 1.125rem;
+  font-size: var(--tracer-text-lg, 1.125rem);
 }
 
 .markdown-renderer :deep(h3) {
-  font-size: 1rem;
+  font-size: var(--tracer-text-base, 1rem);
 }
 
 .markdown-renderer :deep(h4),
 .markdown-renderer :deep(h5),
 .markdown-renderer :deep(h6) {
-  font-size: 0.875rem;
+  font-size: var(--tracer-text-sm, 0.875rem);
 }
 
 .markdown-renderer :deep(p) {
@@ -152,7 +152,7 @@ const html = computed(() =>
   border: 1px solid rgb(226 232 240);
   border-radius: 0.25rem;
   color: rgb(15 23 42);
-  font-size: 0.8125rem;
+  font-size: var(--tracer-text-xs, 0.75rem);
   padding: 0.1rem 0.25rem;
 }
 

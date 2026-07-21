@@ -39,4 +39,28 @@ describe('generateLearnQuestions', () => {
       expect(item.answerIndex).toBeLessThan(4)
     }
   })
+
+  it('supports selecting written questions only', () => {
+    const q = generateLearnQuestions(makeTerms(6), {
+      seed: 9,
+      maxQuestions: 4,
+      questionTypes: ['written'],
+      shuffle: false
+    })
+
+    expect(q).toHaveLength(4)
+    expect(q.every((item) => item.kind === 'written')).toBe(true)
+    expect(q[0]).toMatchObject({ answer: 'Definition 1', termId: 't-1' })
+  })
+
+  it('uses each term at most once when several question types are enabled', () => {
+    const q = generateLearnQuestions(makeTerms(12), {
+      seed: 12,
+      maxQuestions: 30,
+      questionTypes: ['multiple_choice', 'true_false', 'written']
+    })
+
+    expect(q).toHaveLength(12)
+    expect(new Set(q.map((item) => item.termId)).size).toBe(q.length)
+  })
 })

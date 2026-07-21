@@ -9,7 +9,7 @@
             @close="closeAiError"
             @retry="retryAiRequest"
         />
-        <div class="mx-auto max-w-3xl p-8">
+        <div class="mx-auto max-w-5xl p-6 sm:p-8">
             <div
                 class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             >
@@ -118,6 +118,16 @@
 
                     <div v-else class="space-y-6">
                         <section :aria-label="t('set.studyModes')">
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <StudyModeTile :to="`/set/${set.id}?mode=flashcards`" :icon="flashcardsModeIcon" :title="t('set.flashcards')" :hint="t('set.flashcardsHint')" :active="mode === 'flashcards'" replace />
+                                <StudyModeTile :to="`/set/${set.id}?mode=learn`" :icon="practiceModeIcon" :title="t('set.learn')" :hint="t('set.learnHint')" :active="mode === 'learn'" accent="practice" replace />
+                                <StudyModeTile :to="`/set/${set.id}?mode=chat`" :icon="chatModeIcon" :title="t('set.chat')" :hint="t('set.chatHint')" :active="mode === 'chat'" replace />
+                                <StudyModeTile :to="`/set/${set.id}?mode=match`" :icon="matchModeIcon" :title="t('set.match')" :hint="t('set.matchHint')" :active="mode === 'match'" replace />
+                                <StudyModeTile v-if="studyGuideSetId" :to="`/study-guide/${studyGuideSetId}`" :icon="studyGuideModeIcon" :title="t('set.studyGuide')" :hint="t('set.studyGuideHint')" />
+                            </div>
+                        </section>
+
+                        <section v-if="false" :aria-label="t('set.studyModes')">
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <div
                                     class="group rounded-md border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -244,7 +254,7 @@
                         <section
                             v-if="mode === 'flashcards'"
                             aria-label="Flashcards"
-                            class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="study-panel rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-center justify-between gap-3"
@@ -262,6 +272,13 @@
                                     </p>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
+                                    <p
+                                        v-if="practiceTimed && !learnIsFinished"
+                                        class="rounded-md bg-orange-50 px-2.5 py-2 text-sm font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300"
+                                        aria-live="polite"
+                                    >
+                                        {{ practiceTimerText }}
+                                    </p>
                                     <p
                                         class="text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
@@ -289,7 +306,7 @@
                                         :aria-pressed="starredOnly"
                                         @click="toggleStarredOnly"
                                     >
-                                        {{ starredOnly ? "★" : "☆" }} {{ t('set.starredOnly') }}
+                                        <StarGlyph :active="starredOnly" class="mr-1" /> {{ t('set.starredOnly') }}
                                     </button>
                                     <button
                                         type="button"
@@ -365,7 +382,7 @@
                                 <button
                                     ref="viewerButtonEl"
                                     type="button"
-                                    class="relative mt-3 flex min-h-36 w-full items-center justify-center rounded-md border border-slate-200 bg-slate-50 p-6 text-left shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    class="relative mt-3 flex min-h-[clamp(16rem,34vh,24rem)] w-full items-center justify-center rounded-lg border border-orange-200 bg-orange-50/20 p-6 text-left shadow-sm hover:bg-orange-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
                                     :class="{
                                         'animate-flip': isFlipping,
                                         'animate-slide-left':
@@ -388,7 +405,7 @@
                                         {{ isFlipped ? t('create.definition') : t('create.term') }}
                                     </p>
                                     <div
-                                        class="flashcard-content-row flex w-full flex-row items-center justify-center text-center text-slate-900 dark:text-slate-50"
+                                        class="flashcard-content-row flex w-full flex-row items-center justify-center text-center text-2xl text-slate-900 dark:text-slate-50"
                                         :class="{ 'flashcard-content-row--paired': viewerImage && viewerHasText }"
                                     >
                                         <img
@@ -444,17 +461,17 @@
                                     >
                                         <button
                                             type="button"
-                                            class="inline-flex items-center rounded-md border border-[#CC8D52] bg-white dark:bg-slate-950 px-3 py-2 text-sm font-medium text-[#CC8D52] shadow-sm hover:bg-slate-50"
+                                            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-amber-500 bg-white p-0 text-sm font-medium text-amber-500 shadow-sm hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-amber-400 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
                                             :disabled="!currentTerm || starBusy"
                                             :aria-pressed="isCurrentStarred"
                                             :aria-label="isCurrentStarred ? 'Unstar card' : 'Star card'"
                                             @click="toggleStar"
                                         >
-                                            {{ isCurrentStarred ? "★" : "☆" }}
+                                            <StarGlyph :active="isCurrentStarred" />
                                         </button>
                                         <button
                                             type="button"
-                                            class="inline-flex items-center rounded-md border border-[#C14D4D] bg-white px-3 py-2 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                                            class="inline-flex h-10 items-center justify-center rounded-md border border-[#C14D4D] bg-white px-3 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                                             :disabled="!currentTerm"
                                             @click="markIncorrect"
                                         >
@@ -462,7 +479,7 @@
                                         </button>
                                         <button
                                             type="button"
-                                            class="inline-flex items-center rounded-md border border-[#2D8210] bg-white px-3 py-2 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                                            class="inline-flex h-10 items-center justify-center rounded-md border border-[#2D8210] bg-white px-3 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                                             :disabled="!currentTerm"
                                             @click="markCorrect"
                                         >
@@ -475,8 +492,8 @@
 
                         <section
                             v-else-if="mode === 'learn'"
-                            aria-label="Learn"
-                            class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            aria-label="Practice"
+                            class="study-panel rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-center justify-between gap-3"
@@ -499,6 +516,15 @@
                                     >
                                         {{ learnRatioText }}
                                     </p>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
+                                        :aria-expanded="practiceSettingsOpen"
+                                        @click="openPracticeSettings"
+                                    >
+                                        <span aria-hidden="true">⚙</span>
+                                        Settings
+                                    </button>
                                     <NuxtLink
                                         v-if="set"
                                         :to="`/set/${set.id}-learn`"
@@ -530,6 +556,123 @@
                             </p>
 
                             <div
+                                v-if="practiceSettingsOpen"
+                                class="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+                            >
+                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <h2 class="text-base font-semibold text-slate-950 dark:text-white">Practice settings</h2>
+                                        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Build a session that fits how you want to study.</p>
+                                    </div>
+                                    <div class="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-950">
+                                        <button
+                                            v-for="choice in practiceSessionChoices"
+                                            :key="choice"
+                                            type="button"
+                                            class="rounded-md px-4 py-2 text-sm font-semibold capitalize transition"
+                                            :class="practiceSessionMode === choice ? 'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-950' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'"
+                                            @click="practiceSessionMode = choice"
+                                        >
+                                            {{ choice }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="mt-5 grid gap-5 lg:grid-cols-2">
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-900 dark:text-white">Question types</p>
+                                        <div class="mt-2 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                                            <button
+                                                v-for="item in practiceQuestionTypeChoices"
+                                                :key="item.kind"
+                                                type="button"
+                                                class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition"
+                                                :class="practiceQuestionTypes[item.kind] ? 'border-orange-300 bg-orange-50 text-slate-950 dark:border-orange-700 dark:bg-orange-950/30 dark:text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300'"
+                                                :aria-pressed="practiceQuestionTypes[item.kind]"
+                                                @click="togglePracticeQuestionType(item.kind)"
+                                            >
+                                                {{ item.label }}
+                                                <span
+                                                    class="relative h-5 w-9 shrink-0 rounded-full transition"
+                                                    :class="practiceQuestionTypes[item.kind] ? 'bg-orange-500' : 'bg-slate-300 dark:bg-slate-700'"
+                                                >
+                                                    <span
+                                                        class="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all"
+                                                        :class="practiceQuestionTypes[item.kind] ? 'left-[18px]' : 'left-0.5'"
+                                                    />
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <label class="block">
+                                            <span class="flex items-center justify-between text-sm font-semibold text-slate-900 dark:text-white">
+                                                Questions
+                                                <span class="rounded-md bg-white px-2 py-1 text-orange-700 shadow-sm dark:bg-slate-950 dark:text-orange-300">{{ practiceQuestionCount }}</span>
+                                            </span>
+                                            <input
+                                                v-model.number="practiceQuestionCount"
+                                                type="range"
+                                                min="1"
+                                                :max="practiceQuestionLimit"
+                                                class="mt-3 w-full accent-orange-500"
+                                            />
+                                        </label>
+
+                                        <button
+                                            type="button"
+                                            class="flex w-full items-center justify-between text-left"
+                                            :aria-pressed="practiceShuffle"
+                                            @click="practiceShuffle = !practiceShuffle"
+                                        >
+                                            <span>
+                                                <span class="block text-sm font-semibold text-slate-900 dark:text-white">Shuffle questions</span>
+                                                <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">Mix question types and terms</span>
+                                            </span>
+                                            <span class="relative h-6 w-11 rounded-full transition" :class="practiceShuffle ? 'bg-orange-500' : 'bg-slate-300 dark:bg-slate-700'">
+                                                <span class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all" :class="practiceShuffle ? 'left-6' : 'left-1'" />
+                                            </span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="flex w-full items-center justify-between text-left"
+                                            :aria-pressed="practiceTimed"
+                                            @click="practiceTimed = !practiceTimed"
+                                        >
+                                            <span>
+                                                <span class="block text-sm font-semibold text-slate-900 dark:text-white">Time limit</span>
+                                                <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">Finish before the countdown ends</span>
+                                            </span>
+                                            <span class="relative h-6 w-11 rounded-full transition" :class="practiceTimed ? 'bg-orange-500' : 'bg-slate-300 dark:bg-slate-700'">
+                                                <span class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all" :class="practiceTimed ? 'left-6' : 'left-1'" />
+                                            </span>
+                                        </button>
+
+                                        <label v-if="practiceTimed" class="block">
+                                            <span class="flex items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200">
+                                                Minutes
+                                                <span>{{ practiceTimeLimitMinutes }}</span>
+                                            </span>
+                                            <input v-model.number="practiceTimeLimitMinutes" type="range" min="1" max="60" step="1" class="mt-2 w-full accent-orange-500" />
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="mt-5 flex justify-end">
+                                    <button
+                                        type="button"
+                                        class="rounded-lg bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                                        :disabled="learnBusy || enabledPracticeQuestionTypes().length === 0"
+                                        @click="applyPracticeSettings"
+                                    >
+                                        Restart {{ practiceSessionMode === 'test' ? 'test' : 'practice' }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div
                                 v-if="learnBusy"
                                 class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                             >
@@ -542,6 +685,7 @@
                                 >
                                     {{ t('common.results') }}
                                 </h2>
+                                <p v-if="practiceTimedOut" class="mt-2 text-sm font-semibold text-orange-700 dark:text-orange-300">Time is up. Unanswered questions were counted as missed.</p>
                                 <p
                                     class="mt-2 text-sm text-slate-700 dark:text-slate-200"
                                 >
@@ -635,7 +779,7 @@
                                             </button>
                                         </template>
 
-                                        <template v-else>
+                                        <template v-else-if="learnCurrentQuestion.kind === 'multiple_choice'">
                                             <button
                                                 v-for="(
                                                     opt, idx
@@ -653,6 +797,18 @@
                                                 <MarkdownRenderer :markdown="opt" variant="compact" />
                                             </button>
                                         </template>
+                                        <form v-else class="grid gap-3" @submit.prevent="answerLearnWritten">
+                                            <label for="practice-written-answer" class="text-sm font-medium text-slate-700 dark:text-slate-200">Your answer</label>
+                                            <textarea
+                                                id="practice-written-answer"
+                                                v-model="practiceWrittenAnswer"
+                                                rows="4"
+                                                autofocus
+                                                class="w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-orange-900"
+                                                placeholder="Type the definition..."
+                                            />
+                                            <button type="submit" class="justify-self-end rounded-lg bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-white dark:text-slate-950" :disabled="!practiceWrittenAnswer.trim()">Submit answer</button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -661,7 +817,7 @@
                         <section
                             v-else-if="mode === 'chat'"
                             aria-label="Chat"
-                            class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="study-panel rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-center justify-between gap-3"
@@ -810,7 +966,7 @@
                         <section
                             v-else-if="mode === 'match'"
                             aria-label="Match"
-                            class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="study-panel rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-start justify-between gap-3"
@@ -1048,8 +1204,8 @@
                                             class="absolute top-3 right-3 inline-flex items-center justify-center w-6 h-6 rounded-md text-sm transition-colors"
                                             :class="
                                                 starredTermIds.has(term.id as Uuid)
-                                                    ? 'text-yellow-500'
-                                                    : 'border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900'
+                                                    ? 'border border-amber-300 bg-amber-50 text-amber-500 dark:border-amber-800 dark:bg-amber-950/30'
+                                                    : 'border border-slate-200 text-amber-500 hover:border-amber-200 hover:bg-amber-50 dark:border-slate-700 dark:hover:bg-amber-950/30'
                                             "
                                             :aria-pressed="
                                                 starredTermIds.has(term.id as Uuid)
@@ -1059,7 +1215,7 @@
                                                 toggleTermStar(term.id as Uuid)
                                             "
                                         >
-                                            <span class="text-lg">★</span>
+                                            <StarGlyph :active="starredTermIds.has(term.id as Uuid)" />
                                         </button>
                                         <p
                                             class="text-xs font-medium text-slate-500 dark:text-slate-400"
@@ -1335,6 +1491,11 @@
 </template>
 
 <script setup lang="ts">
+import flashcardsModeIcon from "~/assets/icons/study-modes/flashcards.png";
+import studyGuideModeIcon from "~/assets/icons/study-modes/study-guide.png";
+import practiceModeIcon from "~/assets/icons/study-modes/practice.png";
+import matchModeIcon from "~/assets/icons/study-modes/match.png";
+import chatModeIcon from "~/assets/icons/study-modes/chat.png";
 import { lockGetStatus } from "~/src/composables/lock";
 import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import { useLockSession } from "~/src/composables/lock-session";
@@ -1360,6 +1521,7 @@ import { hasTauriRuntime } from "~/src/composables/tauri";
 import {
     generateLearnQuestions,
     type LearnQuestion,
+    type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
 import {
     buildChatTitlePrompt,
@@ -1677,6 +1839,30 @@ const learnRunCounter = ref(0);
 const learnCursorIndex = ref(0);
 const learnQuestions = ref<LearnQuestion[]>([]);
 const learnAnswersByQuestionId = ref<Record<string, boolean>>({});
+const practiceSettingsOpen = ref(false);
+const practiceSessionChoices = ["practice", "test"] as const;
+const practiceQuestionTypeChoices: {
+    kind: LearnQuestionKind;
+    label: string;
+}[] = [
+    { kind: "multiple_choice", label: "Multiple choice" },
+    { kind: "true_false", label: "True / false" },
+    { kind: "written", label: "Written" },
+];
+const practiceSessionMode = ref<"practice" | "test">("practice");
+const practiceQuestionTypes = reactive<Record<LearnQuestionKind, boolean>>({
+    multiple_choice: true,
+    true_false: true,
+    written: false,
+});
+const practiceQuestionCount = ref(10);
+const practiceShuffle = ref(true);
+const practiceTimed = ref(false);
+const practiceTimeLimitMinutes = ref(10);
+const practiceSecondsRemaining = ref(10 * 60);
+const practiceTimedOut = ref(false);
+const practiceWrittenAnswer = ref("");
+const practiceTimerHandle = shallowRef<number | null>(null);
 
 const matchPairsRequested = 8;
 const matchDurationSeconds = 600; // 10 minutes max for stopwatch
@@ -2185,6 +2371,69 @@ const learnCurrentQuestion = computed(() => {
     return learnQuestions.value[learnCursorIndex.value] ?? null;
 });
 
+const practiceQuestionLimit = computed(() => {
+    const terms = set.value?.terms.length ?? 1;
+    return Math.max(1, Math.min(60, terms));
+});
+
+const practiceTimerText = computed(() => {
+    const seconds = Math.max(0, practiceSecondsRemaining.value);
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
+});
+
+function enabledPracticeQuestionTypes(): LearnQuestionKind[] {
+    return (Object.keys(practiceQuestionTypes) as LearnQuestionKind[]).filter(
+        (kind) => practiceQuestionTypes[kind],
+    );
+}
+
+function togglePracticeQuestionType(kind: LearnQuestionKind) {
+    if (practiceQuestionTypes[kind] && enabledPracticeQuestionTypes().length === 1) {
+        learnError.value = "Choose at least one question type.";
+        return;
+    }
+    practiceQuestionTypes[kind] = !practiceQuestionTypes[kind];
+    learnError.value = null;
+    practiceQuestionCount.value = Math.min(
+        practiceQuestionCount.value,
+        practiceQuestionLimit.value,
+    );
+}
+
+function openPracticeSettings() {
+    practiceSettingsOpen.value = !practiceSettingsOpen.value;
+    if (practiceSettingsOpen.value) clearPracticeTimer();
+}
+
+function clearPracticeTimer() {
+    if (practiceTimerHandle.value !== null) {
+        window.clearInterval(practiceTimerHandle.value);
+        practiceTimerHandle.value = null;
+    }
+}
+
+function expirePracticeSession() {
+    clearPracticeTimer();
+    practiceTimedOut.value = true;
+    const answers = { ...learnAnswersByQuestionId.value };
+    for (const question of learnQuestions.value) {
+        if (answers[question.id] === undefined) answers[question.id] = false;
+    }
+    learnAnswersByQuestionId.value = answers;
+}
+
+function startPracticeTimer() {
+    clearPracticeTimer();
+    practiceTimedOut.value = false;
+    practiceSecondsRemaining.value = practiceTimeLimitMinutes.value * 60;
+    if (!practiceTimed.value) return;
+    practiceTimerHandle.value = window.setInterval(() => {
+        practiceSecondsRemaining.value -= 1;
+        if (practiceSecondsRemaining.value <= 0) expirePracticeSession();
+    }, 1000);
+}
+
 function learnFindNextUnattempted(fromIndex: number) {
     const list = learnQuestions.value;
     if (list.length === 0) return null;
@@ -2205,6 +2454,7 @@ function learnMarkAnswered(questionId: string, isCorrect: boolean) {
     };
     const next = learnFindNextUnattempted(learnCursorIndex.value + 1);
     if (next === null) {
+        clearPracticeTimer();
         return;
     }
     learnCursorIndex.value = next;
@@ -2220,6 +2470,26 @@ function answerLearnMultipleChoice(selectedIndex: number) {
     const q = learnCurrentQuestion.value;
     if (!q || q.kind !== "multiple_choice") return;
     learnMarkAnswered(q.id, selectedIndex === q.answerIndex);
+}
+
+function normalizeWrittenAnswer(value: string) {
+    return value
+        .toLocaleLowerCase()
+        .replace(/[`*_~#[\]()]/g, "")
+        .replace(/[^\p{L}\p{N}\s]/gu, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function answerLearnWritten() {
+    const q = learnCurrentQuestion.value;
+    if (!q || q.kind !== "written" || !practiceWrittenAnswer.value.trim()) return;
+    learnMarkAnswered(
+        q.id,
+        normalizeWrittenAnswer(practiceWrittenAnswer.value) ===
+            normalizeWrittenAnswer(q.answer),
+    );
+    practiceWrittenAnswer.value = "";
 }
 
 function buildLearnAugmentPrompt(args: {
@@ -2317,9 +2587,15 @@ function parseLearnAugmentJson(raw: string): LearnQuestion[] {
 
 async function buildLearnQuestionsForSet(s: FlashcardSet) {
     const seed = learnSeed();
+    const selectedTypes = enabledPracticeQuestionTypes();
     const baseline = generateLearnQuestions(s.terms, {
         seed,
-        maxQuestions: 40,
+        maxQuestions: Math.min(
+            practiceQuestionCount.value,
+            practiceQuestionLimit.value,
+        ),
+        questionTypes: selectedTypes,
+        shuffle: practiceShuffle.value,
     });
     if (!learnHybridEnabled.value) return baseline;
     if (!defaultModelId.value) return baseline;
@@ -2335,8 +2611,13 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
             count: 10,
         });
         const res = await generateText({ model, prompt });
-        const extra = parseLearnAugmentJson(res.text ?? "");
-        return [...baseline, ...extra].slice(0, 60);
+        const extra = parseLearnAugmentJson(res.text ?? "").filter((question) =>
+            selectedTypes.includes(question.kind),
+        );
+        return [...baseline, ...extra].slice(
+            0,
+            Math.min(practiceQuestionCount.value, practiceQuestionLimit.value),
+        );
     } catch {
         return baseline;
     } finally {
@@ -2344,7 +2625,10 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
     }
 }
 
-async function startLearnRun(options?: { resetCounter?: boolean }) {
+async function startLearnRun(options?: {
+    resetCounter?: boolean;
+    startTimer?: boolean;
+}) {
     const s = set.value;
     if (!s) return;
     if (options?.resetCounter) learnRunCounter.value = 0;
@@ -2355,6 +2639,8 @@ async function startLearnRun(options?: { resetCounter?: boolean }) {
         learnQuestions.value = list;
         learnCursorIndex.value = 0;
         learnAnswersByQuestionId.value = {};
+        practiceWrittenAnswer.value = "";
+        if (options?.startTimer && list.length > 0) startPracticeTimer();
     } catch {
         learnError.value = "Failed to generate questions.";
         learnQuestions.value = [];
@@ -2367,7 +2653,13 @@ async function startLearnRun(options?: { resetCounter?: boolean }) {
 
 function restartLearnRun() {
     learnRunCounter.value += 1;
-    void startLearnRun();
+    void startLearnRun({ startTimer: true });
+}
+
+function applyPracticeSettings() {
+    practiceSettingsOpen.value = false;
+    learnRunCounter.value += 1;
+    void startLearnRun({ startTimer: true });
 }
 
 function shuffle<T>(items: T[], rand: () => number) {
@@ -3180,6 +3472,9 @@ watch(
         if (next === "learn" && prev !== "learn") {
             await startLearnRun({ resetCounter: true });
         }
+        if (prev === "learn" && next !== "learn") {
+            clearPracticeTimer();
+        }
         if (next === "match" && prev !== "match") {
             resetMatchStateForRun();
             if (set.value) matchPrepareTiles(set.value);
@@ -3205,6 +3500,14 @@ watch(language, async () => {
     await initWebDemoSet();
 });
 
+watch(learnCurrentQuestion, () => {
+    practiceWrittenAnswer.value = "";
+});
+
+watch(practiceTimed, (enabled) => {
+    if (!enabled) clearPracticeTimer();
+});
+
 watch(
     isNestedSetRoute,
     async (isNested, wasNested) => {
@@ -3216,6 +3519,7 @@ watch(
 
 onBeforeUnmount(() => {
     resetChat();
+    clearPracticeTimer();
     clearMatchTimer();
     window.removeEventListener("keydown", onKeydown);
     window.removeEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus);
@@ -3224,6 +3528,13 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.study-panel {
+    min-height: clamp(360px, 58vh, 640px);
+    max-height: min(78vh, 760px);
+    overflow: auto;
+    resize: vertical;
+}
+
 @keyframes flip {
     0% {
         transform: scaleY(1);

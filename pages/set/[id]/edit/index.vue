@@ -79,6 +79,46 @@
           />
         </div>
 
+        <fieldset>
+          <legend class="block text-sm font-medium">Set icon</legend>
+          <div class="mt-2 grid grid-cols-5 gap-3 sm:grid-cols-9">
+            <button
+              v-for="(option, index) in setIconOptions"
+              :key="option.key"
+              type="button"
+              class="aspect-square rounded-2xl border-2 bg-white p-1.5 transition hover:-translate-y-0.5 hover:border-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:bg-slate-950"
+              :class="iconKey === option.key ? 'border-orange-500 ring-2 ring-orange-100 dark:ring-orange-950' : 'border-transparent'"
+              :aria-label="`Choose set icon ${index + 1}`"
+              :aria-pressed="iconKey === option.key"
+              @click="iconKey = option.key"
+            >
+              <img :src="option.src" alt="" class="h-full w-full rounded-xl object-cover transition" :style="iconKey === option.key ? setIconToneStyle(iconTone) : undefined" />
+            </button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend class="block text-sm font-medium">Icon color</legend>
+          <div class="mt-2 flex flex-wrap items-center gap-3">
+            <button
+              v-for="tone in setIconToneOptions"
+              :key="tone.key"
+              type="button"
+              class="h-9 w-9 rounded-full border-2 border-white shadow-sm ring-1 transition hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              :class="iconTone === tone.key ? 'ring-2 ring-red-500 ring-offset-2' : 'ring-slate-300 hover:ring-red-300 dark:ring-slate-700'"
+              :style="{ background: tone.swatch }"
+              :aria-label="`${tone.label} icon color`"
+              :aria-pressed="iconTone === tone.key"
+              :title="tone.label"
+              @click="iconTone = tone.key"
+            />
+            <div class="ml-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
+              <img :src="setIconSrc(iconKey)" alt="" class="h-10 w-10 rounded-lg object-cover transition" :style="setIconToneStyle(iconTone)" />
+              <span class="text-sm font-medium text-slate-700 dark:text-slate-200">{{ setIconToneOptions.find((tone) => tone.key === iconTone)?.label }}</span>
+            </div>
+          </div>
+        </fieldset>
+
         <FactCheckPanel
           :busy="factCheckBusy"
           :response="factCheckResponse"
@@ -293,6 +333,7 @@ import {
   type DuplicateCardIssue
 } from '~/src/composables/cards/duplicates'
 import { useFactCheck } from '~/src/composables/ai/use-fact-check'
+import { normalizeSetIconKey, normalizeSetIconTone, setIconOptions, setIconSrc, setIconToneOptions, setIconToneStyle, type SetIconKey, type SetIconTone } from '~/src/composables/set-icons'
 
 type DraftCardRow = {
   key: string
@@ -318,6 +359,8 @@ const setId = computed<Uuid | null>(() => {
 
 const title = ref('')
 const description = ref('')
+const iconKey = ref<SetIconKey>('default')
+const iconTone = ref<SetIconTone>('original')
 const cards = ref<DraftCardRow[]>([{ key: crypto.randomUUID(), front: '', back: '' }])
 const imageAccept = 'image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg'
 const busy = ref(false)
@@ -362,6 +405,8 @@ async function onFactCheck() {
 function setDraftFromSet(s: FlashcardSet) {
   title.value = s.title
   description.value = s.description ?? ''
+  iconKey.value = normalizeSetIconKey(s.iconKey)
+  iconTone.value = normalizeSetIconTone(s.iconTone)
   cards.value = s.terms.length
     ? s.terms.map((term) => ({
         key: crypto.randomUUID(),
@@ -625,6 +670,8 @@ async function onUpdate(skipDuplicateReview = false) {
       id,
       title: validated.title,
       description: validated.description,
+      iconKey: iconKey.value,
+      iconTone: iconTone.value,
       terms
     })
     notifySearchItemsChanged()

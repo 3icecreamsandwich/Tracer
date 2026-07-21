@@ -45,6 +45,36 @@ pub fn run() {
             sql: include_str!("../migrations/005_linked_folders.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 6,
+            description: "add_set_icons",
+            sql: include_str!("../migrations/006_set_icons.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 7,
+            description: "add_folder_order",
+            sql: include_str!("../migrations/007_folder_order.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 8,
+            description: "add_set_icon_tone",
+            sql: include_str!("../migrations/008_set_icon_tone.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 9,
+            description: "add_text_scale_setting",
+            sql: include_str!("../migrations/009_text_scale.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 10,
+            description: "add_home_library_order",
+            sql: include_str!("../migrations/010_home_library_order.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

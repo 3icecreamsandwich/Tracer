@@ -23,6 +23,8 @@ export function createWebPreviewDemoSet(
     folderId: null,
     title: t('demo.setTitle'),
     description: t(options?.descriptionKey ?? 'demo.setDescription'),
+    iconKey: null,
+    iconTone: null,
     terms: createDemoTerms(t, options?.termCount ?? 2),
     createdAt: now,
     updatedAt: now,

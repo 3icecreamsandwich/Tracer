@@ -7,6 +7,7 @@
 <script setup lang="ts">
 import { themeInitFromDb } from '~/src/composables/theme'
 import { languageInit } from '~/src/composables/language'
+import { textScaleInit } from '~/src/composables/text-scale'
 import { useLockSession } from '~/src/composables/lock-session'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 import {
@@ -19,6 +20,7 @@ const { unlockedThisSession } = useLockSession()
 onMounted(() => {
   themeInitFromDb().catch(() => {})
   languageInit().catch(() => {})
+  textScaleInit().catch(() => {})
   if (hasTauriRuntime() && unlockedThisSession.value) {
     startLinkedFolderSyncManager().catch(() => {})
   }

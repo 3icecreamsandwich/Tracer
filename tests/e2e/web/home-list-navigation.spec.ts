@@ -12,6 +12,8 @@ test('home list rows: set and study guide cards navigate', async ({ page }) => {
 
   await page.goBack()
 
+  await page.getByRole('tab', { name: 'Study guides' }).click()
+
   const guideCard = page.getByRole('link', { name: /^Study guide · Demo set$/ })
   await expect(guideCard).toBeVisible()
   await guideCard.click()
