@@ -1,10 +1,14 @@
 <template>
     <main class="flex flex-col h-8/9 bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
-        <div class="border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
+        <div
+            class="border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950"
+        >
             <div class="flex items-center justify-between gap-4">
                 <BackButton />
-                <p class="text-sm font-medium text-slate-600 dark:text-slate-300">
+                <p
+                    class="text-sm font-medium text-slate-600 dark:text-slate-300"
+                >
                     {{ matchTopline }}
                 </p>
             </div>
@@ -14,8 +18,14 @@
         <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
             <!-- Title -->
             <div class="mb-6 text-center">
-                <h1 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('set.match') }}</h1>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('set.matchInstructions') }}</p>
+                <h1
+                    class="text-xl font-semibold text-slate-900 dark:text-slate-50"
+                >
+                    {{ t("set.match") }}
+                </h1>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    {{ t("set.matchInstructions") }}
+                </p>
             </div>
 
             <p v-if="matchError" class="text-sm text-red-700 dark:text-red-300">
@@ -24,54 +34,68 @@
 
             <!-- Results -->
             <div v-if="matchIsFinished" class="w-full max-w-2xl select-none">
-                <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
-                    <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">{{ t('common.results') }}</h2>
+                <div
+                    class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900"
+                >
+                    <h2
+                        class="text-2xl font-semibold text-slate-900 dark:text-slate-50"
+                    >
+                        {{ t("common.results") }}
+                    </h2>
                     <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
-                        {{ t('set.accuracy') }}
+                        {{ t("set.accuracy") }}
                         <span class="font-medium">{{ matchAccuracyText }}</span>
                     </p>
                     <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                        {{ t('set.matched') }} {{ matchMatchedPairsCount }}/{{ matchPairsTarget }} · {{ t('set.attempts') }} {{ matchAttemptsCount }}
+                        {{ t("set.matched") }} {{ matchMatchedPairsCount }}/{{
+                            matchPairsTarget
+                        }}
+                        · {{ t("set.attempts") }} {{ matchAttemptsCount }}
                     </p>
                     <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                        {{ t('set.time') }} {{ matchTimeText }}
+                        {{ t("set.time") }} {{ matchTimeText }}
                     </p>
 
                     <div class="mt-6 flex flex-wrap justify-center gap-2">
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-md border border-orange-600 bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                             :disabled="!set || set.terms.length === 0"
                             @click="restartMatchRun"
                         >
-                            {{ t('set.playAgain') }}
+                            {{ t("set.playAgain") }}
                         </button>
                         <NuxtLink
                             v-if="set"
                             :to="`/set/${set.id}`"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
-                            {{ t('set.backToSet') }}
+                            {{ t("set.backToSet") }}
                         </NuxtLink>
                     </div>
                 </div>
             </div>
 
             <!-- Not started yet -->
-            <div v-else-if="!matchIsRunning" class="w-full max-w-2xl text-center">
-                <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 dark:border-slate-800 dark:bg-slate-900">
+            <div
+                v-else-if="!matchIsRunning"
+                class="w-full max-w-2xl text-center"
+            >
+                <div
+                    class="rounded-lg border border-slate-200 bg-slate-50 p-8 dark:border-slate-800 dark:bg-slate-900"
+                >
                     <p class="text-sm text-slate-700 dark:text-slate-200 mb-4">
-                        {{ t('set.matchInstructions') }}
+                        {{ t("set.matchInstructions") }}
                     </p>
 
                     <div class="flex flex-wrap justify-center gap-2 mb-4">
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-md border border-orange-600 bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                             :disabled="!set || set.terms.length === 0"
                             @click="startMatch"
                         >
-                            {{ t('set.start') }}
+                            {{ t("set.start") }}
                         </button>
                     </div>
 
@@ -101,12 +125,15 @@
                         :disabled="matchTileDisabled(tile) || matchBusy"
                         @click.stop="onMatchTileClick(tile)"
                     >
-                        <span class="sr-only">{{ t('set.tile') }}</span>
+                        <span class="sr-only">{{ t("set.tile") }}</span>
                         <span
                             v-if="matchIsTileRevealed(tile)"
                             class="block h-full overflow-hidden text-xs font-medium leading-snug flex items-center justify-center"
                         >
-                            <MarkdownRenderer :markdown="tile.text" variant="tile" />
+                            <MarkdownRenderer
+                                :markdown="tile.text"
+                                variant="tile"
+                            />
                         </span>
                     </button>
                 </div>
@@ -118,7 +145,7 @@
                         :disabled="!set || set.terms.length === 0"
                         @click="restartMatchRun"
                     >
-                        {{ t('common.restart') }}
+                        {{ t("common.restart") }}
                     </button>
                 </div>
             </div>
@@ -127,6 +154,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ hideNavbar: true });
+
 import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import type { FlashcardSet, Uuid } from "~/src/composables/db/types";
 import {
@@ -300,7 +329,8 @@ function matchIsTileRevealed(tile: MatchTile) {
 }
 
 function matchTileDisabled(tile: MatchTile) {
-    const matchIsRunning = matchStartedAtMs.value !== null && matchEndedAtMs.value === null;
+    const matchIsRunning =
+        matchStartedAtMs.value !== null && matchEndedAtMs.value === null;
     if (!matchIsRunning) return true;
     if (matchEndedAtMs.value !== null) return true;
     if (matchMatchedPairIds.value.has(tile.pairId)) return true;
@@ -320,11 +350,10 @@ function matchTileClass(tile: MatchTile) {
         return "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100";
     }
     if (selected && !matchMemoryMode.value) {
-        // When selected in non-memory mode, show light gray
-        return "border-slate-300 bg-slate-200 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-50";
+        return "border-[#C75F5F] bg-[#FFF2F3] text-slate-900 ring-1 ring-[#E8BDBD] dark:border-[#C75F5F] dark:bg-[#2A171A] dark:text-slate-50 dark:ring-[#7A3535]";
     }
     if (selected) {
-        return "border-slate-300 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50";
+        return "border-[#C75F5F] bg-[#FFF2F3] text-slate-900 ring-1 ring-[#E8BDBD] dark:border-[#C75F5F] dark:bg-[#2A171A] dark:text-slate-50 dark:ring-[#7A3535]";
     }
     if (revealed) {
         return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50";
@@ -337,7 +366,8 @@ function matchFindTile(id: string) {
 }
 
 async function onMatchTileClick(tile: MatchTile) {
-    const matchIsRunning = matchStartedAtMs.value !== null && matchEndedAtMs.value === null;
+    const matchIsRunning =
+        matchStartedAtMs.value !== null && matchEndedAtMs.value === null;
     if (!matchIsRunning) return;
     if (matchEndedAtMs.value !== null) return;
     if (matchMatchedPairIds.value.has(tile.pairId)) return;
@@ -392,7 +422,8 @@ function onDocumentMatchPointerDown(event: PointerEvent) {
     const target = event.target;
     if (!(target instanceof Element)) return;
     if (target.closest('[data-match-tile="true"]')) return;
-    if (target.closest('button,a,input,textarea,select,[role="button"]')) return;
+    if (target.closest('button,a,input,textarea,select,[role="button"]'))
+        return;
     matchSelectedTileIds.value = [];
 }
 
@@ -452,7 +483,10 @@ onMounted(async () => {
             busy.value = false;
             resetMatchStateForRun();
             if (set.value) matchPrepareTiles(set.value);
-            document.addEventListener("pointerdown", onDocumentMatchPointerDown);
+            document.addEventListener(
+                "pointerdown",
+                onDocumentMatchPointerDown,
+            );
             return;
         }
 
@@ -499,7 +533,10 @@ onMounted(async () => {
             busy.value = false;
             resetMatchStateForRun();
             if (set.value) matchPrepareTiles(set.value);
-            document.addEventListener("pointerdown", onDocumentMatchPointerDown);
+            document.addEventListener(
+                "pointerdown",
+                onDocumentMatchPointerDown,
+            );
             return;
         }
 

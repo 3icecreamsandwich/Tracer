@@ -1,15 +1,15 @@
 <template>
   <main>
-    <div class="mx-auto max-w-[1380px] px-8 pb-28 pt-12">
-      <div class="grid items-stretch gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+    <div class="mx-auto max-w-[1280px] px-8 pb-24 pt-10">
+      <div class="grid items-stretch gap-7 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         <section
-          class="min-h-[calc(100vh-13rem)] rounded-xl border border-slate-200 bg-white p-7 text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          class="min-h-[calc(100vh-13rem)] rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           aria-labelledby="home-sets"
         >
           <div class="flex items-start justify-between gap-4">
             <div>
-              <h1 id="home-sets" class="text-2xl font-semibold">{{ t('home.sets') }}</h1>
-              <p class="mt-1 text-base text-slate-950 dark:text-slate-100">
+              <h1 id="home-sets" class="text-[22px] font-semibold">{{ t('home.sets') }}</h1>
+              <p class="mt-1 text-[15px] text-slate-950 dark:text-slate-100">
                 {{ t('home.subtitle') }}
               </p>
             </div>
@@ -94,7 +94,7 @@
                       :data-folder-drop-id="folder.id"
                       class="flex min-h-12 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                       :class="folderRowClass(folder.id)"
-                      @click="selectFolder(folder.id, $event)"
+                      @click.stop="selectFolder(folder.id, $event)"
                       @dblclick="handleFolderDoubleClick(folder.id)"
                       @keydown.enter.prevent="beginFolderRename(folder)"
                       @keydown.space.prevent="toggleFolder(folder.id)"
@@ -200,7 +200,7 @@
                         :to="itemTo(item)"
                         :formatted-date="formatDate(item.updatedAt ?? item.createdAt)"
                         :dense="denseLibrary"
-                        :selected="item.kind === 'set' && selectedSetIds.has(item.id)"
+                        :selected="selectedSetIds.has(homeItemSetId(item))"
                         @item-click="onItemClick(item, $event)"
                         @item-pointerdown="onItemPointerDown(item, $event)"
                       />
@@ -230,7 +230,7 @@
                     :to="itemTo(item)"
                     :formatted-date="formatDate(item.updatedAt ?? item.createdAt)"
                     :dense="denseLibrary"
-                    :selected="item.kind === 'set' && selectedSetIds.has(item.id)"
+                    :selected="selectedSetIds.has(homeItemSetId(item))"
                     root-entry
                     :order="rootEntryPosition('set', item.setId ?? item.id)"
                     :drop-indicator="rootDropIndicator('set', item.setId ?? item.id)"
@@ -276,37 +276,37 @@
         </Teleport>
 
         <section
-          class="min-h-[calc(100vh-13rem)] rounded-xl border border-slate-200 bg-white p-7 text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          class="min-h-[calc(100vh-30rem)] rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           aria-labelledby="home-create"
         >
-          <h2 id="home-create" class="text-2xl font-semibold">{{ t('home.create') }}</h2>
-          <p class="mt-1 text-base text-slate-950 dark:text-slate-100">{{ t('home.chooseMode') }}</p>
+          <h2 id="home-create" class="text-[22px] font-semibold">{{ t('home.create') }}</h2>
+          <p class="mt-1 text-[15px] text-slate-950 dark:text-slate-100">{{ t('home.chooseMode') }}</p>
 
-          <div class="mt-8 grid gap-6">
+          <div class="mt-8 grid w-full gap-3">
             <NuxtLink
               to="/create/basic"
-              class="group flex min-h-[112px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+              class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
             >
               <img :src="basicIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
-              <div class="min-w-0 flex-1"><p class="text-base font-medium">{{ t('home.basic') }}</p><p class="mt-1 text-sm">{{ t('home.basicHint') }}</p></div>
+              <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.basic') }}</p><p class="mt-1 text-[13px]">{{ t('home.basicHint') }}</p></div>
               <CreateChevron />
             </NuxtLink>
 
             <NuxtLink
               to="/create/synthesize"
-              class="group flex min-h-[112px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+              class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
             >
               <img :src="synthesizeIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
-              <div class="min-w-0 flex-1"><p class="text-base font-medium">{{ t('home.synthesize') }}</p><p class="mt-1 text-sm">{{ t('home.synthesizeHint') }}</p></div>
+              <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.synthesize') }}</p><p class="mt-1 text-[13px]">{{ t('home.synthesizeHint') }}</p></div>
               <CreateChevron />
             </NuxtLink>
 
             <NuxtLink
               to="/create/generate"
-              class="group flex min-h-[112px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+              class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
             >
               <img :src="generateIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
-              <div class="min-w-0 flex-1"><p class="text-base font-medium">{{ t('home.generate') }}</p><p class="mt-1 text-sm">{{ t('home.generateHint') }}</p></div>
+              <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.generate') }}</p><p class="mt-1 text-[13px]">{{ t('home.generateHint') }}</p></div>
               <CreateChevron />
             </NuxtLink>
           </div>
@@ -340,7 +340,7 @@ import { useAppLanguage } from '../src/composables/language'
 import { createDemoStudyGuideTitle } from '../src/composables/demo-content'
 import {
   assignHomeItemsToFolder,
-  hasSelectionModifier,
+  homeItemSetId,
   selectedSetsAfterPlainClick,
   toggleSelectedSet,
   visibleSetRange
@@ -493,15 +493,32 @@ function orderedRootKeys() {
 }
 
 const visibleSetIds = computed(() => {
+  const rootEntries = [
+    ...visibleFolders.value.map((folder) => ({
+      kind: 'folder' as const,
+      id: folder.id,
+      item: null as HomeListItem | null
+    })),
+    ...rootItems.value.map((item) => ({
+      kind: 'set' as const,
+      id: homeItemSetId(item),
+      item
+    }))
+  ].sort(
+    (left, right) =>
+      rootEntryPosition(left.kind, left.id) - rootEntryPosition(right.kind, right.id)
+  )
+
   const ids: Uuid[] = []
-  for (const folder of visibleFolders.value) {
-    if (!folderIsOpen(folder.id)) continue
-    for (const item of itemsForFolder(folder.id)) {
-      if (item.kind === 'set') ids.push(item.id)
+  for (const entry of rootEntries) {
+    if (entry.kind === 'set' && entry.item) {
+      ids.push(homeItemSetId(entry.item))
+      continue
     }
-  }
-  for (const item of rootItems.value) {
-    if (item.kind === 'set') ids.push(item.id)
+    if (!folderIsOpen(entry.id)) continue
+    for (const item of itemsForFolder(entry.id)) {
+      ids.push(homeItemSetId(item))
+    }
   }
   return ids
 })
@@ -934,40 +951,33 @@ function toggleSetSelection(setId: Uuid) {
 }
 
 function onItemClick(item: HomeListItem, event: MouseEvent) {
-  if (item.kind === 'study-guide') {
-    if (hasSelectionModifier(event)) {
-      return
-    }
-    clearSetSelection()
-    void router.push(itemTo(item))
-    return
-  }
+  const setId = homeItemSetId(item)
+  selectedFolderId.value = null
 
-  if (suppressNextSetClickId === item.id) {
+  if (suppressNextSetClickId === setId) {
     suppressNextSetClickId = null
     return
   }
 
   if (event.shiftKey) {
-    if (selectedSetIds.value.has(item.id)) toggleSetSelection(item.id)
-    else selectSetRange(item.id)
+    selectSetRange(setId)
     return
   }
 
   if (event.ctrlKey || event.metaKey) {
-    toggleSetSelection(item.id)
+    toggleSetSelection(setId)
     return
   }
 
   const nextSelection = selectedSetsAfterPlainClick(
     [...selectedSetIds.value],
-    item.id
+    setId
   )
   if (nextSelection !== null) {
     replaceSelectedSets(new Set(nextSelection))
     if (nextSelection.length === 0) {
       selectionAnchorId.value = null
-    } else if (selectionAnchorId.value === item.id) {
+    } else if (selectionAnchorId.value === setId) {
       selectionAnchorId.value = nextSelection[nextSelection.length - 1] ?? null
     }
     return
@@ -977,20 +987,21 @@ function onItemClick(item: HomeListItem, event: MouseEvent) {
 }
 
 function onDocumentClick() {
-  if (selectedSetIds.value.size === 0) return
-  clearSetSelection()
+  if (selectedSetIds.value.size > 0) clearSetSelection()
+  selectedFolderId.value = null
 }
 
 function onWindowKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && selectedSetIds.value.size > 0) {
+  if (event.key === 'Escape') {
     clearSetSelection()
+    selectedFolderId.value = null
   }
 }
 
 function onItemPointerDown(item: HomeListItem, event: PointerEvent) {
-  if (item.kind !== 'set' || event.button !== 0 || !event.isPrimary) return
+  if (event.button !== 0 || !event.isPrimary) return
   pointerCandidate = {
-    setId: item.id,
+    setId: homeItemSetId(item),
     pointerId: event.pointerId,
     startX: event.clientX,
     startY: event.clientY

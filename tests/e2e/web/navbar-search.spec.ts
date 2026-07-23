@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test('navbar search: shows dropdown results without changing the page query', async ({ page }) => {
   await page.goto('/settings')
 
-  const search = page.getByPlaceholder('Search sets…')
+  const search = page.getByPlaceholder('Search sets and study guides…')
   await expect(search).toBeVisible()
 
   await search.click()

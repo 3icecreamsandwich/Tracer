@@ -8,6 +8,14 @@ export function hasSelectionModifier(event: {
   return event.ctrlKey || event.metaKey || event.shiftKey
 }
 
+export function homeItemSetId(item: {
+  kind: 'set' | 'study-guide'
+  id: Uuid
+  setId?: Uuid
+}) {
+  return item.kind === 'set' ? item.id : (item.setId ?? item.id)
+}
+
 export function selectedSetsAfterPlainClick(
   selectedSetIds: readonly Uuid[],
   clickedSetId: Uuid

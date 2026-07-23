@@ -47,7 +47,7 @@ export function createSettingsRepo(db: DbClient) {
         darkMode: toBool(row.dark_mode),
         learnHybridEnabled: toBool(row.learn_hybrid_enabled),
         language: toLanguage(row.language),
-        textScale: Math.min(3, Math.max(0, Math.round(Number(row.text_scale) || 0)))
+        textScale: Math.min(4, Math.max(0, Math.round(Number(row.text_scale) || 0)))
       }
     },
 

@@ -73,6 +73,23 @@
     --tracer-leading-4xl: 3.125rem;
   }
 
+  html[data-text-scale='4'] {
+    --tracer-text-xs: 1.125rem;
+    --tracer-text-sm: 1.275rem;
+    --tracer-text-base: 1.5rem;
+    --tracer-text-lg: 1.65rem;
+    --tracer-text-xl: 1.8rem;
+    --tracer-text-2xl: 2.25rem;
+    --tracer-text-4xl: 3.3rem;
+    --tracer-leading-xs: 1.65rem;
+    --tracer-leading-sm: 1.95rem;
+    --tracer-leading-base: 2.25rem;
+    --tracer-leading-lg: 2.55rem;
+    --tracer-leading-xl: 2.55rem;
+    --tracer-leading-2xl: 3rem;
+    --tracer-leading-4xl: 3.75rem;
+  }
+
   html,
   body,
   #__nuxt {

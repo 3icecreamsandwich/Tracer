@@ -4,7 +4,9 @@
         :class="windowControlsClass"
         @pointerdown="onTopbarPointerDown"
     >
-        <div class="mx-auto flex h-20 w-full max-w-[1480px] items-center gap-6 px-8">
+        <div
+            class="mx-auto flex h-[60px] w-[87.5%] max-w-[1400px] items-center gap-5 px-7"
+        >
             <div
                 class="native-window-controls-spacer native-window-controls-spacer-left"
                 aria-hidden="true"
@@ -12,14 +14,22 @@
 
             <NuxtLink
                 to="/"
-                class="inline-flex shrink-0 items-center gap-3 rounded-lg text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-white"
+                class="inline-flex shrink-0 items-center mx-2 gap-3 rounded-lg text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-white"
             >
-                <img :src="tracerLogo" alt="" class="h-10 w-10 rounded-[10px] object-cover" />
-                <span class="text-2xl font-semibold tracking-tight">Tracer</span>
+                <span
+                    class="text-[22px] font-semibold tracking-tight text-white"
+                >
+                    Tracer
+                </span>
             </NuxtLink>
 
-            <div ref="searchRootEl" class="relative min-w-0 flex-1">
-                <label class="sr-only" for="nav-search">{{ t('nav.search') }}</label>
+            <div
+                ref="searchRootEl"
+                class="relative mx-auto min-w-0 max-w-[1040px] flex-1"
+            >
+                <label class="sr-only" for="nav-search">{{
+                    t("nav.search")
+                }}</label>
                 <form class="relative" @submit.prevent="onSubmit">
                     <input
                         id="nav-search"
@@ -28,7 +38,7 @@
                         type="search"
                         autocomplete="off"
                         :placeholder="t('nav.searchPlaceholder')"
-                        class="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-950 placeholder:text-slate-500 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-400"
+                        class="h-10 w-full rounded-lg border border-slate-200 bg-white px-3.5 text-[15px] text-slate-950 placeholder:text-slate-500 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-400"
                         @focus="openSearch"
                         @click="openSearch"
                         @keydown.esc.prevent="onSearchEscape"
@@ -45,7 +55,7 @@
                         v-if="searchBusy"
                         class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300"
                     >
-                        {{ t('common.loading') }}
+                        {{ t("common.loading") }}
                     </div>
                     <div
                         v-else-if="searchError"
@@ -77,7 +87,11 @@
                                         v-if="item.subtitle"
                                         class="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400"
                                     >
-                                        {{ translateAppGeneratedText(item.subtitle) }}
+                                        {{
+                                            translateAppGeneratedText(
+                                                item.subtitle,
+                                            )
+                                        }}
                                     </span>
                                 </span>
                                 <span
@@ -92,21 +106,21 @@
                         v-else
                         class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300"
                     >
-                        {{ t('nav.noResults') }}
+                        {{ t("nav.noResults") }}
                     </div>
                 </div>
             </div>
 
             <NuxtLink
                 to="/settings"
-                class="inline-flex h-12 shrink-0 items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 text-base font-medium text-slate-950 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+                class="inline-flex h-10 shrink-0 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 text-[15px] font-medium text-slate-950 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
             >
                 <span
-                    class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 text-sm font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-950 text-[13px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
                 >
                     {{ avatarText }}
                 </span>
-                <span class="hidden sm:block">{{ t('nav.settings') }}</span>
+                <span class="hidden sm:block">{{ t("nav.settings") }}</span>
             </NuxtLink>
 
             <div
@@ -118,7 +132,6 @@
 </template>
 
 <script setup lang="ts">
-import tracerLogo from "~/assets/icons/tracer-logo.png";
 import {
     createSetsRepo,
     createProfileRepo,
@@ -361,14 +374,14 @@ onBeforeUnmount(() => {
 }
 
 .app-topbar--macos .native-window-controls-spacer-left {
-    flex-basis: 88px;
+    flex-basis: 20px;
 }
 
 .app-topbar--windows .native-window-controls-spacer-right {
-    flex-basis: 0;
+    flex-basis: 30px;
 }
 
 .app-topbar--linux .native-window-controls-spacer-right {
-    flex-basis: 0;
+    flex-basis: 20px;
 }
 </style>

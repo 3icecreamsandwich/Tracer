@@ -9,7 +9,7 @@
             @close="closeAiError"
             @retry="retryAiRequest"
         />
-        <div class="mx-auto max-w-5xl p-6 sm:p-8">
+        <div class="mx-auto max-w-4xl p-6 sm:p-8">
             <div
                 class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             >
@@ -117,16 +117,6 @@
                     </div>
 
                     <div v-else class="space-y-6">
-                        <section :aria-label="t('set.studyModes')">
-                            <div class="grid gap-3 sm:grid-cols-2">
-                                <StudyModeTile :to="`/set/${set.id}?mode=flashcards`" :icon="flashcardsModeIcon" :title="t('set.flashcards')" :hint="t('set.flashcardsHint')" :active="mode === 'flashcards'" replace />
-                                <StudyModeTile :to="`/set/${set.id}?mode=learn`" :icon="practiceModeIcon" :title="t('set.learn')" :hint="t('set.learnHint')" :active="mode === 'learn'" accent="practice" replace />
-                                <StudyModeTile :to="`/set/${set.id}?mode=chat`" :icon="chatModeIcon" :title="t('set.chat')" :hint="t('set.chatHint')" :active="mode === 'chat'" replace />
-                                <StudyModeTile :to="`/set/${set.id}?mode=match`" :icon="matchModeIcon" :title="t('set.match')" :hint="t('set.matchHint')" :active="mode === 'match'" replace />
-                                <StudyModeTile v-if="studyGuideSetId" :to="`/study-guide/${studyGuideSetId}`" :icon="studyGuideModeIcon" :title="t('set.studyGuide')" :hint="t('set.studyGuideHint')" />
-                            </div>
-                        </section>
-
                         <section v-if="false" :aria-label="t('set.studyModes')">
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <div
@@ -254,7 +244,7 @@
                         <section
                             v-if="mode === 'flashcards'"
                             aria-label="Flashcards"
-                            class="study-panel rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="study-panel flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-center justify-between gap-3"
@@ -284,14 +274,6 @@
                                     >
                                         {{ ratioText }}
                                     </p>
-                                    <NuxtLink
-                                        v-if="set"
-                                        :to="`/set/${set.id}-flashcards`"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        title="Open fullscreen"
-                                    >
-                                        ⛶ {{ t('set.fullscreen') }}
-                                    </NuxtLink>
                                     <button
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -493,7 +475,7 @@
                         <section
                             v-else-if="mode === 'learn'"
                             aria-label="Practice"
-                            class="study-panel rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="study-panel flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-center justify-between gap-3"
@@ -525,14 +507,6 @@
                                         <span aria-hidden="true">⚙</span>
                                         Settings
                                     </button>
-                                    <NuxtLink
-                                        v-if="set"
-                                        :to="`/set/${set.id}-learn`"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        title="Open fullscreen"
-                                    >
-                                        ⛶ {{ t('set.fullscreen') }}
-                                    </NuxtLink>
                                     <button
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -578,15 +552,15 @@
                                     </div>
                                 </div>
 
-                                <div class="mt-5 grid gap-5 lg:grid-cols-2">
+                                <div class="mt-5 grid gap-5 md:grid-cols-2">
                                     <div>
                                         <p class="text-sm font-semibold text-slate-900 dark:text-white">Question types</p>
-                                        <div class="mt-2 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                                        <div class="mt-2 grid gap-2">
                                             <button
                                                 v-for="item in practiceQuestionTypeChoices"
                                                 :key="item.kind"
                                                 type="button"
-                                                class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition"
+                                                class="flex min-h-12 items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition"
                                                 :class="practiceQuestionTypes[item.kind] ? 'border-orange-300 bg-orange-50 text-slate-950 dark:border-orange-700 dark:bg-orange-950/30 dark:text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300'"
                                                 :aria-pressed="practiceQuestionTypes[item.kind]"
                                                 @click="togglePracticeQuestionType(item.kind)"
@@ -606,17 +580,16 @@
                                     </div>
 
                                     <div class="space-y-4">
-                                        <label class="block">
-                                            <span class="flex items-center justify-between text-sm font-semibold text-slate-900 dark:text-white">
-                                                Questions
-                                                <span class="rounded-md bg-white px-2 py-1 text-orange-700 shadow-sm dark:bg-slate-950 dark:text-orange-300">{{ practiceQuestionCount }}</span>
-                                            </span>
+                                        <label class="flex items-center justify-between gap-4">
+                                            <span class="text-sm font-semibold text-slate-900 dark:text-white">Questions</span>
                                             <input
                                                 v-model.number="practiceQuestionCount"
-                                                type="range"
+                                                type="number"
                                                 min="1"
                                                 :max="practiceQuestionLimit"
-                                                class="mt-3 w-full accent-orange-500"
+                                                step="1"
+                                                class="w-24 rounded-lg border border-slate-300 bg-white px-3 py-2 text-right text-sm font-semibold text-slate-950 shadow-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
+                                                @change="clampPracticeQuestionCount"
                                             />
                                         </label>
 
@@ -729,7 +702,7 @@
                                 </div>
                             </div>
 
-                            <div v-else class="mt-4">
+                            <div v-else class="mt-4 flex flex-1 flex-col">
                                 <div
                                     v-if="!learnCurrentQuestion"
                                     class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
@@ -739,18 +712,21 @@
 
                                 <div
                                     v-else
-                                    class="rounded-md border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                                    class="flex flex-1 flex-col rounded-md border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
                                 >
                                     <p
                                         class="text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
                                         {{ t('set.question') }}
                                     </p>
-                                    <div class="mt-3 text-base font-medium text-slate-900 dark:text-slate-50">
-                                        <MarkdownRenderer :markdown="learnCurrentQuestion.prompt" variant="compact" />
+                                    <div class="mt-3 text-2xl font-medium text-slate-900 dark:text-slate-50">
+                                        <MarkdownRenderer :markdown="learnCurrentQuestion.prompt" variant="flashcard" />
                                     </div>
 
-                                    <div class="mt-4 grid gap-2">
+                                    <div
+                                        class="mt-4 grid gap-3"
+                                        :class="learnCurrentQuestion.kind === 'true_false' ? 'grid-cols-2' : 'flex-1'"
+                                    >
                                         <template
                                             v-if="
                                                 learnCurrentQuestion.kind ===
@@ -759,7 +735,7 @@
                                         >
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center justify-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                                class="inline-flex min-h-12 items-center justify-center rounded-lg border border-amber-500 bg-amber-400 px-4 py-2.5 text-base font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
                                                 :disabled="learnBusy"
                                                 @click="
                                                     answerLearnTrueFalse(true)
@@ -769,7 +745,7 @@
                                             </button>
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                                class="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-base font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
                                                 :disabled="learnBusy"
                                                 @click="
                                                     answerLearnTrueFalse(false)
@@ -817,7 +793,7 @@
                         <section
                             v-else-if="mode === 'chat'"
                             aria-label="Chat"
-                            class="study-panel rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="study-panel flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-center justify-between gap-3"
@@ -882,7 +858,7 @@
 
                             <div
                                 ref="chatLogEl"
-                                class="mt-4 max-h-[420px] space-y-3 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
+                                class="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
                                 role="log"
                                 aria-live="polite"
                             >
@@ -946,7 +922,7 @@
                                 />
                                 <button
                                     type="button"
-                                    class="inline-flex shrink-0 items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    class="inline-flex shrink-0 items-center rounded-md border border-amber-500 bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
                                     :disabled="
                                         chatBusy || chatSaveBusy || !set || !chatInput.trim()
                                     "
@@ -966,7 +942,7 @@
                         <section
                             v-else-if="mode === 'match'"
                             aria-label="Match"
-                            class="study-panel rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="study-panel flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-start justify-between gap-3"
@@ -983,57 +959,6 @@
                                         {{ t('set.matchInstructions') }}
                                     </p>
                                 </div>
-                            </div>
-
-                            <div
-                                v-if="!matchIsRunning && !matchIsFinished"
-                                class="mt-3 flex items-center gap-2"
-                            >
-                                <!-- <button
-                                    type="button"
-                                    class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                    :class="{
-                                        'bg-slate-100 dark:bg-slate-900':
-                                            matchMemoryMode,
-                                    }"
-                                    @click="matchMemoryMode = !matchMemoryMode"
-                                >
-                                    {{ t('set.memory') }} {{ matchMemoryMode ? "✓" : "" }}
-                                </button> -->
-                                <NuxtLink
-                                    v-if="set"
-                                    :to="`/set/${set.id}-match`"
-                                    class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                    title="Open fullscreen"
-                                >
-                                    ⛶ {{ t('set.fullscreen') }}
-                                </NuxtLink>
-
-                                <button
-                                    v-if="
-                                        !matchIsRunning && !matchIsFinished
-                                    "
-                                    type="button"
-                                    class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                    :disabled="
-                                        !set || set.terms.length === 0
-                                    "
-                                    @click="startMatch"
-                                >
-                                    {{ t('set.start') }}
-                                </button>
-
-                                <button
-                                    v-else
-                                    type="button"
-                                    class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                    :disabled="
-                                        !set || set.terms.length === 0
-                                    "
-                                    @click="restartMatchRun"
-                                >
-                                    {{ t('common.restart') }}
-                                </button>
                             </div>
 
                             <p
@@ -1109,21 +1034,29 @@
                                 </div>
                             </div>
 
-                            <div v-else class="mt-4">
+                            <div v-else class="mt-4 flex flex-1 flex-col">
                                 <div
                                     v-if="!matchIsRunning"
-                                    class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                    class="flex flex-1 flex-col items-center justify-center rounded-md border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                                 >
-                                    {{ t('set.matchInstructions') }}
+                                    <p>{{ t('set.matchInstructions') }}</p>
+                                    <button
+                                        type="button"
+                                        class="mt-4 inline-flex items-center rounded-md border border-orange-600 bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-orange-500 dark:bg-orange-500 dark:hover:bg-orange-400"
+                                        :disabled="!set || set.terms.length === 0"
+                                        @click="startMatch"
+                                    >
+                                        {{ t('set.start') }}
+                                    </button>
                                 </div>
 
-                                <div v-else class="grid grid-cols-4 gap-2">
+                                <div v-else class="grid flex-1 auto-rows-fr grid-cols-4 gap-2">
                                     <button
                                         v-for="tile in matchTiles"
                                         :key="tile.id"
                                         type="button"
                                         data-match-tile="true"
-                                        class="relative h-24 w-full rounded-md border p-2 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950 transition-colors"
+                                        class="relative min-h-20 w-full rounded-md border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :class="matchTileClass(tile)"
                                         :disabled="
                                             matchTileDisabled(tile) || matchBusy
@@ -1165,6 +1098,55 @@
                                 >
                                     {{ t('common.continue') }} · {{ t('set.flashcards') }}
                                 </NuxtLink>
+                            </div>
+                        </section>
+
+                        <section :aria-label="t('set.studyModes')">
+                            <div class="flex flex-nowrap gap-3 overflow-x-auto pb-1">
+                                <StudyModeTile
+                                    :to="`/set/${set.id}?mode=flashcards`"
+                                    :fullscreen-to="`/set/${set.id}-flashcards`"
+                                    :icon="flashcardsModeIcon"
+                                    :title="t('set.flashcards')"
+                                    :hint="t('set.flashcardsHint')"
+                                    :active="mode === 'flashcards'"
+                                    replace
+                                />
+                                <StudyModeTile
+                                    :to="`/set/${set.id}?mode=learn`"
+                                    :fullscreen-to="`/set/${set.id}-learn`"
+                                    :icon="practiceModeIcon"
+                                    :title="t('set.learn')"
+                                    :hint="t('set.learnHint')"
+                                    :active="mode === 'learn'"
+                                    replace
+                                />
+                                <StudyModeTile
+                                    :to="`/set/${set.id}?mode=chat`"
+                                    :icon="chatModeIcon"
+                                    :title="t('set.chat')"
+                                    :hint="t('set.chatHint')"
+                                    :active="mode === 'chat'"
+                                    show-caret
+                                    replace
+                                />
+                                <StudyModeTile
+                                    :to="`/set/${set.id}?mode=match`"
+                                    :fullscreen-to="`/set/${set.id}-match`"
+                                    :icon="matchModeIcon"
+                                    :title="t('set.match')"
+                                    :hint="t('set.matchHint')"
+                                    :active="mode === 'match'"
+                                    replace
+                                />
+                                <StudyModeTile
+                                    v-if="studyGuideSetId"
+                                    :to="`/study-guide/${studyGuideSetId}`"
+                                    :icon="studyGuideModeIcon"
+                                    :title="t('set.studyGuide')"
+                                    :hint="t('set.studyGuideHint')"
+                                    show-caret
+                                />
                             </div>
                         </section>
 
@@ -2261,11 +2243,10 @@ function matchTileClass(tile: MatchTile) {
         return "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100";
     }
     if (selected && !matchMemoryMode.value) {
-        // Light gray fill when selected with Memory OFF
-        return "border-slate-300 bg-slate-200 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-50";
+        return "border-[#C75F5F] bg-[#FFF2F3] text-slate-900 ring-1 ring-[#E8BDBD] dark:border-[#C75F5F] dark:bg-[#2A171A] dark:text-slate-50 dark:ring-[#7A3535]";
     }
     if (selected) {
-        return "border-slate-300 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50";
+        return "border-[#C75F5F] bg-[#FFF2F3] text-slate-900 ring-1 ring-[#E8BDBD] dark:border-[#C75F5F] dark:bg-[#2A171A] dark:text-slate-50 dark:ring-[#7A3535]";
     }
     if (revealed) {
         return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50";
@@ -2373,7 +2354,7 @@ const learnCurrentQuestion = computed(() => {
 
 const practiceQuestionLimit = computed(() => {
     const terms = set.value?.terms.length ?? 1;
-    return Math.max(1, Math.min(60, terms));
+    return Math.max(1, terms);
 });
 
 const practiceTimerText = computed(() => {
@@ -2385,6 +2366,14 @@ const practiceTimerText = computed(() => {
 function enabledPracticeQuestionTypes(): LearnQuestionKind[] {
     return (Object.keys(practiceQuestionTypes) as LearnQuestionKind[]).filter(
         (kind) => practiceQuestionTypes[kind],
+    );
+}
+
+function clampPracticeQuestionCount() {
+    const next = Math.round(Number(practiceQuestionCount.value) || 1);
+    practiceQuestionCount.value = Math.min(
+        practiceQuestionLimit.value,
+        Math.max(1, next),
     );
 }
 
@@ -2403,7 +2392,10 @@ function togglePracticeQuestionType(kind: LearnQuestionKind) {
 
 function openPracticeSettings() {
     practiceSettingsOpen.value = !practiceSettingsOpen.value;
-    if (practiceSettingsOpen.value) clearPracticeTimer();
+    if (practiceSettingsOpen.value) {
+        clampPracticeQuestionCount();
+        clearPracticeTimer();
+    }
 }
 
 function clearPracticeTimer() {
@@ -3529,10 +3521,9 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .study-panel {
-    min-height: clamp(360px, 58vh, 640px);
-    max-height: min(78vh, 760px);
+    min-height: clamp(324px, 52.2vh, 576px);
+    max-height: min(70.2vh, 684px);
     overflow: auto;
-    resize: vertical;
 }
 
 @keyframes flip {

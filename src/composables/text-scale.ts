@@ -1,12 +1,12 @@
 import { createSettingsRepo, useTracerDb } from './db'
 import { hasTauriRuntime } from './tauri'
 
-export const textScaleLabels = ['Small', 'Medium', 'Large', 'Extra large'] as const
+export const textScaleLabels = ['Small', '', '', '', 'Large'] as const
 const textScaleStorageKey = 'tracer:text-scale'
 
 export function normalizeTextScale(value: unknown) {
   const number = Math.round(Number(value) || 0)
-  return Math.min(3, Math.max(0, number))
+  return Math.min(4, Math.max(0, number))
 }
 
 export function applyTextScale(value: unknown) {

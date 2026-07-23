@@ -1,6 +1,7 @@
 <template>
   <li
     class="relative"
+    :class="item.kind === 'study-guide' ? 'mx-auto w-[97.5%]' : ''"
     :data-root-entry-kind="rootEntry ? 'set' : undefined"
     :data-root-entry-id="rootEntry ? (item.setId ?? item.id) : undefined"
     :style="rootEntry && order !== undefined ? { order } : undefined"
@@ -18,12 +19,12 @@
       :class="[
         dense ? 'min-h-[58px] gap-3 px-4 py-2' : 'min-h-[82px] gap-5 px-5 py-3.5',
         selected ? 'bg-slate-100 dark:bg-slate-900' : 'bg-white dark:bg-slate-950',
-        item.kind === 'set' ? 'cursor-grab active:cursor-grabbing' : ''
+        'cursor-grab active:cursor-grabbing'
       ]"
       @click.stop.prevent="$emit('itemClick', $event)"
       @pointerdown="onPointerDown"
     >
-      <svg v-if="item.kind === 'set'" aria-hidden="true" viewBox="0 0 16 20" class="h-5 w-4 shrink-0 text-slate-400 transition group-hover:text-slate-600 dark:text-slate-600 dark:group-hover:text-slate-300" fill="currentColor"><circle cx="5" cy="4" r="1.3"/><circle cx="11" cy="4" r="1.3"/><circle cx="5" cy="10" r="1.3"/><circle cx="11" cy="10" r="1.3"/><circle cx="5" cy="16" r="1.3"/><circle cx="11" cy="16" r="1.3"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 16 20" class="h-5 w-4 shrink-0 text-slate-400 transition group-hover:text-slate-600 dark:text-slate-600 dark:group-hover:text-slate-300" fill="currentColor"><circle cx="5" cy="4" r="1.3"/><circle cx="11" cy="4" r="1.3"/><circle cx="5" cy="10" r="1.3"/><circle cx="11" cy="10" r="1.3"/><circle cx="5" cy="16" r="1.3"/><circle cx="11" cy="16" r="1.3"/></svg>
       <img
         :src="setIconSrc(item.iconKey)"
         :style="setIconToneStyle(item.iconTone)"

@@ -2,12 +2,18 @@ import { describe, expect, it } from 'vitest'
 import {
   assignHomeItemsToFolder,
   hasSelectionModifier,
+  homeItemSetId,
   selectedSetsAfterPlainClick,
   toggleSelectedSet,
   visibleSetRange
 } from '../../src/composables/home/set-organization'
 
 describe('set organization', () => {
+  it('uses one linked set identity for flashcards and study guides', () => {
+    expect(homeItemSetId({ kind: 'set', id: 'set-1' })).toBe('set-1')
+    expect(homeItemSetId({ kind: 'study-guide', id: 'guide-1', setId: 'set-1' })).toBe('set-1')
+  })
+
   it('recognizes every supported selection modifier', () => {
     expect(hasSelectionModifier({ ctrlKey: true, metaKey: false, shiftKey: false })).toBe(true)
     expect(hasSelectionModifier({ ctrlKey: false, metaKey: true, shiftKey: false })).toBe(true)
@@ -41,6 +47,9 @@ describe('set organization', () => {
       'set-4'
     ])
     expect(visibleSetRange(visible, null, 'set-3')).toEqual(['set-3'])
+    expect(
+      visibleSetRange(['color-theory', 'icons', 'math-concepts', 'random-facts'], 'color-theory', 'icons')
+    ).toEqual(['color-theory', 'icons'])
   })
 
   it('moves linked study guides with their sets', () => {

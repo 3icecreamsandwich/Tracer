@@ -75,6 +75,12 @@ pub fn run() {
             sql: include_str!("../migrations/010_home_library_order.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 11,
+            description: "expand_text_scale_range",
+            sql: include_str!("../migrations/011_expand_text_scale.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

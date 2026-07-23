@@ -58,22 +58,24 @@
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Adjust text and interface sizing throughout Tracer.</p>
           </div>
           <div class="w-full max-w-sm">
-            <div class="flex items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200">
+            <div class="flex h-5 items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200">
               <span>Small</span>
-              <span>Medium</span>
-              <span>Extra large</span>
+              <span>Large</span>
             </div>
             <input
               v-model.number="textScale"
               type="range"
               min="0"
-              max="3"
+              max="4"
               step="1"
               class="mt-3 w-full accent-red-500"
               aria-label="Text size"
               @input="onTextScalePreview"
               @change="onTextScaleChange"
             />
+            <div class="mt-1 flex items-center justify-between px-1" aria-hidden="true">
+              <span v-for="stop in 5" :key="stop" class="h-1.5 w-px bg-slate-300 dark:bg-slate-700" />
+            </div>
           </div>
         </div>
       </section>

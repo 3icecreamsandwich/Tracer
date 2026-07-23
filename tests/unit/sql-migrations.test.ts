@@ -68,10 +68,14 @@ describe('SQLite migrations (task 3)', () => {
         path.resolve(process.cwd(), 'src-tauri', 'migrations', '010_home_library_order.sql'),
         'utf8'
       )
+      const expandedTextScaleMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '011_expand_text_scale.sql'),
+        'utf8'
+      )
 
       const migrateRes = await runSqlite(
         dbPath,
-        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}`
+        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}`
       )
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
@@ -111,6 +115,13 @@ describe('SQLite migrations (task 3)', () => {
       )
       expect(languageRes.code).toBe(0)
       expect(languageRes.stdout.trim()).toBe('en')
+
+      const maximumTextScaleRes = await runSqlite(
+        dbPath,
+        ['UPDATE app_settings SET text_scale = 4 WHERE id = 1;', 'SELECT text_scale FROM app_settings WHERE id = 1;'].join('\n') + '\n'
+      )
+      expect(maximumTextScaleRes.code).toBe(0)
+      expect(maximumTextScaleRes.stdout.trim()).toBe('4')
 
       const invalidJsonRes = await runSqlite(
         dbPath,

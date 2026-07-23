@@ -20,7 +20,7 @@
         <div class="flex shrink-0 flex-wrap items-center gap-2">
           <button
             type="button"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            class="inline-flex items-center rounded-md border border-amber-300 bg-amber-200 px-3 py-2 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-amber-700 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
             :disabled="busy || factCheckBusy"
             @click="onFactCheck"
           >
@@ -28,7 +28,7 @@
           </button>
           <button
             type="button"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            class="inline-flex items-center rounded-md border border-orange-300 bg-orange-100 px-3 py-2 text-sm font-semibold text-orange-950 shadow-sm transition hover:bg-orange-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-orange-700 dark:bg-orange-400 dark:text-slate-950 dark:hover:bg-orange-300"
             :disabled="busy || factCheckBusy"
             @click="openImport"
           >
@@ -36,7 +36,7 @@
           </button>
           <button
             type="button"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            class="inline-flex items-center rounded-md border border-red-300 bg-red-100 px-3 py-2 text-sm font-semibold text-red-900 shadow-sm transition hover:bg-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-800 dark:bg-red-400 dark:text-slate-950 dark:hover:bg-red-300"
             :disabled="busy || factCheckBusy"
             @click="onCreate"
           >

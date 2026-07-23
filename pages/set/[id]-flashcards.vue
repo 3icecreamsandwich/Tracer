@@ -1,11 +1,15 @@
 <template>
     <main class="flex flex-col h-8/9 bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
-        <div class="border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950 select-none">
+        <div
+            class="border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950 select-none"
+        >
             <div class="flex items-center justify-between gap-4">
                 <BackButton />
                 <div class="flex items-center gap-4">
-                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300 select-none">
+                    <p
+                        class="text-sm font-medium text-slate-600 dark:text-slate-300 select-none"
+                    >
                         {{ ratioText }}
                     </p>
                 </div>
@@ -16,37 +20,54 @@
         <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
             <!-- Title -->
             <div class="mb-6 text-center select-none">
-                <h1 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('set.flashcards') }}</h1>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('set.flashcardInstructions') }}</p>
+                <h1
+                    class="text-xl font-semibold text-slate-900 dark:text-slate-50"
+                >
+                    {{ t("set.flashcards") }}
+                </h1>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    {{ t("set.flashcardInstructions") }}
+                </p>
             </div>
 
             <!-- Results -->
             <div v-if="isFinished" class="w-full max-w-2xl select-none">
-                <div class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900 select-none">
-                    <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">{{ t('common.results') }}</h2>
+                <div
+                    class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900 select-none"
+                >
+                    <h2
+                        class="text-2xl font-semibold text-slate-900 dark:text-slate-50"
+                    >
+                        {{ t("common.results") }}
+                    </h2>
                     <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
-                        {{ t('set.accuracy') }}
+                        {{ t("set.accuracy") }}
                         <span class="font-medium">{{ accuracyText }}</span>
                     </p>
-                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 select-none">
-                        {{ t('set.correct') }} {{ correctCount }} · {{ t('set.attempted') }} {{ attemptedCount }}
+                    <p
+                        class="mt-2 text-sm text-slate-600 dark:text-slate-300 select-none"
+                    >
+                        {{ t("set.correct") }} {{ correctCount }} ·
+                        {{ t("set.attempted") }} {{ attemptedCount }}
                     </p>
 
-                    <div class="mt-6 flex flex-wrap justify-center gap-2 select-none">
+                    <div
+                        class="mt-6 flex flex-wrap justify-center gap-2 select-none"
+                    >
                         <button
                             type="button"
                             class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :disabled="allStudyTermIds.length === 0"
                             @click="restartRun"
                         >
-                            {{ t('common.restart') }}
+                            {{ t("common.restart") }}
                         </button>
                         <NuxtLink
                             v-if="set"
                             :to="`/set/${set.id}`"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
-                            {{ t('set.backToSet') }}
+                            {{ t("set.backToSet") }}
                         </NuxtLink>
                     </div>
                 </div>
@@ -58,7 +79,11 @@
                     ref="viewerButtonEl"
                     type="button"
                     class="relative flex flex-col items-center justify-center w-[70vw] h-[50vh] rounded-lg border border-slate-200 bg-slate-50 px-8 py-12 text-center shadow-md hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                    :class="{ 'animate-flip': isFlipping, 'animate-slide-left': isNavigating === 'next', 'animate-slide-right': isNavigating === 'prev' }"
+                    :class="{
+                        'animate-flip': isFlipping,
+                        'animate-slide-left': isNavigating === 'next',
+                        'animate-slide-right': isNavigating === 'prev',
+                    }"
                     :disabled="totalCount === 0"
                     @click="toggleFlip"
                 >
@@ -66,14 +91,23 @@
                         v-if="isCurrentRetry"
                         class="absolute top-4 right-4 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100"
                     >
-                        {{ t('set.tryAgain') }}
+                        {{ t("set.tryAgain") }}
                     </span>
-                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
-                        {{ isFlipped ? t('create.definition') : t('create.term') }}
+                    <p
+                        class="text-sm font-medium text-slate-500 dark:text-slate-400"
+                    >
+                        {{
+                            isFlipped
+                                ? t("create.definition")
+                                : t("create.term")
+                        }}
                     </p>
                     <div
                         class="flashcard-content-row mt-4 flex w-full flex-row items-center justify-center overflow-y-auto text-center text-4xl font-medium text-slate-900 dark:text-slate-50"
-                        :class="{ 'flashcard-content-row--paired': viewerImage && viewerHasText }"
+                        :class="{
+                            'flashcard-content-row--paired':
+                                viewerImage && viewerHasText,
+                        }"
                     >
                         <img
                             v-if="viewerImage"
@@ -84,9 +118,14 @@
                         <div
                             v-if="viewerHasText"
                             class="flashcard-side-text"
-                            :class="{ 'flashcard-side-text--paired': viewerImage }"
+                            :class="{
+                                'flashcard-side-text--paired': viewerImage,
+                            }"
                         >
-                            <MarkdownRenderer :markdown="viewerText" variant="flashcard" />
+                            <MarkdownRenderer
+                                :markdown="viewerText"
+                                variant="flashcard"
+                            />
                         </div>
                     </div>
                 </button>
@@ -95,27 +134,31 @@
                     v-if="isStarredOnlyEmpty"
                     class="mt-4 w-full max-w-2xl rounded-md border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
-                    {{ t('set.noStarred') }}
+                    {{ t("set.noStarred") }}
                 </div>
 
                 <!-- Controls -->
-                <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <div
+                    class="mt-8 flex flex-wrap items-center justify-center gap-3"
+                >
                     <button
                         type="button"
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-amber-600 shadow-sm hover:border-amber-200 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
                         :disabled="totalCount === 0 || cursorIndex === 0"
                         @click="goPrev"
                     >
-                        ← {{ t('set.previous') }}
+                        ← {{ t("set.previous") }}
                     </button>
 
                     <button
                         type="button"
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="totalCount === 0 || cursorIndex >= order.length - 1"
+                        :disabled="
+                            totalCount === 0 || cursorIndex >= order.length - 1
+                        "
                         @click="goNext"
                     >
-                        {{ t('set.next') }} →
+                        {{ t("set.next") }} →
                     </button>
 
                     <button
@@ -124,7 +167,7 @@
                         :disabled="totalCount === 0"
                         @click="shuffleRun"
                     >
-                        {{ t('set.shuffle') }}
+                        {{ t("set.shuffle") }}
                     </button>
 
                     <button
@@ -133,7 +176,7 @@
                         :disabled="allStudyTermIds.length === 0"
                         @click="restartRun"
                     >
-                        {{ t('common.restart') }}
+                        {{ t("common.restart") }}
                     </button>
 
                     <button
@@ -143,7 +186,7 @@
                         :aria-pressed="starredOnly"
                         @click="toggleStarredOnly"
                     >
-                        {{ starredOnly ? "★" : "☆" }} {{ t('set.starredOnly') }}
+                        {{ starredOnly ? "★" : "☆" }} {{ t("set.starredOnly") }}
                     </button>
 
                     <button
@@ -151,7 +194,9 @@
                         class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-amber-500 bg-white p-0 text-sm font-medium text-amber-500 shadow-sm hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-amber-400 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
                         :disabled="!currentTerm || starBusy"
                         :aria-pressed="isCurrentStarred"
-                        :aria-label="isCurrentStarred ? 'Unstar card' : 'Star card'"
+                        :aria-label="
+                            isCurrentStarred ? 'Unstar card' : 'Star card'
+                        "
                         @click="toggleStar"
                     >
                         {{ isCurrentStarred ? "★" : "☆" }}
@@ -163,7 +208,7 @@
                         :disabled="!currentTerm"
                         @click="markIncorrect"
                     >
-                        {{ t('set.missed') }}
+                        {{ t("set.missed") }}
                     </button>
 
                     <button
@@ -172,7 +217,7 @@
                         :disabled="!currentTerm"
                         @click="markCorrect"
                     >
-                        {{ t('set.gotIt') }}
+                        {{ t("set.gotIt") }}
                     </button>
                 </div>
             </div>
@@ -181,6 +226,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ hideNavbar: true });
+
 import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
@@ -210,7 +257,7 @@ const set = ref<FlashcardSet | null>(null);
 
 const isFlipped = ref(false);
 const isFlipping = ref(false);
-const isNavigating = ref<'prev' | 'next' | null>(null);
+const isNavigating = ref<"prev" | "next" | null>(null);
 
 const runCounter = ref(0);
 const cursorIndex = ref(0);
@@ -301,7 +348,7 @@ const viewerHasText = computed(() => viewerText.value.trim().length > 0);
 const viewerImage = computed(() => {
     const t = currentTerm.value;
     if (!t) return null;
-    return isFlipped.value ? t.backImage ?? null : t.frontImage ?? null;
+    return isFlipped.value ? (t.backImage ?? null) : (t.frontImage ?? null);
 });
 
 const isCurrentStarred = computed(() => {
@@ -314,7 +361,9 @@ const isCurrentRetry = computed(() => {
     const t = currentTerm.value;
     if (!t) return false;
     const id = t.id as Uuid;
-    return retryTermIds.value.has(id) && answersByTermId.value[id] === "incorrect";
+    return (
+        retryTermIds.value.has(id) && answersByTermId.value[id] === "incorrect"
+    );
 });
 
 const accuracyText = computed(() => {
@@ -452,7 +501,7 @@ function goPrev() {
         order.value.length - 1,
     );
     if (next !== cursorIndex.value) {
-        isNavigating.value = 'prev';
+        isNavigating.value = "prev";
         setTimeout(() => {
             cursorIndex.value = next;
             isFlipped.value = false;
@@ -468,7 +517,7 @@ function goNext() {
         order.value.length - 1,
     );
     if (next !== cursorIndex.value) {
-        isNavigating.value = 'next';
+        isNavigating.value = "next";
         setTimeout(() => {
             cursorIndex.value = next;
             isFlipped.value = false;

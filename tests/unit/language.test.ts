@@ -84,4 +84,15 @@ describe('app language', () => {
       expect(Object.keys(messages[option.code])).toEqual(expect.arrayContaining(requiredKeys))
     }
   })
+
+  it('distinguishes the global set-and-guide search from set-only search', () => {
+    for (const option of languageOptions) {
+      const localeMessages = messages[option.code]
+      expect(localeMessages['nav.searchPlaceholder']).toBeTruthy()
+      expect(localeMessages['create.searchSetsPlaceholder']).toBeTruthy()
+      expect(localeMessages['nav.searchPlaceholder']).not.toBe(
+        localeMessages['create.searchSetsPlaceholder']
+      )
+    }
+  })
 })

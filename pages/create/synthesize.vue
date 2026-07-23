@@ -12,7 +12,7 @@
 
         <button
           type="button"
-          class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          class="inline-flex items-center rounded-md border border-red-300 bg-red-100 px-3 py-2 text-sm font-semibold text-red-900 shadow-sm transition hover:bg-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:bg-red-400 dark:text-slate-950 dark:hover:bg-red-300"
           :disabled="createDisabled"
           @click="onCreate"
         >
@@ -56,7 +56,7 @@
               v-model="query"
               type="search"
               autocomplete="off"
-              :placeholder="t('nav.searchPlaceholder')"
+              :placeholder="t('create.searchSetsPlaceholder')"
               class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             />
           </div>
