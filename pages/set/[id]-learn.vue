@@ -19,7 +19,8 @@
                     </p>
                     <button
                         type="button"
-                        class="inline-flex items-center gap-2 rounded-md border border-rose-200 bg-amber-50/60 px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:border-rose-300 hover:bg-amber-50 active:bg-amber-100 dark:border-rose-900 dark:bg-amber-950/20 dark:text-white"
+                        class="inline-flex items-center gap-2 rounded-md bg-amber-50/60 px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm outline-none hover:bg-amber-50 active:bg-amber-100 focus:outline-none focus-visible:outline-none dark:bg-amber-950/20 dark:text-white dark:hover:bg-amber-950/30"
+                        :disabled="practiceAnswerBusy"
                         :aria-expanded="practiceSettingsOpen"
                         @click="openPracticeSettings"
                     >
@@ -31,8 +32,7 @@
 
         <!-- Main Content Area -->
         <div
-            class="flex flex-1 flex-col items-center px-6 py-8"
-            :class="practiceSettingsOpen ? 'justify-start' : 'justify-center'"
+            class="flex flex-1 flex-col items-center justify-start px-6 py-8"
         >
             <!-- Title -->
             <div class="mb-6 text-center">
@@ -48,7 +48,7 @@
 
             <div
                 v-if="practiceSettingsOpen"
-                class="mb-6 w-full max-w-4xl rounded-2xl border border-rose-200 bg-amber-50/40 p-5 shadow-sm dark:border-rose-900 dark:bg-amber-950/10"
+                class="mb-6 w-full max-w-4xl rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10"
             >
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -64,7 +64,7 @@
                         </p>
                     </div>
                     <div
-                        class="inline-flex rounded-lg border border-rose-200 bg-white p-1 dark:border-rose-900 dark:bg-slate-950"
+                        class="inline-flex rounded-lg border border-amber-200 bg-white p-1 dark:border-amber-900/60 dark:bg-slate-950"
                     >
                         <button
                             v-for="choice in practiceSessionChoices"
@@ -100,8 +100,8 @@
                                 class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition"
                                 :class="
                                     practiceQuestionTypes[item.kind]
-                                        ? 'border-rose-300 bg-amber-50 text-slate-950 dark:border-rose-800 dark:bg-amber-950/20 dark:text-white'
-                                        : 'border-slate-200 bg-white text-slate-600 hover:border-rose-200 hover:bg-amber-50/50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300'
+                                        ? 'border-amber-300 bg-amber-50 text-slate-950 dark:border-amber-800/70 dark:bg-amber-950/20 dark:text-white'
+                                        : 'border-slate-200 bg-white text-slate-600 hover:border-amber-200 hover:bg-amber-50/50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-amber-900/60'
                                 "
                                 :aria-pressed="practiceQuestionTypes[item.kind]"
                                 @click="togglePracticeQuestionType(item.kind)"
@@ -304,7 +304,10 @@
 
             <div v-else class="w-full max-w-2xl">
                 <div
-                    class="rounded-lg border border-slate-200 bg-slate-50 p-8 dark:border-slate-800 dark:bg-slate-900"
+                    class="rounded-lg border border-amber-200 bg-amber-50/20 p-8 dark:border-amber-900/60 dark:bg-amber-950/10"
+                    :class="{
+                        'animate-slide-left': learnIsNavigating,
+                    }"
                 >
                     <p
                         class="text-sm font-medium text-slate-500 dark:text-slate-400"
@@ -333,16 +336,26 @@
                         >
                             <button
                                 type="button"
-                                class="inline-flex min-h-12 items-center justify-center rounded-lg border border-amber-500 bg-amber-400 px-4 py-2.5 text-base font-semibold text-slate-950 shadow-sm hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2"
-                                :disabled="learnBusy"
+                                class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                                :class="
+                                    practiceTrueFalseChoiceClass(true)
+                                "
+                                :disabled="
+                                    learnBusy || practiceAnswerBusy
+                                "
                                 @click="answerLearnTrueFalse(true)"
                             >
                                 {{ t("common.true") }}
                             </button>
                             <button
                                 type="button"
-                                class="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-base font-semibold text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
-                                :disabled="learnBusy"
+                                class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                                :class="
+                                    practiceTrueFalseChoiceClass(false)
+                                "
+                                :disabled="
+                                    learnBusy || practiceAnswerBusy
+                                "
                                 @click="answerLearnTrueFalse(false)"
                             >
                                 {{ t("common.false") }}
@@ -360,8 +373,13 @@
                                 ) in learnCurrentQuestion.options"
                                 :key="`${learnCurrentQuestion.id}:${idx}`"
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                :disabled="learnBusy"
+                                class="inline-flex items-center justify-center rounded-md border px-4 py-3 text-sm font-medium shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                                :class="
+                                    practiceMultipleChoiceClass(idx)
+                                "
+                                :disabled="
+                                    learnBusy || practiceAnswerBusy
+                                "
                                 @click="answerLearnMultipleChoice(idx)"
                             >
                                 <MarkdownRenderer
@@ -385,13 +403,16 @@
                                 v-model="practiceWrittenAnswer"
                                 rows="5"
                                 autofocus
-                                class="w-full resize-y rounded-lg border border-rose-200 bg-white px-3 py-3 text-sm text-slate-950 shadow-sm outline-none focus:border-rose-300 focus:ring-2 focus:ring-amber-200 dark:border-rose-900 dark:bg-slate-950 dark:text-white"
+                                class="w-full resize-y rounded-lg border border-amber-200 bg-white px-3 py-3 text-sm text-slate-950 shadow-sm outline-none focus:border-amber-300 focus:ring-2 focus:ring-amber-200 dark:border-amber-900/60 dark:bg-slate-950 dark:text-white"
                                 placeholder="Type the definition..."
                             />
                             <button
                                 type="submit"
                                 class="justify-self-end rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-50"
-                                :disabled="!practiceWrittenAnswer.trim()"
+                                :disabled="
+                                    !practiceWrittenAnswer.trim() ||
+                                    practiceAnswerBusy
+                                "
                             >
                                 Submit answer
                             </button>
@@ -471,6 +492,16 @@ const practiceSecondsRemaining = ref(10 * 60);
 const practiceTimedOut = ref(false);
 const practiceWrittenAnswer = ref("");
 const practiceTimerHandle = shallowRef<number | null>(null);
+type PracticeChoiceValue = boolean | number;
+type PracticeAnswerFeedback = {
+    questionId: string;
+    selected: PracticeChoiceValue;
+    correct: PracticeChoiceValue;
+};
+const practiceAnswerFeedback = ref<PracticeAnswerFeedback | null>(null);
+const practiceAnswerBusy = ref(false);
+const learnIsNavigating = ref(false);
+const practiceAnswerTransitionId = ref(0);
 
 const baseSeed = computed(() => {
     const raw = route.query.seed;
@@ -580,6 +611,7 @@ function openPracticeSettings() {
 }
 
 function expirePracticeSession() {
+    cancelPracticeAnswerFeedback();
     clearPracticeTimer();
     practiceTimedOut.value = true;
     const answers = { ...learnAnswersByQuestionId.value };
@@ -626,16 +658,81 @@ function learnMarkAnswered(questionId: string, isCorrect: boolean) {
     learnCursorIndex.value = next;
 }
 
+function practiceChoiceFeedbackClass(choice: PracticeChoiceValue) {
+    const feedback = practiceAnswerFeedback.value;
+    const question = learnCurrentQuestion.value;
+    if (!feedback || !question || feedback.questionId !== question.id) {
+        return null;
+    }
+    if (choice === feedback.correct) {
+        return "border-2 border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-200 focus-visible:ring-emerald-300 dark:border-emerald-500 dark:bg-emerald-950/35 dark:text-emerald-50 dark:ring-emerald-900/70";
+    }
+    if (choice === feedback.selected) {
+        return "border-2 border-red-700 bg-red-50/80 text-red-950 ring-2 ring-red-200 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/40 dark:text-red-50 dark:ring-red-900/70";
+    }
+    return null;
+}
+
+function practiceTrueFalseChoiceClass(choice: boolean) {
+    const feedbackClass = practiceChoiceFeedbackClass(choice);
+    if (feedbackClass) return feedbackClass;
+    if (choice) {
+        return "border-amber-500 bg-amber-400 text-slate-950 hover:bg-amber-300 focus-visible:ring-amber-300 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300";
+    }
+    return "border-slate-300 bg-white text-slate-900 hover:bg-slate-100 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900";
+}
+
+function practiceMultipleChoiceClass(choice: number) {
+    const feedbackClass = practiceChoiceFeedbackClass(choice);
+    if (feedbackClass) return feedbackClass;
+    return "border-slate-200 bg-white text-slate-900 hover:bg-slate-50 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500";
+}
+
+function waitForFeedback(ms: number) {
+    return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+}
+
+function cancelPracticeAnswerFeedback() {
+    practiceAnswerTransitionId.value += 1;
+    practiceAnswerFeedback.value = null;
+    practiceAnswerBusy.value = false;
+    learnIsNavigating.value = false;
+}
+
+async function submitPracticeChoice(
+    questionId: string,
+    selected: PracticeChoiceValue,
+    correct: PracticeChoiceValue,
+) {
+    if (practiceAnswerBusy.value) return;
+    const transitionId = ++practiceAnswerTransitionId.value;
+    const isCorrect = selected === correct;
+    practiceAnswerFeedback.value = { questionId, selected, correct };
+    practiceAnswerBusy.value = true;
+
+    await waitForFeedback((isCorrect ? 1000 : 1800) - 250);
+    if (transitionId !== practiceAnswerTransitionId.value) return;
+
+    learnIsNavigating.value = true;
+    await waitForFeedback(250);
+    if (transitionId !== practiceAnswerTransitionId.value) return;
+
+    learnMarkAnswered(questionId, isCorrect);
+    practiceAnswerFeedback.value = null;
+    practiceAnswerBusy.value = false;
+    learnIsNavigating.value = false;
+}
+
 function answerLearnTrueFalse(value: boolean) {
     const q = learnCurrentQuestion.value;
     if (!q || q.kind !== "true_false") return;
-    learnMarkAnswered(q.id, value === q.answer);
+    void submitPracticeChoice(q.id, value, q.answer);
 }
 
 function answerLearnMultipleChoice(selectedIndex: number) {
     const q = learnCurrentQuestion.value;
     if (!q || q.kind !== "multiple_choice") return;
-    learnMarkAnswered(q.id, selectedIndex === q.answerIndex);
+    void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
 }
 
 function normalizeWrittenAnswer(value: string) {
@@ -647,16 +744,27 @@ function normalizeWrittenAnswer(value: string) {
         .trim();
 }
 
-function answerLearnWritten() {
+async function answerLearnWritten() {
     const q = learnCurrentQuestion.value;
-    if (!q || q.kind !== "written" || !practiceWrittenAnswer.value.trim())
+    if (
+        !q ||
+        q.kind !== "written" ||
+        !practiceWrittenAnswer.value.trim() ||
+        practiceAnswerBusy.value
+    )
         return;
-    learnMarkAnswered(
-        q.id,
+    const transitionId = ++practiceAnswerTransitionId.value;
+    const isCorrect =
         normalizeWrittenAnswer(practiceWrittenAnswer.value) ===
-            normalizeWrittenAnswer(q.answer),
-    );
+        normalizeWrittenAnswer(q.answer);
+    practiceAnswerBusy.value = true;
+    learnIsNavigating.value = true;
+    await waitForFeedback(250);
+    if (transitionId !== practiceAnswerTransitionId.value) return;
+    learnMarkAnswered(q.id, isCorrect);
     practiceWrittenAnswer.value = "";
+    practiceAnswerBusy.value = false;
+    learnIsNavigating.value = false;
 }
 
 function parseLearnAugmentJson(raw: string): LearnQuestion[] {
@@ -796,6 +904,7 @@ async function startLearnRun(options?: {
     resetCounter?: boolean;
     startTimer?: boolean;
 }) {
+    cancelPracticeAnswerFeedback();
     const s = set.value;
     if (!s) return;
     if (options?.resetCounter) learnRunCounter.value = 0;
@@ -917,6 +1026,24 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+    cancelPracticeAnswerFeedback();
     clearPracticeTimer();
 });
 </script>
+
+<style scoped>
+@keyframes slideLeft {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-10%);
+        opacity: 0;
+    }
+}
+
+.animate-slide-left {
+    animation: slideLeft 0.25s ease-in-out;
+}
+</style>

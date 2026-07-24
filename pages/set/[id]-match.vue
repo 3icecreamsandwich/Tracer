@@ -349,11 +349,11 @@ function matchTileClass(tile: MatchTile) {
     if (matched) {
         return "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100";
     }
-    if (selected && !matchMemoryMode.value) {
-        return "border-[#C75F5F] bg-[#FFF2F3] text-slate-900 ring-1 ring-[#E8BDBD] dark:border-[#C75F5F] dark:bg-[#2A171A] dark:text-slate-50 dark:ring-[#7A3535]";
+    if (selected && matchBusy.value) {
+        return "border-red-800 bg-red-100 text-red-950 ring-2 ring-red-500/70 dark:border-red-500 dark:bg-red-950/60 dark:text-red-50 dark:ring-red-700/80";
     }
     if (selected) {
-        return "border-[#C75F5F] bg-[#FFF2F3] text-slate-900 ring-1 ring-[#E8BDBD] dark:border-[#C75F5F] dark:bg-[#2A171A] dark:text-slate-50 dark:ring-[#7A3535]";
+        return "border-amber-500 bg-amber-50 text-slate-900 ring-1 ring-amber-200 dark:border-amber-600 dark:bg-amber-950/25 dark:text-slate-50 dark:ring-amber-900/60";
     }
     if (revealed) {
         return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50";

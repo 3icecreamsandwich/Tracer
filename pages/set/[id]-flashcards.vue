@@ -78,13 +78,16 @@
                 <button
                     ref="viewerButtonEl"
                     type="button"
-                    class="relative flex flex-col items-center justify-center w-[70vw] h-[50vh] rounded-lg border border-slate-200 bg-slate-50 px-8 py-12 text-center shadow-md hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                    :class="{
-                        'animate-flip': isFlipping,
-                        'animate-slide-left': isNavigating === 'next',
-                        'animate-slide-right': isNavigating === 'prev',
-                    }"
-                    :disabled="totalCount === 0"
+                    class="relative flex flex-col items-center justify-center w-[70vw] h-[50vh] rounded-lg px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                    :class="[
+                        flashcardSurfaceClass,
+                        {
+                            'animate-flip': isFlipping,
+                            'animate-slide-left': isNavigating === 'next',
+                            'animate-slide-right': isNavigating === 'prev',
+                        },
+                    ]"
+                    :disabled="totalCount === 0 || flashcardAnswerBusy"
                     @click="toggleFlip"
                 >
                     <span
@@ -144,7 +147,11 @@
                     <button
                         type="button"
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-amber-600 shadow-sm hover:border-amber-200 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
-                        :disabled="totalCount === 0 || cursorIndex === 0"
+                        :disabled="
+                            totalCount === 0 ||
+                            cursorIndex === 0 ||
+                            flashcardAnswerBusy
+                        "
                         @click="goPrev"
                     >
                         ← {{ t("set.previous") }}
@@ -154,7 +161,9 @@
                         type="button"
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :disabled="
-                            totalCount === 0 || cursorIndex >= order.length - 1
+                            totalCount === 0 ||
+                            cursorIndex >= order.length - 1 ||
+                            flashcardAnswerBusy
                         "
                         @click="goNext"
                     >
@@ -205,7 +214,7 @@
                     <button
                         type="button"
                         class="inline-flex h-10 items-center justify-center rounded-md border border-[#C14D4D] bg-white px-3 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
-                        :disabled="!currentTerm"
+                        :disabled="!currentTerm || flashcardAnswerBusy"
                         @click="markIncorrect"
                     >
                         {{ t("set.missed") }}
@@ -214,7 +223,7 @@
                     <button
                         type="button"
                         class="inline-flex h-10 items-center justify-center rounded-md border border-[#2D8210] bg-white px-3 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
-                        :disabled="!currentTerm"
+                        :disabled="!currentTerm || flashcardAnswerBusy"
                         @click="markCorrect"
                     >
                         {{ t("set.gotIt") }}
@@ -258,6 +267,9 @@ const set = ref<FlashcardSet | null>(null);
 const isFlipped = ref(false);
 const isFlipping = ref(false);
 const isNavigating = ref<"prev" | "next" | null>(null);
+const flashcardAnswerFeedback = ref<"correct" | "incorrect" | null>(null);
+const flashcardAnswerBusy = ref(false);
+const flashcardAnswerTransitionId = ref(0);
 
 const runCounter = ref(0);
 const cursorIndex = ref(0);
@@ -351,6 +363,16 @@ const viewerImage = computed(() => {
     return isFlipped.value ? (t.backImage ?? null) : (t.frontImage ?? null);
 });
 
+const flashcardSurfaceClass = computed(() => {
+    if (flashcardAnswerFeedback.value === "correct") {
+        return "border-2 border-emerald-600 bg-emerald-50/60 hover:bg-emerald-50/60 focus-visible:ring-emerald-300 dark:border-emerald-500 dark:bg-emerald-950/25 dark:hover:bg-emerald-950/25 dark:focus-visible:ring-emerald-800";
+    }
+    if (flashcardAnswerFeedback.value === "incorrect") {
+        return "border-2 border-red-700 bg-red-50/70 hover:bg-red-50/70 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/30 dark:hover:bg-red-950/30 dark:focus-visible:ring-red-800";
+    }
+    return "border border-amber-200 bg-amber-50/20 hover:bg-amber-50/40 focus-visible:ring-amber-300 dark:border-amber-900/60 dark:bg-amber-950/10 dark:hover:bg-amber-950/20 dark:focus-visible:ring-amber-800";
+});
+
 const isCurrentStarred = computed(() => {
     const t = currentTerm.value;
     if (!t) return false;
@@ -418,6 +440,7 @@ function shuffle<T>(items: T[], rand: () => number) {
 }
 
 function shuffleRun() {
+    cancelFlashcardAnswerFeedback();
     const s = set.value;
     if (!s) return;
     const ids = studyTermIds.value;
@@ -456,6 +479,7 @@ function shuffleRun() {
 }
 
 function startRun(options?: { resetCounter?: boolean }) {
+    cancelFlashcardAnswerFeedback();
     const s = set.value;
     if (!s) return;
     if (options?.resetCounter) runCounter.value = 0;
@@ -486,7 +510,7 @@ function toggleStarredOnly() {
 }
 
 function toggleFlip() {
-    if (totalCount.value === 0) return;
+    if (totalCount.value === 0 || flashcardAnswerBusy.value) return;
     isFlipping.value = true;
     setTimeout(() => {
         isFlipped.value = !isFlipped.value;
@@ -495,7 +519,7 @@ function toggleFlip() {
 }
 
 function goPrev() {
-    if (order.value.length === 0) return;
+    if (order.value.length === 0 || flashcardAnswerBusy.value) return;
     const next = Math.min(
         Math.max(cursorIndex.value - 1, 0),
         order.value.length - 1,
@@ -511,7 +535,7 @@ function goPrev() {
 }
 
 function goNext() {
-    if (order.value.length === 0) return;
+    if (order.value.length === 0 || flashcardAnswerBusy.value) return;
     const next = Math.min(
         Math.max(cursorIndex.value + 1, 0),
         order.value.length - 1,
@@ -539,7 +563,7 @@ function findNextUnattempted(fromIndex: number) {
     return null;
 }
 
-function markAnswer(answer: "correct" | "incorrect") {
+function commitAnswer(answer: "correct" | "incorrect") {
     const t = currentTerm.value;
     if (!t) return;
     const id = t.id as Uuid;
@@ -564,12 +588,43 @@ function markAnswer(answer: "correct" | "incorrect") {
     cursorIndex.value = next;
 }
 
+function waitForFeedback(ms: number) {
+    return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+}
+
+function cancelFlashcardAnswerFeedback() {
+    flashcardAnswerTransitionId.value += 1;
+    flashcardAnswerFeedback.value = null;
+    flashcardAnswerBusy.value = false;
+    isNavigating.value = null;
+}
+
+async function markAnswer(answer: "correct" | "incorrect") {
+    if (!currentTerm.value || flashcardAnswerBusy.value) return;
+    const transitionId = ++flashcardAnswerTransitionId.value;
+    flashcardAnswerFeedback.value = answer;
+    flashcardAnswerBusy.value = true;
+    isFlipped.value = false;
+
+    await waitForFeedback(450);
+    if (transitionId !== flashcardAnswerTransitionId.value) return;
+
+    isNavigating.value = "next";
+    await waitForFeedback(250);
+    if (transitionId !== flashcardAnswerTransitionId.value) return;
+
+    commitAnswer(answer);
+    isNavigating.value = null;
+    flashcardAnswerFeedback.value = null;
+    flashcardAnswerBusy.value = false;
+}
+
 function markCorrect() {
-    markAnswer("correct");
+    void markAnswer("correct");
 }
 
 function markIncorrect() {
-    markAnswer("incorrect");
+    void markAnswer("incorrect");
 }
 
 async function loadStars(setId: Uuid) {
@@ -723,6 +778,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+    cancelFlashcardAnswerFeedback();
     window.removeEventListener("keydown", onKeydown);
 });
 </script>

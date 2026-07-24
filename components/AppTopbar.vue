@@ -17,7 +17,7 @@
                 class="inline-flex shrink-0 items-center mx-2 gap-3 rounded-lg text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-white"
             >
                 <span
-                    class="text-[22px] font-semibold tracking-tight text-white"
+                    class="text-[22px] font-semibold tracking-tight text-slate-950 dark:text-white"
                 >
                     Tracer
                 </span>

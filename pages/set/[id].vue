@@ -364,15 +364,21 @@
                                 <button
                                     ref="viewerButtonEl"
                                     type="button"
-                                    class="relative mt-3 flex min-h-[clamp(16rem,34vh,24rem)] w-full items-center justify-center rounded-lg border border-orange-200 bg-orange-50/20 p-6 text-left shadow-sm hover:bg-orange-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
-                                    :class="{
-                                        'animate-flip': isFlipping,
-                                        'animate-slide-left':
-                                            isNavigating === 'next',
-                                        'animate-slide-right':
-                                            isNavigating === 'prev',
-                                    }"
-                                    :disabled="totalCount === 0"
+                                    class="relative mt-3 flex min-h-[clamp(16rem,34vh,24rem)] w-full items-center justify-center rounded-lg p-6 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2"
+                                    :class="[
+                                        flashcardSurfaceClass,
+                                        {
+                                            'animate-flip': isFlipping,
+                                            'animate-slide-left':
+                                                isNavigating === 'next',
+                                            'animate-slide-right':
+                                                isNavigating === 'prev',
+                                        },
+                                    ]"
+                                    :disabled="
+                                        totalCount === 0 ||
+                                        flashcardAnswerBusy
+                                    "
                                     @click="toggleFlip"
                                 >
                                     <span
@@ -417,7 +423,8 @@
                                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                             :disabled="
                                                 totalCount === 0 ||
-                                                cursorIndex === 0
+                                                cursorIndex === 0 ||
+                                                flashcardAnswerBusy
                                             "
                                             @click="goPrev"
                                         >
@@ -430,7 +437,8 @@
                                             :disabled="
                                                 totalCount === 0 ||
                                                 cursorIndex >=
-                                                    order.length - 1
+                                                    order.length - 1 ||
+                                                flashcardAnswerBusy
                                             "
                                             @click="goNext"
                                         >
@@ -454,7 +462,10 @@
                                         <button
                                             type="button"
                                             class="inline-flex h-10 items-center justify-center rounded-md border border-[#C14D4D] bg-white px-3 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
-                                            :disabled="!currentTerm"
+                                            :disabled="
+                                                !currentTerm ||
+                                                flashcardAnswerBusy
+                                            "
                                             @click="markIncorrect"
                                         >
                                         {{ t('set.missed') }}
@@ -462,7 +473,10 @@
                                         <button
                                             type="button"
                                             class="inline-flex h-10 items-center justify-center rounded-md border border-[#2D8210] bg-white px-3 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
-                                            :disabled="!currentTerm"
+                                            :disabled="
+                                                !currentTerm ||
+                                                flashcardAnswerBusy
+                                            "
                                             @click="markCorrect"
                                         >
                                         {{ t('set.gotIt') }}
@@ -500,7 +514,8 @@
                                     </p>
                                     <button
                                         type="button"
-                                        class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
+                                        class="inline-flex items-center gap-2 rounded-md bg-amber-50/60 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm outline-none hover:bg-amber-50 focus:outline-none focus-visible:outline-none disabled:opacity-60 dark:bg-amber-950/20 dark:text-slate-50 dark:hover:bg-amber-950/30"
+                                        :disabled="practiceAnswerBusy"
                                         :aria-expanded="practiceSettingsOpen"
                                         @click="openPracticeSettings"
                                     >
@@ -512,6 +527,7 @@
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :disabled="
                                             learnBusy ||
+                                            practiceAnswerBusy ||
                                             !set ||
                                             learnQuestions.length === 0
                                         "
@@ -712,7 +728,11 @@
 
                                 <div
                                     v-else
-                                    class="flex flex-1 flex-col rounded-md border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                                    class="flex flex-1 flex-col rounded-md border border-amber-200 bg-amber-50/20 p-5 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10"
+                                    :class="{
+                                        'animate-slide-left':
+                                            learnIsNavigating,
+                                    }"
                                 >
                                     <p
                                         class="text-xs font-medium text-slate-500 dark:text-slate-400"
@@ -724,8 +744,13 @@
                                     </div>
 
                                     <div
-                                        class="mt-4 grid gap-3"
-                                        :class="learnCurrentQuestion.kind === 'true_false' ? 'grid-cols-2' : 'flex-1'"
+                                        class="grid gap-3"
+                                        :class="
+                                            learnCurrentQuestion.kind ===
+                                            'true_false'
+                                                ? 'mt-auto grid-cols-2 pt-4'
+                                                : 'mt-4 flex-1'
+                                        "
                                     >
                                         <template
                                             v-if="
@@ -735,8 +760,16 @@
                                         >
                                             <button
                                                 type="button"
-                                                class="inline-flex min-h-12 items-center justify-center rounded-lg border border-amber-500 bg-amber-400 px-4 py-2.5 text-base font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
-                                                :disabled="learnBusy"
+                                                class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                                                :class="
+                                                    practiceTrueFalseChoiceClass(
+                                                        true,
+                                                    )
+                                                "
+                                                :disabled="
+                                                    learnBusy ||
+                                                    practiceAnswerBusy
+                                                "
                                                 @click="
                                                     answerLearnTrueFalse(true)
                                                 "
@@ -745,8 +778,16 @@
                                             </button>
                                             <button
                                                 type="button"
-                                                class="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-base font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
-                                                :disabled="learnBusy"
+                                                class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                                                :class="
+                                                    practiceTrueFalseChoiceClass(
+                                                        false,
+                                                    )
+                                                "
+                                                :disabled="
+                                                    learnBusy ||
+                                                    practiceAnswerBusy
+                                                "
                                                 @click="
                                                     answerLearnTrueFalse(false)
                                                 "
@@ -762,8 +803,16 @@
                                                 ) in learnCurrentQuestion.options"
                                                 :key="`${learnCurrentQuestion.id}:${idx}`"
                                                 type="button"
-                                                class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                                :disabled="learnBusy"
+                                                class="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                                                :class="
+                                                    practiceMultipleChoiceClass(
+                                                        idx,
+                                                    )
+                                                "
+                                                :disabled="
+                                                    learnBusy ||
+                                                    practiceAnswerBusy
+                                                "
                                                 @click="
                                                     answerLearnMultipleChoice(
                                                         idx,
@@ -783,7 +832,7 @@
                                                 class="w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-orange-900"
                                                 placeholder="Type the definition..."
                                             />
-                                            <button type="submit" class="justify-self-end rounded-lg bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-white dark:text-slate-950" :disabled="!practiceWrittenAnswer.trim()">Submit answer</button>
+                                            <button type="submit" class="justify-self-end rounded-lg bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-white dark:text-slate-950" :disabled="!practiceWrittenAnswer.trim() || practiceAnswerBusy">Submit answer</button>
                                         </form>
                                     </div>
                                 </div>
@@ -858,7 +907,7 @@
 
                             <div
                                 ref="chatLogEl"
-                                class="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
+                                class="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-md border border-amber-200 bg-amber-50/20 p-3 text-sm text-slate-900 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-50"
                                 role="log"
                                 aria-live="polite"
                             >
@@ -1037,7 +1086,7 @@
                             <div v-else class="mt-4 flex flex-1 flex-col">
                                 <div
                                     v-if="!matchIsRunning"
-                                    class="flex flex-1 flex-col items-center justify-center rounded-md border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                    class="flex flex-1 flex-col items-center justify-center rounded-md border border-amber-200 bg-amber-50/20 p-4 text-center text-sm text-slate-700 dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-200"
                                 >
                                     <p>{{ t('set.matchInstructions') }}</p>
                                     <button
@@ -1588,6 +1637,9 @@ const isFlipping = ref(false);
 const isNavigating = ref<"prev" | "next" | null>(null);
 
 type FlashcardsAnswer = "correct" | "incorrect";
+const flashcardAnswerFeedback = ref<FlashcardsAnswer | null>(null);
+const flashcardAnswerBusy = ref(false);
+const flashcardAnswerTransitionId = ref(0);
 
 const runCounter = ref(0);
 const cursorIndex = ref(0);
@@ -1845,6 +1897,16 @@ const practiceSecondsRemaining = ref(10 * 60);
 const practiceTimedOut = ref(false);
 const practiceWrittenAnswer = ref("");
 const practiceTimerHandle = shallowRef<number | null>(null);
+type PracticeChoiceValue = boolean | number;
+type PracticeAnswerFeedback = {
+    questionId: string;
+    selected: PracticeChoiceValue;
+    correct: PracticeChoiceValue;
+};
+const practiceAnswerFeedback = ref<PracticeAnswerFeedback | null>(null);
+const practiceAnswerBusy = ref(false);
+const learnIsNavigating = ref(false);
+const practiceAnswerTransitionId = ref(0);
 
 const matchPairsRequested = 8;
 const matchDurationSeconds = 600; // 10 minutes max for stopwatch
@@ -2037,6 +2099,16 @@ const viewerImage = computed(() => {
     return isFlipped.value ? t.backImage ?? null : t.frontImage ?? null;
 });
 
+const flashcardSurfaceClass = computed(() => {
+    if (flashcardAnswerFeedback.value === "correct") {
+        return "border-2 border-emerald-600 bg-emerald-50/60 hover:bg-emerald-50/60 focus-visible:ring-emerald-300 dark:border-emerald-500 dark:bg-emerald-950/25 dark:hover:bg-emerald-950/25 dark:focus-visible:ring-emerald-800";
+    }
+    if (flashcardAnswerFeedback.value === "incorrect") {
+        return "border-2 border-red-700 bg-red-50/70 hover:bg-red-50/70 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/30 dark:hover:bg-red-950/30 dark:focus-visible:ring-red-800";
+    }
+    return "border border-orange-200 bg-orange-50/20 hover:bg-orange-50/40 focus-visible:ring-orange-300 dark:border-amber-900/60 dark:bg-amber-950/10 dark:hover:bg-amber-950/20 dark:focus-visible:ring-amber-800";
+});
+
 const isCurrentStarred = computed(() => {
     const t = currentTerm.value;
     if (!t) return false;
@@ -2064,7 +2136,7 @@ const exportTsv = computed(() => {
 });
 
 function toggleFlip() {
-    if (totalCount.value === 0) return;
+    if (totalCount.value === 0 || flashcardAnswerBusy.value) return;
     isFlipping.value = true;
     setTimeout(() => {
         isFlipped.value = !isFlipped.value;
@@ -2073,7 +2145,7 @@ function toggleFlip() {
 }
 
 function goPrev() {
-    if (order.value.length === 0) return;
+    if (order.value.length === 0 || flashcardAnswerBusy.value) return;
     const next = Math.min(
         Math.max(cursorIndex.value - 1, 0),
         order.value.length - 1,
@@ -2089,7 +2161,7 @@ function goPrev() {
 }
 
 function goNext() {
-    if (order.value.length === 0) return;
+    if (order.value.length === 0 || flashcardAnswerBusy.value) return;
     const next = Math.min(
         Math.max(cursorIndex.value + 1, 0),
         order.value.length - 1,
@@ -2242,16 +2314,16 @@ function matchTileClass(tile: MatchTile) {
     if (matched) {
         return "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100";
     }
-    if (selected && !matchMemoryMode.value) {
-        return "border-[#C75F5F] bg-[#FFF2F3] text-slate-900 ring-1 ring-[#E8BDBD] dark:border-[#C75F5F] dark:bg-[#2A171A] dark:text-slate-50 dark:ring-[#7A3535]";
+    if (selected && matchBusy.value) {
+        return "border-red-800 bg-red-100 text-red-950 ring-2 ring-red-500/70 dark:border-red-500 dark:bg-red-950/60 dark:text-red-50 dark:ring-red-700/80";
     }
     if (selected) {
-        return "border-[#C75F5F] bg-[#FFF2F3] text-slate-900 ring-1 ring-[#E8BDBD] dark:border-[#C75F5F] dark:bg-[#2A171A] dark:text-slate-50 dark:ring-[#7A3535]";
+        return "border-amber-500 bg-amber-50 text-slate-900 ring-1 ring-amber-200 dark:border-amber-600 dark:bg-amber-950/25 dark:text-slate-50 dark:ring-amber-900/60";
     }
     if (revealed) {
-        return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50";
+        return "border-amber-200 bg-amber-50/20 text-slate-900 dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-50";
     }
-    return "border-slate-200 bg-slate-100 text-transparent hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900/70 dark:hover:bg-slate-800";
+    return "border-amber-200 bg-amber-50/30 text-transparent hover:bg-amber-50/60 dark:border-amber-900/60 dark:bg-amber-950/10 dark:hover:bg-amber-950/20";
 }
 
 function matchFindTile(id: string) {
@@ -2406,6 +2478,7 @@ function clearPracticeTimer() {
 }
 
 function expirePracticeSession() {
+    cancelPracticeAnswerFeedback();
     clearPracticeTimer();
     practiceTimedOut.value = true;
     const answers = { ...learnAnswersByQuestionId.value };
@@ -2452,16 +2525,77 @@ function learnMarkAnswered(questionId: string, isCorrect: boolean) {
     learnCursorIndex.value = next;
 }
 
+function practiceChoiceFeedbackClass(choice: PracticeChoiceValue) {
+    const feedback = practiceAnswerFeedback.value;
+    const question = learnCurrentQuestion.value;
+    if (!feedback || !question || feedback.questionId !== question.id) {
+        return null;
+    }
+    if (choice === feedback.correct) {
+        return "border-2 border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-200 focus-visible:ring-emerald-300 dark:border-emerald-500 dark:bg-emerald-950/35 dark:text-emerald-50 dark:ring-emerald-900/70";
+    }
+    if (choice === feedback.selected) {
+        return "border-2 border-red-700 bg-red-50/80 text-red-950 ring-2 ring-red-200 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/40 dark:text-red-50 dark:ring-red-900/70";
+    }
+    return null;
+}
+
+function practiceTrueFalseChoiceClass(choice: boolean) {
+    const feedbackClass = practiceChoiceFeedbackClass(choice);
+    if (feedbackClass) return feedbackClass;
+    if (choice) {
+        return "border-amber-500 bg-amber-400 text-slate-950 hover:bg-amber-300 focus-visible:ring-amber-300 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300";
+    }
+    return "border-slate-300 bg-white text-slate-900 hover:bg-slate-100 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900";
+}
+
+function practiceMultipleChoiceClass(choice: number) {
+    const feedbackClass = practiceChoiceFeedbackClass(choice);
+    if (feedbackClass) return feedbackClass;
+    return "border-slate-200 bg-white text-slate-900 hover:bg-slate-50 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500";
+}
+
+function cancelPracticeAnswerFeedback() {
+    practiceAnswerTransitionId.value += 1;
+    practiceAnswerFeedback.value = null;
+    practiceAnswerBusy.value = false;
+    learnIsNavigating.value = false;
+}
+
+async function submitPracticeChoice(
+    questionId: string,
+    selected: PracticeChoiceValue,
+    correct: PracticeChoiceValue,
+) {
+    if (practiceAnswerBusy.value) return;
+    const transitionId = ++practiceAnswerTransitionId.value;
+    const isCorrect = selected === correct;
+    practiceAnswerFeedback.value = { questionId, selected, correct };
+    practiceAnswerBusy.value = true;
+
+    await waitForFeedback((isCorrect ? 1000 : 1800) - 250);
+    if (transitionId !== practiceAnswerTransitionId.value) return;
+
+    learnIsNavigating.value = true;
+    await waitForFeedback(250);
+    if (transitionId !== practiceAnswerTransitionId.value) return;
+
+    learnMarkAnswered(questionId, isCorrect);
+    practiceAnswerFeedback.value = null;
+    practiceAnswerBusy.value = false;
+    learnIsNavigating.value = false;
+}
+
 function answerLearnTrueFalse(value: boolean) {
     const q = learnCurrentQuestion.value;
     if (!q || q.kind !== "true_false") return;
-    learnMarkAnswered(q.id, value === q.answer);
+    void submitPracticeChoice(q.id, value, q.answer);
 }
 
 function answerLearnMultipleChoice(selectedIndex: number) {
     const q = learnCurrentQuestion.value;
     if (!q || q.kind !== "multiple_choice") return;
-    learnMarkAnswered(q.id, selectedIndex === q.answerIndex);
+    void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
 }
 
 function normalizeWrittenAnswer(value: string) {
@@ -2473,15 +2607,27 @@ function normalizeWrittenAnswer(value: string) {
         .trim();
 }
 
-function answerLearnWritten() {
+async function answerLearnWritten() {
     const q = learnCurrentQuestion.value;
-    if (!q || q.kind !== "written" || !practiceWrittenAnswer.value.trim()) return;
-    learnMarkAnswered(
-        q.id,
+    if (
+        !q ||
+        q.kind !== "written" ||
+        !practiceWrittenAnswer.value.trim() ||
+        practiceAnswerBusy.value
+    )
+        return;
+    const transitionId = ++practiceAnswerTransitionId.value;
+    const isCorrect =
         normalizeWrittenAnswer(practiceWrittenAnswer.value) ===
-            normalizeWrittenAnswer(q.answer),
-    );
+        normalizeWrittenAnswer(q.answer);
+    practiceAnswerBusy.value = true;
+    learnIsNavigating.value = true;
+    await waitForFeedback(250);
+    if (transitionId !== practiceAnswerTransitionId.value) return;
+    learnMarkAnswered(q.id, isCorrect);
     practiceWrittenAnswer.value = "";
+    practiceAnswerBusy.value = false;
+    learnIsNavigating.value = false;
 }
 
 function buildLearnAugmentPrompt(args: {
@@ -2621,6 +2767,7 @@ async function startLearnRun(options?: {
     resetCounter?: boolean;
     startTimer?: boolean;
 }) {
+    cancelPracticeAnswerFeedback();
     const s = set.value;
     if (!s) return;
     if (options?.resetCounter) learnRunCounter.value = 0;
@@ -2666,6 +2813,7 @@ function shuffle<T>(items: T[], rand: () => number) {
 }
 
 function shuffleRun() {
+    cancelFlashcardAnswerFeedback();
     const s = set.value;
     if (!s) return;
     const ids = studyTermIds.value;
@@ -2704,6 +2852,7 @@ function shuffleRun() {
 }
 
 function startRun(options?: { resetCounter?: boolean }) {
+    cancelFlashcardAnswerFeedback();
     const s = set.value;
     if (!s) return;
     if (options?.resetCounter) runCounter.value = 0;
@@ -2747,7 +2896,7 @@ function findNextUnattempted(fromIndex: number) {
     return null;
 }
 
-function markAnswer(answer: FlashcardsAnswer) {
+function commitAnswer(answer: FlashcardsAnswer) {
     const t = currentTerm.value;
     if (!t) return;
     const id = t.id as Uuid;
@@ -2772,12 +2921,43 @@ function markAnswer(answer: FlashcardsAnswer) {
     cursorIndex.value = next;
 }
 
+function waitForFeedback(ms: number) {
+    return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+}
+
+function cancelFlashcardAnswerFeedback() {
+    flashcardAnswerTransitionId.value += 1;
+    flashcardAnswerFeedback.value = null;
+    flashcardAnswerBusy.value = false;
+    isNavigating.value = null;
+}
+
+async function markAnswer(answer: FlashcardsAnswer) {
+    if (!currentTerm.value || flashcardAnswerBusy.value) return;
+    const transitionId = ++flashcardAnswerTransitionId.value;
+    flashcardAnswerFeedback.value = answer;
+    flashcardAnswerBusy.value = true;
+    isFlipped.value = false;
+
+    await waitForFeedback(450);
+    if (transitionId !== flashcardAnswerTransitionId.value) return;
+
+    isNavigating.value = "next";
+    await waitForFeedback(250);
+    if (transitionId !== flashcardAnswerTransitionId.value) return;
+
+    commitAnswer(answer);
+    isNavigating.value = null;
+    flashcardAnswerFeedback.value = null;
+    flashcardAnswerBusy.value = false;
+}
+
 function markCorrect() {
-    markAnswer("correct");
+    void markAnswer("correct");
 }
 
 function markIncorrect() {
-    markAnswer("incorrect");
+    void markAnswer("incorrect");
 }
 
 async function loadStars(setId: Uuid) {
@@ -3510,6 +3690,8 @@ watch(
 );
 
 onBeforeUnmount(() => {
+    cancelFlashcardAnswerFeedback();
+    cancelPracticeAnswerFeedback();
     resetChat();
     clearPracticeTimer();
     clearMatchTimer();
