@@ -17,7 +17,7 @@ type ShortcutEvent = Pick<
 >
 
 export function flashcardSetIdFromPath(path: string): string | null {
-  const fullscreenMatch = path.match(/^\/set\/(.+)-(?:flashcards|learn|match)\/?$/)
+  const fullscreenMatch = path.match(/^\/set\/(.+)-(?:flashcards|learn|match|test)\/?$/)
   if (fullscreenMatch?.[1]) return fullscreenMatch[1]
 
   const setMatch = path.match(/^\/set\/([^/]+)(?:\/(?:edit|results))?\/?$/)
@@ -25,7 +25,7 @@ export function flashcardSetIdFromPath(path: string): string | null {
 }
 
 export function fallbackBackTarget(path: string): string {
-  const fullscreenMatch = path.match(/^\/(set|study-guide)\/(.+)-(?:flashcards|learn|match)\/?$/)
+  const fullscreenMatch = path.match(/^\/(set|study-guide)\/(.+)-(?:flashcards|learn|match|test)\/?$/)
   if (fullscreenMatch?.[1] && fullscreenMatch[2]) {
     return `/${fullscreenMatch[1]}/${fullscreenMatch[2]}`
   }

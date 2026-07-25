@@ -26,7 +26,7 @@
  const hideFloatingBackButton = computed(() => {
    if (route.meta?.hideBackButton === true) return true
    // Fullscreen study pages have their own header back button.
-   return /^\/(set|study-guide)\/.+-(flashcards|learn|match)\/?$/.test(route.path)
+   return /^\/(set|study-guide)\/.+-(flashcards|learn|match|test)\/?$/.test(route.path)
  })
 
  function onGlobalKeydown(event: KeyboardEvent) {

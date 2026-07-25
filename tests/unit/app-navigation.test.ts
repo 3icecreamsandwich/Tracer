@@ -31,6 +31,7 @@ describe('app navigation', () => {
     expect(flashcardSetIdFromPath('/set/demo')).toBe('demo')
     expect(flashcardSetIdFromPath('/set/demo/edit')).toBe('demo')
     expect(flashcardSetIdFromPath('/set/id-with-hyphens-flashcards')).toBe('id-with-hyphens')
+    expect(flashcardSetIdFromPath('/set/id-with-hyphens-test')).toBe('id-with-hyphens')
     expect(flashcardSetIdFromPath('/study-guide/demo')).toBeNull()
   })
 
@@ -43,6 +44,7 @@ describe('app navigation', () => {
 
     navigateBack(router, '/set/demo-flashcards', { back: null })
     expect(router.push).toHaveBeenCalledWith('/set/demo')
+    expect(fallbackBackTarget('/set/demo-test')).toBe('/set/demo')
     expect(fallbackBackTarget('/study-guide/demo')).toBe('/')
     expect(hasInAppBackEntry({ back: 'https://example.com' })).toBe(false)
   })

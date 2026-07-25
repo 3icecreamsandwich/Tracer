@@ -514,7 +514,7 @@
                                     </p>
                                     <button
                                         type="button"
-                                        class="inline-flex items-center gap-2 rounded-md bg-amber-50/60 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm outline-none hover:bg-amber-50 focus:outline-none focus-visible:outline-none disabled:opacity-60 dark:bg-amber-950/20 dark:text-slate-50 dark:hover:bg-amber-950/30"
+                                        class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :disabled="practiceAnswerBusy"
                                         :aria-expanded="practiceSettingsOpen"
                                         @click="openPracticeSettings"
@@ -2797,6 +2797,23 @@ function restartLearnRun() {
 
 function applyPracticeSettings() {
     practiceSettingsOpen.value = false;
+    if (practiceSessionMode.value === "test") {
+        const currentSet = set.value;
+        if (!currentSet) return;
+        clampPracticeQuestionCount();
+        void router.push({
+            path: `/set/${currentSet.id}-test`,
+            query: {
+                types: enabledPracticeQuestionTypes().join(","),
+                count: String(practiceQuestionCount.value),
+                shuffle: practiceShuffle.value ? "1" : "0",
+                timed: practiceTimed.value ? "1" : "0",
+                minutes: String(practiceTimeLimitMinutes.value),
+                seed: String(learnSeed()),
+            },
+        });
+        return;
+    }
     learnRunCounter.value += 1;
     void startLearnRun({ startTimer: true });
 }
