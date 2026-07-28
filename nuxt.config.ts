@@ -36,5 +36,9 @@ export default defineNuxtConfig({
 
   watch: {
     ignore: ['**/src-tauri/**']
+  },
+
+  devtools: {
+    enabled: false
   }
 })

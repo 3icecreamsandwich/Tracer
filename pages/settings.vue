@@ -560,14 +560,14 @@
         <div
           class="relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
         >
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0">
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('settings.clearApiKey') }}</h2>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                {{ providerApiKeyClearLabel }} · {{ t('settings.apiKey') }}
-              </p>
-            </div>
+          <div class="min-w-0">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('settings.clearApiKey') }}</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              {{ providerApiKeyClearLabel }} · {{ t('settings.apiKey') }}
+            </p>
+          </div>
 
+          <div class="mt-4 flex flex-wrap justify-end gap-2">
             <button
               type="button"
               class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -576,9 +576,6 @@
             >
               {{ t('common.cancel') }}
             </button>
-          </div>
-
-          <div class="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
               class="inline-flex items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"

@@ -7,7 +7,7 @@
     @click="onBack"
   >
     <span class="text-base">{{ language === 'ar' ? '→' : '←' }}</span>
-    <span>{{ t('common.back') }}</span>
+    <span>{{ props.label ?? t('common.back') }}</span>
   </button>
 </template>
 
@@ -21,11 +21,19 @@ import { hasTauriRuntime } from '~/src/composables/tauri'
 const props = withDefaults(
   defineProps<{
     nativeWindowControlsSafe?: boolean
+    label?: string
+    preventNavigation?: boolean
   }>(),
   {
     nativeWindowControlsSafe: false,
+    label: undefined,
+    preventNavigation: false,
   },
 )
+
+const emit = defineEmits<{
+  activate: []
+}>()
 
 const router = useRouter()
 const route = useRoute()
@@ -40,6 +48,10 @@ const isDisabled = computed(() => {
 })
 
 function onBack() {
+  if (props.preventNavigation) {
+    emit('activate')
+    return
+  }
   navigateBack(router, route.path, window.history.state)
 }
 

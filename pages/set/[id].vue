@@ -728,11 +728,14 @@
 
                                 <div
                                     v-else
-                                    class="flex flex-1 flex-col rounded-md border border-amber-200 bg-amber-50/20 p-5 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10"
-                                    :class="{
-                                        'animate-slide-left':
-                                            learnIsNavigating,
-                                    }"
+                                    class="flex flex-1 flex-col rounded-md border p-5 shadow-sm"
+                                    :class="[
+                                        practiceQuestionSurfaceClass(),
+                                        {
+                                            'animate-slide-left':
+                                                learnIsNavigating,
+                                        },
+                                    ]"
                                 >
                                     <p
                                         class="text-xs font-medium text-slate-500 dark:text-slate-400"
@@ -822,18 +825,86 @@
                                                 <MarkdownRenderer :markdown="opt" variant="compact" />
                                             </button>
                                         </template>
-                                        <form v-else class="grid gap-3" @submit.prevent="answerLearnWritten">
-                                            <label for="practice-written-answer" class="text-sm font-medium text-slate-700 dark:text-slate-200">Your answer</label>
-                                            <textarea
-                                                id="practice-written-answer"
-                                                v-model="practiceWrittenAnswer"
-                                                rows="4"
-                                                autofocus
-                                                class="w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-orange-900"
-                                                placeholder="Type the definition..."
-                                            />
-                                            <button type="submit" class="justify-self-end rounded-lg bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-white dark:text-slate-950" :disabled="!practiceWrittenAnswer.trim() || practiceAnswerBusy">Submit answer</button>
+                                        <form
+                                            v-else
+                                            class="grid gap-2"
+                                            @submit.prevent="answerLearnWritten"
+                                        >
+                                            <label
+                                                for="practice-written-answer"
+                                                class="sr-only"
+                                            >
+                                                Your answer
+                                            </label>
+                                            <div class="flex items-end gap-2">
+                                                <textarea
+                                                    id="practice-written-answer"
+                                                    v-model="practiceWrittenAnswer"
+                                                    rows="1"
+                                                    autofocus
+                                                    class="h-12 w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
+                                                    placeholder="Type your answer…"
+                                                    :disabled="
+                                                        practiceAnswerBusy ||
+                                                        Boolean(
+                                                            practiceWrittenFeedback,
+                                                        )
+                                                    "
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    class="inline-flex h-12 shrink-0 items-center rounded-lg border border-amber-500 bg-amber-400 px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                                                    :disabled="
+                                                        !practiceWrittenAnswer.trim() ||
+                                                        practiceAnswerBusy ||
+                                                        Boolean(
+                                                            practiceWrittenFeedback,
+                                                        )
+                                                    "
+                                                >
+                                                    {{
+                                                        practiceAnswerBusy
+                                                            ? "Checking…"
+                                                            : "Save"
+                                                    }}
+                                                </button>
+                                            </div>
                                         </form>
+                                    </div>
+                                </div>
+
+                                <div
+                                    v-if="practiceWrittenFeedback"
+                                    class="mt-3 rounded-md border p-4 shadow-sm"
+                                    :class="
+                                        practiceWrittenFeedback.isCorrect
+                                            ? 'border-emerald-300 bg-emerald-50/80 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100'
+                                            : 'border-red-300 bg-red-50/80 text-red-950 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100'
+                                    "
+                                >
+                                    <p class="text-sm font-semibold">
+                                        {{
+                                            practiceWrittenFeedback.isCorrect
+                                                ? "Correct"
+                                                : "Not quite"
+                                        }}
+                                    </p>
+                                    <p class="mt-1 text-sm">
+                                        {{
+                                            practiceWrittenFeedback.explanation
+                                        }}
+                                    </p>
+                                    <div class="mt-3 flex justify-end">
+                                        <button
+                                            type="button"
+                                            class="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                                            :disabled="practiceAnswerBusy"
+                                            @click="
+                                                continueAfterWrittenFeedback
+                                            "
+                                        >
+                                            Continue
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1151,7 +1222,9 @@
                         </section>
 
                         <section :aria-label="t('set.studyModes')">
-                            <div class="flex flex-nowrap gap-3 overflow-x-auto pb-1">
+                            <div
+                                class="study-mode-bar flex flex-nowrap gap-3 overflow-x-auto pb-1"
+                            >
                                 <StudyModeTile
                                     :to="`/set/${set.id}?mode=flashcards`"
                                     :fullscreen-to="`/set/${set.id}-flashcards`"
@@ -1575,6 +1648,12 @@ import {
     isAiErrorCandidate,
     type AiErrorUx,
 } from "~/src/composables/ai/ux-errors";
+import {
+    gradeWebPreviewWrittenAnswer,
+    gradeWrittenAnswer,
+    type WrittenAnswerGrade,
+    type WrittenAnswerGradeInput,
+} from "~/src/composables/ai/written-answer-grader";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 import {
@@ -1693,7 +1772,7 @@ const chatIsSaved = computed(() => activeSavedChatId.value !== null);
 
 const aiError = ref<AiErrorUx | null>(null);
 const aiErrorOpen = ref(false);
-const aiRetryAction = ref<"chat" | "save">("chat");
+const aiRetryAction = ref<"chat" | "save" | "written">("chat");
 const lastChatText = ref<string | null>(null);
 const cachedChatModel = shallowRef<{ id: string; model: any } | null>(null);
 const cachedChatModelPromise = shallowRef<
@@ -1858,6 +1937,11 @@ async function retryChat() {
 }
 
 async function retryAiRequest() {
+    if (aiRetryAction.value === "written") {
+        closeAiError();
+        await retryPracticeWrittenAnswer();
+        return;
+    }
     if (aiRetryAction.value === "save") {
         closeAiError();
         await saveChat();
@@ -1887,7 +1971,7 @@ const practiceSessionMode = ref<"practice" | "test">("practice");
 const practiceQuestionTypes = reactive<Record<LearnQuestionKind, boolean>>({
     multiple_choice: true,
     true_false: true,
-    written: false,
+    written: true,
 });
 const practiceQuestionCount = ref(10);
 const practiceShuffle = ref(true);
@@ -1904,6 +1988,14 @@ type PracticeAnswerFeedback = {
     correct: PracticeChoiceValue;
 };
 const practiceAnswerFeedback = ref<PracticeAnswerFeedback | null>(null);
+type PracticeWrittenFeedback = WrittenAnswerGrade & {
+    questionId: string;
+};
+const practiceWrittenFeedback = ref<PracticeWrittenFeedback | null>(null);
+const lastPracticeWrittenInput = ref<
+    (WrittenAnswerGradeInput & { questionId: string }) | null
+>(null);
+const practiceWrittenAbort = shallowRef<AbortController | null>(null);
 const practiceAnswerBusy = ref(false);
 const learnIsNavigating = ref(false);
 const practiceAnswerTransitionId = ref(0);
@@ -2557,7 +2649,11 @@ function practiceMultipleChoiceClass(choice: number) {
 
 function cancelPracticeAnswerFeedback() {
     practiceAnswerTransitionId.value += 1;
+    practiceWrittenAbort.value?.abort();
+    practiceWrittenAbort.value = null;
     practiceAnswerFeedback.value = null;
+    practiceWrittenFeedback.value = null;
+    lastPracticeWrittenInput.value = null;
     practiceAnswerBusy.value = false;
     learnIsNavigating.value = false;
 }
@@ -2598,13 +2694,18 @@ function answerLearnMultipleChoice(selectedIndex: number) {
     void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
 }
 
-function normalizeWrittenAnswer(value: string) {
-    return value
-        .toLocaleLowerCase()
-        .replace(/[`*_~#[\]()]/g, "")
-        .replace(/[^\p{L}\p{N}\s]/gu, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+function practiceQuestionSurfaceClass() {
+    const question = learnCurrentQuestion.value;
+    const feedback = practiceWrittenFeedback.value;
+    if (
+        question?.kind === "written" &&
+        feedback?.questionId === question.id
+    ) {
+        return feedback.isCorrect
+            ? "border-2 border-emerald-600 bg-emerald-50/40 dark:border-emerald-500 dark:bg-emerald-950/20"
+            : "border-2 border-red-700 bg-red-50/40 dark:border-red-500 dark:bg-red-950/20";
+    }
+    return "border-amber-200 bg-amber-50/20 dark:border-amber-900/60 dark:bg-amber-950/10";
 }
 
 async function answerLearnWritten() {
@@ -2616,16 +2717,100 @@ async function answerLearnWritten() {
         practiceAnswerBusy.value
     )
         return;
+    const input = {
+        questionId: q.id,
+        question: q.prompt,
+        referenceAnswer: q.answer,
+        studentAnswer: practiceWrittenAnswer.value.trim(),
+    };
+    lastPracticeWrittenInput.value = input;
+    await runPracticeWrittenGrade(input);
+}
+
+async function runPracticeWrittenGrade(
+    input: WrittenAnswerGradeInput & { questionId: string },
+) {
+    if (practiceAnswerBusy.value) return;
+    const question = learnCurrentQuestion.value;
+    if (
+        !question ||
+        question.kind !== "written" ||
+        question.id !== input.questionId
+    )
+        return;
+
     const transitionId = ++practiceAnswerTransitionId.value;
-    const isCorrect =
-        normalizeWrittenAnswer(practiceWrittenAnswer.value) ===
-        normalizeWrittenAnswer(q.answer);
+    const controller = new AbortController();
+    practiceWrittenAbort.value?.abort();
+    practiceWrittenAbort.value = controller;
+    practiceAnswerBusy.value = true;
+    practiceWrittenFeedback.value = null;
+    learnError.value = null;
+
+    try {
+        let grade: WrittenAnswerGrade;
+        if (isWebPreview.value) {
+            await waitForFeedback(250);
+            grade = gradeWebPreviewWrittenAnswer(input);
+        } else {
+            if (!defaultModelId.value) {
+                aiRetryAction.value = "written";
+                aiError.value = aiErrorForMissingDefaultModel();
+                aiErrorOpen.value = true;
+                return;
+            }
+            grade = await gradeWrittenAnswer({
+                model: await getCachedChatModel(defaultModelId.value),
+                input,
+                abortSignal: controller.signal,
+            });
+        }
+
+        if (
+            controller.signal.aborted ||
+            transitionId !== practiceAnswerTransitionId.value
+        )
+            return;
+        practiceWrittenFeedback.value = {
+            questionId: input.questionId,
+            ...grade,
+        };
+    } catch (error) {
+        if (controller.signal.aborted) return;
+        aiRetryAction.value = "written";
+        aiError.value = normalizeAiError(error);
+        aiErrorOpen.value = true;
+    } finally {
+        if (practiceWrittenAbort.value === controller) {
+            practiceWrittenAbort.value = null;
+        }
+        if (
+            !controller.signal.aborted &&
+            transitionId === practiceAnswerTransitionId.value
+        ) {
+            practiceAnswerBusy.value = false;
+        }
+    }
+}
+
+async function retryPracticeWrittenAnswer() {
+    const input = lastPracticeWrittenInput.value;
+    if (!input) return;
+    await runPracticeWrittenGrade(input);
+}
+
+async function continueAfterWrittenFeedback() {
+    const feedback = practiceWrittenFeedback.value;
+    if (!feedback || practiceAnswerBusy.value) return;
+    const transitionId = ++practiceAnswerTransitionId.value;
     practiceAnswerBusy.value = true;
     learnIsNavigating.value = true;
     await waitForFeedback(250);
     if (transitionId !== practiceAnswerTransitionId.value) return;
-    learnMarkAnswered(q.id, isCorrect);
+    learnMarkAnswered(feedback.questionId, feedback.isCorrect);
     practiceWrittenAnswer.value = "";
+    practiceWrittenFeedback.value = null;
+    lastPracticeWrittenInput.value = null;
     practiceAnswerBusy.value = false;
     learnIsNavigating.value = false;
 }
@@ -3719,6 +3904,11 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.study-mode-bar {
+    justify-content: center;
+    justify-content: safe center;
+}
+
 .study-panel {
     min-height: clamp(324px, 52.2vh, 576px);
     max-height: min(70.2vh, 684px);

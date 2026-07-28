@@ -104,7 +104,7 @@ const en: Messages = {
   'set.match': 'Match',
   'set.matchHint': 'Find pairs under pressure',
   'set.chat': 'Chat',
-  'set.chatHint': 'Chat with TracerAI',
+  'set.chatHint': 'Chat with Tracer',
   'set.studyGuide': 'Study guide',
   'set.studyGuideHint': 'Markdown',
   'set.terms': 'Terms',
