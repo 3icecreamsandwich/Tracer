@@ -80,10 +80,14 @@ describe('SQLite migrations (task 3)', () => {
         path.resolve(process.cwd(), 'src-tauri', 'migrations', '013_flashcard_score_autosave.sql'),
         'utf8'
       )
+      const practiceAutosaveMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '014_practice_autosave.sql'),
+        'utf8'
+      )
 
       const migrateRes = await runSqlite(
         dbPath,
-        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}\n${flashcardAutosaveMigrationSql}\n${flashcardScoreAutosaveMigrationSql}`
+        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}\n${flashcardAutosaveMigrationSql}\n${flashcardScoreAutosaveMigrationSql}\n${practiceAutosaveMigrationSql}`
       )
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
@@ -110,6 +114,7 @@ describe('SQLite migrations (task 3)', () => {
         'app_settings',
         'chats',
         'flashcard_progress',
+        'practice_progress',
         'home_library_order',
         'folders',
         'linked_folders',

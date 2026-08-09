@@ -25,6 +25,7 @@ export {
   createFlashcardProgressRepo,
   createFoldersRepo,
   createLinkedFoldersRepo,
+  createPracticeProgressRepo,
   createProfileRepo,
   createSettingsRepo,
   createSetsRepo,

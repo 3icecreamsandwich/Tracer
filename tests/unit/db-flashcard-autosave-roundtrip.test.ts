@@ -69,7 +69,8 @@ async function applyMigrations(dbPath: string) {
     '010_home_library_order.sql',
     '011_expand_text_scale.sql',
     '012_flashcard_autosave.sql',
-    '013_flashcard_score_autosave.sql'
+    '013_flashcard_score_autosave.sql',
+    '014_practice_autosave.sql'
   ]
   const migrations = await Promise.all(
     names.map((name) => readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8'))
@@ -123,6 +124,59 @@ describe('flashcard autosave persistence (sqlite:tracer.db)', () => {
 
       await db.execute(`DELETE FROM flashcard_sets WHERE id = 'set-1';`)
       expect(await progressRepo.get('set-1')).toBeNull()
+    } finally {
+      await rm(tmpDir, { recursive: true, force: true })
+    }
+  })
+
+  it('persists a Practice question, question order, and completed ratio state', async () => {
+    const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'tracer-practice-autosave-'))
+    try {
+      const dbPath = path.join(tmpDir, 'test.db')
+      await applyMigrations(dbPath)
+      const db = createSqliteCliDb(dbPath)
+      await db.execute(
+        `INSERT INTO flashcard_sets (id, title, terms_json, updated_at)
+         VALUES ('set-1', 'Biology', '[]', '2026-08-09T12:00:00.000Z');`
+      )
+
+      const { createPracticeProgressRepo } = await import(
+        '../../src/composables/db/repos/practice-progress.repo'
+      )
+      const repo = createPracticeProgressRepo(db)
+      const questions = [
+        {
+          id: 'written:term-1',
+          kind: 'written' as const,
+          prompt: 'Define cell.',
+          answer: 'The basic unit of life.',
+          termId: 'term-1'
+        },
+        {
+          id: 'tf:term-2:t:term-2',
+          kind: 'true_false' as const,
+          prompt: 'True or false?',
+          answer: true,
+          termId: 'term-2'
+        }
+      ]
+
+      expect(await repo.get('set-1')).toBeNull()
+      await repo.save('set-1', {
+        setUpdatedAt: '2026-08-09T12:00:00.000Z',
+        currentQuestionId: questions[1]!.id,
+        questions,
+        answersByQuestionId: { [questions[0]!.id]: true }
+      })
+      expect(await repo.get('set-1')).toEqual({
+        setUpdatedAt: '2026-08-09T12:00:00.000Z',
+        currentQuestionId: questions[1]!.id,
+        questions,
+        answersByQuestionId: { [questions[0]!.id]: true }
+      })
+
+      await db.execute(`DELETE FROM flashcard_sets WHERE id = 'set-1';`)
+      expect(await repo.get('set-1')).toBeNull()
     } finally {
       await rm(tmpDir, { recursive: true, force: true })
     }

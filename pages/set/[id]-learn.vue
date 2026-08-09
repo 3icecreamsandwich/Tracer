@@ -27,12 +27,17 @@
                     </p>
                     <button
                         type="button"
-                        class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :disabled="practiceAnswerBusy"
                         :aria-expanded="practiceSettingsOpen"
+                        aria-label="Practice settings"
+                        title="Practice settings"
                         @click="openPracticeSettings"
                     >
-                        <span aria-hidden="true">⚙</span> Settings
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -283,14 +288,6 @@
                     </p>
 
                     <div class="mt-6 flex flex-wrap justify-center gap-2">
-                        <button
-                            type="button"
-                            class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                            :disabled="!set || learnQuestions.length === 0"
-                            @click="restartLearnRun"
-                        >
-                            {{ t("common.restart") }}
-                        </button>
                         <NuxtLink
                             v-if="set"
                             :to="`/set/${set.id}`"
@@ -493,6 +490,11 @@ import { lockGetStatus } from "~/src/composables/lock";
 import { useLockSession } from "~/src/composables/lock-session";
 import { hasTauriRuntime } from "~/src/composables/tauri";
 import {
+    loadPracticeProgress,
+    savePracticeProgress,
+    type PracticeProgress,
+} from "~/src/composables/practice-progress";
+import {
     generateLearnQuestions,
     type LearnQuestion,
     type LearnQuestionKind,
@@ -533,6 +535,8 @@ const learnRunCounter = ref(0);
 const learnCursorIndex = ref(0);
 const learnQuestions = ref<LearnQuestion[]>([]);
 const learnAnswersByQuestionId = ref<Record<string, boolean>>({});
+const practiceProgressReady = ref(false);
+const savedPracticeProgressSignature = ref<string | null>(null);
 const practiceSettingsOpen = ref(false);
 const practiceSessionChoices = ["practice", "test"] as const;
 const practiceQuestionTypeChoices: {
@@ -1106,9 +1110,76 @@ async function startLearnRun(options?: {
     }
 }
 
-function restartLearnRun() {
-    learnRunCounter.value += 1;
-    void startLearnRun({ startTimer: true });
+function currentPracticeProgress(): PracticeProgress | null {
+    const currentSet = set.value;
+    if (!currentSet || learnQuestions.value.length === 0) return null;
+    return {
+        setUpdatedAt: currentSet.updatedAt,
+        currentQuestionId: learnCurrentQuestion.value?.id ?? null,
+        questions: learnQuestions.value,
+        answersByQuestionId: learnAnswersByQuestionId.value,
+    };
+}
+
+function persistPracticeRun() {
+    if (!practiceProgressReady.value) return;
+    const currentSet = set.value;
+    const progress = currentPracticeProgress();
+    if (!currentSet || !progress) return;
+    const signature = JSON.stringify(progress);
+    if (signature === savedPracticeProgressSignature.value) return;
+    savedPracticeProgressSignature.value = signature;
+    void savePracticeProgress(currentSet.id, progress, isWebPreview.value).catch(
+        () => {},
+    );
+}
+
+async function initializePracticeRun() {
+    const currentSet = set.value;
+    if (!currentSet) return;
+    practiceProgressReady.value = false;
+    const saved = await loadPracticeProgress(
+        currentSet.id,
+        isWebPreview.value,
+    );
+    if (
+        saved &&
+        (isWebPreview.value || saved.setUpdatedAt === currentSet.updatedAt) &&
+        saved.questions.length > 0
+    ) {
+        const questionIds = new Set(saved.questions.map((question) => question.id));
+        learnQuestions.value = saved.questions;
+        learnAnswersByQuestionId.value = Object.fromEntries(
+            Object.entries(saved.answersByQuestionId).filter(
+                ([questionId]) => questionIds.has(questionId),
+            ),
+        );
+        const savedIndex = saved.currentQuestionId
+            ? saved.questions.findIndex(
+                  (question) => question.id === saved.currentQuestionId,
+              )
+            : -1;
+        const firstUnansweredIndex = saved.questions.findIndex(
+            (question) =>
+                learnAnswersByQuestionId.value[question.id] === undefined,
+        );
+        learnCursorIndex.value =
+            savedIndex >= 0
+                ? savedIndex
+                : firstUnansweredIndex >= 0
+                  ? firstUnansweredIndex
+                  : 0;
+        savedPracticeProgressSignature.value = JSON.stringify(
+            currentPracticeProgress(),
+        );
+        practiceProgressReady.value = true;
+        return;
+    }
+
+    await startLearnRun({ resetCounter: true });
+    savedPracticeProgressSignature.value = null;
+    practiceProgressReady.value = true;
+    persistPracticeRun();
 }
 
 function applyPracticeSettings() {
@@ -1157,6 +1228,15 @@ watch(learnCurrentQuestion, () => {
     practiceWrittenAnswer.value = "";
 });
 
+watch(
+    () => {
+        const progress = currentPracticeProgress();
+        return progress ? JSON.stringify(progress) : null;
+    },
+    () => persistPracticeRun(),
+    { flush: "post" },
+);
+
 watch(practiceTimed, (enabled) => {
     if (!enabled) clearPracticeTimer();
 });
@@ -1166,7 +1246,7 @@ onMounted(async () => {
         if (isWebPreview.value) {
             set.value = createWebPreviewDemoSet(t);
             busy.value = false;
-            await startLearnRun({ resetCounter: true });
+            await initializePracticeRun();
             return;
         }
 
@@ -1204,7 +1284,7 @@ onMounted(async () => {
         await loadSet(idParam as Uuid);
 
         if (set.value) {
-            await startLearnRun({ resetCounter: true });
+            await initializePracticeRun();
         }
     } catch {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
@@ -1212,7 +1292,7 @@ onMounted(async () => {
         if (tauriInvoke !== "function") {
             set.value = createWebPreviewDemoSet(t);
             busy.value = false;
-            await startLearnRun({ resetCounter: true });
+            await initializePracticeRun();
             return;
         }
 
