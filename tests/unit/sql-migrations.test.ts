@@ -72,10 +72,18 @@ describe('SQLite migrations (task 3)', () => {
         path.resolve(process.cwd(), 'src-tauri', 'migrations', '011_expand_text_scale.sql'),
         'utf8'
       )
+      const flashcardAutosaveMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '012_flashcard_autosave.sql'),
+        'utf8'
+      )
+      const flashcardScoreAutosaveMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '013_flashcard_score_autosave.sql'),
+        'utf8'
+      )
 
       const migrateRes = await runSqlite(
         dbPath,
-        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}`
+        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}\n${flashcardAutosaveMigrationSql}\n${flashcardScoreAutosaveMigrationSql}`
       )
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
@@ -101,6 +109,7 @@ describe('SQLite migrations (task 3)', () => {
         'study_guides',
         'app_settings',
         'chats',
+        'flashcard_progress',
         'home_library_order',
         'folders',
         'linked_folders',
@@ -122,6 +131,13 @@ describe('SQLite migrations (task 3)', () => {
       )
       expect(maximumTextScaleRes.code).toBe(0)
       expect(maximumTextScaleRes.stdout.trim()).toBe('4')
+
+      const definitionFirstDefaultRes = await runSqlite(
+        dbPath,
+        ['.mode list', '.headers off', 'SELECT flashcards_definition_first FROM app_settings WHERE id = 1;'].join('\n') + '\n'
+      )
+      expect(definitionFirstDefaultRes.code).toBe(0)
+      expect(definitionFirstDefaultRes.stdout.trim()).toBe('0')
 
       const invalidJsonRes = await runSqlite(
         dbPath,

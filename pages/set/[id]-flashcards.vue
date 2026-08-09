@@ -12,6 +12,45 @@
                     >
                         {{ ratioText }}
                     </p>
+                    <div ref="flashcardSettingsMenuRoot" class="relative">
+                        <button
+                            ref="flashcardSettingsButtonEl"
+                            type="button"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            :aria-label="t('set.flashcardSettings')"
+                            :title="t('set.flashcardSettings')"
+                            :aria-expanded="flashcardSettingsOpen"
+                            aria-haspopup="menu"
+                            @click="flashcardSettingsOpen = !flashcardSettingsOpen"
+                        >
+                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+
+                        <div
+                            v-if="flashcardSettingsOpen"
+                            class="absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                            role="menu"
+                            :aria-label="t('set.flashcardSettings')"
+                        >
+                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="totalCount === 0" @click="shuffleFromFlashcardSettings">
+                                {{ t('set.shuffle') }}
+                            </button>
+                            <button type="button" role="menuitemcheckbox" :aria-checked="starredOnly" class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="starredStudyCount === 0 && !starredOnly" @click="toggleStarredOnlyFromFlashcardSettings">
+                                <span>{{ t('set.starredOnly') }}</span>
+                                <span class="w-4 text-center" aria-hidden="true">{{ starredOnly ? "✓" : "" }}</span>
+                            </button>
+                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="allStudyTermIds.length === 0" @click="restartFromFlashcardSettings">
+                                {{ t('common.restart') }}
+                            </button>
+                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
+                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="flashcardFrontPreferenceBusy" @click="togglePreferredFlashcardFront">
+                                {{ preferredFlashcardFrontOptionLabel }}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -100,7 +139,7 @@
                         class="text-sm font-medium text-slate-500 dark:text-slate-400"
                     >
                         {{
-                            isFlipped
+                            showingDefinition
                                 ? t("create.definition")
                                 : t("create.term")
                         }}
@@ -172,34 +211,6 @@
 
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="totalCount === 0"
-                        @click="shuffleRun"
-                    >
-                        {{ t("set.shuffle") }}
-                    </button>
-
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="allStudyTermIds.length === 0"
-                        @click="restartRun"
-                    >
-                        {{ t("common.restart") }}
-                    </button>
-
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-amber-200 bg-amber-50/30 px-4 py-2 text-sm font-medium text-amber-600 shadow-sm hover:border-amber-300 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-400 dark:hover:bg-amber-950/30"
-                        :disabled="starredStudyCount === 0"
-                        :aria-pressed="starredOnly"
-                        @click="toggleStarredOnly"
-                    >
-                        {{ starredOnly ? "★" : "☆" }} {{ t("set.starredOnly") }}
-                    </button>
-
-                    <button
-                        type="button"
                         class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-amber-500 bg-white p-0 text-sm font-medium text-amber-500 shadow-sm hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-amber-400 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
                         :disabled="!currentTerm || starBusy"
                         :aria-pressed="isCurrentStarred"
@@ -242,6 +253,7 @@ import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 import type { FlashcardSet, Uuid } from "~/src/composables/db/types";
 import {
+    createFlashcardProgressRepo,
     createProfileRepo,
     createSettingsRepo,
     createSetsRepo,
@@ -282,6 +294,130 @@ const retryTermIds = ref<Set<Uuid>>(new Set());
 const starredTermIds = ref<Set<Uuid>>(new Set());
 const starBusy = ref(false);
 const starredOnly = ref(false);
+const flashcardSettingsOpen = ref(false);
+const flashcardSettingsMenuRoot = ref<HTMLElement | null>(null);
+const flashcardSettingsButtonEl = ref<HTMLButtonElement | null>(null);
+const flashcardsDefinitionFirst = ref(false);
+const flashcardFrontPreferenceBusy = ref(false);
+const savedFlashcardTermId = ref<Uuid | null>(null);
+const savedFlashcardCorrectTermIds = ref<Uuid[]>([]);
+const savedFlashcardProgressSignature = ref<string | null>(null);
+
+type SavedFlashcardProgress = {
+    currentTermId: Uuid;
+    correctTermIds: Uuid[];
+};
+
+const WEB_FLASHCARD_FRONT_KEY = "tracer:flashcards-definition-first";
+const webFlashcardProgressKey = (setId: Uuid) =>
+    `tracer:flashcard-progress:${setId}`;
+
+const preferredFlashcardFrontOptionLabel = computed(() =>
+    flashcardsDefinitionFirst.value
+        ? t("set.termAtFront")
+        : t("set.definitionAtFront"),
+);
+
+function readWebFlashcardFrontPreference() {
+    try {
+        return window.localStorage.getItem(WEB_FLASHCARD_FRONT_KEY) === "true";
+    } catch {
+        return false;
+    }
+}
+
+function readWebFlashcardProgress(setId: Uuid): SavedFlashcardProgress | null {
+    try {
+        const raw = window.localStorage.getItem(webFlashcardProgressKey(setId));
+        if (!raw) return null;
+        try {
+            const parsed = JSON.parse(raw) as Partial<SavedFlashcardProgress>;
+            if (typeof parsed.currentTermId !== "string") return null;
+            return {
+                currentTermId: parsed.currentTermId,
+                correctTermIds: Array.isArray(parsed.correctTermIds)
+                    ? parsed.correctTermIds.filter(
+                          (id): id is Uuid => typeof id === "string",
+                      )
+                    : [],
+            };
+        } catch {
+            return { currentTermId: raw, correctTermIds: [] };
+        }
+    } catch {
+        return null;
+    }
+}
+
+async function loadSavedFlashcardProgress(setId: Uuid) {
+    if (isWebPreview.value) return readWebFlashcardProgress(setId);
+    try {
+        const db = await useTracerDb();
+        return await createFlashcardProgressRepo(db).get(setId);
+    } catch {
+        return null;
+    }
+}
+
+function persistFlashcardProgress(termId: Uuid) {
+    const setId = set.value?.id as Uuid | undefined;
+    if (!setId) return;
+    const correctTermIds = allStudyTermIds.value.filter(
+        (id) => answersByTermId.value[id] === "correct",
+    );
+    const progress = { currentTermId: termId, correctTermIds };
+    const signature = JSON.stringify(progress);
+    if (savedFlashcardProgressSignature.value === signature) return;
+    savedFlashcardTermId.value = termId;
+    savedFlashcardCorrectTermIds.value = correctTermIds;
+    savedFlashcardProgressSignature.value = signature;
+    if (isWebPreview.value) {
+        try {
+            window.localStorage.setItem(
+                webFlashcardProgressKey(setId),
+                signature,
+            );
+        } catch {}
+        return;
+    }
+    void useTracerDb()
+        .then((db) =>
+            createFlashcardProgressRepo(db).save(setId, progress),
+        )
+        .catch(() => {});
+}
+
+async function togglePreferredFlashcardFront() {
+    if (flashcardFrontPreferenceBusy.value) return;
+    const previous = flashcardsDefinitionFirst.value;
+    const next = !previous;
+    flashcardSettingsOpen.value = false;
+    flashcardsDefinitionFirst.value = next;
+    isFlipped.value = false;
+    flashcardFrontPreferenceBusy.value = true;
+    try {
+        if (isWebPreview.value) {
+            window.localStorage.setItem(WEB_FLASHCARD_FRONT_KEY, String(next));
+        } else {
+            const db = await useTracerDb();
+            await createSettingsRepo(db).set({
+                flashcardsDefinitionFirst: next,
+            });
+        }
+    } catch {
+        flashcardsDefinitionFirst.value = previous;
+    } finally {
+        flashcardFrontPreferenceBusy.value = false;
+        nextTick(() => flashcardSettingsButtonEl.value?.focus());
+    }
+}
+
+function onDocumentFlashcardSettingsPointerDown(event: PointerEvent) {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (flashcardSettingsMenuRoot.value?.contains(target)) return;
+    flashcardSettingsOpen.value = false;
+}
 
 const baseSeed = computed(() => {
     const raw = route.query.seed;
@@ -349,10 +485,14 @@ const currentTerm = computed(() => {
     return termById.value.get(id) ?? null;
 });
 
+const showingDefinition = computed(
+    () => flashcardsDefinitionFirst.value !== isFlipped.value,
+);
+
 const viewerText = computed(() => {
     const t = currentTerm.value;
     if (!t) return "No cards.";
-    return isFlipped.value ? t.back : t.front;
+    return showingDefinition.value ? t.back : t.front;
 });
 
 const viewerHasText = computed(() => viewerText.value.trim().length > 0);
@@ -360,7 +500,7 @@ const viewerHasText = computed(() => viewerText.value.trim().length > 0);
 const viewerImage = computed(() => {
     const t = currentTerm.value;
     if (!t) return null;
-    return isFlipped.value ? (t.backImage ?? null) : (t.frontImage ?? null);
+    return showingDefinition.value ? (t.backImage ?? null) : (t.frontImage ?? null);
 });
 
 const flashcardSurfaceClass = computed(() => {
@@ -478,7 +618,11 @@ function shuffleRun() {
     nextTick(() => viewerButtonEl.value?.focus());
 }
 
-function startRun(options?: { resetCounter?: boolean }) {
+function startRun(options?: {
+    resetCounter?: boolean;
+    resumeTermId?: Uuid | null;
+    resumeCorrectTermIds?: Uuid[];
+}) {
     cancelFlashcardAnswerFeedback();
     const s = set.value;
     if (!s) return;
@@ -487,9 +631,17 @@ function startRun(options?: { resetCounter?: boolean }) {
     const ids = studyTermIds.value;
     lastOrder.value = ids;
     order.value = ids;
-    cursorIndex.value = 0;
-    answersByTermId.value = {};
-    answerAttemptsCount.value = 0;
+    const resumeIndex = options?.resumeTermId
+        ? ids.indexOf(options.resumeTermId)
+        : -1;
+    cursorIndex.value = resumeIndex >= 0 ? resumeIndex : 0;
+    const correctTermIds = (options?.resumeCorrectTermIds ?? []).filter((id) =>
+        ids.includes(id),
+    );
+    answersByTermId.value = Object.fromEntries(
+        correctTermIds.map((id) => [id, "correct" as const]),
+    );
+    answerAttemptsCount.value = correctTermIds.length;
     retryTermIds.value = new Set();
     isFlipped.value = false;
 }
@@ -506,6 +658,21 @@ function restartRun() {
 function toggleStarredOnly() {
     if (!starredOnly.value && starredStudyCount.value === 0) return;
     starredOnly.value = !starredOnly.value;
+    restartRun();
+}
+
+function shuffleFromFlashcardSettings() {
+    flashcardSettingsOpen.value = false;
+    shuffleRun();
+}
+
+function toggleStarredOnlyFromFlashcardSettings() {
+    flashcardSettingsOpen.value = false;
+    toggleStarredOnly();
+}
+
+function restartFromFlashcardSettings() {
+    flashcardSettingsOpen.value = false;
     restartRun();
 }
 
@@ -681,7 +848,13 @@ function shouldIgnoreKey(e: KeyboardEvent) {
 }
 
 function onKeydown(e: KeyboardEvent) {
+    if (e.key === "Escape" && flashcardSettingsOpen.value) {
+        flashcardSettingsOpen.value = false;
+        flashcardSettingsButtonEl.value?.focus();
+        return;
+    }
     if (shouldIgnoreKey(e)) return;
+    if (flashcardSettingsOpen.value) return;
     if (isFinished.value) return;
 
     if (e.key === " " || e.code === "Space") {
@@ -701,22 +874,56 @@ function onKeydown(e: KeyboardEvent) {
     }
 }
 
-watch(language, () => {
+async function restoreSavedFlashcardRun(setId: Uuid) {
+    const savedProgress = await loadSavedFlashcardProgress(setId);
+    savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
+    savedFlashcardCorrectTermIds.value = savedProgress?.correctTermIds ?? [];
+    savedFlashcardProgressSignature.value = savedProgress
+        ? JSON.stringify(savedProgress)
+        : null;
+    startRun({
+        resetCounter: true,
+        resumeTermId: savedProgress?.currentTermId,
+        resumeCorrectTermIds: savedProgress?.correctTermIds,
+    });
+}
+
+watch(language, async () => {
     if (!isWebPreview.value) return;
     set.value = createWebPreviewDemoSet(t);
-    startRun({ resetCounter: true });
+    flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
+    await restoreSavedFlashcardRun(set.value.id);
 });
+
+watch(
+    () => [
+        order.value[cursorIndex.value] ?? null,
+        allStudyTermIds.value
+            .filter((id) => answersByTermId.value[id] === "correct")
+            .join("\u0000"),
+    ] as const,
+    ([termId]) => {
+        if (!termId) return;
+        persistFlashcardProgress(termId as Uuid);
+    },
+    { flush: "post" },
+);
 
 onMounted(async () => {
     try {
         if (isWebPreview.value) {
             set.value = createWebPreviewDemoSet(t);
             busy.value = false;
+            flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
             await loadStars(set.value.id);
-            startRun({ resetCounter: true });
+            await restoreSavedFlashcardRun(set.value.id);
             await nextTick();
             viewerButtonEl.value?.focus();
             window.addEventListener("keydown", onKeydown);
+            document.addEventListener(
+                "pointerdown",
+                onDocumentFlashcardSettingsPointerDown,
+            );
             return;
         }
 
@@ -731,6 +938,7 @@ onMounted(async () => {
         }
 
         const settings = await createSettingsRepo(db).get();
+        flashcardsDefinitionFirst.value = settings.flashcardsDefinitionFirst;
         if (settings.startupLockEnabled && status.requires_unlock) {
             if (!unlockedThisSession.value) {
                 markLocked();
@@ -752,23 +960,32 @@ onMounted(async () => {
 
         if (set.value) {
             await loadStars(set.value.id);
-            startRun({ resetCounter: true });
+            await restoreSavedFlashcardRun(set.value.id);
         }
         await nextTick();
         viewerButtonEl.value?.focus();
 
         window.addEventListener("keydown", onKeydown);
+        document.addEventListener(
+            "pointerdown",
+            onDocumentFlashcardSettingsPointerDown,
+        );
     } catch {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
         if (tauriInvoke !== "function") {
             set.value = createWebPreviewDemoSet(t);
             busy.value = false;
+            flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
             await loadStars(set.value.id);
-            startRun({ resetCounter: true });
+            await restoreSavedFlashcardRun(set.value.id);
             await nextTick();
             viewerButtonEl.value?.focus();
             window.addEventListener("keydown", onKeydown);
+            document.addEventListener(
+                "pointerdown",
+                onDocumentFlashcardSettingsPointerDown,
+            );
             return;
         }
 
@@ -780,6 +997,10 @@ onMounted(async () => {
 onBeforeUnmount(() => {
     cancelFlashcardAnswerFeedback();
     window.removeEventListener("keydown", onKeydown);
+    document.removeEventListener(
+        "pointerdown",
+        onDocumentFlashcardSettingsPointerDown,
+    );
 });
 </script>
 

@@ -81,6 +81,18 @@ pub fn run() {
             sql: include_str!("../migrations/011_expand_text_scale.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 12,
+            description: "add_flashcard_autosave",
+            sql: include_str!("../migrations/012_flashcard_autosave.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 13,
+            description: "add_flashcard_score_autosave",
+            sql: include_str!("../migrations/013_flashcard_score_autosave.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

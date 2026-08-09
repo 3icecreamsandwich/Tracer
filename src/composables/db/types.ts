@@ -60,6 +60,7 @@ export type AppSettings = {
   defaultModelId: string | null
   darkMode: boolean
   learnHybridEnabled: boolean
+  flashcardsDefinitionFirst: boolean
   language: AppLanguage
   textScale: number
 }

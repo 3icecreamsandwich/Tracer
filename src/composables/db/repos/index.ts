@@ -1,5 +1,6 @@
 export { createChatsRepo } from './chats.repo'
 export { createFoldersRepo } from './folders.repo'
+export { createFlashcardProgressRepo } from './flashcard-progress.repo'
 export { createLinkedFoldersRepo } from './linked-folders.repo'
 export { createProfileRepo } from './profile.repo'
 export { createSettingsRepo } from './settings.repo'
