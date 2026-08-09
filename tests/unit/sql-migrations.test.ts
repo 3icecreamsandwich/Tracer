@@ -84,10 +84,14 @@ describe('SQLite migrations (task 3)', () => {
         path.resolve(process.cwd(), 'src-tauri', 'migrations', '014_practice_autosave.sql'),
         'utf8'
       )
+      const floatingChatMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '015_floating_chat.sql'),
+        'utf8'
+      )
 
       const migrateRes = await runSqlite(
         dbPath,
-        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}\n${flashcardAutosaveMigrationSql}\n${flashcardScoreAutosaveMigrationSql}\n${practiceAutosaveMigrationSql}`
+        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}\n${flashcardAutosaveMigrationSql}\n${flashcardScoreAutosaveMigrationSql}\n${practiceAutosaveMigrationSql}\n${floatingChatMigrationSql}`
       )
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
@@ -143,6 +147,13 @@ describe('SQLite migrations (task 3)', () => {
       )
       expect(definitionFirstDefaultRes.code).toBe(0)
       expect(definitionFirstDefaultRes.stdout.trim()).toBe('0')
+
+      const floatingChatDefaultRes = await runSqlite(
+        dbPath,
+        ['.mode list', '.headers off', 'SELECT floating_chat_enabled FROM app_settings WHERE id = 1;'].join('\n') + '\n'
+      )
+      expect(floatingChatDefaultRes.code).toBe(0)
+      expect(floatingChatDefaultRes.stdout.trim()).toBe('1')
 
       const invalidJsonRes = await runSqlite(
         dbPath,

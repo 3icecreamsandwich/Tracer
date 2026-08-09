@@ -9,6 +9,8 @@
     <main>
       <slot />
     </main>
+
+    <FloatingPageChat />
   </div>
 </template>
 

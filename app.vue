@@ -8,6 +8,7 @@
 import { themeInitFromDb } from '~/src/composables/theme'
 import { languageInit } from '~/src/composables/language'
 import { textScaleInit } from '~/src/composables/text-scale'
+import { floatingChatInitFromDb } from '~/src/composables/floating-chat'
 import { useLockSession } from '~/src/composables/lock-session'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 import {
@@ -21,6 +22,7 @@ onMounted(() => {
   themeInitFromDb().catch(() => {})
   languageInit().catch(() => {})
   textScaleInit().catch(() => {})
+  floatingChatInitFromDb().catch(() => {})
   if (hasTauriRuntime() && unlockedThisSession.value) {
     startLinkedFolderSyncManager().catch(() => {})
   }

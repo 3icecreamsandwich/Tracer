@@ -100,6 +100,12 @@ pub fn run() {
             sql: include_str!("../migrations/014_practice_autosave.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 15,
+            description: "add_floating_chat_preference",
+            sql: include_str!("../migrations/015_floating_chat.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     let app = tauri::Builder::default()

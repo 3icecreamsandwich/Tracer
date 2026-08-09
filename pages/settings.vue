@@ -208,6 +208,29 @@
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+        aria-label="Page chat button"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-sm font-medium">Page chat button</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              Show the floating, page-aware Chat button throughout Tracer.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy"
+            @click="onToggleFloatingChat"
+          >
+            {{ floatingChatEnabled ? t('common.on') : t('common.off') }}
+          </button>
+        </div>
+      </section>
+
+      <section
+        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         :aria-label="t('settings.providers')"
       >
         <h2 class="text-sm font-medium">{{ t('settings.providers') }}</h2>
@@ -743,6 +766,10 @@ import {
 } from '../src/composables/language'
 import type { AppLanguage } from '../src/composables/db/types'
 import { applyTextScale, textScaleSet } from '../src/composables/text-scale'
+import {
+  floatingChatSetEnabled,
+  useFloatingChatPreference
+} from '../src/composables/floating-chat'
 
 const router = useRouter()
 const route = useRoute()
@@ -753,6 +780,7 @@ const hasTauriInternals = hasTauriRuntime()
 const isWebPreview = computed(() => !hasTauriInternals)
 
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
+const { floatingChatEnabled } = useFloatingChatPreference()
 
 const profile = ref<Profile | null>(null)
 
@@ -1508,6 +1536,7 @@ onMounted(() => {
       startupLockEnabled.value = false
       defaultModelId.value = null
       learnHybridEnabled.value = false
+      floatingChatEnabled.value = true
       textScale.value = Number(document.documentElement.dataset.textScale || 0)
       return
     }
@@ -1528,6 +1557,7 @@ onMounted(() => {
       darkMode.value = settings.darkMode
       defaultModelId.value = settings.defaultModelId
       learnHybridEnabled.value = settings.learnHybridEnabled
+      floatingChatEnabled.value = settings.floatingChatEnabled
       textScale.value = settings.textScale
       applyTextScale(settings.textScale)
 
@@ -1616,6 +1646,18 @@ async function onToggleLearnHybrid() {
     learnHybridEnabled.value = updated.learnHybridEnabled
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to update Practice settings')
+  } finally {
+    busy.value = false
+  }
+}
+
+async function onToggleFloatingChat() {
+  error.value = null
+  busy.value = true
+  try {
+    await floatingChatSetEnabled(!floatingChatEnabled.value)
+  } catch (e: unknown) {
+    error.value = toSafeErrorMessage(e, 'Failed to update the page chat button setting')
   } finally {
     busy.value = false
   }

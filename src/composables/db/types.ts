@@ -61,6 +61,7 @@ export type AppSettings = {
   darkMode: boolean
   learnHybridEnabled: boolean
   flashcardsDefinitionFirst: boolean
+  floatingChatEnabled: boolean
   language: AppLanguage
   textScale: number
 }

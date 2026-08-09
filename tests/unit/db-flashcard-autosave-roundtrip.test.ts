@@ -70,7 +70,8 @@ async function applyMigrations(dbPath: string) {
     '011_expand_text_scale.sql',
     '012_flashcard_autosave.sql',
     '013_flashcard_score_autosave.sql',
-    '014_practice_autosave.sql'
+    '014_practice_autosave.sql',
+    '015_floating_chat.sql'
   ]
   const migrations = await Promise.all(
     names.map((name) => readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8'))
@@ -119,8 +120,11 @@ describe('flashcard autosave persistence (sqlite:tracer.db)', () => {
       })
 
       expect((await settingsRepo.get()).flashcardsDefinitionFirst).toBe(false)
+      expect((await settingsRepo.get()).floatingChatEnabled).toBe(true)
       await settingsRepo.set({ flashcardsDefinitionFirst: true })
       expect((await settingsRepo.get()).flashcardsDefinitionFirst).toBe(true)
+      await settingsRepo.set({ floatingChatEnabled: false })
+      expect((await settingsRepo.get()).floatingChatEnabled).toBe(false)
 
       await db.execute(`DELETE FROM flashcard_sets WHERE id = 'set-1';`)
       expect(await progressRepo.get('set-1')).toBeNull()
