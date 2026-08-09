@@ -1284,22 +1284,77 @@
                                 >
                                     {{ t('set.terms') }}
                                 </h2>
-                                <span
-                                    class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                                >
-                                    {{ set.terms.length }}
-                                </span>
+                                <div class="flex shrink-0 items-center gap-2">
+                                    <span
+                                        class="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                    >
+                                        {{ filteredTerms.length }}
+                                    </span>
+                                    <div ref="termsFilterMenuRoot" class="relative">
+                                        <button
+                                            ref="termsFilterButtonEl"
+                                            type="button"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                            :aria-label="t('set.filterTerms')"
+                                            :title="t('set.filterTerms')"
+                                            :aria-expanded="termsFilterMenuOpen"
+                                            :disabled="set.terms.length === 0"
+                                            aria-haspopup="menu"
+                                            @click="termsFilterMenuOpen = !termsFilterMenuOpen"
+                                        >
+                                            <svg
+                                                aria-hidden="true"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="1.8"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                class="h-4 w-4"
+                                            >
+                                                <path d="M4 6h16" />
+                                                <path d="M7 12h10" />
+                                                <path d="M10 18h4" />
+                                            </svg>
+                                        </button>
+
+                                        <div
+                                            v-if="termsFilterMenuOpen"
+                                            class="absolute end-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                                            role="menu"
+                                            :aria-label="t('set.filterTerms')"
+                                        >
+                                            <button
+                                                v-for="option in termsFilterOptions"
+                                                :key="option.value"
+                                                type="button"
+                                                role="menuitemradio"
+                                                :aria-checked="termsFilter === option.value"
+                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500"
+                                                @click="selectTermsFilter(option.value)"
+                                            >
+                                                <span>{{ t(option.labelKey) }}</span>
+                                                <span
+                                                    class="w-4 text-center"
+                                                    aria-hidden="true"
+                                                >
+                                                    {{ termsFilter === option.value ? "✓" : "" }}
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div
-                                v-if="set.terms.length === 0"
+                                v-if="filteredTerms.length === 0"
                                 class="mt-3 text-sm text-slate-700 dark:text-slate-200"
                             >
                                 {{ t('set.noCards') }}
                             </div>
 
                             <ul v-else class="mt-3 space-y-3">
-                                <li v-for="(term, idx) in set.terms" :key="term.id">
+                                <li v-for="(term, idx) in filteredTerms" :key="term.id">
                                     <div
                                         class="relative rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                                     >
@@ -1732,6 +1787,43 @@ const starredTermIds = ref<Set<Uuid>>(new Set());
 const starBusy = ref(false);
 const starredOnly = ref(false);
 
+type TermsFilter = "all" | "starred" | "unstarred";
+const termsFilter = ref<TermsFilter>("all");
+const termsFilterMenuOpen = ref(false);
+const termsFilterMenuRoot = ref<HTMLElement | null>(null);
+const termsFilterButtonEl = ref<HTMLButtonElement | null>(null);
+const termsFilterOptions: Array<{
+    value: TermsFilter;
+    labelKey: string;
+}> = [
+    { value: "all", labelKey: "set.filterAll" },
+    { value: "starred", labelKey: "set.filterStarred" },
+    { value: "unstarred", labelKey: "set.filterUnstarred" },
+];
+
+const filteredTerms = computed(() => {
+    const terms = set.value?.terms ?? [];
+    if (termsFilter.value === "all") return terms;
+    const showStarred = termsFilter.value === "starred";
+    return terms.filter(
+        (term) =>
+            starredTermIds.value.has(term.id as Uuid) === showStarred,
+    );
+});
+
+function selectTermsFilter(filter: TermsFilter) {
+    termsFilter.value = filter;
+    termsFilterMenuOpen.value = false;
+    nextTick(() => termsFilterButtonEl.value?.focus());
+}
+
+function onDocumentTermsFilterPointerDown(event: PointerEvent) {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (termsFilterMenuRoot.value?.contains(target)) return;
+    termsFilterMenuOpen.value = false;
+}
+
 const baseSeed = computed(() => {
     const raw = route.query.seed;
     if (typeof raw !== "string") return null;
@@ -2118,6 +2210,7 @@ async function initWebDemoSet() {
     }
     window.addEventListener("keydown", onKeydown);
     document.addEventListener("pointerdown", onDocumentMatchPointerDown);
+    document.addEventListener("pointerdown", onDocumentTermsFilterPointerDown);
 }
 
 const allStudyTermIds = computed(() => {
@@ -3240,8 +3333,14 @@ function shouldIgnoreKey(e: KeyboardEvent) {
 }
 
 function onKeydown(e: KeyboardEvent) {
+    if (e.key === "Escape" && termsFilterMenuOpen.value) {
+        termsFilterMenuOpen.value = false;
+        termsFilterButtonEl.value?.focus();
+        return;
+    }
     if (shouldIgnoreKey(e)) return;
     if (isExportOpen.value) return;
+    if (termsFilterMenuOpen.value) return;
     if (mode.value !== "flashcards") return;
 
     if (e.key === " " || e.code === "Space") {
@@ -3804,6 +3903,7 @@ async function openSetPage() {
         window.addEventListener("keydown", onKeydown);
         window.addEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus);
         document.addEventListener("pointerdown", onDocumentMatchPointerDown);
+        document.addEventListener("pointerdown", onDocumentTermsFilterPointerDown);
     } catch {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
@@ -3900,6 +4000,7 @@ onBeforeUnmount(() => {
     window.removeEventListener("keydown", onKeydown);
     window.removeEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus);
     document.removeEventListener("pointerdown", onDocumentMatchPointerDown);
+    document.removeEventListener("pointerdown", onDocumentTermsFilterPointerDown);
 });
 </script>
 
