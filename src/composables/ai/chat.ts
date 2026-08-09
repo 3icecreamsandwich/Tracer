@@ -108,7 +108,8 @@ export function buildGroundedChatSystemPrompt(set: FlashcardSet) {
     'Answer style:',
     '- Be concise.',
     '- Be professional, meaning that you should not be overly polite, excited, or rude, and you should get straight to the point (i.e., the answer).',
-    '- For math/science expressions, use LaTeX delimiters like $...$ or $$...$$ so Tracer can render them.'
+    '- For math/science expressions, use balanced LaTeX delimiters like $...$ or $$...$$ so Tracer can render them.',
+    '- Do not escape the dollar delimiters. Use one backslash for LaTeX commands (for example, $\\lim_{x\\to c} f(x)$).'
   ]
     .filter((x) => x.length > 0)
     .join('\n')

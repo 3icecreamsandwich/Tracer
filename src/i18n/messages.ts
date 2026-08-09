@@ -711,6 +711,7 @@ for (const language of Object.keys(duplicateMessages) as AppLanguage[]) {
 const chatHistoryMessages: Record<AppLanguage, Messages> = {
   en: {
     'chat.history': 'History',
+    'chat.new': 'New chat',
     'chat.saving': 'Saving…',
     'chat.saved': 'Chat saved',
     'chat.noHistory': 'No saved chats for this set.',
@@ -724,6 +725,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   es: {
     'chat.history': 'Historial',
+    'chat.new': 'Nuevo chat',
     'chat.saving': 'Guardando…',
     'chat.saved': 'Chat guardado',
     'chat.noHistory': 'No hay chats guardados para este conjunto.',
@@ -737,6 +739,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   fr: {
     'chat.history': 'Historique',
+    'chat.new': 'Nouveau chat',
     'chat.saving': 'Enregistrement…',
     'chat.saved': 'Chat enregistré',
     'chat.noHistory': 'Aucun chat enregistré pour cet ensemble.',
@@ -750,6 +753,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   'zh-CN': {
     'chat.history': '历史记录',
+    'chat.new': '新建聊天',
     'chat.saving': '正在保存…',
     'chat.saved': '聊天已保存',
     'chat.noHistory': '此卡片集没有已保存的聊天。',
@@ -763,6 +767,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   hi: {
     'chat.history': 'इतिहास',
+    'chat.new': 'नई चैट',
     'chat.saving': 'सहेजा जा रहा है…',
     'chat.saved': 'चैट सहेजी गई',
     'chat.noHistory': 'इस सेट के लिए कोई सहेजी गई चैट नहीं है।',
@@ -776,6 +781,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   ar: {
     'chat.history': 'السجل',
+    'chat.new': 'دردشة جديدة',
     'chat.saving': 'جارٍ الحفظ…',
     'chat.saved': 'تم حفظ الدردشة',
     'chat.noHistory': 'لا توجد دردشات محفوظة لهذه المجموعة.',
@@ -789,6 +795,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   de: {
     'chat.history': 'Verlauf',
+    'chat.new': 'Neuer Chat',
     'chat.saving': 'Wird gespeichert…',
     'chat.saved': 'Chat gespeichert',
     'chat.noHistory': 'Keine gespeicherten Chats für dieses Set.',
@@ -802,6 +809,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   ru: {
     'chat.history': 'История',
+    'chat.new': 'Новый чат',
     'chat.saving': 'Сохранение…',
     'chat.saved': 'Чат сохранён',
     'chat.noHistory': 'Для этого набора нет сохранённых чатов.',
@@ -815,6 +823,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   ja: {
     'chat.history': '履歴',
+    'chat.new': '新しいチャット',
     'chat.saving': '保存中…',
     'chat.saved': 'チャットを保存しました',
     'chat.noHistory': 'このセットに保存済みのチャットはありません。',
@@ -828,6 +837,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   ko: {
     'chat.history': '기록',
+    'chat.new': '새 채팅',
     'chat.saving': '저장 중…',
     'chat.saved': '채팅 저장됨',
     'chat.noHistory': '이 세트에 저장된 채팅이 없습니다.',

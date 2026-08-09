@@ -26,6 +26,7 @@ export default defineNuxtConfig({
         '@ai-sdk/google',
         '@ai-sdk/openai',
         '@ai-sdk/openai-compatible',
+        '@tauri-apps/api/event',
         '@tauri-apps/plugin-http',
         'ai',
         'pdfjs-dist',

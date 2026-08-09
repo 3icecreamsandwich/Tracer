@@ -56,6 +56,7 @@ describe('chat prompt', () => {
     expect(prompt).toContain('Description: Cells')
     expect(prompt).toContain('cell\tbasic unit of life')
     expect(prompt).toContain('LaTeX delimiters')
+    expect(prompt).toContain('Do not escape the dollar delimiters')
   })
 
   it('takeRecentChatMessages trims empty content and caps older history', () => {

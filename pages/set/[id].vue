@@ -945,39 +945,25 @@
                                     >
                                         {{ t('chat.history') }}
                                     </button>
-                                    <div class="inline-flex items-center gap-1.5">
-                                        <button
-                                            type="button"
-                                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                            :disabled="
-                                                chatBusy ||
-                                                chatSaveBusy ||
-                                                chatIsSaved ||
-                                                !firstChatQuestion ||
-                                                isWebPreview
-                                            "
-                                            @click="saveChat"
-                                        >
-                                            {{ chatSaveBusy ? t('chat.saving') : t('common.save') }}
-                                        </button>
-                                        <span
-                                            v-if="chatSavedFeedback"
-                                            class="text-sm font-semibold text-emerald-600 dark:text-emerald-400"
-                                            :aria-label="t('chat.saved')"
-                                            aria-live="polite"
-                                        >
-                                            ✓
-                                        </span>
-                                    </div>
                                     <button
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :disabled="
                                             chatBusy || chatSaveBusy || chatMessages.length === 0
                                         "
-                                        @click="resetChat"
+                                        @click="clearCurrentChat"
                                     >
                                         {{ t('common.clear') }}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-lg font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        :disabled="chatBusy || chatSaveBusy || !set"
+                                        :aria-label="t('chat.new')"
+                                        :title="t('chat.new')"
+                                        @click="startNewChat"
+                                    >
+                                        <span aria-hidden="true">+</span>
                                     </button>
                                 </div>
                             </div>
@@ -1695,7 +1681,6 @@ import {
     type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
 import {
-    buildChatTitlePrompt,
     buildGroundedChatSystemPrompt,
     normalizeGeneratedChatTitle,
     streamGroundedChatText,
@@ -1980,9 +1965,7 @@ const chatLogEl = ref<HTMLDivElement | null>(null);
 const chatTextareaEl = ref<HTMLTextAreaElement | null>(null);
 const activeSavedChatId = ref<Uuid | null>(null);
 const chatSaveBusy = ref(false);
-const chatSaveAbort = shallowRef<AbortController | null>(null);
-const chatSavedFeedback = ref(false);
-let chatSavedFeedbackTimer: number | null = null;
+let chatSessionVersion = 0;
 const chatHistoryOpen = ref(false);
 const chatHistoryBusy = ref(false);
 const chatHistoryError = ref<string | null>(null);
@@ -1996,11 +1979,9 @@ const firstChatQuestion = computed(
             (message) => message.role === "user" && message.content.trim(),
         )?.content.trim() ?? "",
 );
-const chatIsSaved = computed(() => activeSavedChatId.value !== null);
-
 const aiError = ref<AiErrorUx | null>(null);
 const aiErrorOpen = ref(false);
-const aiRetryAction = ref<"chat" | "save" | "written">("chat");
+const aiRetryAction = ref<"chat" | "written">("chat");
 const lastChatText = ref<string | null>(null);
 const cachedChatModel = shallowRef<{ id: string; model: any } | null>(null);
 const cachedChatModelPromise = shallowRef<
@@ -2168,11 +2149,6 @@ async function retryAiRequest() {
     if (aiRetryAction.value === "written") {
         closeAiError();
         await retryPracticeWrittenAnswer();
-        return;
-    }
-    if (aiRetryAction.value === "save") {
-        closeAiError();
-        await saveChat();
         return;
     }
     await retryChat();
@@ -3674,90 +3650,41 @@ function currentSavedChatPayload(): SavedChatPayload {
     };
 }
 
-function clearChatSavedFeedback() {
-    chatSavedFeedback.value = false;
-    if (chatSavedFeedbackTimer !== null) {
-        window.clearTimeout(chatSavedFeedbackTimer);
-        chatSavedFeedbackTimer = null;
-    }
-}
-
-function showChatSavedFeedback() {
-    clearChatSavedFeedback();
-    chatSavedFeedback.value = true;
-    chatSavedFeedbackTimer = window.setTimeout(() => {
-        chatSavedFeedback.value = false;
-        chatSavedFeedbackTimer = null;
-    }, 1500);
-}
-
-async function saveChat() {
+async function ensureActiveChatSaved() {
     const s = set.value;
     const firstQuestion = firstChatQuestion.value;
-    if (!s || !firstQuestion || chatBusy.value || chatSaveBusy.value) return;
-    if (activeSavedChatId.value || isWebPreview.value) return;
-
-    if (!defaultModelId.value) {
-        aiRetryAction.value = "save";
-        aiError.value = aiErrorForMissingDefaultModel();
-        aiErrorOpen.value = true;
+    if (!s || !firstQuestion || activeSavedChatId.value || isWebPreview.value)
         return;
-    }
+    if (chatSaveBusy.value) return;
 
-    flushChatRevealJobs();
-    chatError.value = null;
-    const controller = new AbortController();
-    chatSaveAbort.value?.abort();
-    chatSaveAbort.value = controller;
+    const sessionVersion = chatSessionVersion;
+    const payload = currentSavedChatPayload();
     chatSaveBusy.value = true;
-
     try {
-        const model = await getCachedChatModel(defaultModelId.value);
-        const result = await generateText({
-            model,
-            prompt: buildChatTitlePrompt(firstQuestion),
-            abortSignal: controller.signal,
-        });
-        if (controller.signal.aborted) return;
-
-        const title = normalizeGeneratedChatTitle(result.text);
-        if (!title) throw new Error("The AI model returned an empty chat title.");
-
         const db = await useTracerDb();
         const saved = await createChatsRepo(db).create({
             id: newMsgId() as Uuid,
             setId: s.id,
-            title,
-            payload: currentSavedChatPayload(),
+            title: normalizeGeneratedChatTitle(firstQuestion) || firstQuestion,
+            payload,
         });
-        if (controller.signal.aborted) return;
-
-        activeSavedChatId.value = saved.id;
-        showChatSavedFeedback();
+        if (chatSessionVersion === sessionVersion) {
+            activeSavedChatId.value = saved.id;
+        }
     } catch (err) {
-        if (controller.signal.aborted) return;
-        if (isAiErrorCandidate(err)) {
-            showAiError(err, "save");
-        } else {
-            chatError.value = toErrorMessage(err, t("chat.saveFailed"));
-        }
+        chatError.value = toErrorMessage(err, t("chat.saveFailed"));
     } finally {
-        if (chatSaveAbort.value === controller) {
-            chatSaveAbort.value = null;
-            chatSaveBusy.value = false;
-        }
+        chatSaveBusy.value = false;
     }
 }
 
 async function persistActiveSavedChat() {
     const id = activeSavedChatId.value;
     if (!id || isWebPreview.value) return;
+    const payload = currentSavedChatPayload();
     try {
         const db = await useTracerDb();
-        await createChatsRepo(db).updateMessages(
-            id,
-            currentSavedChatPayload(),
-        );
+        await createChatsRepo(db).updateMessages(id, payload);
     } catch (err) {
         chatError.value = toErrorMessage(err, t("chat.saveFailed"));
     }
@@ -3868,12 +3795,10 @@ async function confirmDeleteChat() {
 }
 
 function resetChat() {
+    chatSessionVersion += 1;
     chatAbort.value?.abort();
     chatAbort.value = null;
-    chatSaveAbort.value?.abort();
-    chatSaveAbort.value = null;
     cancelChatRevealJobs();
-    clearChatSavedFeedback();
     chatMessages.value = [];
     chatInput.value = "";
     chatBusy.value = false;
@@ -3881,6 +3806,33 @@ function resetChat() {
     chatError.value = null;
     activeSavedChatId.value = null;
     lastChatText.value = null;
+}
+
+function startNewChat() {
+    if (chatBusy.value || chatSaveBusy.value) return;
+    resetChat();
+    void nextTick(() => chatTextareaEl.value?.focus());
+}
+
+async function clearCurrentChat() {
+    if (chatBusy.value || chatSaveBusy.value) return;
+    const id = activeSavedChatId.value;
+    if (id && !isWebPreview.value) {
+        chatSaveBusy.value = true;
+        chatError.value = null;
+        try {
+            const db = await useTracerDb();
+            await createChatsRepo(db).delete(id);
+            savedChats.value = savedChats.value.filter((chat) => chat.id !== id);
+        } catch (err) {
+            chatError.value = toErrorMessage(err, t("chat.deleteFailed"));
+            chatSaveBusy.value = false;
+            return;
+        }
+        chatSaveBusy.value = false;
+    }
+    resetChat();
+    void nextTick(() => chatTextareaEl.value?.focus());
 }
 
 function onChatInputKeydown(e: KeyboardEvent) {
@@ -3940,6 +3892,8 @@ async function sendChat() {
         fullContent: text,
     };
     chatMessages.value = [...chatMessages.value, userMsg];
+    await ensureActiveChatSaved();
+    if (controller.signal.aborted) return;
 
     const assistantMsg: UiChatMessage = {
         id: newMsgId(),
@@ -3948,6 +3902,7 @@ async function sendChat() {
         fullContent: "",
     };
     chatMessages.value = [...chatMessages.value, assistantMsg];
+    await persistActiveSavedChat();
     await nextTick();
     scrollChatToBottom();
 
@@ -3996,6 +3951,7 @@ async function sendChat() {
         await persistActiveSavedChat();
     } catch (err) {
         if (controller.signal.aborted) return;
+        await persistActiveSavedChat();
         if (isAiErrorCandidate(err)) {
             showAiError(err);
             chatError.value = null;
@@ -4211,7 +4167,12 @@ watch(
 
         flashcardSettingsOpen.value = false;
 
-        if (prev === "chat" && next !== "chat") resetChat();
+        if (prev === "chat" && next !== "chat") {
+            chatAbort.value?.abort();
+            flushChatRevealJobs();
+            await persistActiveSavedChat();
+            resetChat();
+        }
         if (next === "chat") warmChatModel();
 
         if (next === "flashcards" && prev !== "flashcards") {
@@ -4293,6 +4254,8 @@ watch(
 onBeforeUnmount(() => {
     cancelFlashcardAnswerFeedback();
     cancelPracticeAnswerFeedback();
+    flushChatRevealJobs();
+    void persistActiveSavedChat();
     resetChat();
     clearPracticeTimer();
     clearMatchTimer();

@@ -17,7 +17,7 @@
                         native-window-controls-safe
                         label="Back · Quit test"
                         prevent-navigation
-                        @activate="quitTestOpen = true"
+                        @activate="requestQuitTest('navigation')"
                     />
                 </div>
                 <div class="text-center">
@@ -354,6 +354,9 @@ import { lockGetStatus } from "~/src/composables/lock"
 import { useLockSession } from "~/src/composables/lock-session"
 import { navigateBack } from "~/src/composables/navigation/app-navigation"
 import { hasTauriRuntime } from "~/src/composables/tauri"
+import { invoke } from "@tauri-apps/api/core"
+import { listen, type UnlistenFn } from "@tauri-apps/api/event"
+import { getCurrentWindow } from "@tauri-apps/api/window"
 
 type TestResponse = boolean | number | string
 
@@ -379,6 +382,9 @@ const answerResultsEl = ref<HTMLElement | null>(null)
 const timerHandle = shallowRef<number | null>(null)
 const secondsRemaining = ref(0)
 const quitTestOpen = ref(false)
+const pendingTestExit = ref<"navigation" | "app">("navigation")
+let unlistenTestWindowClose: UnlistenFn | null = null
+let unlistenTestAppQuit: UnlistenFn | null = null
 const aiError = ref<AiErrorUx | null>(null)
 const aiErrorOpen = ref(false)
 const testGradingAbort = shallowRef<AbortController | null>(null)
@@ -710,9 +716,42 @@ function scrollToAnswerResults() {
     })
 }
 
-function confirmQuitTest() {
+function requestQuitTest(source: "navigation" | "app") {
+    pendingTestExit.value = source
+    quitTestOpen.value = true
+}
+
+async function activateTestExitGuards() {
+    if (isWebPreview.value) return
+    unlistenTestAppQuit = await listen("tracer://test-quit-requested", () => {
+        requestQuitTest("app")
+    })
+    unlistenTestWindowClose = await getCurrentWindow().onCloseRequested(
+        (event) => {
+            event.preventDefault()
+            requestQuitTest("app")
+        },
+    )
+    await invoke("test_mode_set_active", { active: true })
+}
+
+function deactivateTestExitGuards() {
+    unlistenTestWindowClose?.()
+    unlistenTestWindowClose = null
+    unlistenTestAppQuit?.()
+    unlistenTestAppQuit = null
+    if (!isWebPreview.value) {
+        void invoke("test_mode_set_active", { active: false }).catch(() => {})
+    }
+}
+
+async function confirmQuitTest() {
     quitTestOpen.value = false
     clearTimer()
+    if (pendingTestExit.value === "app" && !isWebPreview.value) {
+        await invoke("test_mode_confirm_exit")
+        return
+    }
     navigateBack(router, route.path, window.history.state)
 }
 
@@ -735,8 +774,13 @@ watch(language, () => {
     buildTest()
 })
 
+onBeforeRouteLeave(() => {
+    deactivateTestExitGuards()
+})
+
 onMounted(async () => {
     try {
+        await activateTestExitGuards()
         if (isWebPreview.value) {
             set.value = createWebPreviewDemoSet(t)
             busy.value = false

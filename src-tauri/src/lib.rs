@@ -6,12 +6,13 @@ use commands::{
     ai_provider_settings_save, ai_secrets_delete, ai_secrets_get, ai_secrets_set,
     github_oauth_pkce_cancel, github_oauth_pkce_finish, github_oauth_pkce_start,
     lock_first_run_set_password, lock_get_status, lock_reset_tracer, lock_set_startup_lock_enabled,
-    lock_unlock, open_external, GithubPkceState, VaultKeyState,
+    lock_unlock, open_external, test_mode_confirm_exit, test_mode_set_active, GithubPkceState,
+    TestModeExitState, VaultKeyState,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    use tauri::Manager;
+    use tauri::{Emitter, Manager};
     use tauri_plugin_sql::{Migration, MigrationKind};
 
     let migrations = vec![
@@ -101,7 +102,49 @@ pub fn run() {
         },
     ];
 
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
+        .menu(|app_handle| {
+            let menu = tauri::menu::Menu::default(app_handle)?;
+
+            #[cfg(target_os = "macos")]
+            if let Some(tauri::menu::MenuItemKind::Submenu(app_menu)) =
+                menu.items()?.into_iter().next()
+            {
+                let quit_position = app_menu.items()?.iter().position(|item| {
+                    item.as_predefined_menuitem()
+                        .and_then(|item| item.text().ok())
+                        .is_some_and(|text| text.starts_with("Quit "))
+                });
+
+                if let Some(position) = quit_position {
+                    app_menu.remove_at(position)?;
+                    app_menu.insert(
+                        &tauri::menu::MenuItem::with_id(
+                            app_handle,
+                            "tracer-quit",
+                            format!("Quit {}", app_handle.package_info().name),
+                            true,
+                            Some("CmdOrCtrl+Q"),
+                        )?,
+                        position,
+                    )?;
+                }
+            }
+
+            Ok(menu)
+        })
+        .on_menu_event(|app_handle, event| {
+            if event.id() != "tracer-quit" {
+                return;
+            }
+
+            let state = app_handle.state::<TestModeExitState>();
+            if state.should_confirm_exit() {
+                let _ = app_handle.emit("tracer://test-quit-requested", ());
+            } else {
+                app_handle.exit(0);
+            }
+        })
         .setup(|app| {
             let salt_path = app
                 .path()
@@ -113,6 +156,7 @@ pub fn run() {
 
             app.manage(VaultKeyState::default());
             app.manage(GithubPkceState::default());
+            app.manage(TestModeExitState::default());
             Ok(())
         })
         .plugin(tauri_plugin_dialog::init())
@@ -141,8 +185,27 @@ pub fn run() {
             open_external,
             github_oauth_pkce_start,
             github_oauth_pkce_finish,
-            github_oauth_pkce_cancel
+            github_oauth_pkce_cancel,
+            test_mode_set_active,
+            test_mode_confirm_exit
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application")
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application");
+
+    app.run(|app_handle, event| {
+        if let tauri::RunEvent::ExitRequested { api, .. } = event {
+            let state = app_handle.state::<TestModeExitState>();
+            let current_url = app_handle
+                .get_webview_window("main")
+                .and_then(|window| window.url().ok());
+            let test_route_is_open = current_url.as_ref().is_some_and(|url| {
+                url.path().starts_with("/set/") && url.path().ends_with("-test")
+            });
+
+            if state.should_confirm_exit() || test_route_is_open {
+                api.prevent_exit();
+                let _ = app_handle.emit("tracer://test-quit-requested", ());
+            }
+        }
+    });
 }

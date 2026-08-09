@@ -117,6 +117,12 @@ function wrapImplicitLatex(source: string) {
 }
 
 function repairMathTextSegment(source: string) {
+  // Models sometimes escape Markdown math delimiters as \$...\$. Keep escaped
+  // currency intact, but restore delimiter pairs that clearly contain LaTeX.
+  source = source.replace(/\\\$([^\n]+?)\\\$/g, (match, content: string) =>
+    looksLikeLatex(content) ? `$${content}$` : match
+  )
+
   // A recurring malformed model response leaves "$\" at the end of the term
   // and begins its definition with the actual LaTeX command.
   let repaired = source.replace(/\s+\$\\\s*$/, '')
@@ -218,6 +224,14 @@ function balanceLatexBraces(source: string) {
 
 function repairLatexSyntax(source: string) {
   let repaired = balanceLatexBraces(source.trim())
+
+  // JSON-oriented model output occasionally doubles command backslashes even
+  // after transport decoding. Collapse only recognized commands so genuine
+  // TeX line breaks remain untouched.
+  repaired = repaired.replace(
+    /\\\\(?=(?:begin|end|displaystyle|left|right|sum|prod|int|oint|lim|frac|dfrac|tfrac|sqrt|Delta|delta|theta|alpha|beta|gamma|pi|infty|partial|nabla|pm|mp|times|cdot|div|leq?|geq?|neq|approx|equiv|to|Rightarrow|Leftarrow|iff|text|operatorname|vec|mathbf|mathrm|mathbb|mathcal|overline|underline)(?![A-Za-z]))/g,
+    '\\'
+  )
 
   const leftCount = repaired.match(/\\left\b/g)?.length ?? 0
   const rightCount = repaired.match(/\\right\b/g)?.length ?? 0
