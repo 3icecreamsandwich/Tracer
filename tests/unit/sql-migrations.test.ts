@@ -88,10 +88,14 @@ describe('SQLite migrations (task 3)', () => {
         path.resolve(process.cwd(), 'src-tauri', 'migrations', '015_floating_chat.sql'),
         'utf8'
       )
+      const supabaseProfileMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '016_profile_supabase_user.sql'),
+        'utf8'
+      )
 
       const migrateRes = await runSqlite(
         dbPath,
-        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}\n${flashcardAutosaveMigrationSql}\n${flashcardScoreAutosaveMigrationSql}\n${practiceAutosaveMigrationSql}\n${floatingChatMigrationSql}`
+        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}\n${flashcardAutosaveMigrationSql}\n${flashcardScoreAutosaveMigrationSql}\n${practiceAutosaveMigrationSql}\n${floatingChatMigrationSql}\n${supabaseProfileMigrationSql}`
       )
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
@@ -154,6 +158,16 @@ describe('SQLite migrations (task 3)', () => {
       )
       expect(floatingChatDefaultRes.code).toBe(0)
       expect(floatingChatDefaultRes.stdout.trim()).toBe('1')
+
+      const profileBindingRes = await runSqlite(
+        dbPath,
+        [
+          "INSERT INTO profile (id, name, email, supabase_user_id) VALUES ('profile', 'Tracer User', 'user@example.com', '00000000-0000-4000-8000-000000000001');",
+          "SELECT supabase_user_id FROM profile WHERE id = 'profile';"
+        ].join('\n') + '\n'
+      )
+      expect(profileBindingRes.code).toBe(0)
+      expect(profileBindingRes.stdout.trim()).toBe('00000000-0000-4000-8000-000000000001')
 
       const invalidJsonRes = await runSqlite(
         dbPath,

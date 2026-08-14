@@ -44,6 +44,7 @@ export type Profile = {
   id: Uuid
   name: string
   email: string
+  supabaseUserId?: string | null
   createdAt: IsoDateTimeString
 }
 

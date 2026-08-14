@@ -4,10 +4,12 @@ mod security;
 use commands::{
     ai_openai_compat_get_config, ai_openai_compat_set_config, ai_provider_api_key_presence,
     ai_provider_settings_save, ai_secrets_delete, ai_secrets_get, ai_secrets_set,
-    github_oauth_pkce_cancel, github_oauth_pkce_finish, github_oauth_pkce_start,
-    lock_first_run_set_password, lock_get_status, lock_reset_tracer, lock_set_startup_lock_enabled,
-    lock_unlock, open_external, test_mode_confirm_exit, test_mode_set_active, GithubPkceState,
-    TestModeExitState, VaultKeyState,
+    auth_session_delete, auth_session_get, auth_session_set, github_oauth_pkce_cancel,
+    github_oauth_pkce_finish, github_oauth_pkce_start, lock_first_run_set_password,
+    lock_get_status, lock_reset_tracer, lock_set_startup_lock_enabled, lock_unlock,
+    oauth_callback_cancel, oauth_callback_finish, oauth_callback_start, open_external,
+    test_mode_confirm_exit, test_mode_set_active, OAuthCallbackState, TestModeExitState,
+    VaultKeyState,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -106,6 +108,12 @@ pub fn run() {
             sql: include_str!("../migrations/015_floating_chat.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 16,
+            description: "bind_profile_to_supabase_user",
+            sql: include_str!("../migrations/016_profile_supabase_user.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     let app = tauri::Builder::default()
@@ -161,7 +169,7 @@ pub fn run() {
                 .plugin(tauri_plugin_stronghold::Builder::with_argon2(&salt_path).build())?;
 
             app.manage(VaultKeyState::default());
-            app.manage(GithubPkceState::default());
+            app.manage(OAuthCallbackState::default());
             app.manage(TestModeExitState::default());
             Ok(())
         })
@@ -184,6 +192,9 @@ pub fn run() {
             ai_secrets_get,
             ai_secrets_set,
             ai_secrets_delete,
+            auth_session_get,
+            auth_session_set,
+            auth_session_delete,
             ai_provider_api_key_presence,
             ai_provider_settings_save,
             ai_openai_compat_get_config,
@@ -192,6 +203,9 @@ pub fn run() {
             github_oauth_pkce_start,
             github_oauth_pkce_finish,
             github_oauth_pkce_cancel,
+            oauth_callback_start,
+            oauth_callback_finish,
+            oauth_callback_cancel,
             test_mode_set_active,
             test_mode_confirm_exit
         ])

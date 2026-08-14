@@ -3,6 +3,16 @@
     <h1>Tracer</h1>
 </div>
 
+## Supabase authentication
+
+Copy `.env.example` to `.env` and set `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_PUBLISHABLE_KEY` from the Supabase project Connect dialog.
+Only use a publishable key in the desktop client; never add a secret/service-role
+key or Google OAuth client secret to this repository.
+
+Google and email confirmation redirects must allow Tracer's loopback callback:
+`http://127.0.0.1:*/callback`.
+
 ## What is Tracer?
 **Tracer** is a free flashcard app to help you study. It strives to provide many of the features of proprietary flashcard software such as Quizlet or Knowt, while being easier to use than Anki.
 
@@ -22,7 +32,10 @@ xattr -dr com.apple.quarantine /Applications/Tracer.app
 This is to override macOS's requirement for a developer certificate, which we do not have yet 😅.
 
 ## How to Use
-On first startup, provide a username, email, and password. Don't worry---everything stays local (for now), including your login details. These details are required for future features to be implemented, such as flashcard set sharing.
+On first startup, create or open a Tracer account with Google or verified email,
+then choose a separate local app password. The account identifies you to Tracer's
+Supabase backend; the local password encrypts provider keys and other secrets on
+this device. Your local study library remains available while offline.
 
 Once you signed up, you'll see the homepage. Your future flashcards are on the left and the create modes are on the right.
 

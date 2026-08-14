@@ -50,6 +50,29 @@
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+        :aria-label="t('settings.account')"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-sm font-medium">{{ t('settings.account') }}</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ accountEmail || profile?.email }}</p>
+            <p class="mt-1 text-xs" :class="accountOnline ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'">
+              {{ accountSignedOut ? t('settings.accountSignedOut') : accountOnline ? t('settings.accountOnline') : t('settings.accountOffline') }}
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900" :disabled="busy || isWebPreview" @click="onReconnectAccount">
+              {{ t('settings.reconnect') }}
+            </button>
+            <button type="button" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900" :disabled="busy || isWebPreview || accountSignedOut" @click="onAccountSignOut">
+              {{ t('common.signOut') }}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         aria-label="Text size"
       >
         <div class="flex flex-wrap items-center justify-between gap-5">
@@ -767,6 +790,14 @@ import {
 import type { AppLanguage } from '../src/composables/db/types'
 import { applyTextScale, textScaleSet } from '../src/composables/text-scale'
 import {
+  clearAuthSession,
+  identityFromUser,
+  persistAuthSession,
+  prepareAuthenticatedProfile,
+  restoreAuthSession,
+  signInWithGoogle
+} from '../src/composables/auth'
+import {
   floatingChatSetEnabled,
   useFloatingChatPreference
 } from '../src/composables/floating-chat'
@@ -783,6 +814,9 @@ const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 const { floatingChatEnabled } = useFloatingChatPreference()
 
 const profile = ref<Profile | null>(null)
+const accountEmail = ref('')
+const accountOnline = ref(false)
+const accountSignedOut = ref(false)
 
 const startupLockEnabled = ref(true)
 const darkMode = ref(false)
@@ -1582,6 +1616,16 @@ onMounted(() => {
       }
 
       try {
+        const account = await restoreAuthSession()
+        accountEmail.value = account?.identity.email ?? p.email
+        accountOnline.value = account?.online ?? false
+        accountSignedOut.value = account === null
+      } catch {
+        accountEmail.value = p.email
+        accountOnline.value = false
+      }
+
+      try {
         await refreshProviderApiKeyPresence()
       } catch (e: unknown) {
         error.value = toSafeErrorMessage(e, 'Failed to load provider key status')
@@ -1724,11 +1768,52 @@ async function onReset() {
   error.value = null
   busy.value = true
   try {
+    await clearAuthSession().catch(() => {})
     await lockResetTracer()
     markLocked()
     await router.replace('/first-run')
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to reset')
+  } finally {
+    busy.value = false
+  }
+}
+
+async function onReconnectAccount() {
+  error.value = null
+  busy.value = true
+  try {
+    const session = await signInWithGoogle()
+    if (profile.value?.supabaseUserId && session.user.id !== profile.value.supabaseUserId) {
+      await clearAuthSession()
+      throw new Error(t('auth.errorAccountMismatch'))
+    }
+    const prepared = await prepareAuthenticatedProfile({
+      session,
+      submittedName: profile.value?.name,
+      language: language.value
+    })
+    profile.value = prepared.profile
+    await persistAuthSession(session)
+    accountEmail.value = identityFromUser(session.user).email
+    accountOnline.value = true
+    accountSignedOut.value = false
+  } catch (e: unknown) {
+    error.value = toSafeErrorMessage(e, t('auth.errorUnknown'))
+  } finally {
+    busy.value = false
+  }
+}
+
+async function onAccountSignOut() {
+  error.value = null
+  busy.value = true
+  try {
+    await clearAuthSession()
+    accountOnline.value = false
+    accountSignedOut.value = true
+  } catch (e: unknown) {
+    error.value = toSafeErrorMessage(e, t('auth.errorUnknown'))
   } finally {
     busy.value = false
   }
