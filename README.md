@@ -32,14 +32,21 @@ xattr -dr com.apple.quarantine /Applications/Tracer.app
 This is to override macOS's requirement for a developer certificate, which we do not have yet 😅.
 
 ## How to Use
-On first startup, create or open a Tracer account with Google or verified email,
-then choose a separate local app password. The account identifies you to Tracer's
-Supabase backend; the local password encrypts provider keys and other secrets on
-this device. Your local study library remains available while offline.
+On first startup, create or open a Tracer account with Google or verified email.
+Google accounts use a random device key protected by the operating system keychain,
+so no local password is required and the vault can open offline. Email accounts use
+a separate local app password. The account identifies you to Tracer's Supabase
+backend; either local vault mode encrypts provider keys and other secrets on this
+device. A Google device-key vault has no password recovery if its keychain entry is
+lost and must be reset in that case.
 
 Once you signed up, you'll see the homepage. Your future flashcards are on the left and the create modes are on the right.
 
-Tracer may require your password to unlock for subsequent sessions. You can disable this with the "Require password on startup" toggle in Settings. The Settings is also where you provide your API keys for AI features, toggling Dark mode, etc.
+Email-account vaults may require your password to unlock for subsequent sessions.
+You can disable this with the "Require password on startup" toggle in Settings.
+Google device-key vaults always use seamless keychain unlock, so that toggle is not
+available. Settings is also where you provide API keys for AI features, toggle Dark
+mode, and manage the connected account.
 
 ## Credits
 - **Tauri**, as the app framework Tracer uses

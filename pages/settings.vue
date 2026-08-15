@@ -400,17 +400,17 @@
           <div>
             <h2 class="text-sm font-medium">{{ t('settings.startupLock') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {{ t('settings.startupLockDescription') }}
+              {{ vaultMode === 'device_key' ? t('settings.deviceKeyVaultDescription') : t('settings.startupLockDescription') }}
             </p>
           </div>
 
           <button
             type="button"
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
+            :disabled="busy || vaultMode === 'device_key'"
             @click="onToggleStartupLock"
           >
-            {{ startupLockEnabled ? t('common.on') : t('common.off') }}
+            {{ vaultMode === 'device_key' ? t('settings.deviceKeychain') : startupLockEnabled ? t('common.on') : t('common.off') }}
           </button>
         </div>
 
@@ -819,6 +819,7 @@ const accountOnline = ref(false)
 const accountSignedOut = ref(false)
 
 const startupLockEnabled = ref(true)
+const vaultMode = ref<'password' | 'device_key' | null>(null)
 const darkMode = ref(false)
 const defaultModelId = ref<string | null>(null)
 const learnHybridEnabled = ref(false)
@@ -1568,6 +1569,7 @@ onMounted(() => {
       profile.value = { id: 'web-preview', name: 'Web Preview', email: '', createdAt: '' }
       darkMode.value = document.documentElement.classList.contains('dark')
       startupLockEnabled.value = false
+      vaultMode.value = null
       defaultModelId.value = null
       learnHybridEnabled.value = false
       floatingChatEnabled.value = true
@@ -1576,6 +1578,7 @@ onMounted(() => {
     }
     try {
       const status = await lockGetStatus()
+      vaultMode.value = status.vault_mode
       const db = await useTracerDb()
 
       const p = await createProfileRepo(db).get()
@@ -1587,7 +1590,7 @@ onMounted(() => {
       profile.value = p
 
       const settings = await createSettingsRepo(db).get()
-      startupLockEnabled.value = settings.startupLockEnabled
+      startupLockEnabled.value = status.vault_mode === 'device_key' ? false : settings.startupLockEnabled
       darkMode.value = settings.darkMode
       defaultModelId.value = settings.defaultModelId
       learnHybridEnabled.value = settings.learnHybridEnabled
@@ -1712,6 +1715,7 @@ async function onToggleStartupLock() {
     error.value = 'Startup lock is not available in web preview.'
     return
   }
+  if (vaultMode.value === 'device_key') return
   error.value = null
   if (startupLockEnabled.value) {
     showPasswordPrompt.value = true

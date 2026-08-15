@@ -5,9 +5,9 @@ use commands::{
     ai_openai_compat_get_config, ai_openai_compat_set_config, ai_provider_api_key_presence,
     ai_provider_settings_save, ai_secrets_delete, ai_secrets_get, ai_secrets_set,
     auth_session_delete, auth_session_get, auth_session_set, github_oauth_pkce_cancel,
-    github_oauth_pkce_finish, github_oauth_pkce_start, lock_first_run_set_password,
-    lock_get_status, lock_reset_tracer, lock_set_startup_lock_enabled, lock_unlock,
-    oauth_callback_cancel, oauth_callback_finish, oauth_callback_start, open_external,
+    github_oauth_pkce_finish, github_oauth_pkce_start, lock_first_run_set_device_key,
+    lock_first_run_set_password, lock_get_status, lock_reset_tracer, lock_set_startup_lock_enabled,
+    lock_unlock, oauth_callback_cancel, oauth_callback_finish, oauth_callback_start, open_external,
     test_mode_confirm_exit, test_mode_set_active, OAuthCallbackState, TestModeExitState,
     VaultKeyState,
 };
@@ -185,6 +185,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             lock_get_status,
+            lock_first_run_set_device_key,
             lock_first_run_set_password,
             lock_unlock,
             lock_set_startup_lock_enabled,

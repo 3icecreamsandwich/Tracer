@@ -5,6 +5,7 @@ pub struct AppLockStatus {
     pub has_verifier: bool,
     pub requires_unlock: bool,
     pub can_auto_unlock: bool,
+    pub vault_mode: Option<String>,
 }
 
 #[derive(Debug, Serialize, PartialEq, Eq, Default)]

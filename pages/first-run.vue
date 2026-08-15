@@ -1,10 +1,10 @@
 <template>
   <main>
     <div class="mx-auto max-w-md p-8">
-      <h1 class="text-2xl font-semibold">{{ t('auth.firstRunTitle') }}</h1>
+      <h1 class="inline-block bg-gradient-to-r from-red-500 via-orange-400 to-yellow-500
+               bg-clip-text text-4xl font-bold text-transparent">{{ t('auth.firstRunTitle') }}</h1>
 
       <template v-if="stage === 'account'">
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ t('auth.accountDescription') }}</p>
 
         <div v-if="!configured" class="mt-6 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
           {{ t('auth.notConfigured') }}
@@ -71,25 +71,33 @@
       </template>
 
       <template v-else>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ t('auth.localPasswordDescription') }}</p>
         <div class="mt-5 rounded border border-slate-200 p-3 text-sm dark:border-slate-700">
           <div class="font-medium">{{ authenticatedEmail }}</div>
-          <div class="mt-1 text-slate-500 dark:text-slate-400">{{ t('auth.accountConnected') }}</div>
+          <div class="mt-1 text-slate-500 dark:text-slate-400">
+            {{ t(usesGoogleDeviceKey ? 'auth.googleAccountConnected' : 'auth.emailAccountConnected') }}
+          </div>
         </div>
         <form class="mt-6 space-y-4" @submit.prevent="onLocalSetup">
           <div>
             <label class="block text-sm font-medium" for="profile-name">{{ t('auth.name') }}</label>
             <input id="profile-name" v-model="name" autocomplete="name" class="auth-input" />
           </div>
-          <div>
+          <div v-if="usesGoogleDeviceKey" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+            <p class="font-medium">{{ t('auth.deviceKeyTitle') }}</p>
+            <p class="mt-2">{{ t('auth.deviceKeyDescription') }}</p>
+            <p class="mt-2">{{ t('auth.deviceKeyTradeoff') }}</p>
+          </div>
+          <div v-else>
             <label class="block text-sm font-medium" for="local-password">{{ t('auth.localPassword') }}</label>
             <input id="local-password" v-model="localPassword" type="password" autocomplete="new-password" class="auth-input" />
           </div>
-          <div>
+          <div v-if="!usesGoogleDeviceKey">
             <label class="block text-sm font-medium" for="local-confirm">{{ t('auth.confirmPassword') }}</label>
             <input id="local-confirm" v-model="localConfirm" type="password" autocomplete="new-password" class="auth-input" />
           </div>
-          <button type="submit" class="auth-primary" :disabled="busy">{{ busy ? t('common.loading') : t('auth.finishSetup') }}</button>
+          <button type="submit" class="auth-primary" :disabled="busy">
+            {{ busy ? t('common.loading') : usesGoogleDeviceKey ? t('auth.continueWithoutPassword') : t('auth.finishSetup') }}
+          </button>
         </form>
       </template>
 
@@ -103,6 +111,7 @@ import type { Session } from '@supabase/supabase-js'
 
 import {
   displayNameFromUser,
+  isGoogleUser,
   cancelPendingEmailVerification,
   isSupabaseConfigured,
   normalizeAuthError,
@@ -116,13 +125,13 @@ import {
   type AuthErrorCode,
   type PendingEmailVerification,
 } from '../src/composables/auth'
-import { createProfileRepo, useTracerDb } from '../src/composables/db'
-import { lockFirstRunSetPassword, lockGetStatus } from '../src/composables/lock'
+import { createProfileRepo, createSettingsRepo, useTracerDb } from '../src/composables/db'
+import { lockFirstRunSetDeviceKey, lockFirstRunSetPassword, lockGetStatus } from '../src/composables/lock'
 import { useLockSession } from '../src/composables/lock-session'
 import { useAppLanguage } from '../src/composables/language'
 import { hasTauriRuntime } from '../src/composables/tauri'
 
-definePageMeta({ hideNavbar: true })
+definePageMeta({ hideNavbar: true, hideFloatingChat: true })
 
 const router = useRouter()
 const { markUnlocked } = useLockSession()
@@ -138,11 +147,13 @@ const localPassword = ref('')
 const localConfirm = ref('')
 const authenticatedEmail = ref('')
 const activeSession = shallowRef<Session | null>(null)
+const activeAuthProvider = ref<'google' | 'email' | null>(null)
 const pendingVerification = shallowRef<PendingEmailVerification | null>(null)
 const error = ref<string | null>(null)
 const errorCode = ref<AuthErrorCode | null>(null)
 const busyProvider = ref<'google' | 'email' | 'resend' | 'local' | null>(null)
 const busy = computed(() => busyProvider.value !== null)
+const usesGoogleDeviceKey = computed(() => activeAuthProvider.value === 'google' && activeSession.value ? isGoogleUser(activeSession.value.user) : false)
 const authorizationUrl = ref('')
 const resendCooldown = ref(0)
 let cooldownTimer: ReturnType<typeof setInterval> | null = null
@@ -152,7 +163,7 @@ function translatedError(input: unknown) {
   errorCode.value = normalized.code
   const keys: Partial<Record<AuthErrorCode, string>> = {
     account_mismatch: 'auth.errorAccountMismatch', browser_open_failed: 'auth.errorBrowser',
-    callback_timeout: 'auth.errorTimeout', email_not_verified: 'auth.errorUnverified',
+    callback_timeout: 'auth.errorTimeout', device_key_failed: 'auth.errorDeviceKey', email_not_verified: 'auth.errorUnverified',
     missing_email: 'auth.errorMissingEmail', network: 'auth.errorNetwork',
     oauth_cancelled: 'auth.errorCancelled', profile_failed: 'auth.errorProfile',
     supabase_not_configured: 'auth.notConfigured', unknown: 'auth.errorUnknown',
@@ -164,8 +175,9 @@ function clearError() { error.value = null; errorCode.value = null }
 function toggleMode() { mode.value = mode.value === 'signup' ? 'signin' : 'signup'; accountPassword.value = ''; clearError() }
 function returnToSignIn() { void cancelPendingEmailVerification(pendingVerification.value); pendingVerification.value = null; stage.value = 'account'; mode.value = 'signin'; accountPassword.value = ''; clearError() }
 
-function acceptSession(session: Session, submittedName = '') {
+function acceptSession(session: Session, provider: 'google' | 'email', submittedName = '') {
   activeSession.value = session
+  activeAuthProvider.value = provider
   authenticatedEmail.value = session.user.email?.trim() ?? ''
   name.value = displayNameFromUser(session.user, submittedName)
   accountPassword.value = ''
@@ -175,7 +187,7 @@ function acceptSession(session: Session, submittedName = '') {
 
 async function onGoogle() {
   clearError(); authorizationUrl.value = ''; busyProvider.value = 'google'
-  try { acceptSession(await signInWithGoogle((url) => { authorizationUrl.value = url })) }
+  try { acceptSession(await signInWithGoogle((url) => { authorizationUrl.value = url }), 'google') }
   catch (input) { translatedError(input) }
   finally { busyProvider.value = null }
 }
@@ -187,11 +199,11 @@ async function onEmail() {
   busyProvider.value = 'email'
   try {
     if (mode.value === 'signin') {
-      acceptSession(await signInWithEmail(email.value, accountPassword.value), name.value)
+      acceptSession(await signInWithEmail(email.value, accountPassword.value), 'email', name.value)
       return
     }
     const result = await signUpWithEmail({ name: name.value, email: email.value, password: accountPassword.value })
-    if ('access_token' in result) { acceptSession(result, name.value); return }
+    if ('access_token' in result) { acceptSession(result, 'email', name.value); return }
     pendingVerification.value = result
     accountPassword.value = ''
     stage.value = 'verify'
@@ -202,7 +214,7 @@ async function onEmail() {
 }
 
 async function watchForVerification(pending: PendingEmailVerification) {
-  try { acceptSession(await waitForEmailVerification(pending), name.value) }
+  try { acceptSession(await waitForEmailVerification(pending), 'email', name.value) }
   catch (input) { if (stage.value === 'verify' && pendingVerification.value?.listener.id === pending.listener.id) translatedError(input) }
 }
 
@@ -235,12 +247,18 @@ async function onLocalSetup() {
   clearError()
   if (!activeSession.value) { stage.value = 'account'; return }
   if (!name.value.trim()) { error.value = t('auth.errorName'); return }
-  if (localPassword.value.trim().length < 8) { error.value = t('auth.errorLocalPassword'); return }
-  if (localPassword.value !== localConfirm.value) { error.value = t('auth.errorPasswordsMatch'); return }
+  if (!usesGoogleDeviceKey.value && localPassword.value.trim().length < 8) { error.value = t('auth.errorLocalPassword'); return }
+  if (!usesGoogleDeviceKey.value && localPassword.value !== localConfirm.value) { error.value = t('auth.errorPasswordsMatch'); return }
   busyProvider.value = 'local'
   try {
     await prepareAuthenticatedProfile({ session: activeSession.value, submittedName: name.value, language: language.value })
-    await lockFirstRunSetPassword(localPassword.value)
+    if (usesGoogleDeviceKey.value) {
+      await lockFirstRunSetDeviceKey()
+      const db = await useTracerDb()
+      await createSettingsRepo(db).set({ startupLockEnabled: false })
+    } else {
+      await lockFirstRunSetPassword(localPassword.value)
+    }
     await persistAuthSession(activeSession.value)
     localPassword.value = ''; localConfirm.value = ''
     markUnlocked()

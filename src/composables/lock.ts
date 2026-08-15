@@ -6,6 +6,7 @@ export type AppLockStatus = {
   has_verifier: boolean
   requires_unlock: boolean
   can_auto_unlock: boolean
+  vault_mode: 'password' | 'device_key' | null
 }
 
 export type AppLockError = {
@@ -33,9 +34,18 @@ function toAppLockError(err: unknown): AppLockError {
 
 export async function lockGetStatus(): Promise<AppLockStatus> {
   if (!hasTauriRuntime()) {
-    return { has_verifier: false, requires_unlock: false, can_auto_unlock: true }
+    return { has_verifier: false, requires_unlock: false, can_auto_unlock: true, vault_mode: null }
   }
   return invoke<AppLockStatus>('lock_get_status')
+}
+
+export async function lockFirstRunSetDeviceKey(): Promise<void> {
+  if (!hasTauriRuntime()) return
+  try {
+    await invoke('lock_first_run_set_device_key')
+  } catch (e) {
+    throw toAppLockError(e)
+  }
 }
 
 export async function lockFirstRunSetPassword(password: string): Promise<void> {

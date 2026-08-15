@@ -3,11 +3,18 @@ import type { Session, User } from '@supabase/supabase-js'
 import { openExternal } from '../ai/github-oauth'
 import type { AppLanguage, Profile } from '../db'
 import { createProfileRepo, useTracerDb } from '../db'
+import { redactSensitiveText } from '../security/redact'
 import { getSupabaseClient } from './client'
 import { TracerAuthError, normalizeAuthError } from './errors'
 import { callbackUrl, cancelOAuthCallback, finishOAuthCallback, startOAuthCallback, type OAuthCallbackListener } from './oauth-callback'
 
 export type PendingEmailVerification = { listener: OAuthCallbackListener; email: string }
+
+export function isGoogleUser(user: User): boolean {
+  const provider = user.app_metadata?.provider
+  const providers = user.app_metadata?.providers
+  return provider === 'google' || (Array.isArray(providers) && providers.includes('google'))
+}
 
 export function displayNameFromUser(user: User, submittedName = ''): string {
   const submitted = submittedName.trim()
@@ -136,7 +143,15 @@ export async function prepareAuthenticatedProfile(input: {
     timezone,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'id' })
-  if (error) throw new TracerAuthError('profile_failed', error.message)
+  if (error) {
+    console.error('[Tracer auth] Cloud profile upsert failed', {
+      code: error.code,
+      message: redactSensitiveText(error.message),
+      details: redactSensitiveText(error.details ?? ''),
+      hint: redactSensitiveText(error.hint ?? ''),
+    })
+    throw new TracerAuthError('profile_failed', error.message)
+  }
 
   const profile = await repo.set({
     name: displayName || email.split('@')[0] || 'User',

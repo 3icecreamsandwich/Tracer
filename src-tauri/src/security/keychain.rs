@@ -3,6 +3,8 @@ use keyring::Entry;
 
 const KEYRING_SERVICE: &str = "tracer";
 const KEYRING_ACCOUNT_APP_PASSWORD: &str = "app_password";
+const DEVICE_KEY_PREFIX: &str = "device_key:";
+const PASSWORD_KEY_PREFIX: &str = "password:";
 
 fn bytes_to_hex(bytes: &[u8]) -> String {
     const LUT: &[u8; 16] = b"0123456789abcdef";
@@ -34,12 +36,28 @@ fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, AppLockError> {
     Ok(out)
 }
 
-pub fn obfuscate_bytes_for_keychain(bytes: &[u8]) -> String {
-    bytes_to_hex(bytes)
+pub fn deobfuscate_bytes_from_keychain(hex: &str) -> Result<Vec<u8>, AppLockError> {
+    let value = hex
+        .strip_prefix(DEVICE_KEY_PREFIX)
+        .or_else(|| hex.strip_prefix(PASSWORD_KEY_PREFIX))
+        .unwrap_or(hex);
+    hex_to_bytes(value)
 }
 
-pub fn deobfuscate_bytes_from_keychain(hex: &str) -> Result<Vec<u8>, AppLockError> {
-    hex_to_bytes(hex)
+pub fn device_key_marker(bytes: &[u8]) -> String {
+    format!("{DEVICE_KEY_PREFIX}{}", bytes_to_hex(bytes))
+}
+
+pub fn password_key_marker(bytes: &[u8]) -> String {
+    format!("{PASSWORD_KEY_PREFIX}{}", bytes_to_hex(bytes))
+}
+
+pub fn keychain_vault_mode(marker: &str) -> &'static str {
+    if marker.starts_with(DEVICE_KEY_PREFIX) {
+        "device_key"
+    } else {
+        "password"
+    }
 }
 
 fn keyring_entry() -> Result<Entry, AppLockError> {
