@@ -14,6 +14,7 @@
               </p>
             </div>
             <button
+              v-if="activeLibraryKind !== 'class'"
               type="button"
               class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               :disabled="busy || !hasTauriRuntime()"
@@ -23,12 +24,18 @@
             </button>
           </div>
 
-          <div class="mt-7 inline-flex overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800" role="tablist" aria-label="Library type">
-            <button type="button" role="tab" :aria-selected="activeLibraryKind === 'set'" class="min-w-40 px-6 py-2.5 text-sm font-medium text-slate-950 transition dark:text-white" :class="activeLibraryKind === 'set' ? 'bg-white shadow-sm dark:bg-slate-800' : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-900'" @click="activeLibraryKind = 'set'">
-              Flashcards
-            </button>
-            <button type="button" role="tab" :aria-selected="activeLibraryKind === 'study-guide'" class="min-w-40 border-l border-slate-200 px-6 py-2.5 text-sm font-medium text-slate-950 transition dark:border-slate-800 dark:text-white" :class="activeLibraryKind === 'study-guide' ? 'bg-white shadow-sm dark:bg-slate-800' : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-900'" @click="activeLibraryKind = 'study-guide'">
-              Study guides
+          <div class="mt-7 grid w-full max-w-[410px] grid-cols-3 rounded-[14px] border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-950" role="tablist" :aria-label="t('home.libraryType')">
+            <button
+              v-for="tab in libraryTabs"
+              :key="tab.value"
+              type="button"
+              role="tab"
+              :aria-selected="activeLibraryKind === tab.value"
+              class="h-10 rounded-xl px-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+              :class="activeLibraryKind === tab.value ? 'bg-neutral-800 text-white shadow-sm dark:bg-slate-700' : 'bg-transparent text-slate-950 hover:bg-slate-50 dark:text-white dark:hover:bg-slate-900'"
+              @click="activeLibraryKind = tab.value"
+            >
+              {{ t(tab.label) }}
             </button>
           </div>
 
@@ -52,6 +59,13 @@
                 class="mt-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
               >
                 {{ t('common.loading') }}
+              </div>
+
+              <div
+                v-else-if="activeLibraryKind === 'class'"
+                class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+              >
+                {{ t('home.noClasses') }}
               </div>
 
               <div
@@ -382,7 +396,14 @@ type RootDropTarget = {
 const busy = ref(true)
 const loadError = ref<string | null>(null)
 const items = ref<HomeListItem[]>([])
-const activeLibraryKind = ref<'set' | 'study-guide'>('set')
+type LibraryKind = 'set' | 'study-guide' | 'class'
+
+const activeLibraryKind = ref<LibraryKind>('set')
+const libraryTabs: Array<{ value: LibraryKind; label: string }> = [
+  { value: 'set', label: 'home.flashcards' },
+  { value: 'study-guide', label: 'home.studyGuides' },
+  { value: 'class', label: 'home.classes' },
+]
 const folders = ref<SetFolder[]>([])
 const homeOrder = ref<HomeOrderEntry[]>([])
 const expandedFolderIds = ref(new Set<Uuid>())
@@ -447,6 +468,7 @@ const visibleLibraryCount = computed(() =>
 const denseLibrary = computed(() => visibleLibraryCount.value >= 4)
 
 const visibleFolders = computed(() => {
+  if (activeLibraryKind.value === 'class') return []
   const q = normalizedQuery.value
   if (!q) return folders.value
   return folders.value.filter((folder) => {

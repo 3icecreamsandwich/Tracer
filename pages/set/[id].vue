@@ -1147,6 +1147,12 @@
                             </div>
 
                             <div v-else class="mt-4 flex flex-1 flex-col">
+                                <p
+                                    v-if="matchIsRunning"
+                                    class="mb-3 text-center text-sm font-medium tabular-nums text-slate-600 dark:text-slate-300"
+                                >
+                                    {{ matchTopline }}
+                                </p>
                                 <div
                                     v-if="!matchIsRunning"
                                     class="flex flex-1 flex-col items-center justify-center rounded-md border border-amber-200 bg-amber-50/20 p-4 text-center text-sm text-slate-700 dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-200"
@@ -1695,6 +1701,10 @@ import {
     type MatchTile,
 } from "~/src/composables/match/generator";
 import {
+    formatMatchTime,
+    MATCH_DURATION_MS,
+} from "~/src/composables/match/timer";
+import {
     normalizeAiError,
     aiErrorForMissingDefaultModel,
     isAiErrorCandidate,
@@ -1766,6 +1776,9 @@ const learnHybridEnabled = ref(false);
 const isFlipped = ref(false);
 const isFlipping = ref(false);
 const isNavigating = ref<"prev" | "next" | null>(null);
+const FLASHCARD_FLIP_DURATION_MS = 320;
+let flashcardFlipSwapTimeout: ReturnType<typeof setTimeout> | null = null;
+let flashcardFlipEndTimeout: ReturnType<typeof setTimeout> | null = null;
 
 type FlashcardsAnswer = "correct" | "incorrect";
 const flashcardAnswerFeedback = ref<FlashcardsAnswer | null>(null);
@@ -2207,8 +2220,6 @@ const learnIsNavigating = ref(false);
 const practiceAnswerTransitionId = ref(0);
 
 const matchPairsRequested = 8;
-const matchDurationSeconds = 600; // 10 minutes max for stopwatch
-
 const matchBusy = ref(false);
 const matchError = ref<string | null>(null);
 const matchRunCounter = ref(0);
@@ -2454,12 +2465,20 @@ const exportTsv = computed(() => {
 });
 
 function toggleFlip() {
-    if (totalCount.value === 0 || flashcardAnswerBusy.value) return;
+    if (totalCount.value === 0 || flashcardAnswerBusy.value || isFlipping.value) return;
     isFlipping.value = true;
-    setTimeout(() => {
+
+    // Swap the rendered side while the card is collapsed, not after the
+    // animation has already returned to its full-size resting state.
+    flashcardFlipSwapTimeout = setTimeout(() => {
         isFlipped.value = !isFlipped.value;
+        flashcardFlipSwapTimeout = null;
+    }, FLASHCARD_FLIP_DURATION_MS / 2);
+
+    flashcardFlipEndTimeout = setTimeout(() => {
         isFlipping.value = false;
-    }, 250);
+        flashcardFlipEndTimeout = null;
+    }, FLASHCARD_FLIP_DURATION_MS);
 }
 
 function goPrev() {
@@ -2554,11 +2573,11 @@ function startMatchTimer() {
         const now = Date.now();
         matchElapsedTimeMs.value = matchComputeElapsedMs(now);
         // Stop if elapsed time reaches 10 minutes
-        if (matchElapsedTimeMs.value >= matchDurationSeconds * 1000) {
-            matchElapsedTimeMs.value = matchDurationSeconds * 1000;
+        if (matchElapsedTimeMs.value >= MATCH_DURATION_MS) {
+            matchElapsedTimeMs.value = MATCH_DURATION_MS;
             matchStop("timeout");
         }
-    }, 125);
+    }, 16);
 }
 
 function resetMatchStateForRun() {
@@ -3601,15 +3620,10 @@ const matchIsFinished = computed(
 );
 const matchMatchedPairsCount = computed(() => matchMatchedPairIds.value.size);
 
-function formatSecondsCeil(ms: number) {
-    return Math.ceil(Math.max(0, ms) / 1000);
-}
-
 const matchTopline = computed(() => {
     if (!matchIsRunning.value && !matchIsFinished.value) return "Ready";
-    const seconds = Math.floor(matchElapsedTimeMs.value / 1000);
     const pairs = `${matchMatchedPairsCount.value}/${matchPairsTarget.value}`;
-    if (matchIsRunning.value) return `Time: ${seconds}s · Matched: ${pairs}`;
+    if (matchIsRunning.value) return `Time: ${formatMatchTime(matchElapsedTimeMs.value)} · Matched: ${pairs}`;
     return `Done · Matched: ${pairs}`;
 });
 
@@ -3621,9 +3635,7 @@ const matchAccuracyText = computed(() => {
 });
 
 const matchTimeText = computed(() => {
-    const elapsedMs = matchElapsedTimeMs.value;
-    const elapsedS = Math.round(elapsedMs / 1000);
-    return `${elapsedS}s`;
+    return formatMatchTime(matchElapsedTimeMs.value);
 });
 
 function newMsgId() {
@@ -4252,6 +4264,8 @@ watch(
 );
 
 onBeforeUnmount(() => {
+    if (flashcardFlipSwapTimeout) clearTimeout(flashcardFlipSwapTimeout);
+    if (flashcardFlipEndTimeout) clearTimeout(flashcardFlipEndTimeout);
     cancelFlashcardAnswerFeedback();
     cancelPracticeAnswerFeedback();
     flushChatRevealJobs();
@@ -4320,7 +4334,7 @@ onBeforeUnmount(() => {
 }
 
 .animate-flip {
-    animation: flip 0.25s ease-in-out;
+    animation: flip 0.32s ease-in-out;
 }
 
 .animate-slide-left {

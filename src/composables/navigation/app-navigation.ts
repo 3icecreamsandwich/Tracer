@@ -9,6 +9,7 @@ export type AppShortcutAction =
   | { type: 'back' }
   | { type: 'forward' }
   | { type: 'focus-search' }
+  | { type: 'reload' }
   | { type: 'navigate'; to: string; replace?: boolean }
 
 type ShortcutEvent = Pick<
@@ -52,12 +53,44 @@ export function navigateBack(
   void router.push(fallbackBackTarget(path))
 }
 
+export function shouldPreventFullscreenExit(event: ShortcutEvent): boolean {
+  return event.key === 'Escape'
+    && !event.altKey
+    && !event.ctrlKey
+    && !event.metaKey
+    && !event.shiftKey
+}
+
 export function resolveAppShortcut(
   event: ShortcutEvent,
   path: string,
 ): AppShortcutAction | null {
+  const setId = flashcardSetIdFromPath(path)
+
+  if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && setId) {
+    if (event.code === 'Digit1') {
+      return { type: 'navigate', to: `/set/${setId}?mode=flashcards`, replace: true }
+    }
+    if (event.code === 'Digit2') {
+      return { type: 'navigate', to: `/set/${setId}?mode=learn`, replace: true }
+    }
+    if (event.code === 'Digit3') {
+      return { type: 'navigate', to: `/set/${setId}?mode=chat`, replace: true }
+    }
+    if (event.code === 'Digit4') {
+      return { type: 'navigate', to: `/set/${setId}?mode=match`, replace: true }
+    }
+    if (event.code === 'Digit5') {
+      return { type: 'navigate', to: `/study-guide/${setId}`, replace: true }
+    }
+  }
+
   const primary = event.metaKey || event.ctrlKey
   if (!primary) return null
+
+  if (!event.altKey && !event.shiftKey && event.key.toLowerCase() === 'r') {
+    return { type: 'reload' }
+  }
 
   if (!event.altKey && !event.shiftKey && (event.key === '[' || event.key === 'ArrowLeft')) {
     return { type: 'back' }
@@ -75,8 +108,6 @@ export function resolveAppShortcut(
     return { type: 'focus-search' }
   }
 
-  const setId = flashcardSetIdFromPath(path)
-
   if (!event.altKey && !event.shiftKey && event.key.toLowerCase() === 'e') {
     return setId ? { type: 'navigate', to: `/set/${setId}/edit` } : null
   }
@@ -85,21 +116,6 @@ export function resolveAppShortcut(
     if (event.code === 'Digit1') return { type: 'navigate', to: '/create/basic' }
     if (event.code === 'Digit2') return { type: 'navigate', to: '/create/synthesize' }
     if (event.code === 'Digit3') return { type: 'navigate', to: '/create/generate' }
-  }
-
-  if (!event.shiftKey && event.altKey && setId) {
-    if (event.code === 'Digit1') {
-      return { type: 'navigate', to: `/set/${setId}?mode=flashcards`, replace: true }
-    }
-    if (event.code === 'Digit2') {
-      return { type: 'navigate', to: `/set/${setId}?mode=learn`, replace: true }
-    }
-    if (event.code === 'Digit3') {
-      return { type: 'navigate', to: `/set/${setId}?mode=match`, replace: true }
-    }
-    if (event.code === 'Digit4') {
-      return { type: 'navigate', to: `/set/${setId}?mode=chat`, replace: true }
-    }
   }
 
   return null

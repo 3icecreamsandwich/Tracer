@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { closeTracerDb } from './db'
 import { hasTauriRuntime } from './tauri'
 import { redactSensitiveText } from './security/redact'
 
@@ -81,6 +82,7 @@ export async function lockSetStartupLockEnabled(enabled: boolean, password?: str
 export async function lockResetTracer(): Promise<void> {
   if (!hasTauriRuntime()) return
   try {
+    await closeTracerDb().catch(() => {})
     await invoke('lock_reset_tracer')
   } catch (e) {
     throw new Error(redactSensitiveText(toMessage(e)))

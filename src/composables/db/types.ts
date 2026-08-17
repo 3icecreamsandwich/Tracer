@@ -127,4 +127,5 @@ export type SavedChat = SavedChatListItem & {
 export type DbClient = {
   execute: (sql: string, bindValues?: unknown[]) => Promise<unknown>
   select: <T>(sql: string, bindValues?: unknown[]) => Promise<T[]>
+  close: () => Promise<boolean>
 }

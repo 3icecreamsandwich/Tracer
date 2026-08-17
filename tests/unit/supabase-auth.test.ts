@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { displayNameFromUser, isGoogleUser } from '../../src/composables/auth/account'
-import { normalizeAuthError } from '../../src/composables/auth/errors'
+import { normalizeAuthError, TracerAuthError } from '../../src/composables/auth/errors'
 import { parseStoredSession } from '../../src/composables/auth/session'
 
 describe('Supabase account authentication', () => {
@@ -32,7 +32,12 @@ describe('Supabase account authentication', () => {
     expect(normalizeAuthError(new Error('access_denied')).code).toBe('oauth_cancelled')
     expect(normalizeAuthError({ code: 'timeout', message: 'late' }).code).toBe('callback_timeout')
     expect(normalizeAuthError(new Error('Email not confirmed')).code).toBe('email_not_verified')
+    expect(normalizeAuthError({ code: 'over_email_send_rate_limit', message: 'email rate limit exceeded' }).code).toBe('email_rate_limited')
+    expect(normalizeAuthError({ code: 'invalid_credentials', message: 'Invalid login credentials' }).code).toBe('invalid_credentials')
     expect(normalizeAuthError(new Error('Failed to fetch')).code).toBe('network')
     expect(normalizeAuthError({ code: 'keychain', message: 'Access denied' }).code).toBe('device_key_failed')
+    expect(normalizeAuthError({ code: 'already_initialized', message: 'App lock is already initialized' }).code).toBe('local_data_failed')
+    expect(normalizeAuthError(new Error('database disk I/O error')).code).toBe('local_data_failed')
+    expect(normalizeAuthError(new TracerAuthError('role_failed', 'role setup failed')).code).toBe('role_failed')
   })
 })

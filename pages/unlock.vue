@@ -28,11 +28,19 @@
       <button
         class="mt-6 w-full rounded border border-red-300 px-4 py-2 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
         :disabled="busy"
-        @click="onReset"
+        @click="openResetConfirmation"
       >
         {{ t('settings.resetTracer') }}
       </button>
     </div>
+
+    <ResetTracerDialog
+      :open="showResetConfirmation"
+      :busy="busy"
+      :error="resetError"
+      @cancel="closeResetConfirmation"
+      @confirm="onConfirmReset"
+    />
   </main>
 </template>
 
@@ -49,7 +57,9 @@ const { t } = useAppLanguage()
 
 const password = ref('')
 const error = ref<string | null>(null)
+const resetError = ref<string | null>(null)
 const busy = ref(false)
+const showResetConfirmation = ref(false)
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
@@ -77,15 +87,26 @@ async function onUnlock() {
   }
 }
 
-async function onReset() {
-  error.value = null
+function openResetConfirmation() {
+  resetError.value = null
+  showResetConfirmation.value = true
+}
+
+function closeResetConfirmation() {
+  if (busy.value) return
+  showResetConfirmation.value = false
+  resetError.value = null
+}
+
+async function onConfirmReset() {
+  resetError.value = null
   busy.value = true
   try {
     await lockResetTracer()
     markLocked()
     await router.replace('/first-run')
   } catch (e: unknown) {
-    error.value = toErrorMessage(e, 'Failed to reset')
+    resetError.value = toErrorMessage(e, 'Failed to reset')
   } finally {
     busy.value = false
   }

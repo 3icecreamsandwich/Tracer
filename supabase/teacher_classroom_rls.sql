@@ -1,7 +1,7 @@
 -- Tracer teacher/classroom Row Level Security baseline for Supabase.
 --
 -- Prerequisites (all in public):
---   profiles, subscriptions, classes, class_memberships, sets, set_versions,
+--   profiles, subscriptions, user_roles, classes, class_memberships, sets, set_versions,
 --   assignments, assignment_recipients, attempts, attempt_answers, set_assets
 --
 -- Assumptions:
@@ -23,6 +23,7 @@ begin
   foreach missing_table in array array[
     'profiles',
     'subscriptions',
+    'user_roles',
     'classes',
     'class_memberships',
     'sets',
@@ -50,6 +51,35 @@ grant usage on schema private to authenticated;
 -- in a non-exposed schema, bind authorization to auth.uid(), use a locked
 -- search_path, and receive only explicit EXECUTE grants below.
 
+create or replace function private.user_has_role(target_user_id uuid, expected_role text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog
+as $function$
+  select exists (
+      select 1
+      from public.user_roles as ur
+      where ur.user_id = target_user_id
+        and (
+          ur.role = expected_role
+          or (ur.role = 'admin' and expected_role = 'teacher')
+        )
+    );
+$function$;
+
+create or replace function private.has_user_role(expected_role text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog
+as $function$
+  select (select auth.uid()) is not null
+    and (select private.user_has_role((select auth.uid()), expected_role));
+$function$;
+
 create or replace function private.is_class_member(target_class_id uuid)
 returns boolean
 language sql
@@ -74,7 +104,7 @@ stable
 security definer
 set search_path = pg_catalog
 as $function$
-  select (select auth.uid()) is not null
+  select (select private.has_user_role('teacher'))
     and exists (
       select 1
       from public.class_memberships as cm
@@ -92,7 +122,7 @@ stable
 security definer
 set search_path = pg_catalog
 as $function$
-  select (select auth.uid()) is not null
+  select (select private.has_user_role('teacher'))
     and exists (
       select 1
       from public.classes as c
@@ -174,7 +204,7 @@ stable
 security definer
 set search_path = pg_catalog
 as $function$
-  select (select auth.uid()) is not null
+  select (select private.has_user_role('teacher'))
     and exists (
       select 1
       from public.assignments as a
@@ -200,7 +230,7 @@ stable
 security definer
 set search_path = pg_catalog
 as $function$
-  select (select auth.uid()) is not null
+  select (select private.has_user_role('student'))
     and exists (
       select 1
       from public.assignments as a
@@ -285,7 +315,7 @@ stable
 security definer
 set search_path = pg_catalog
 as $function$
-  select (select auth.uid()) is not null
+  select (select private.has_user_role('teacher'))
     and exists (
       select 1
       from public.attempts as att
@@ -305,6 +335,8 @@ as $function$
     );
 $function$;
 
+revoke all on function private.user_has_role(uuid, text) from public;
+revoke all on function private.has_user_role(text) from public;
 revoke all on function private.is_class_member(uuid) from public;
 revoke all on function private.is_class_teacher(uuid) from public;
 revoke all on function private.can_manage_class(uuid) from public;
@@ -315,6 +347,8 @@ revoke all on function private.can_start_assignment(uuid) from public;
 revoke all on function private.can_read_set_version(uuid) from public;
 revoke all on function private.owns_set_version(uuid) from public;
 revoke all on function private.can_grade_attempt(uuid) from public;
+grant execute on function private.user_has_role(uuid, text) to authenticated;
+grant execute on function private.has_user_role(text) to authenticated;
 grant execute on function private.is_class_member(uuid) to authenticated;
 grant execute on function private.is_class_teacher(uuid) to authenticated;
 grant execute on function private.can_manage_class(uuid) to authenticated;
@@ -421,14 +455,20 @@ using (
 );
 create policy "tracer_classes_insert"
 on public.classes for insert to authenticated
-with check (created_by = (select auth.uid()));
+with check (
+  created_by = (select auth.uid())
+  and (select private.has_user_role('teacher'))
+);
 create policy "tracer_classes_update"
 on public.classes for update to authenticated
 using ((select private.can_manage_class(id)))
 with check ((select private.can_manage_class(id)));
 create policy "tracer_classes_delete"
 on public.classes for delete to authenticated
-using (created_by = (select auth.uid()));
+using (
+  created_by = (select auth.uid())
+  and (select private.has_user_role('teacher'))
+);
 
 drop policy if exists "tracer_memberships_select" on public.class_memberships;
 drop policy if exists "tracer_memberships_insert" on public.class_memberships;
@@ -443,17 +483,24 @@ using (
 create policy "tracer_memberships_insert"
 on public.class_memberships for insert to authenticated
 with check (
-  (select private.is_class_teacher(class_id))
+  (
+    (select private.is_class_teacher(class_id))
+    and (select private.user_has_role(user_id, role::text))
+  )
   or (
     user_id = (select auth.uid())
     and role = 'teacher'
+    and (select private.has_user_role('teacher'))
     and (select private.can_manage_class(class_id))
   )
 );
 create policy "tracer_memberships_update"
 on public.class_memberships for update to authenticated
 using ((select private.is_class_teacher(class_id)))
-with check ((select private.is_class_teacher(class_id)));
+with check (
+  (select private.is_class_teacher(class_id))
+  and (select private.user_has_role(user_id, role::text))
+);
 create policy "tracer_memberships_delete"
 on public.class_memberships for delete to authenticated
 using ((select private.is_class_teacher(class_id)));
@@ -542,6 +589,7 @@ create policy "tracer_recipients_insert"
 on public.assignment_recipients for insert to authenticated
 with check (
   (select private.can_manage_assignment(assignment_id))
+  and (select private.user_has_role(student_id, 'student'))
   and exists (
     select 1
     from public.assignments as a

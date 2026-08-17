@@ -13,6 +13,12 @@ key or Google OAuth client secret to this repository.
 Google and email confirmation redirects must allow Tracer's loopback callback:
 `http://127.0.0.1:*/callback`.
 
+For GitHub Actions distribution builds, create repository variables named
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` under **Settings →
+Secrets and variables → Actions → Variables**. The platform build workflows pass
+these values to Vite, which embeds them in the packaged desktop client. Builds fail
+before packaging if either variable is missing.
+
 ## What is Tracer?
 **Tracer** is a free flashcard app to help you study. It strives to provide many of the features of proprietary flashcard software such as Quizlet or Knowt, while being easier to use than Anki.
 

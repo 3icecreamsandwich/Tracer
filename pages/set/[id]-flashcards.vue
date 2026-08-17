@@ -279,6 +279,9 @@ const set = ref<FlashcardSet | null>(null);
 const isFlipped = ref(false);
 const isFlipping = ref(false);
 const isNavigating = ref<"prev" | "next" | null>(null);
+const FLASHCARD_FLIP_DURATION_MS = 320;
+let flashcardFlipSwapTimeout: ReturnType<typeof setTimeout> | null = null;
+let flashcardFlipEndTimeout: ReturnType<typeof setTimeout> | null = null;
 const flashcardAnswerFeedback = ref<"correct" | "incorrect" | null>(null);
 const flashcardAnswerBusy = ref(false);
 const flashcardAnswerTransitionId = ref(0);
@@ -677,12 +680,20 @@ function restartFromFlashcardSettings() {
 }
 
 function toggleFlip() {
-    if (totalCount.value === 0 || flashcardAnswerBusy.value) return;
+    if (totalCount.value === 0 || flashcardAnswerBusy.value || isFlipping.value) return;
     isFlipping.value = true;
-    setTimeout(() => {
+
+    // Swap the rendered side while the card is collapsed, not after the
+    // animation has already returned to its full-size resting state.
+    flashcardFlipSwapTimeout = setTimeout(() => {
         isFlipped.value = !isFlipped.value;
+        flashcardFlipSwapTimeout = null;
+    }, FLASHCARD_FLIP_DURATION_MS / 2);
+
+    flashcardFlipEndTimeout = setTimeout(() => {
         isFlipping.value = false;
-    }, 250);
+        flashcardFlipEndTimeout = null;
+    }, FLASHCARD_FLIP_DURATION_MS);
 }
 
 function goPrev() {
@@ -995,6 +1006,8 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+    if (flashcardFlipSwapTimeout) clearTimeout(flashcardFlipSwapTimeout);
+    if (flashcardFlipEndTimeout) clearTimeout(flashcardFlipEndTimeout);
     cancelFlashcardAnswerFeedback();
     window.removeEventListener("keydown", onKeydown);
     document.removeEventListener(
@@ -1043,7 +1056,7 @@ onBeforeUnmount(() => {
 }
 
 .animate-flip {
-    animation: flip 0.25s ease-in-out;
+    animation: flip 0.32s ease-in-out;
 }
 
 .animate-slide-left {

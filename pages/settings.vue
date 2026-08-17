@@ -91,7 +91,7 @@
               min="0"
               max="4"
               step="1"
-              class="mt-3 w-full accent-red-500"
+              class="mt-3 w-full accent-neutral-800"
               aria-label="Text size"
               @input="onTextScalePreview"
               @change="onTextScaleChange"
@@ -461,11 +461,19 @@
           type="button"
           class="mt-4 inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-800 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950 dark:focus-visible:ring-red-600 dark:focus-visible:ring-offset-slate-950"
           :disabled="busy"
-          @click="onReset"
+          @click="openResetConfirmation"
         >
           {{ t('settings.resetTracer') }}
         </button>
       </section>
+
+      <ResetTracerDialog
+        :open="showResetConfirmation"
+        :busy="busy"
+        :error="resetError"
+        @cancel="closeResetConfirmation"
+        @confirm="onConfirmReset"
+      />
 
       <div
         v-if="isModelPickerOpen"
@@ -831,6 +839,8 @@ const showPasswordPrompt = ref(false)
 const password = ref('')
 const busy = ref(false)
 const error = ref<string | null>(null)
+const resetError = ref<string | null>(null)
+const showResetConfirmation = ref(false)
 
 // BYOK fields are intentionally not persisted yet.
 // We avoid storing plaintext secrets in SQLite/localStorage.
@@ -1764,12 +1774,24 @@ function onCancelDisable() {
   password.value = ''
 }
 
-async function onReset() {
+function openResetConfirmation() {
   if (isWebPreview.value) {
     error.value = 'Reset is not available in web preview.'
     return
   }
   error.value = null
+  resetError.value = null
+  showResetConfirmation.value = true
+}
+
+function closeResetConfirmation() {
+  if (busy.value) return
+  showResetConfirmation.value = false
+  resetError.value = null
+}
+
+async function onConfirmReset() {
+  resetError.value = null
   busy.value = true
   try {
     await clearAuthSession().catch(() => {})
@@ -1777,7 +1799,7 @@ async function onReset() {
     markLocked()
     await router.replace('/first-run')
   } catch (e: unknown) {
-    error.value = toSafeErrorMessage(e, 'Failed to reset')
+    resetError.value = toSafeErrorMessage(e, 'Failed to reset')
   } finally {
     busy.value = false
   }

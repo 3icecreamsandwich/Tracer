@@ -12,6 +12,14 @@ export function useTracerDb(): Promise<DbClient> {
   return dbPromise
 }
 
+export async function closeTracerDb(): Promise<void> {
+  const pending = dbPromise
+  dbPromise = null
+  if (!pending) return
+  const db = await pending
+  await db.close()
+}
+
 export function __resetTracerDbForTests() {
   dbPromise = null
 }

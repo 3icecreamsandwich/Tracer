@@ -171,6 +171,10 @@ import {
     generateMatchTiles,
     type MatchTile,
 } from "~/src/composables/match/generator";
+import {
+    formatMatchTime,
+    MATCH_DURATION_MS,
+} from "~/src/composables/match/timer";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 
@@ -186,8 +190,6 @@ const loadError = ref<string | null>(null);
 const set = ref<FlashcardSet | null>(null);
 
 const matchPairsRequested = 8;
-const matchDurationSeconds = 600; // 10 minutes max
-
 const matchBusy = ref(false);
 const matchError = ref<string | null>(null);
 const matchRunCounter = ref(0);
@@ -265,11 +267,11 @@ function startMatchTimer() {
     matchTimerHandle.value = window.setInterval(() => {
         const now = Date.now();
         matchElapsedTimeMs.value = matchComputeElapsedMs(now);
-        if (matchElapsedTimeMs.value >= matchDurationSeconds * 1000) {
-            matchElapsedTimeMs.value = matchDurationSeconds * 1000;
+        if (matchElapsedTimeMs.value >= MATCH_DURATION_MS) {
+            matchElapsedTimeMs.value = MATCH_DURATION_MS;
             matchStop("timeout");
         }
-    }, 125);
+    }, 16);
 }
 
 function resetMatchStateForRun() {
@@ -437,9 +439,8 @@ const matchMatchedPairsCount = computed(() => matchMatchedPairIds.value.size);
 
 const matchTopline = computed(() => {
     if (!matchIsRunning.value && !matchIsFinished.value) return "Ready";
-    const seconds = Math.floor(matchElapsedTimeMs.value / 1000);
     const pairs = `${matchMatchedPairsCount.value}/${matchPairsTarget.value}`;
-    if (matchIsRunning.value) return `Time: ${seconds}s · Matched: ${pairs}`;
+    if (matchIsRunning.value) return `Time: ${formatMatchTime(matchElapsedTimeMs.value)} · Matched: ${pairs}`;
     return `Done · Matched: ${pairs}`;
 });
 
@@ -451,9 +452,7 @@ const matchAccuracyText = computed(() => {
 });
 
 const matchTimeText = computed(() => {
-    const elapsedMs = matchElapsedTimeMs.value;
-    const elapsedS = Math.round(elapsedMs / 1000);
-    return `${elapsedS}s`;
+    return formatMatchTime(matchElapsedTimeMs.value);
 });
 
 async function loadSet(setId: Uuid) {
