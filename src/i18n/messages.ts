@@ -1287,4 +1287,331 @@ for (const language of Object.keys(passwordVisibilityMessages) as AppLanguage[])
   Object.assign(messageTargets[language], passwordVisibilityMessages[language])
 }
 
+const classroomEnglish: Messages = {
+  'classroom.dashboard': 'Dashboard',
+  'classroom.teacherDashboard': 'Teacher dashboard',
+  'classroom.dashboardTitle': 'Your Classes',
+  'classroom.createClass': 'Create Class',
+  'classroom.createDescription': 'Add the class details. Tracer will generate a unique join code.',
+  'classroom.className': 'Class name',
+  'classroom.classNamePlaceholder': 'Calculus AB',
+  'classroom.subject': 'Subject',
+  'classroom.subjectPlaceholder': 'Mathematics',
+  'classroom.section': 'Section',
+  'classroom.sectionPlaceholder': 'Period 2',
+  'classroom.schoolYear': 'School year',
+  'classroom.schoolYearPlaceholder': '2026–2027',
+  'classroom.addStudents': 'Add Students',
+  'classroom.shareCodeDescription': 'Share this code with students joining {name}.',
+  'classroom.classCode': 'Class code',
+  'classroom.codeCopied': 'Class code copied.',
+  'classroom.copyFailed': 'Could not copy the code. Select and copy it manually.',
+  'classroom.copyCode': 'Copy code',
+  'classroom.addClass': 'Add Class',
+  'classroom.joinDescription': 'Enter the code your teacher shared with you.',
+  'classroom.codePlaceholder': 'ENTER CODE',
+  'classroom.joinClass': 'Join class',
+  'classroom.retry': 'Retry',
+  'classroom.noClassesTitle': 'Create your first class',
+  'classroom.noClassesDescription': 'Classes give you one place to invite students and view their learning activity.',
+  'classroom.class': 'Class',
+  'classroom.students': 'Students',
+  'classroom.assignments': 'Assignments',
+  'classroom.progress': 'Progress',
+  'classroom.comingSoon': 'Coming soon',
+  'classroom.recentActivity': 'Recent activity',
+  'classroom.noActivity': 'Student activity and progress will appear here in a future update.',
+  'classroom.classActions': 'Class actions',
+  'classroom.createSets': 'Create Sets',
+  'classroom.detailedView': 'Detailed View',
+  'classroom.noClassDetails': 'No additional class details',
+  'classroom.backToDashboard': 'Back to dashboard',
+  'classroom.searchStudents': 'Search students',
+  'classroom.sortStudents': 'Sort students',
+  'classroom.sortByName': 'Sort by name',
+  'classroom.sortByJoined': 'Sort by join date',
+  'classroom.studentRoster': 'Student roster',
+  'classroom.studentCount': '{count} students',
+  'classroom.noMatchingStudents': 'No students match this search.',
+  'classroom.noStudents': 'No students have joined this class yet.',
+  'classroom.student': 'Student',
+  'classroom.joined': 'Joined',
+  'classroom.totalScore': 'Total score',
+  'classroom.mostRecent': 'Most recent',
+  'classroom.consistency': 'Consistency',
+  'classroom.progressNotTracked': 'Scores and study progress are not tracked in this first dashboard version.',
+  'classroom.errorOffline': 'Classroom features need an internet connection. Your local library is still available.',
+  'classroom.errorSignedOut': 'Reconnect your account in Settings to use classroom features.',
+  'classroom.errorForbidden': 'This account does not have permission to perform that classroom action.',
+  'classroom.errorCodeNotFound': 'That class code is invalid or no longer active.',
+  'classroom.errorInvalidInput': 'Check the class details and try again.',
+  'classroom.errorUnknown': 'Tracer could not update the classroom. Try again.',
+}
+
+function classroomCopy(overrides: Messages): Messages {
+  return { ...classroomEnglish, ...overrides }
+}
+
+const classroomMessages: Record<AppLanguage, Messages> = {
+  en: classroomEnglish,
+  es: classroomCopy({
+    'classroom.dashboard': 'Panel', 'classroom.teacherDashboard': 'Panel docente', 'classroom.dashboardTitle': 'Tus clases', 'classroom.createClass': 'Crear clase', 'classroom.createDescription': 'Añade los datos de la clase. Tracer generará un código único.', 'classroom.className': 'Nombre de la clase', 'classroom.classNamePlaceholder': 'Cálculo AB', 'classroom.subject': 'Asignatura', 'classroom.subjectPlaceholder': 'Matemáticas', 'classroom.section': 'Sección', 'classroom.sectionPlaceholder': 'Periodo 2', 'classroom.schoolYear': 'Curso escolar', 'classroom.schoolYearPlaceholder': '2026–2027', 'classroom.addStudents': 'Añadir estudiantes', 'classroom.shareCodeDescription': 'Comparte este código con quienes se unan a {name}.', 'classroom.classCode': 'Código de clase', 'classroom.codeCopied': 'Código copiado.', 'classroom.copyFailed': 'No se pudo copiar. Selecciona el código y cópialo manualmente.', 'classroom.copyCode': 'Copiar código', 'classroom.addClass': 'Añadir clase', 'classroom.joinDescription': 'Introduce el código que compartió tu docente.', 'classroom.codePlaceholder': 'INTRODUCE EL CÓDIGO', 'classroom.joinClass': 'Unirse a la clase', 'classroom.retry': 'Reintentar', 'classroom.noClassesTitle': 'Crea tu primera clase', 'classroom.noClassesDescription': 'Invita estudiantes y consulta su actividad desde un solo lugar.', 'classroom.class': 'Clase', 'classroom.students': 'Estudiantes', 'classroom.assignments': 'Tareas', 'classroom.progress': 'Progreso', 'classroom.comingSoon': 'Próximamente', 'classroom.recentActivity': 'Actividad reciente', 'classroom.noActivity': 'La actividad y el progreso aparecerán aquí en una futura actualización.', 'classroom.classActions': 'Acciones de clase', 'classroom.createSets': 'Crear conjuntos', 'classroom.detailedView': 'Vista detallada', 'classroom.noClassDetails': 'Sin detalles adicionales', 'classroom.backToDashboard': 'Volver al panel', 'classroom.searchStudents': 'Buscar estudiantes', 'classroom.sortStudents': 'Ordenar estudiantes', 'classroom.sortByName': 'Ordenar por nombre', 'classroom.sortByJoined': 'Ordenar por fecha de ingreso', 'classroom.studentRoster': 'Lista de estudiantes', 'classroom.studentCount': '{count} estudiantes', 'classroom.noMatchingStudents': 'Ningún estudiante coincide.', 'classroom.noStudents': 'Aún no se ha unido ningún estudiante.', 'classroom.student': 'Estudiante', 'classroom.joined': 'Se unió', 'classroom.totalScore': 'Puntuación total', 'classroom.mostRecent': 'Más reciente', 'classroom.consistency': 'Constancia', 'classroom.progressNotTracked': 'Las puntuaciones y el progreso no se registran en esta primera versión.', 'classroom.errorOffline': 'Las clases necesitan internet. Tu biblioteca local sigue disponible.', 'classroom.errorSignedOut': 'Reconecta tu cuenta en Configuración para usar las clases.', 'classroom.errorForbidden': 'Esta cuenta no tiene permiso para esa acción.', 'classroom.errorCodeNotFound': 'El código no es válido o ya no está activo.', 'classroom.errorInvalidInput': 'Revisa los datos de la clase e inténtalo de nuevo.', 'classroom.errorUnknown': 'Tracer no pudo actualizar la clase. Inténtalo de nuevo.'
+  }),
+  fr: classroomCopy({
+    'classroom.dashboard': 'Tableau de bord', 'classroom.teacherDashboard': 'Tableau enseignant', 'classroom.dashboardTitle': 'Vos classes', 'classroom.createClass': 'Créer une classe', 'classroom.createDescription': 'Ajoutez les informations. Tracer générera un code unique.', 'classroom.className': 'Nom de la classe', 'classroom.classNamePlaceholder': 'Calcul AB', 'classroom.subject': 'Matière', 'classroom.subjectPlaceholder': 'Mathématiques', 'classroom.section': 'Section', 'classroom.sectionPlaceholder': 'Période 2', 'classroom.schoolYear': 'Année scolaire', 'classroom.schoolYearPlaceholder': '2026–2027', 'classroom.addStudents': 'Ajouter des élèves', 'classroom.shareCodeDescription': 'Partagez ce code avec les élèves qui rejoignent {name}.', 'classroom.classCode': 'Code de classe', 'classroom.codeCopied': 'Code copié.', 'classroom.copyFailed': 'Impossible de copier le code. Copiez-le manuellement.', 'classroom.copyCode': 'Copier le code', 'classroom.addClass': 'Ajouter une classe', 'classroom.joinDescription': 'Saisissez le code partagé par votre enseignant.', 'classroom.codePlaceholder': 'SAISIR LE CODE', 'classroom.joinClass': 'Rejoindre la classe', 'classroom.retry': 'Réessayer', 'classroom.noClassesTitle': 'Créez votre première classe', 'classroom.noClassesDescription': 'Invitez des élèves et consultez leur activité au même endroit.', 'classroom.class': 'Classe', 'classroom.students': 'Élèves', 'classroom.assignments': 'Devoirs', 'classroom.progress': 'Progression', 'classroom.comingSoon': 'Bientôt disponible', 'classroom.recentActivity': 'Activité récente', 'classroom.noActivity': 'L’activité et la progression apparaîtront ici prochainement.', 'classroom.classActions': 'Actions de classe', 'classroom.createSets': 'Créer des ensembles', 'classroom.detailedView': 'Vue détaillée', 'classroom.noClassDetails': 'Aucun détail supplémentaire', 'classroom.backToDashboard': 'Retour au tableau de bord', 'classroom.searchStudents': 'Rechercher des élèves', 'classroom.sortStudents': 'Trier les élèves', 'classroom.sortByName': 'Trier par nom', 'classroom.sortByJoined': 'Trier par date d’arrivée', 'classroom.studentRoster': 'Liste des élèves', 'classroom.studentCount': '{count} élèves', 'classroom.noMatchingStudents': 'Aucun élève ne correspond.', 'classroom.noStudents': 'Aucun élève n’a encore rejoint cette classe.', 'classroom.student': 'Élève', 'classroom.joined': 'Arrivée', 'classroom.totalScore': 'Score total', 'classroom.mostRecent': 'Plus récent', 'classroom.consistency': 'Régularité', 'classroom.progressNotTracked': 'Les scores et la progression ne sont pas suivis dans cette première version.', 'classroom.errorOffline': 'Les classes nécessitent Internet. Votre bibliothèque locale reste disponible.', 'classroom.errorSignedOut': 'Reconnectez votre compte dans Paramètres.', 'classroom.errorForbidden': 'Ce compte n’est pas autorisé à effectuer cette action.', 'classroom.errorCodeNotFound': 'Ce code est invalide ou n’est plus actif.', 'classroom.errorInvalidInput': 'Vérifiez les informations et réessayez.', 'classroom.errorUnknown': 'Tracer n’a pas pu mettre la classe à jour.'
+  }),
+  'zh-CN': classroomCopy({
+    'classroom.dashboard': '教学面板', 'classroom.teacherDashboard': '教师面板', 'classroom.dashboardTitle': '你的班级', 'classroom.createClass': '创建班级', 'classroom.createDescription': '填写班级信息，Tracer 将生成唯一加入代码。', 'classroom.className': '班级名称', 'classroom.classNamePlaceholder': '微积分 AB', 'classroom.subject': '科目', 'classroom.subjectPlaceholder': '数学', 'classroom.section': '班次', 'classroom.sectionPlaceholder': '第 2 节', 'classroom.schoolYear': '学年', 'classroom.schoolYearPlaceholder': '2026–2027', 'classroom.addStudents': '添加学生', 'classroom.shareCodeDescription': '将此代码分享给要加入 {name} 的学生。', 'classroom.classCode': '班级代码', 'classroom.codeCopied': '班级代码已复制。', 'classroom.copyFailed': '无法复制代码，请手动选择并复制。', 'classroom.copyCode': '复制代码', 'classroom.addClass': '添加班级', 'classroom.joinDescription': '输入教师分享的代码。', 'classroom.codePlaceholder': '输入代码', 'classroom.joinClass': '加入班级', 'classroom.retry': '重试', 'classroom.noClassesTitle': '创建第一个班级', 'classroom.noClassesDescription': '在一个地方邀请学生并查看学习活动。', 'classroom.class': '班级', 'classroom.students': '学生', 'classroom.assignments': '作业', 'classroom.progress': '进度', 'classroom.comingSoon': '即将推出', 'classroom.recentActivity': '最近活动', 'classroom.noActivity': '学生活动和进度将在后续更新中显示。', 'classroom.classActions': '班级操作', 'classroom.createSets': '创建卡片集', 'classroom.detailedView': '详细视图', 'classroom.noClassDetails': '没有其他班级信息', 'classroom.backToDashboard': '返回教学面板', 'classroom.searchStudents': '搜索学生', 'classroom.sortStudents': '排序学生', 'classroom.sortByName': '按姓名排序', 'classroom.sortByJoined': '按加入日期排序', 'classroom.studentRoster': '学生名单', 'classroom.studentCount': '{count} 名学生', 'classroom.noMatchingStudents': '没有匹配的学生。', 'classroom.noStudents': '尚无学生加入此班级。', 'classroom.student': '学生', 'classroom.joined': '加入时间', 'classroom.totalScore': '总分', 'classroom.mostRecent': '最近成绩', 'classroom.consistency': '持续性', 'classroom.progressNotTracked': '此首版面板暂不跟踪分数和学习进度。', 'classroom.errorOffline': '班级功能需要网络连接，本地资料库仍可使用。', 'classroom.errorSignedOut': '请在设置中重新连接帐户。', 'classroom.errorForbidden': '此帐户无权执行该班级操作。', 'classroom.errorCodeNotFound': '班级代码无效或已停用。', 'classroom.errorInvalidInput': '请检查班级信息后重试。', 'classroom.errorUnknown': 'Tracer 无法更新班级，请重试。'
+  }),
+  hi: classroomCopy({
+    'classroom.dashboard': 'डैशबोर्ड', 'classroom.teacherDashboard': 'शिक्षक डैशबोर्ड', 'classroom.dashboardTitle': 'आपकी कक्षाएँ', 'classroom.createClass': 'कक्षा बनाएँ', 'classroom.createDescription': 'कक्षा की जानकारी भरें। Tracer एक अनूठा कोड बनाएगा।', 'classroom.className': 'कक्षा का नाम', 'classroom.classNamePlaceholder': 'कैलकुलस AB', 'classroom.subject': 'विषय', 'classroom.subjectPlaceholder': 'गणित', 'classroom.section': 'सेक्शन', 'classroom.sectionPlaceholder': 'पीरियड 2', 'classroom.schoolYear': 'शैक्षणिक वर्ष', 'classroom.schoolYearPlaceholder': '2026–2027', 'classroom.addStudents': 'विद्यार्थी जोड़ें', 'classroom.shareCodeDescription': '{name} में शामिल होने वाले विद्यार्थियों से यह कोड साझा करें।', 'classroom.classCode': 'कक्षा कोड', 'classroom.codeCopied': 'कक्षा कोड कॉपी हुआ।', 'classroom.copyFailed': 'कोड कॉपी नहीं हुआ। इसे चुनकर मैन्युअल रूप से कॉपी करें।', 'classroom.copyCode': 'कोड कॉपी करें', 'classroom.addClass': 'कक्षा जोड़ें', 'classroom.joinDescription': 'शिक्षक द्वारा साझा किया गया कोड दर्ज करें।', 'classroom.codePlaceholder': 'कोड दर्ज करें', 'classroom.joinClass': 'कक्षा में शामिल हों', 'classroom.retry': 'फिर कोशिश करें', 'classroom.noClassesTitle': 'अपनी पहली कक्षा बनाएँ', 'classroom.noClassesDescription': 'विद्यार्थियों को आमंत्रित करें और उनकी गतिविधि एक जगह देखें।', 'classroom.class': 'कक्षा', 'classroom.students': 'विद्यार्थी', 'classroom.assignments': 'असाइनमेंट', 'classroom.progress': 'प्रगति', 'classroom.comingSoon': 'जल्द उपलब्ध', 'classroom.recentActivity': 'हाल की गतिविधि', 'classroom.noActivity': 'विद्यार्थी गतिविधि और प्रगति भविष्य के अपडेट में यहाँ दिखेगी।', 'classroom.classActions': 'कक्षा कार्रवाइयाँ', 'classroom.createSets': 'सेट बनाएँ', 'classroom.detailedView': 'विस्तृत दृश्य', 'classroom.noClassDetails': 'कोई अतिरिक्त विवरण नहीं', 'classroom.backToDashboard': 'डैशबोर्ड पर वापस', 'classroom.searchStudents': 'विद्यार्थी खोजें', 'classroom.sortStudents': 'विद्यार्थी क्रमित करें', 'classroom.sortByName': 'नाम से क्रमित करें', 'classroom.sortByJoined': 'जुड़ने की तारीख से क्रमित करें', 'classroom.studentRoster': 'विद्यार्थी सूची', 'classroom.studentCount': '{count} विद्यार्थी', 'classroom.noMatchingStudents': 'कोई विद्यार्थी नहीं मिला।', 'classroom.noStudents': 'अभी कोई विद्यार्थी इस कक्षा में नहीं जुड़ा।', 'classroom.student': 'विद्यार्थी', 'classroom.joined': 'जुड़ने की तारीख', 'classroom.totalScore': 'कुल अंक', 'classroom.mostRecent': 'सबसे हाल का', 'classroom.consistency': 'निरंतरता', 'classroom.progressNotTracked': 'इस पहले संस्करण में अंक और प्रगति ट्रैक नहीं होते।', 'classroom.errorOffline': 'कक्षा सुविधाओं के लिए इंटरनेट चाहिए। स्थानीय लाइब्रेरी उपलब्ध है।', 'classroom.errorSignedOut': 'कक्षा सुविधाओं के लिए सेटिंग्स में खाता दोबारा जोड़ें।', 'classroom.errorForbidden': 'इस खाते को यह कार्रवाई करने की अनुमति नहीं है।', 'classroom.errorCodeNotFound': 'कक्षा कोड अमान्य है या सक्रिय नहीं है।', 'classroom.errorInvalidInput': 'कक्षा विवरण जाँचकर फिर कोशिश करें।', 'classroom.errorUnknown': 'Tracer कक्षा अपडेट नहीं कर सका।'
+  }),
+  ar: classroomCopy({
+    'classroom.dashboard': 'لوحة التحكم', 'classroom.teacherDashboard': 'لوحة المعلم', 'classroom.dashboardTitle': 'صفوفك', 'classroom.createClass': 'إنشاء صف', 'classroom.createDescription': 'أضف تفاصيل الصف وسيُنشئ Tracer رمز انضمام فريدًا.', 'classroom.className': 'اسم الصف', 'classroom.classNamePlaceholder': 'التفاضل والتكامل AB', 'classroom.subject': 'المادة', 'classroom.subjectPlaceholder': 'الرياضيات', 'classroom.section': 'الشعبة', 'classroom.sectionPlaceholder': 'الحصة 2', 'classroom.schoolYear': 'العام الدراسي', 'classroom.schoolYearPlaceholder': '2026–2027', 'classroom.addStudents': 'إضافة طلاب', 'classroom.shareCodeDescription': 'شارك هذا الرمز مع الطلاب المنضمين إلى {name}.', 'classroom.classCode': 'رمز الصف', 'classroom.codeCopied': 'تم نسخ رمز الصف.', 'classroom.copyFailed': 'تعذر نسخ الرمز. حدده وانسخه يدويًا.', 'classroom.copyCode': 'نسخ الرمز', 'classroom.addClass': 'إضافة صف', 'classroom.joinDescription': 'أدخل الرمز الذي شاركه معلمك.', 'classroom.codePlaceholder': 'أدخل الرمز', 'classroom.joinClass': 'الانضمام إلى الصف', 'classroom.retry': 'إعادة المحاولة', 'classroom.noClassesTitle': 'أنشئ صفك الأول', 'classroom.noClassesDescription': 'ادعُ الطلاب واعرض نشاطهم التعليمي في مكان واحد.', 'classroom.class': 'الصف', 'classroom.students': 'الطلاب', 'classroom.assignments': 'الواجبات', 'classroom.progress': 'التقدم', 'classroom.comingSoon': 'قريبًا', 'classroom.recentActivity': 'النشاط الأخير', 'classroom.noActivity': 'سيظهر نشاط الطلاب وتقدمهم هنا في تحديث لاحق.', 'classroom.classActions': 'إجراءات الصف', 'classroom.createSets': 'إنشاء مجموعات', 'classroom.detailedView': 'عرض تفصيلي', 'classroom.noClassDetails': 'لا توجد تفاصيل إضافية', 'classroom.backToDashboard': 'العودة إلى لوحة التحكم', 'classroom.searchStudents': 'البحث عن طلاب', 'classroom.sortStudents': 'ترتيب الطلاب', 'classroom.sortByName': 'الترتيب حسب الاسم', 'classroom.sortByJoined': 'الترتيب حسب تاريخ الانضمام', 'classroom.studentRoster': 'قائمة الطلاب', 'classroom.studentCount': '{count} طلاب', 'classroom.noMatchingStudents': 'لا يوجد طلاب مطابقون.', 'classroom.noStudents': 'لم ينضم أي طالب بعد.', 'classroom.student': 'الطالب', 'classroom.joined': 'تاريخ الانضمام', 'classroom.totalScore': 'النتيجة الكلية', 'classroom.mostRecent': 'الأحدث', 'classroom.consistency': 'الاستمرارية', 'classroom.progressNotTracked': 'لا تُتبع النتائج والتقدم في هذا الإصدار الأول.', 'classroom.errorOffline': 'تحتاج ميزات الصف إلى الإنترنت. مكتبتك المحلية متاحة.', 'classroom.errorSignedOut': 'أعد ربط حسابك من الإعدادات لاستخدام الصفوف.', 'classroom.errorForbidden': 'لا يملك هذا الحساب إذن تنفيذ هذا الإجراء.', 'classroom.errorCodeNotFound': 'رمز الصف غير صالح أو لم يعد نشطًا.', 'classroom.errorInvalidInput': 'تحقق من تفاصيل الصف وحاول مجددًا.', 'classroom.errorUnknown': 'تعذر على Tracer تحديث الصف.'
+  }),
+  de: classroomCopy({
+    'classroom.dashboard': 'Dashboard', 'classroom.teacherDashboard': 'Lehrkräfte-Dashboard', 'classroom.dashboardTitle': 'Deine Klassen', 'classroom.createClass': 'Klasse erstellen', 'classroom.createDescription': 'Füge die Klassendetails hinzu. Tracer erstellt einen eindeutigen Beitrittscode.', 'classroom.className': 'Klassenname', 'classroom.classNamePlaceholder': 'Analysis AB', 'classroom.subject': 'Fach', 'classroom.subjectPlaceholder': 'Mathematik', 'classroom.section': 'Kursabschnitt', 'classroom.sectionPlaceholder': '2. Stunde', 'classroom.schoolYear': 'Schuljahr', 'classroom.schoolYearPlaceholder': '2026–2027', 'classroom.addStudents': 'Lernende hinzufügen', 'classroom.shareCodeDescription': 'Teile diesen Code mit den Lernenden, die {name} beitreten.', 'classroom.classCode': 'Klassencode', 'classroom.codeCopied': 'Klassencode kopiert.', 'classroom.copyFailed': 'Der Code konnte nicht kopiert werden. Wähle ihn aus und kopiere ihn manuell.', 'classroom.copyCode': 'Code kopieren', 'classroom.addClass': 'Klasse hinzufügen', 'classroom.joinDescription': 'Gib den Code ein, den deine Lehrkraft geteilt hat.', 'classroom.codePlaceholder': 'CODE EINGEBEN', 'classroom.joinClass': 'Klasse beitreten', 'classroom.retry': 'Erneut versuchen', 'classroom.noClassesTitle': 'Erstelle deine erste Klasse', 'classroom.noClassesDescription': 'Lade Lernende ein und sieh ihre Lernaktivitäten an einem Ort.', 'classroom.class': 'Klasse', 'classroom.students': 'Lernende', 'classroom.assignments': 'Aufgaben', 'classroom.progress': 'Fortschritt', 'classroom.comingSoon': 'Demnächst', 'classroom.recentActivity': 'Letzte Aktivität', 'classroom.noActivity': 'Aktivität und Fortschritt der Lernenden erscheinen in einem späteren Update.', 'classroom.classActions': 'Klassenaktionen', 'classroom.createSets': 'Sets erstellen', 'classroom.detailedView': 'Detailansicht', 'classroom.noClassDetails': 'Keine weiteren Klassendetails', 'classroom.backToDashboard': 'Zurück zum Dashboard', 'classroom.searchStudents': 'Lernende suchen', 'classroom.sortStudents': 'Lernende sortieren', 'classroom.sortByName': 'Nach Name sortieren', 'classroom.sortByJoined': 'Nach Beitrittsdatum sortieren', 'classroom.studentRoster': 'Klassenliste', 'classroom.studentCount': '{count} Lernende', 'classroom.noMatchingStudents': 'Keine Lernenden entsprechen dieser Suche.', 'classroom.noStudents': 'Dieser Klasse sind noch keine Lernenden beigetreten.', 'classroom.student': 'Lernende', 'classroom.joined': 'Beigetreten', 'classroom.totalScore': 'Gesamtpunktzahl', 'classroom.mostRecent': 'Zuletzt', 'classroom.consistency': 'Regelmäßigkeit', 'classroom.progressNotTracked': 'Punktzahlen und Lernfortschritt werden in dieser ersten Dashboard-Version nicht erfasst.', 'classroom.errorOffline': 'Klassenfunktionen benötigen eine Internetverbindung. Deine lokale Bibliothek bleibt verfügbar.', 'classroom.errorSignedOut': 'Verbinde dein Konto in den Einstellungen erneut, um Klassenfunktionen zu nutzen.', 'classroom.errorForbidden': 'Dieses Konto darf diese Klassenaktion nicht ausführen.', 'classroom.errorCodeNotFound': 'Der Klassencode ist ungültig oder nicht mehr aktiv.', 'classroom.errorInvalidInput': 'Prüfe die Klassendetails und versuche es erneut.', 'classroom.errorUnknown': 'Tracer konnte die Klasse nicht aktualisieren. Versuche es erneut.'
+  }),
+  ru: classroomCopy({
+    'classroom.dashboard': 'Панель', 'classroom.teacherDashboard': 'Панель учителя', 'classroom.dashboardTitle': 'Ваши классы', 'classroom.createClass': 'Создать класс', 'classroom.createDescription': 'Добавьте сведения о классе. Tracer создаст уникальный код для входа.', 'classroom.className': 'Название класса', 'classroom.classNamePlaceholder': 'Математический анализ AB', 'classroom.subject': 'Предмет', 'classroom.subjectPlaceholder': 'Математика', 'classroom.section': 'Группа', 'classroom.sectionPlaceholder': 'Урок 2', 'classroom.schoolYear': 'Учебный год', 'classroom.schoolYearPlaceholder': '2026–2027', 'classroom.addStudents': 'Добавить учеников', 'classroom.shareCodeDescription': 'Поделитесь этим кодом с учениками, которые присоединяются к {name}.', 'classroom.classCode': 'Код класса', 'classroom.codeCopied': 'Код класса скопирован.', 'classroom.copyFailed': 'Не удалось скопировать код. Выделите и скопируйте его вручную.', 'classroom.copyCode': 'Копировать код', 'classroom.addClass': 'Добавить класс', 'classroom.joinDescription': 'Введите код, которым поделился учитель.', 'classroom.codePlaceholder': 'ВВЕДИТЕ КОД', 'classroom.joinClass': 'Вступить в класс', 'classroom.retry': 'Повторить', 'classroom.noClassesTitle': 'Создайте первый класс', 'classroom.noClassesDescription': 'Приглашайте учеников и просматривайте их учебную активность в одном месте.', 'classroom.class': 'Класс', 'classroom.students': 'Ученики', 'classroom.assignments': 'Задания', 'classroom.progress': 'Прогресс', 'classroom.comingSoon': 'Скоро', 'classroom.recentActivity': 'Недавняя активность', 'classroom.noActivity': 'Активность и прогресс учеников появятся здесь в одном из следующих обновлений.', 'classroom.classActions': 'Действия класса', 'classroom.createSets': 'Создать наборы', 'classroom.detailedView': 'Подробный вид', 'classroom.noClassDetails': 'Дополнительных сведений нет', 'classroom.backToDashboard': 'Назад к панели', 'classroom.searchStudents': 'Поиск учеников', 'classroom.sortStudents': 'Сортировать учеников', 'classroom.sortByName': 'По имени', 'classroom.sortByJoined': 'По дате вступления', 'classroom.studentRoster': 'Список учеников', 'classroom.studentCount': 'Учеников: {count}', 'classroom.noMatchingStudents': 'Поиск не дал результатов.', 'classroom.noStudents': 'К этому классу пока никто не присоединился.', 'classroom.student': 'Ученик', 'classroom.joined': 'Дата вступления', 'classroom.totalScore': 'Общий балл', 'classroom.mostRecent': 'Последний результат', 'classroom.consistency': 'Регулярность', 'classroom.progressNotTracked': 'В первой версии панели баллы и учебный прогресс не отслеживаются.', 'classroom.errorOffline': 'Для классов требуется интернет. Локальная библиотека остаётся доступной.', 'classroom.errorSignedOut': 'Переподключите аккаунт в настройках, чтобы использовать классы.', 'classroom.errorForbidden': 'У этого аккаунта нет разрешения на это действие.', 'classroom.errorCodeNotFound': 'Код класса недействителен или больше не активен.', 'classroom.errorInvalidInput': 'Проверьте сведения о классе и повторите попытку.', 'classroom.errorUnknown': 'Tracer не удалось обновить класс. Повторите попытку.'
+  }),
+  ja: classroomCopy({
+    'classroom.dashboard': 'ダッシュボード', 'classroom.teacherDashboard': '教師ダッシュボード', 'classroom.dashboardTitle': 'クラス', 'classroom.createClass': 'クラスを作成', 'classroom.createDescription': 'クラス情報を入力してください。Tracer が固有の参加コードを生成します。', 'classroom.className': 'クラス名', 'classroom.classNamePlaceholder': '微積分 AB', 'classroom.subject': '科目', 'classroom.subjectPlaceholder': '数学', 'classroom.section': 'セクション', 'classroom.sectionPlaceholder': '2時限', 'classroom.schoolYear': '年度', 'classroom.schoolYearPlaceholder': '2026–2027', 'classroom.addStudents': '生徒を追加', 'classroom.shareCodeDescription': '{name} に参加する生徒とこのコードを共有してください。', 'classroom.classCode': 'クラスコード', 'classroom.codeCopied': 'クラスコードをコピーしました。', 'classroom.copyFailed': 'コードをコピーできませんでした。選択して手動でコピーしてください。', 'classroom.copyCode': 'コードをコピー', 'classroom.addClass': 'クラスを追加', 'classroom.joinDescription': '教師から共有されたコードを入力してください。', 'classroom.codePlaceholder': 'コードを入力', 'classroom.joinClass': 'クラスに参加', 'classroom.retry': '再試行', 'classroom.noClassesTitle': '最初のクラスを作成', 'classroom.noClassesDescription': '生徒の招待と学習活動の確認を一か所で行えます。', 'classroom.class': 'クラス', 'classroom.students': '生徒', 'classroom.assignments': '課題', 'classroom.progress': '進捗', 'classroom.comingSoon': '近日公開', 'classroom.recentActivity': '最近のアクティビティ', 'classroom.noActivity': '生徒のアクティビティと進捗は今後のアップデートで表示されます。', 'classroom.classActions': 'クラス操作', 'classroom.createSets': 'セットを作成', 'classroom.detailedView': '詳細表示', 'classroom.noClassDetails': '追加のクラス情報はありません', 'classroom.backToDashboard': 'ダッシュボードに戻る', 'classroom.searchStudents': '生徒を検索', 'classroom.sortStudents': '生徒を並べ替え', 'classroom.sortByName': '名前順', 'classroom.sortByJoined': '参加日順', 'classroom.studentRoster': '生徒名簿', 'classroom.studentCount': '{count}人の生徒', 'classroom.noMatchingStudents': '検索に一致する生徒はいません。', 'classroom.noStudents': 'このクラスにはまだ生徒が参加していません。', 'classroom.student': '生徒', 'classroom.joined': '参加日', 'classroom.totalScore': '合計スコア', 'classroom.mostRecent': '直近', 'classroom.consistency': '継続性', 'classroom.progressNotTracked': 'この最初のダッシュボード版では、スコアと学習進捗は記録されません。', 'classroom.errorOffline': 'クラス機能にはインターネット接続が必要です。ローカルライブラリは引き続き利用できます。', 'classroom.errorSignedOut': 'クラス機能を使用するには、設定でアカウントを再接続してください。', 'classroom.errorForbidden': 'このアカウントには、そのクラス操作を行う権限がありません。', 'classroom.errorCodeNotFound': 'クラスコードが無効か、使用できません。', 'classroom.errorInvalidInput': 'クラス情報を確認して、もう一度お試しください。', 'classroom.errorUnknown': 'Tracer はクラスを更新できませんでした。もう一度お試しください。'
+  }),
+  ko: classroomCopy({
+    'classroom.dashboard': '대시보드', 'classroom.teacherDashboard': '교사 대시보드', 'classroom.dashboardTitle': '내 수업', 'classroom.createClass': '수업 만들기', 'classroom.createDescription': '수업 정보를 입력하세요. Tracer가 고유한 참여 코드를 생성합니다.', 'classroom.className': '수업 이름', 'classroom.classNamePlaceholder': '미적분 AB', 'classroom.subject': '과목', 'classroom.subjectPlaceholder': '수학', 'classroom.section': '분반', 'classroom.sectionPlaceholder': '2교시', 'classroom.schoolYear': '학년도', 'classroom.schoolYearPlaceholder': '2026–2027', 'classroom.addStudents': '학생 추가', 'classroom.shareCodeDescription': '{name}에 참여할 학생에게 이 코드를 공유하세요.', 'classroom.classCode': '수업 코드', 'classroom.codeCopied': '수업 코드를 복사했습니다.', 'classroom.copyFailed': '코드를 복사하지 못했습니다. 선택한 뒤 직접 복사하세요.', 'classroom.copyCode': '코드 복사', 'classroom.addClass': '수업 추가', 'classroom.joinDescription': '교사가 공유한 코드를 입력하세요.', 'classroom.codePlaceholder': '코드 입력', 'classroom.joinClass': '수업 참여', 'classroom.retry': '다시 시도', 'classroom.noClassesTitle': '첫 수업 만들기', 'classroom.noClassesDescription': '한곳에서 학생을 초대하고 학습 활동을 확인하세요.', 'classroom.class': '수업', 'classroom.students': '학생', 'classroom.assignments': '과제', 'classroom.progress': '진행도', 'classroom.comingSoon': '곧 제공 예정', 'classroom.recentActivity': '최근 활동', 'classroom.noActivity': '학생 활동과 진행도는 향후 업데이트에서 여기에 표시됩니다.', 'classroom.classActions': '수업 작업', 'classroom.createSets': '세트 만들기', 'classroom.detailedView': '상세 보기', 'classroom.noClassDetails': '추가 수업 정보 없음', 'classroom.backToDashboard': '대시보드로 돌아가기', 'classroom.searchStudents': '학생 검색', 'classroom.sortStudents': '학생 정렬', 'classroom.sortByName': '이름순', 'classroom.sortByJoined': '참여일순', 'classroom.studentRoster': '학생 명단', 'classroom.studentCount': '학생 {count}명', 'classroom.noMatchingStudents': '검색과 일치하는 학생이 없습니다.', 'classroom.noStudents': '아직 이 수업에 참여한 학생이 없습니다.', 'classroom.student': '학생', 'classroom.joined': '참여일', 'classroom.totalScore': '총점', 'classroom.mostRecent': '최근 결과', 'classroom.consistency': '꾸준함', 'classroom.progressNotTracked': '이 첫 대시보드 버전에서는 점수와 학습 진행도를 추적하지 않습니다.', 'classroom.errorOffline': '수업 기능에는 인터넷 연결이 필요합니다. 로컬 라이브러리는 계속 사용할 수 있습니다.', 'classroom.errorSignedOut': '수업 기능을 사용하려면 설정에서 계정을 다시 연결하세요.', 'classroom.errorForbidden': '이 계정에는 해당 수업 작업을 수행할 권한이 없습니다.', 'classroom.errorCodeNotFound': '수업 코드가 잘못되었거나 더 이상 활성화되지 않았습니다.', 'classroom.errorInvalidInput': '수업 정보를 확인하고 다시 시도하세요.', 'classroom.errorUnknown': 'Tracer가 수업을 업데이트하지 못했습니다. 다시 시도하세요.'
+  }),
+}
+
+for (const language of Object.keys(classroomMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], classroomMessages[language])
+}
+
+const classroomManagementEnglish: Messages = {
+  'classroom.manageClass': 'Manage Class',
+  'classroom.manageDescription': 'Manage students, assigned material, and class deletion.',
+  'classroom.manageStudents': 'Students',
+  'classroom.manageStudentsDescription': 'Removing a student revokes their class and assignment access.',
+  'classroom.assignedMaterials': 'Assigned sets and material',
+  'classroom.assignedMaterialsDescription': 'Removing an assignment preserves the reusable source set but deletes class-specific attempts.',
+  'classroom.noAssignedMaterials': 'No sets or material are assigned to this class.',
+  'classroom.removeStudent': 'Remove student',
+  'classroom.removeMaterial': 'Remove material',
+  'classroom.deleteClass': 'Delete class',
+  'classroom.deleteClassDescription': 'Permanently delete this class, its roster, assignments, and class-specific attempt history. Reusable source sets are preserved.',
+  'classroom.removeStudentTitle': 'Remove this student?',
+  'classroom.removeMaterialTitle': 'Remove this material?',
+  'classroom.removeStudentConfirmation': 'Remove {name} from this class and revoke their assignment access?',
+  'classroom.removeMaterialConfirmation': 'Remove {name} and its class-specific attempt history? The source set will remain in your library.',
+  'classroom.deleteClassConfirmation': 'This permanently deletes {name}, its roster, assignments, and class-specific attempt history.',
+  'classroom.typeClassName': 'Type “{name}” to confirm.',
+  'classroom.manageItemNotFound': 'That classroom item no longer exists. Reload the page and try again.',
+  'classroom.assignmentStatus.draft': 'Draft',
+  'classroom.assignmentStatus.published': 'Published',
+  'classroom.assignmentStatus.closed': 'Closed',
+}
+
+function classroomManagementCopy(overrides: Messages): Messages {
+  return { ...classroomManagementEnglish, ...overrides }
+}
+
+const classroomManagementMessages: Record<AppLanguage, Messages> = {
+  en: classroomManagementEnglish,
+  es: classroomManagementCopy({
+    'classroom.manageClass': 'Gestionar clase', 'classroom.manageDescription': 'Gestiona estudiantes, material asignado y la eliminación de la clase.', 'classroom.manageStudents': 'Estudiantes', 'classroom.manageStudentsDescription': 'Quitar a un estudiante revoca su acceso a la clase y a las tareas.', 'classroom.assignedMaterials': 'Conjuntos y material asignado', 'classroom.assignedMaterialsDescription': 'Quitar una tarea conserva el conjunto original, pero elimina los intentos de esta clase.', 'classroom.noAssignedMaterials': 'No hay conjuntos ni material asignado a esta clase.', 'classroom.removeStudent': 'Quitar estudiante', 'classroom.removeMaterial': 'Quitar material', 'classroom.deleteClass': 'Eliminar clase', 'classroom.deleteClassDescription': 'Elimina permanentemente la clase, la lista, las tareas y los intentos de la clase. Los conjuntos originales se conservan.', 'classroom.removeStudentTitle': '¿Quitar a este estudiante?', 'classroom.removeMaterialTitle': '¿Quitar este material?', 'classroom.removeStudentConfirmation': '¿Quitar a {name} de esta clase y revocar su acceso a las tareas?', 'classroom.removeMaterialConfirmation': '¿Quitar {name} y sus intentos de esta clase? El conjunto original seguirá en tu biblioteca.', 'classroom.deleteClassConfirmation': 'Esto elimina permanentemente {name}, su lista, sus tareas y los intentos de la clase.', 'classroom.typeClassName': 'Escribe “{name}” para confirmar.', 'classroom.manageItemNotFound': 'Ese elemento ya no existe. Recarga la página e inténtalo de nuevo.', 'classroom.assignmentStatus.draft': 'Borrador', 'classroom.assignmentStatus.published': 'Publicada', 'classroom.assignmentStatus.closed': 'Cerrada'
+  }),
+  fr: classroomManagementCopy({
+    'classroom.manageClass': 'Gérer la classe', 'classroom.manageDescription': 'Gérez les élèves, le matériel attribué et la suppression de la classe.', 'classroom.manageStudents': 'Élèves', 'classroom.manageStudentsDescription': 'Retirer un élève révoque son accès à la classe et aux devoirs.', 'classroom.assignedMaterials': 'Ensembles et matériel attribués', 'classroom.assignedMaterialsDescription': 'Retirer un devoir conserve l’ensemble source, mais supprime les tentatives propres à la classe.', 'classroom.noAssignedMaterials': 'Aucun ensemble ou matériel n’est attribué à cette classe.', 'classroom.removeStudent': 'Retirer l’élève', 'classroom.removeMaterial': 'Retirer le matériel', 'classroom.deleteClass': 'Supprimer la classe', 'classroom.deleteClassDescription': 'Supprime définitivement la classe, ses élèves, ses devoirs et l’historique des tentatives. Les ensembles sources sont conservés.', 'classroom.removeStudentTitle': 'Retirer cet élève ?', 'classroom.removeMaterialTitle': 'Retirer ce matériel ?', 'classroom.removeStudentConfirmation': 'Retirer {name} de cette classe et révoquer son accès aux devoirs ?', 'classroom.removeMaterialConfirmation': 'Retirer {name} et l’historique de ses tentatives dans la classe ? L’ensemble source restera dans votre bibliothèque.', 'classroom.deleteClassConfirmation': 'Cette action supprime définitivement {name}, ses élèves, ses devoirs et l’historique des tentatives.', 'classroom.typeClassName': 'Saisissez « {name} » pour confirmer.', 'classroom.manageItemNotFound': 'Cet élément n’existe plus. Rechargez la page et réessayez.', 'classroom.assignmentStatus.draft': 'Brouillon', 'classroom.assignmentStatus.published': 'Publié', 'classroom.assignmentStatus.closed': 'Fermé'
+  }),
+  'zh-CN': classroomManagementCopy({
+    'classroom.manageClass': '管理班级', 'classroom.manageDescription': '管理学生、已分配材料和班级删除。', 'classroom.manageStudents': '学生', 'classroom.manageStudentsDescription': '移除学生将撤销其班级和作业访问权限。', 'classroom.assignedMaterials': '已分配的卡片集和材料', 'classroom.assignedMaterialsDescription': '移除作业会保留可重复使用的源卡片集，但会删除该班级的作答记录。', 'classroom.noAssignedMaterials': '此班级尚未分配卡片集或材料。', 'classroom.removeStudent': '移除学生', 'classroom.removeMaterial': '移除材料', 'classroom.deleteClass': '删除班级', 'classroom.deleteClassDescription': '永久删除此班级、学生名单、作业和班级作答记录。可重复使用的源卡片集会保留。', 'classroom.removeStudentTitle': '移除此学生？', 'classroom.removeMaterialTitle': '移除此材料？', 'classroom.removeStudentConfirmation': '将 {name} 移出此班级并撤销其作业访问权限？', 'classroom.removeMaterialConfirmation': '移除 {name} 及其班级作答记录？源卡片集仍会保留在资料库中。', 'classroom.deleteClassConfirmation': '这将永久删除 {name}、学生名单、作业和班级作答记录。', 'classroom.typeClassName': '输入“{name}”以确认。', 'classroom.manageItemNotFound': '该班级项目已不存在。请重新加载页面后重试。', 'classroom.assignmentStatus.draft': '草稿', 'classroom.assignmentStatus.published': '已发布', 'classroom.assignmentStatus.closed': '已关闭'
+  }),
+  hi: classroomManagementCopy({
+    'classroom.manageClass': 'कक्षा प्रबंधित करें', 'classroom.manageDescription': 'विद्यार्थियों, सौंपे गए अध्ययन-सामग्री और कक्षा हटाने का प्रबंधन करें।', 'classroom.manageStudents': 'विद्यार्थी', 'classroom.manageStudentsDescription': 'विद्यार्थी को हटाने पर कक्षा और असाइनमेंट की पहुँच समाप्त हो जाती है।', 'classroom.assignedMaterials': 'सौंपे गए सेट और सामग्री', 'classroom.assignedMaterialsDescription': 'असाइनमेंट हटाने पर मूल सेट सुरक्षित रहता है, लेकिन कक्षा-विशिष्ट प्रयास हट जाते हैं।', 'classroom.noAssignedMaterials': 'इस कक्षा को कोई सेट या सामग्री नहीं सौंपी गई है।', 'classroom.removeStudent': 'विद्यार्थी हटाएँ', 'classroom.removeMaterial': 'सामग्री हटाएँ', 'classroom.deleteClass': 'कक्षा हटाएँ', 'classroom.deleteClassDescription': 'इस कक्षा, विद्यार्थियों, असाइनमेंट और कक्षा-विशिष्ट प्रयासों को स्थायी रूप से हटाएँ। मूल सेट सुरक्षित रहेंगे।', 'classroom.removeStudentTitle': 'इस विद्यार्थी को हटाएँ?', 'classroom.removeMaterialTitle': 'यह सामग्री हटाएँ?', 'classroom.removeStudentConfirmation': '{name} को कक्षा से हटाकर असाइनमेंट की पहुँच रद्द करें?', 'classroom.removeMaterialConfirmation': '{name} और उसके कक्षा-विशिष्ट प्रयास हटाएँ? मूल सेट लाइब्रेरी में रहेगा।', 'classroom.deleteClassConfirmation': 'यह {name}, उसके विद्यार्थी, असाइनमेंट और कक्षा-विशिष्ट प्रयास स्थायी रूप से हटा देगा।', 'classroom.typeClassName': 'पुष्टि के लिए “{name}” लिखें।', 'classroom.manageItemNotFound': 'वह कक्षा आइटम अब मौजूद नहीं है। पेज फिर लोड करके कोशिश करें।', 'classroom.assignmentStatus.draft': 'ड्राफ़्ट', 'classroom.assignmentStatus.published': 'प्रकाशित', 'classroom.assignmentStatus.closed': 'बंद'
+  }),
+  ar: classroomManagementCopy({
+    'classroom.manageClass': 'إدارة الصف', 'classroom.manageDescription': 'أدِر الطلاب والمواد المعيّنة وحذف الصف.', 'classroom.manageStudents': 'الطلاب', 'classroom.manageStudentsDescription': 'تؤدي إزالة الطالب إلى إلغاء وصوله إلى الصف والواجبات.', 'classroom.assignedMaterials': 'المجموعات والمواد المعيّنة', 'classroom.assignedMaterialsDescription': 'تحتفظ إزالة الواجب بالمجموعة الأصلية، لكنها تحذف محاولات هذا الصف.', 'classroom.noAssignedMaterials': 'لا توجد مجموعات أو مواد معيّنة لهذا الصف.', 'classroom.removeStudent': 'إزالة الطالب', 'classroom.removeMaterial': 'إزالة المادة', 'classroom.deleteClass': 'حذف الصف', 'classroom.deleteClassDescription': 'يحذف الصف وطلابه وواجباته وسجل محاولاته نهائيًا. تبقى المجموعات الأصلية محفوظة.', 'classroom.removeStudentTitle': 'إزالة هذا الطالب؟', 'classroom.removeMaterialTitle': 'إزالة هذه المادة؟', 'classroom.removeStudentConfirmation': 'هل تريد إزالة {name} من الصف وإلغاء وصوله إلى الواجبات؟', 'classroom.removeMaterialConfirmation': 'هل تريد إزالة {name} ومحاولاته الخاصة بالصف؟ ستبقى المجموعة الأصلية في مكتبتك.', 'classroom.deleteClassConfirmation': 'سيؤدي هذا إلى حذف {name} وطلابه وواجباته وسجل محاولاته نهائيًا.', 'classroom.typeClassName': 'اكتب «{name}» للتأكيد.', 'classroom.manageItemNotFound': 'لم يعد عنصر الصف هذا موجودًا. أعد تحميل الصفحة وحاول مجددًا.', 'classroom.assignmentStatus.draft': 'مسودة', 'classroom.assignmentStatus.published': 'منشور', 'classroom.assignmentStatus.closed': 'مغلق'
+  }),
+  de: classroomManagementCopy({
+    'classroom.manageClass': 'Klasse verwalten', 'classroom.manageDescription': 'Verwalte Lernende, zugewiesenes Material und das Löschen der Klasse.', 'classroom.manageStudents': 'Lernende', 'classroom.manageStudentsDescription': 'Beim Entfernen wird der Zugriff auf Klasse und Aufgaben widerrufen.', 'classroom.assignedMaterials': 'Zugewiesene Sets und Materialien', 'classroom.assignedMaterialsDescription': 'Beim Entfernen einer Aufgabe bleibt das Quell-Set erhalten; klassenspezifische Versuche werden gelöscht.', 'classroom.noAssignedMaterials': 'Dieser Klasse sind keine Sets oder Materialien zugewiesen.', 'classroom.removeStudent': 'Lernende entfernen', 'classroom.removeMaterial': 'Material entfernen', 'classroom.deleteClass': 'Klasse löschen', 'classroom.deleteClassDescription': 'Löscht die Klasse, ihre Lernenden, Aufgaben und klassenspezifischen Versuche dauerhaft. Quell-Sets bleiben erhalten.', 'classroom.removeStudentTitle': 'Diese Person entfernen?', 'classroom.removeMaterialTitle': 'Dieses Material entfernen?', 'classroom.removeStudentConfirmation': '{name} aus der Klasse entfernen und den Aufgabenzugriff widerrufen?', 'classroom.removeMaterialConfirmation': '{name} und die klassenspezifischen Versuche entfernen? Das Quell-Set bleibt in deiner Bibliothek.', 'classroom.deleteClassConfirmation': 'Dadurch werden {name}, die Lernenden, Aufgaben und klassenspezifischen Versuche dauerhaft gelöscht.', 'classroom.typeClassName': 'Gib zur Bestätigung „{name}“ ein.', 'classroom.manageItemNotFound': 'Dieses Klassenelement existiert nicht mehr. Lade die Seite neu und versuche es erneut.', 'classroom.assignmentStatus.draft': 'Entwurf', 'classroom.assignmentStatus.published': 'Veröffentlicht', 'classroom.assignmentStatus.closed': 'Geschlossen'
+  }),
+  ru: classroomManagementCopy({
+    'classroom.manageClass': 'Управление классом', 'classroom.manageDescription': 'Управляйте учениками, назначенными материалами и удалением класса.', 'classroom.manageStudents': 'Ученики', 'classroom.manageStudentsDescription': 'Удаление ученика отзывает доступ к классу и заданиям.', 'classroom.assignedMaterials': 'Назначенные наборы и материалы', 'classroom.assignedMaterialsDescription': 'При удалении задания исходный набор сохраняется, а попытки этого класса удаляются.', 'classroom.noAssignedMaterials': 'Этому классу не назначены наборы или материалы.', 'classroom.removeStudent': 'Удалить ученика', 'classroom.removeMaterial': 'Удалить материал', 'classroom.deleteClass': 'Удалить класс', 'classroom.deleteClassDescription': 'Навсегда удаляет класс, учеников, задания и историю попыток. Исходные наборы сохраняются.', 'classroom.removeStudentTitle': 'Удалить этого ученика?', 'classroom.removeMaterialTitle': 'Удалить этот материал?', 'classroom.removeStudentConfirmation': 'Удалить {name} из класса и отозвать доступ к заданиям?', 'classroom.removeMaterialConfirmation': 'Удалить {name} и попытки этого класса? Исходный набор останется в библиотеке.', 'classroom.deleteClassConfirmation': 'Это навсегда удалит {name}, учеников, задания и историю попыток класса.', 'classroom.typeClassName': 'Введите «{name}» для подтверждения.', 'classroom.manageItemNotFound': 'Этот элемент класса больше не существует. Перезагрузите страницу и повторите попытку.', 'classroom.assignmentStatus.draft': 'Черновик', 'classroom.assignmentStatus.published': 'Опубликовано', 'classroom.assignmentStatus.closed': 'Закрыто'
+  }),
+  ja: classroomManagementCopy({
+    'classroom.manageClass': 'クラスを管理', 'classroom.manageDescription': '生徒、割り当て済み教材、クラスの削除を管理します。', 'classroom.manageStudents': '生徒', 'classroom.manageStudentsDescription': '生徒を削除すると、クラスと課題へのアクセスが取り消されます。', 'classroom.assignedMaterials': '割り当て済みセットと教材', 'classroom.assignedMaterialsDescription': '課題を削除しても元のセットは残りますが、このクラスの解答履歴は削除されます。', 'classroom.noAssignedMaterials': 'このクラスに割り当てられたセットや教材はありません。', 'classroom.removeStudent': '生徒を削除', 'classroom.removeMaterial': '教材を削除', 'classroom.deleteClass': 'クラスを削除', 'classroom.deleteClassDescription': 'クラス、生徒、課題、クラス固有の解答履歴を完全に削除します。元のセットは保持されます。', 'classroom.removeStudentTitle': 'この生徒を削除しますか？', 'classroom.removeMaterialTitle': 'この教材を削除しますか？', 'classroom.removeStudentConfirmation': '{name} をクラスから削除し、課題へのアクセスを取り消しますか？', 'classroom.removeMaterialConfirmation': '{name} とクラス固有の解答履歴を削除しますか？元のセットはライブラリに残ります。', 'classroom.deleteClassConfirmation': '{name}、生徒、課題、クラス固有の解答履歴を完全に削除します。', 'classroom.typeClassName': '確認のため「{name}」と入力してください。', 'classroom.manageItemNotFound': 'そのクラス項目は存在しません。ページを再読み込みして、もう一度お試しください。', 'classroom.assignmentStatus.draft': '下書き', 'classroom.assignmentStatus.published': '公開済み', 'classroom.assignmentStatus.closed': '終了'
+  }),
+  ko: classroomManagementCopy({
+    'classroom.manageClass': '수업 관리', 'classroom.manageDescription': '학생, 배정된 자료, 수업 삭제를 관리합니다.', 'classroom.manageStudents': '학생', 'classroom.manageStudentsDescription': '학생을 삭제하면 수업과 과제 접근 권한이 해제됩니다.', 'classroom.assignedMaterials': '배정된 세트 및 자료', 'classroom.assignedMaterialsDescription': '과제를 삭제해도 원본 세트는 유지되지만 이 수업의 시도 기록은 삭제됩니다.', 'classroom.noAssignedMaterials': '이 수업에 배정된 세트나 자료가 없습니다.', 'classroom.removeStudent': '학생 삭제', 'classroom.removeMaterial': '자료 삭제', 'classroom.deleteClass': '수업 삭제', 'classroom.deleteClassDescription': '수업, 학생, 과제, 수업별 시도 기록을 영구적으로 삭제합니다. 원본 세트는 유지됩니다.', 'classroom.removeStudentTitle': '이 학생을 삭제할까요?', 'classroom.removeMaterialTitle': '이 자료를 삭제할까요?', 'classroom.removeStudentConfirmation': '{name} 학생을 수업에서 삭제하고 과제 접근 권한을 해제할까요?', 'classroom.removeMaterialConfirmation': '{name} 자료와 수업별 시도 기록을 삭제할까요? 원본 세트는 라이브러리에 남습니다.', 'classroom.deleteClassConfirmation': '{name}, 학생, 과제, 수업별 시도 기록이 영구적으로 삭제됩니다.', 'classroom.typeClassName': '확인하려면 “{name}”을 입력하세요.', 'classroom.manageItemNotFound': '해당 수업 항목이 더 이상 존재하지 않습니다. 페이지를 새로고침한 후 다시 시도하세요.', 'classroom.assignmentStatus.draft': '초안', 'classroom.assignmentStatus.published': '게시됨', 'classroom.assignmentStatus.closed': '종료됨'
+  }),
+}
+
+for (const language of Object.keys(classroomManagementMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], classroomManagementMessages[language])
+}
+
+const classroomRefinementMessages: Record<AppLanguage, Messages> = {
+  en: {
+    'classroom.dashboardDescription': 'View your classes, invite students, and open detailed progress.',
+    'classroom.manageDescription': 'Update class information and manage the student roster.',
+    'classroom.classInformation': 'Class information',
+    'classroom.classInformationDescription': 'Update the name and details shown to students.',
+    'classroom.saveClassChanges': 'Save changes',
+    'classroom.classChangesSaved': 'Class information saved.',
+  },
+  es: {
+    'classroom.dashboardDescription': 'Consulta tus clases, invita estudiantes y abre el progreso detallado.',
+    'classroom.manageDescription': 'Actualiza la información de la clase y gestiona la lista de estudiantes.',
+    'classroom.classInformation': 'Información de la clase',
+    'classroom.classInformationDescription': 'Actualiza el nombre y los datos que ven los estudiantes.',
+    'classroom.saveClassChanges': 'Guardar cambios',
+    'classroom.classChangesSaved': 'Información de la clase guardada.',
+  },
+  fr: {
+    'classroom.dashboardDescription': 'Consultez vos classes, invitez des élèves et ouvrez la progression détaillée.',
+    'classroom.manageDescription': 'Modifiez les informations de la classe et gérez la liste des élèves.',
+    'classroom.classInformation': 'Informations de la classe',
+    'classroom.classInformationDescription': 'Modifiez le nom et les informations affichées aux élèves.',
+    'classroom.saveClassChanges': 'Enregistrer les modifications',
+    'classroom.classChangesSaved': 'Informations de la classe enregistrées.',
+  },
+  'zh-CN': {
+    'classroom.dashboardDescription': '查看班级、邀请学生并打开详细进度。',
+    'classroom.manageDescription': '更新班级信息并管理学生名单。',
+    'classroom.classInformation': '班级信息',
+    'classroom.classInformationDescription': '更新学生可见的名称和详细信息。',
+    'classroom.saveClassChanges': '保存更改',
+    'classroom.classChangesSaved': '班级信息已保存。',
+  },
+  hi: {
+    'classroom.dashboardDescription': 'अपनी कक्षाएँ देखें, विद्यार्थियों को आमंत्रित करें और विस्तृत प्रगति खोलें।',
+    'classroom.manageDescription': 'कक्षा की जानकारी अपडेट करें और विद्यार्थियों की सूची प्रबंधित करें।',
+    'classroom.classInformation': 'कक्षा की जानकारी',
+    'classroom.classInformationDescription': 'विद्यार्थियों को दिखने वाला नाम और विवरण अपडेट करें।',
+    'classroom.saveClassChanges': 'बदलाव सहेजें',
+    'classroom.classChangesSaved': 'कक्षा की जानकारी सहेजी गई।',
+  },
+  ar: {
+    'classroom.dashboardDescription': 'اعرض صفوفك وادعُ الطلاب وافتح التقدم التفصيلي.',
+    'classroom.manageDescription': 'حدّث معلومات الصف وأدِر قائمة الطلاب.',
+    'classroom.classInformation': 'معلومات الصف',
+    'classroom.classInformationDescription': 'حدّث الاسم والتفاصيل التي تظهر للطلاب.',
+    'classroom.saveClassChanges': 'حفظ التغييرات',
+    'classroom.classChangesSaved': 'تم حفظ معلومات الصف.',
+  },
+  de: {
+    'classroom.dashboardDescription': 'Sieh deine Klassen an, lade Lernende ein und öffne den detaillierten Fortschritt.',
+    'classroom.manageDescription': 'Aktualisiere die Klasseninformationen und verwalte die Lernendenliste.',
+    'classroom.classInformation': 'Klasseninformationen',
+    'classroom.classInformationDescription': 'Aktualisiere den Namen und die Details, die Lernende sehen.',
+    'classroom.saveClassChanges': 'Änderungen speichern',
+    'classroom.classChangesSaved': 'Klasseninformationen gespeichert.',
+  },
+  ru: {
+    'classroom.dashboardDescription': 'Просматривайте классы, приглашайте учеников и открывайте подробный прогресс.',
+    'classroom.manageDescription': 'Обновляйте сведения о классе и управляйте списком учеников.',
+    'classroom.classInformation': 'Сведения о классе',
+    'classroom.classInformationDescription': 'Измените название и сведения, которые видят ученики.',
+    'classroom.saveClassChanges': 'Сохранить изменения',
+    'classroom.classChangesSaved': 'Сведения о классе сохранены.',
+  },
+  ja: {
+    'classroom.dashboardDescription': 'クラスを確認し、生徒を招待して、詳細な進捗を開きます。',
+    'classroom.manageDescription': 'クラス情報を更新し、生徒名簿を管理します。',
+    'classroom.classInformation': 'クラス情報',
+    'classroom.classInformationDescription': '生徒に表示される名前と詳細を更新します。',
+    'classroom.saveClassChanges': '変更を保存',
+    'classroom.classChangesSaved': 'クラス情報を保存しました。',
+  },
+  ko: {
+    'classroom.dashboardDescription': '수업을 확인하고 학생을 초대하며 상세 진행도를 엽니다.',
+    'classroom.manageDescription': '수업 정보를 수정하고 학생 명단을 관리합니다.',
+    'classroom.classInformation': '수업 정보',
+    'classroom.classInformationDescription': '학생에게 표시되는 이름과 정보를 수정합니다.',
+    'classroom.saveClassChanges': '변경 사항 저장',
+    'classroom.classChangesSaved': '수업 정보를 저장했습니다.',
+  },
+}
+
+for (const language of Object.keys(classroomRefinementMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], classroomRefinementMessages[language])
+}
+
+const classroomAssignmentMessages: Record<AppLanguage, Messages> = {
+  en: {
+    'classroom.assignSet': 'Assign Set',
+    'classroom.assign': 'Assign',
+    'classroom.alreadyAssigned': 'Already assigned',
+    'classroom.assignSetDescription': 'Choose a local set or study guide to upload and assign to this class.',
+    'classroom.chooseAssignment': 'Choose a set or study guide',
+    'classroom.chooseAssignmentDescription': 'The assigned snapshot will not change when you edit the local copy later.',
+    'classroom.noAssignableItems': 'There are no items in this part of your library yet.',
+    'classroom.cardCount': '{count} cards',
+    'classroom.assignmentDesktopRequired': 'Assigning sets requires the Tracer desktop app.',
+    'classroom.localSetMissing': 'The selected local set is no longer available.',
+    'classroom.assignedSuccess': '{name} was assigned to {className}.',
+    'classroom.backToHome': 'Back to home',
+    'classroom.recentSets': 'Recent Sets',
+    'classroom.recentSetsDescription': 'Sets and study guides assigned by your teacher appear here.',
+    'classroom.noRecentSets': 'No sets have been assigned to this class yet.',
+  },
+  es: {
+    'classroom.alreadyAssigned': 'Ya asignado',
+    'classroom.assignSet': 'Asignar conjunto', 'classroom.assign': 'Asignar', 'classroom.assignSetDescription': 'Elige un conjunto local o una guía de estudio para subirla y asignarla a esta clase.', 'classroom.chooseAssignment': 'Elige un conjunto o una guía de estudio', 'classroom.chooseAssignmentDescription': 'La copia asignada no cambiará cuando edites la copia local más adelante.', 'classroom.noAssignableItems': 'Todavía no hay elementos en esta parte de tu biblioteca.', 'classroom.cardCount': '{count} tarjetas', 'classroom.assignmentDesktopRequired': 'Para asignar conjuntos se necesita la aplicación de escritorio de Tracer.', 'classroom.localSetMissing': 'El conjunto local seleccionado ya no está disponible.', 'classroom.assignedSuccess': 'Se asignó {name} a {className}.', 'classroom.backToHome': 'Volver al inicio', 'classroom.recentSets': 'Conjuntos recientes', 'classroom.recentSetsDescription': 'Aquí aparecen los conjuntos y guías de estudio que asigna tu profesor.', 'classroom.noRecentSets': 'Todavía no se asignaron conjuntos a esta clase.',
+  },
+  fr: {
+    'classroom.alreadyAssigned': 'Déjà attribué',
+    'classroom.assignSet': 'Attribuer un ensemble', 'classroom.assign': 'Attribuer', 'classroom.assignSetDescription': 'Choisissez un ensemble local ou un guide d’étude à téléverser et à attribuer à cette classe.', 'classroom.chooseAssignment': 'Choisir un ensemble ou un guide d’étude', 'classroom.chooseAssignmentDescription': 'L’instantané attribué ne changera pas si vous modifiez ensuite la copie locale.', 'classroom.noAssignableItems': 'Cette partie de votre bibliothèque est encore vide.', 'classroom.cardCount': '{count} cartes', 'classroom.assignmentDesktopRequired': 'L’attribution d’ensembles nécessite l’application de bureau Tracer.', 'classroom.localSetMissing': 'L’ensemble local sélectionné n’est plus disponible.', 'classroom.assignedSuccess': '{name} a été attribué à {className}.', 'classroom.backToHome': 'Retour à l’accueil', 'classroom.recentSets': 'Ensembles récents', 'classroom.recentSetsDescription': 'Les ensembles et guides d’étude attribués par votre enseignant apparaissent ici.', 'classroom.noRecentSets': 'Aucun ensemble n’a encore été attribué à cette classe.',
+  },
+  'zh-CN': {
+    'classroom.alreadyAssigned': '已分配',
+    'classroom.assignSet': '分配卡片集', 'classroom.assign': '分配', 'classroom.assignSetDescription': '选择本地卡片集或学习指南，上传并分配给此班级。', 'classroom.chooseAssignment': '选择卡片集或学习指南', 'classroom.chooseAssignmentDescription': '以后编辑本地副本不会改变已分配的快照。', 'classroom.noAssignableItems': '资料库的这一部分还没有内容。', 'classroom.cardCount': '{count} 张卡片', 'classroom.assignmentDesktopRequired': '分配卡片集需要 Tracer 桌面应用。', 'classroom.localSetMissing': '所选本地卡片集已不可用。', 'classroom.assignedSuccess': '已将 {name} 分配给 {className}。', 'classroom.backToHome': '返回首页', 'classroom.recentSets': '最近的卡片集', 'classroom.recentSetsDescription': '老师分配的卡片集和学习指南会显示在这里。', 'classroom.noRecentSets': '此班级尚未分配任何卡片集。',
+  },
+  hi: {
+    'classroom.alreadyAssigned': 'पहले से असाइन किया गया',
+    'classroom.assignSet': 'सेट असाइन करें', 'classroom.assign': 'असाइन करें', 'classroom.assignSetDescription': 'इस कक्षा में अपलोड और असाइन करने के लिए कोई स्थानीय सेट या अध्ययन गाइड चुनें।', 'classroom.chooseAssignment': 'सेट या अध्ययन गाइड चुनें', 'classroom.chooseAssignmentDescription': 'बाद में स्थानीय कॉपी बदलने पर असाइन किया गया स्नैपशॉट नहीं बदलेगा।', 'classroom.noAssignableItems': 'आपकी लाइब्रेरी के इस हिस्से में अभी कोई आइटम नहीं है।', 'classroom.cardCount': '{count} कार्ड', 'classroom.assignmentDesktopRequired': 'सेट असाइन करने के लिए Tracer डेस्कटॉप ऐप आवश्यक है।', 'classroom.localSetMissing': 'चुना गया स्थानीय सेट अब उपलब्ध नहीं है।', 'classroom.assignedSuccess': '{name} को {className} में असाइन किया गया।', 'classroom.backToHome': 'होम पर वापस जाएँ', 'classroom.recentSets': 'हाल के सेट', 'classroom.recentSetsDescription': 'आपके शिक्षक द्वारा असाइन किए गए सेट और अध्ययन गाइड यहाँ दिखाई देते हैं।', 'classroom.noRecentSets': 'इस कक्षा को अभी कोई सेट असाइन नहीं किया गया है।',
+  },
+  ar: {
+    'classroom.alreadyAssigned': 'تم تعيينها بالفعل',
+    'classroom.assignSet': 'تعيين مجموعة', 'classroom.assign': 'تعيين', 'classroom.assignSetDescription': 'اختر مجموعة محلية أو دليل دراسة لرفعه وتعيينه لهذا الصف.', 'classroom.chooseAssignment': 'اختر مجموعة أو دليل دراسة', 'classroom.chooseAssignmentDescription': 'لن تتغير النسخة المعيّنة عند تعديل النسخة المحلية لاحقًا.', 'classroom.noAssignableItems': 'لا توجد عناصر في هذا الجزء من مكتبتك بعد.', 'classroom.cardCount': '{count} بطاقة', 'classroom.assignmentDesktopRequired': 'يتطلب تعيين المجموعات تطبيق Tracer لسطح المكتب.', 'classroom.localSetMissing': 'لم تعد المجموعة المحلية المحددة متاحة.', 'classroom.assignedSuccess': 'تم تعيين {name} إلى {className}.', 'classroom.backToHome': 'العودة إلى الرئيسية', 'classroom.recentSets': 'المجموعات الحديثة', 'classroom.recentSetsDescription': 'تظهر هنا المجموعات وأدلة الدراسة التي يعيّنها معلمك.', 'classroom.noRecentSets': 'لم يتم تعيين أي مجموعات لهذا الصف بعد.',
+  },
+  de: {
+    'classroom.alreadyAssigned': 'Bereits zugewiesen',
+    'classroom.assignSet': 'Set zuweisen', 'classroom.assign': 'Zuweisen', 'classroom.assignSetDescription': 'Wähle ein lokales Set oder einen Lernleitfaden zum Hochladen und Zuweisen aus.', 'classroom.chooseAssignment': 'Set oder Lernleitfaden auswählen', 'classroom.chooseAssignmentDescription': 'Der zugewiesene Stand ändert sich nicht, wenn du die lokale Kopie später bearbeitest.', 'classroom.noAssignableItems': 'In diesem Teil deiner Bibliothek gibt es noch keine Elemente.', 'classroom.cardCount': '{count} Karten', 'classroom.assignmentDesktopRequired': 'Zum Zuweisen von Sets ist die Tracer-Desktop-App erforderlich.', 'classroom.localSetMissing': 'Das ausgewählte lokale Set ist nicht mehr verfügbar.', 'classroom.assignedSuccess': '{name} wurde {className} zugewiesen.', 'classroom.backToHome': 'Zur Startseite', 'classroom.recentSets': 'Neueste Sets', 'classroom.recentSetsDescription': 'Von deiner Lehrkraft zugewiesene Sets und Lernleitfäden erscheinen hier.', 'classroom.noRecentSets': 'Dieser Klasse wurden noch keine Sets zugewiesen.',
+  },
+  ru: {
+    'classroom.alreadyAssigned': 'Уже назначено',
+    'classroom.assignSet': 'Назначить набор', 'classroom.assign': 'Назначить', 'classroom.assignSetDescription': 'Выберите локальный набор или учебное руководство, чтобы загрузить и назначить его классу.', 'classroom.chooseAssignment': 'Выберите набор или руководство', 'classroom.chooseAssignmentDescription': 'Назначенный снимок не изменится при последующем редактировании локальной копии.', 'classroom.noAssignableItems': 'В этой части библиотеки пока нет материалов.', 'classroom.cardCount': '{count} карточек', 'classroom.assignmentDesktopRequired': 'Для назначения наборов требуется настольное приложение Tracer.', 'classroom.localSetMissing': 'Выбранный локальный набор больше недоступен.', 'classroom.assignedSuccess': '{name} назначен классу {className}.', 'classroom.backToHome': 'На главную', 'classroom.recentSets': 'Недавние наборы', 'classroom.recentSetsDescription': 'Здесь появляются наборы и руководства, назначенные учителем.', 'classroom.noRecentSets': 'Этому классу пока не назначены наборы.',
+  },
+  ja: {
+    'classroom.alreadyAssigned': '割り当て済み',
+    'classroom.assignSet': 'セットを割り当てる', 'classroom.assign': '割り当て', 'classroom.assignSetDescription': 'このクラスにアップロードして割り当てるローカルセットまたは学習ガイドを選択します。', 'classroom.chooseAssignment': 'セットまたは学習ガイドを選択', 'classroom.chooseAssignmentDescription': '後でローカルコピーを編集しても、割り当てたスナップショットは変わりません。', 'classroom.noAssignableItems': 'ライブラリのこの部分にはまだ項目がありません。', 'classroom.cardCount': '{count} 枚のカード', 'classroom.assignmentDesktopRequired': 'セットの割り当てには Tracer デスクトップアプリが必要です。', 'classroom.localSetMissing': '選択したローカルセットは利用できなくなりました。', 'classroom.assignedSuccess': '{name} を {className} に割り当てました。', 'classroom.backToHome': 'ホームに戻る', 'classroom.recentSets': '最近のセット', 'classroom.recentSetsDescription': '先生が割り当てたセットと学習ガイドがここに表示されます。', 'classroom.noRecentSets': 'このクラスにはまだセットが割り当てられていません。',
+  },
+  ko: {
+    'classroom.alreadyAssigned': '이미 배정됨',
+    'classroom.assignSet': '세트 배정', 'classroom.assign': '배정', 'classroom.assignSetDescription': '이 수업에 업로드하고 배정할 로컬 세트 또는 학습 가이드를 선택하세요.', 'classroom.chooseAssignment': '세트 또는 학습 가이드 선택', 'classroom.chooseAssignmentDescription': '나중에 로컬 복사본을 수정해도 배정된 스냅샷은 변경되지 않습니다.', 'classroom.noAssignableItems': '라이브러리의 이 부분에는 아직 항목이 없습니다.', 'classroom.cardCount': '카드 {count}개', 'classroom.assignmentDesktopRequired': '세트를 배정하려면 Tracer 데스크톱 앱이 필요합니다.', 'classroom.localSetMissing': '선택한 로컬 세트를 더 이상 사용할 수 없습니다.', 'classroom.assignedSuccess': '{name} 자료를 {className}에 배정했습니다.', 'classroom.backToHome': '홈으로 돌아가기', 'classroom.recentSets': '최근 세트', 'classroom.recentSetsDescription': '선생님이 배정한 세트와 학습 가이드가 여기에 표시됩니다.', 'classroom.noRecentSets': '이 수업에는 아직 배정된 세트가 없습니다.',
+  },
+}
+
+for (const language of Object.keys(classroomAssignmentMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], classroomAssignmentMessages[language])
+}
+
+const classroomProgressMessages: Record<AppLanguage, Messages> = {
+  en: { 'classroom.meanAccuracy': 'Mean accuracy', 'classroom.medianAccuracy': 'Median accuracy', 'classroom.scoreSpread': 'Score spread', 'classroom.participation': 'Completed sessions', 'classroom.completedAssignments': 'Sets completed', 'classroom.bestScore': 'Best score', 'classroom.points': '{count} pts', 'classroom.testMode': 'Test', 'classroom.noActivity': 'Completed student sessions will appear here.' },
+  es: { 'classroom.meanAccuracy': 'Precisión media', 'classroom.medianAccuracy': 'Precisión mediana', 'classroom.scoreSpread': 'Dispersión', 'classroom.participation': 'Sesiones completadas', 'classroom.completedAssignments': 'Conjuntos completados', 'classroom.bestScore': 'Mejor puntuación', 'classroom.points': '{count} ptos.', 'classroom.testMode': 'Prueba', 'classroom.noActivity': 'Las sesiones completadas aparecerán aquí.' },
+  fr: { 'classroom.meanAccuracy': 'Précision moyenne', 'classroom.medianAccuracy': 'Précision médiane', 'classroom.scoreSpread': 'Étendue des scores', 'classroom.participation': 'Sessions terminées', 'classroom.completedAssignments': 'Ensembles terminés', 'classroom.bestScore': 'Meilleur score', 'classroom.points': '{count} pts', 'classroom.testMode': 'Test', 'classroom.noActivity': 'Les sessions terminées apparaîtront ici.' },
+  'zh-CN': { 'classroom.meanAccuracy': '平均准确率', 'classroom.medianAccuracy': '准确率中位数', 'classroom.scoreSpread': '分数范围', 'classroom.participation': '已完成学习', 'classroom.completedAssignments': '已完成卡片集', 'classroom.bestScore': '最高分', 'classroom.points': '{count} 分', 'classroom.testMode': '测试', 'classroom.noActivity': '学生完成的学习记录会显示在这里。' },
+  hi: { 'classroom.meanAccuracy': 'औसत सटीकता', 'classroom.medianAccuracy': 'मध्यिका सटीकता', 'classroom.scoreSpread': 'स्कोर विस्तार', 'classroom.participation': 'पूरे किए सत्र', 'classroom.completedAssignments': 'पूरे किए सेट', 'classroom.bestScore': 'सर्वश्रेष्ठ स्कोर', 'classroom.points': '{count} अंक', 'classroom.testMode': 'टेस्ट', 'classroom.noActivity': 'विद्यार्थियों के पूरे किए सत्र यहाँ दिखेंगे।' },
+  ar: { 'classroom.meanAccuracy': 'متوسط الدقة', 'classroom.medianAccuracy': 'وسيط الدقة', 'classroom.scoreSpread': 'نطاق النتائج', 'classroom.participation': 'الجلسات المكتملة', 'classroom.completedAssignments': 'المجموعات المكتملة', 'classroom.bestScore': 'أفضل نتيجة', 'classroom.points': '{count} نقطة', 'classroom.testMode': 'اختبار', 'classroom.noActivity': 'ستظهر جلسات الطلاب المكتملة هنا.' },
+  de: { 'classroom.meanAccuracy': 'Mittlere Genauigkeit', 'classroom.medianAccuracy': 'Median-Genauigkeit', 'classroom.scoreSpread': 'Punktespanne', 'classroom.participation': 'Abgeschlossene Sitzungen', 'classroom.completedAssignments': 'Abgeschlossene Sets', 'classroom.bestScore': 'Bestes Ergebnis', 'classroom.points': '{count} Pkt.', 'classroom.testMode': 'Test', 'classroom.noActivity': 'Abgeschlossene Schülersitzungen erscheinen hier.' },
+  ru: { 'classroom.meanAccuracy': 'Средняя точность', 'classroom.medianAccuracy': 'Медианная точность', 'classroom.scoreSpread': 'Разброс баллов', 'classroom.participation': 'Завершённые занятия', 'classroom.completedAssignments': 'Завершённые наборы', 'classroom.bestScore': 'Лучший результат', 'classroom.points': '{count} п.', 'classroom.testMode': 'Тест', 'classroom.noActivity': 'Завершённые занятия учеников появятся здесь.' },
+  ja: { 'classroom.meanAccuracy': '平均正答率', 'classroom.medianAccuracy': '正答率の中央値', 'classroom.scoreSpread': 'スコア範囲', 'classroom.participation': '完了したセッション', 'classroom.completedAssignments': '完了したセット', 'classroom.bestScore': '最高スコア', 'classroom.points': '{count}点', 'classroom.testMode': 'テスト', 'classroom.noActivity': '生徒が完了したセッションがここに表示されます。' },
+  ko: { 'classroom.meanAccuracy': '평균 정확도', 'classroom.medianAccuracy': '정확도 중앙값', 'classroom.scoreSpread': '점수 범위', 'classroom.participation': '완료한 세션', 'classroom.completedAssignments': '완료한 세트', 'classroom.bestScore': '최고 점수', 'classroom.points': '{count}점', 'classroom.testMode': '테스트', 'classroom.noActivity': '학생이 완료한 세션이 여기에 표시됩니다.' },
+}
+
+for (const language of Object.keys(classroomProgressMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], classroomProgressMessages[language])
+}
+
 export const messages: Record<AppLanguage, Messages> = messageTargets

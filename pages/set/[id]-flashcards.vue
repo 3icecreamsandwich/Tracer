@@ -103,7 +103,7 @@
                         </button>
                         <NuxtLink
                             v-if="set"
-                            :to="`/set/${set.id}`"
+                            :to="backToSetPath"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
                             {{ t("set.backToSet") }}
@@ -263,6 +263,11 @@ import {
 import { lockGetStatus } from "~/src/composables/lock";
 import { useLockSession } from "~/src/composables/lock-session";
 import { hasTauriRuntime } from "~/src/composables/tauri";
+import {
+    beginAssignedAttempt,
+    completeAssignedAttempt,
+    parseAssignedAssignmentId,
+} from "~/src/composables/assignment-progress";
 
 const { language, t } = useAppLanguage();
 
@@ -271,6 +276,24 @@ const router = useRouter();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isWebPreview = computed(() => !hasTauriRuntime());
+const assignedAssignmentId = computed(() =>
+    parseAssignedAssignmentId(route.query.assignment),
+);
+const backToSetPath = computed(() => {
+    const classroomId = typeof route.query.class === "string" ? route.query.class : null;
+    return assignedAssignmentId.value && classroomId && set.value
+        ? `/student/classes/${classroomId}`
+        : set.value ? `/set/${set.value.id}` : "/";
+});
+
+function beginClassroomFlashcards() {
+    if (!set.value) return;
+    beginAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "flashcards",
+    });
+}
 
 const busy = ref(true);
 const loadError = ref<string | null>(null);
@@ -655,6 +678,7 @@ function restartRun() {
         starredOnly.value = false;
     }
     startRun();
+    beginClassroomFlashcards();
     nextTick(() => viewerButtonEl.value?.focus());
 }
 
@@ -920,6 +944,17 @@ watch(
     { flush: "post" },
 );
 
+watch(isFinished, (finished) => {
+    if (!finished || !set.value) return;
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "flashcards",
+        scoreEarned: correctCount.value,
+        scorePossible: attemptedCount.value,
+    });
+});
+
 onMounted(async () => {
     try {
         if (isWebPreview.value) {
@@ -972,6 +1007,7 @@ onMounted(async () => {
         if (set.value) {
             await loadStars(set.value.id);
             await restoreSavedFlashcardRun(set.value.id);
+            beginClassroomFlashcards();
         }
         await nextTick();
         viewerButtonEl.value?.focus();

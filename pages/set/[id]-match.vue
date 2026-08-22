@@ -67,7 +67,7 @@
                         </button>
                         <NuxtLink
                             v-if="set"
-                            :to="`/set/${set.id}`"
+                            :to="backToSetPath"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
                             {{ t("set.backToSet") }}
@@ -177,6 +177,11 @@ import {
 } from "~/src/composables/match/timer";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
+import {
+    beginAssignedAttempt,
+    completeAssignedAttempt,
+    parseAssignedAssignmentId,
+} from "~/src/composables/assignment-progress";
 
 const route = useRoute();
 const router = useRouter();
@@ -184,6 +189,15 @@ const { language, t } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isWebPreview = computed(() => !hasTauriRuntime());
+const assignedAssignmentId = computed(() =>
+    parseAssignedAssignmentId(route.query.assignment),
+);
+const backToSetPath = computed(() => {
+    const classroomId = typeof route.query.class === "string" ? route.query.class : null;
+    return assignedAssignmentId.value && classroomId && set.value
+        ? `/student/classes/${classroomId}`
+        : set.value ? `/set/${set.value.id}` : "/";
+});
 
 const busy = ref(true);
 const loadError = ref<string | null>(null);
@@ -260,6 +274,15 @@ function matchStop(reason: "completed" | "timeout") {
 
     matchSelectedTileIds.value = [];
     matchBusy.value = false;
+    if (set.value) {
+        void completeAssignedAttempt({
+            assignmentId: assignedAssignmentId.value,
+            setId: set.value.id,
+            mode: "match",
+            scoreEarned: matchCorrectAttemptsCount.value,
+            scorePossible: Math.max(matchAttemptsCount.value, 1),
+        });
+    }
 }
 
 function startMatchTimer() {
@@ -312,6 +335,11 @@ function startMatch() {
     }
     matchStartedAtMs.value = Date.now();
     matchElapsedTimeMs.value = 0;
+    beginAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: s.id,
+        mode: "match",
+    });
     startMatchTimer();
 }
 
