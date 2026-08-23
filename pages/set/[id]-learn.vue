@@ -545,6 +545,26 @@ function beginClassroomPractice() {
     });
 }
 
+let assignedSessionFinished = false;
+const assignedSessionCorrect = ref(0);
+const assignedSessionAttempted = ref(0);
+
+function finishClassroomPractice() {
+    if (assignedSessionFinished || !set.value) return;
+    assignedSessionFinished = true;
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "practice",
+        scoreEarned: assignedSessionCorrect.value,
+        scorePossible: assignedSessionAttempted.value,
+    });
+}
+
+function onPageHide() {
+    finishClassroomPractice();
+}
+
 const busy = ref(true);
 const loadError = ref<string | null>(null);
 const set = ref<FlashcardSet | null>(null);
@@ -749,6 +769,10 @@ function learnFindNextUnattempted(fromIndex: number) {
 }
 
 function learnMarkAnswered(questionId: string, isCorrect: boolean) {
+    if (learnAnswersByQuestionId.value[questionId] === undefined) {
+        assignedSessionAttempted.value += 1;
+        if (isCorrect) assignedSessionCorrect.value += 1;
+    }
     learnAnswersByQuestionId.value = {
         ...learnAnswersByQuestionId.value,
         [questionId]: isCorrect,
@@ -1267,18 +1291,8 @@ watch(practiceTimed, (enabled) => {
     if (!enabled) clearPracticeTimer();
 });
 
-watch(learnIsFinished, (finished) => {
-    if (!finished || !set.value) return;
-    void completeAssignedAttempt({
-        assignmentId: assignedAssignmentId.value,
-        setId: set.value.id,
-        mode: "practice",
-        scoreEarned: learnCorrectCount.value,
-        scorePossible: learnAttemptedCount.value,
-    });
-});
-
 onMounted(async () => {
+    window.addEventListener("pagehide", onPageHide);
     try {
         if (isWebPreview.value) {
             set.value = createWebPreviewDemoSet(t);
@@ -1339,7 +1353,13 @@ onMounted(async () => {
     }
 });
 
+onBeforeRouteLeave(() => {
+    finishClassroomPractice();
+});
+
 onBeforeUnmount(() => {
+    finishClassroomPractice();
+    window.removeEventListener("pagehide", onPageHide);
     cancelPracticeAnswerFeedback();
     clearPracticeTimer();
 });

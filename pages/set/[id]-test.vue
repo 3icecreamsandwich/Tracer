@@ -395,6 +395,9 @@ const aiErrorOpen = ref(false)
 const testGradingAbort = shallowRef<AbortController | null>(null)
 const cachedWrittenModel = shallowRef<{ id: string; model: any } | null>(null)
 const lastSubmitForced = ref(false)
+const assignedPriorCorrect = ref(0)
+const assignedPriorAttempted = ref(0)
+let assignedSessionFinished = false
 
 const isWebPreview = computed(() => !hasTauriRuntime())
 const assignedAssignmentId = computed(() =>
@@ -616,6 +619,22 @@ function buildTest() {
     startTimer()
 }
 
+function finishClassroomTest() {
+    if (assignedSessionFinished || !set.value) return
+    assignedSessionFinished = true
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "test",
+        scoreEarned: assignedPriorCorrect.value + correctCount.value,
+        scorePossible: assignedPriorAttempted.value + answeredCount.value,
+    })
+}
+
+function onPageHide() {
+    finishClassroomTest()
+}
+
 async function getWrittenModel(modelId: string) {
     if (cachedWrittenModel.value?.id === modelId) {
         return cachedWrittenModel.value.model
@@ -713,6 +732,8 @@ async function retrySubmitTest() {
 }
 
 function restartTest() {
+    assignedPriorCorrect.value += correctCount.value
+    assignedPriorAttempted.value += answeredCount.value
     testGradingAbort.value?.abort()
     testGradingAbort.value = null
     runCounter.value += 1
@@ -761,6 +782,7 @@ function deactivateTestExitGuards() {
 async function confirmQuitTest() {
     quitTestOpen.value = false
     clearTimer()
+    finishClassroomTest()
     if (pendingTestExit.value === "app" && !isWebPreview.value) {
         await invoke("test_mode_confirm_exit")
         return
@@ -787,22 +809,13 @@ watch(language, () => {
     buildTest()
 })
 
-watch(testSubmitted, (submitted) => {
-    if (!submitted || !set.value || testQuestions.value.length === 0) return
-    void completeAssignedAttempt({
-        assignmentId: assignedAssignmentId.value,
-        setId: set.value.id,
-        mode: "test",
-        scoreEarned: correctCount.value,
-        scorePossible: testQuestions.value.length,
-    })
-})
-
 onBeforeRouteLeave(() => {
+    finishClassroomTest()
     deactivateTestExitGuards()
 })
 
 onMounted(async () => {
+    window.addEventListener("pagehide", onPageHide)
     try {
         await activateTestExitGuards()
         if (isWebPreview.value) {
@@ -856,6 +869,8 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+    finishClassroomTest()
+    window.removeEventListener("pagehide", onPageHide)
     testGradingAbort.value?.abort()
     clearTimer()
 })

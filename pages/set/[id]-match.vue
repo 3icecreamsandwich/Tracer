@@ -216,7 +216,35 @@ const matchSelectedTileIds = ref<string[]>([]);
 const matchMatchedPairIds = ref<Set<Uuid>>(new Set());
 const matchAttemptsCount = ref(0);
 const matchCorrectAttemptsCount = ref(0);
+const assignedSessionAttempts = ref(0);
+const assignedSessionCorrect = ref(0);
+let assignedSessionFinished = false;
 const matchMemoryMode = ref(false);
+
+function beginClassroomMatch() {
+    if (!set.value) return;
+    beginAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "match",
+    });
+}
+
+function finishClassroomMatch() {
+    if (assignedSessionFinished || !set.value) return;
+    assignedSessionFinished = true;
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "match",
+        scoreEarned: assignedSessionCorrect.value,
+        scorePossible: assignedSessionAttempts.value,
+    });
+}
+
+function onPageHide() {
+    finishClassroomMatch();
+}
 
 const baseSeed = computed(() => {
     const raw = route.query.seed;
@@ -274,15 +302,6 @@ function matchStop(reason: "completed" | "timeout") {
 
     matchSelectedTileIds.value = [];
     matchBusy.value = false;
-    if (set.value) {
-        void completeAssignedAttempt({
-            assignmentId: assignedAssignmentId.value,
-            setId: set.value.id,
-            mode: "match",
-            scoreEarned: matchCorrectAttemptsCount.value,
-            scorePossible: Math.max(matchAttemptsCount.value, 1),
-        });
-    }
 }
 
 function startMatchTimer() {
@@ -335,11 +354,7 @@ function startMatch() {
     }
     matchStartedAtMs.value = Date.now();
     matchElapsedTimeMs.value = 0;
-    beginAssignedAttempt({
-        assignmentId: assignedAssignmentId.value,
-        setId: s.id,
-        mode: "match",
-    });
+    beginClassroomMatch();
     startMatchTimer();
 }
 
@@ -421,9 +436,11 @@ async function onMatchTileClick(tile: MatchTile) {
     }
 
     matchAttemptsCount.value += 1;
+    assignedSessionAttempts.value += 1;
     const isMatch = a.pairId === b.pairId && a.kind !== b.kind;
     if (isMatch) {
         matchCorrectAttemptsCount.value += 1;
+        assignedSessionCorrect.value += 1;
         matchMatchedPairIds.value = new Set([
             ...matchMatchedPairIds.value,
             a.pairId,
@@ -504,6 +521,7 @@ watch(language, () => {
 });
 
 onMounted(async () => {
+    window.addEventListener("pagehide", onPageHide);
     try {
         if (isWebPreview.value) {
             set.value = createWebPreviewDemoSet(t, { termCount: 4 });
@@ -550,6 +568,7 @@ onMounted(async () => {
         if (set.value) {
             resetMatchStateForRun();
             matchPrepareTiles(set.value);
+            beginClassroomMatch();
         }
         document.addEventListener("pointerdown", onDocumentMatchPointerDown);
     } catch {
@@ -572,7 +591,13 @@ onMounted(async () => {
     }
 });
 
+onBeforeRouteLeave(() => {
+    finishClassroomMatch();
+});
+
 onBeforeUnmount(() => {
+    finishClassroomMatch();
+    window.removeEventListener("pagehide", onPageHide);
     resetMatchStateForRun();
     matchMemoryMode.value = false;
     document.removeEventListener("pointerdown", onDocumentMatchPointerDown);

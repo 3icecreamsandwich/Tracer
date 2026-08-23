@@ -103,6 +103,11 @@ export function beginAssignedAttempt(input: {
 }) {
   if (!input.assignmentId) return
   const key = activeKey(input.assignmentId, input.mode)
+  const existing = readActive(key)
+  if (existing?.setId === input.setId) {
+    void flushPendingAssignedAttempts()
+    return
+  }
   writeActive(key, {
     assignmentId: input.assignmentId,
     clientAttemptId: createUuid(),
@@ -120,7 +125,7 @@ export async function completeAssignedAttempt(input: {
   scoreEarned: number
   scorePossible: number
 }) {
-  if (!input.assignmentId || input.scorePossible <= 0) return
+  if (!input.assignmentId || input.scorePossible < 0) return
   const key = activeKey(input.assignmentId, input.mode)
   const active = readActive(key)
   if (!active || active.setId !== input.setId) return
@@ -134,13 +139,17 @@ export async function completeAssignedAttempt(input: {
     startedAt: active.startedAt,
     submittedAt: submittedAt.toISOString(),
     scoreEarned: Math.max(0, Math.min(input.scoreEarned, input.scorePossible)),
-    scorePossible: input.scorePossible,
+    scorePossible: Math.max(0, input.scorePossible),
     durationSeconds: Math.max(0, Math.round((submittedAt.getTime() - startedAt.getTime()) / 1000)),
   }
   const pending = readPending()
   const queued = writePending([...pending.filter((item) => item.clientAttemptId !== attempt.clientAttemptId), attempt])
-  if (queued) await flushPendingAssignedAttempts()
-  else await submitClassroomAttempt(attempt)
+  if (queued) {
+    await flushPendingAssignedAttempts()
+    if (readPending().some((item) => item.clientAttemptId === attempt.clientAttemptId)) {
+      await flushPendingAssignedAttempts()
+    }
+  } else await submitClassroomAttempt(attempt)
 }
 
 let flushRequest: Promise<void> | null = null

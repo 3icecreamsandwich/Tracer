@@ -295,6 +295,26 @@ function beginClassroomFlashcards() {
     });
 }
 
+let assignedSessionFinished = false;
+const assignedSessionCorrect = ref(0);
+const assignedSessionAttempted = ref(0);
+
+function finishClassroomFlashcards() {
+    if (assignedSessionFinished || !set.value) return;
+    assignedSessionFinished = true;
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "flashcards",
+        scoreEarned: assignedSessionCorrect.value,
+        scorePossible: assignedSessionAttempted.value,
+    });
+}
+
+function onPageHide() {
+    finishClassroomFlashcards();
+}
+
 const busy = ref(true);
 const loadError = ref<string | null>(null);
 const set = ref<FlashcardSet | null>(null);
@@ -770,6 +790,8 @@ function commitAnswer(answer: "correct" | "incorrect") {
     if (!t) return;
     const id = t.id as Uuid;
     answerAttemptsCount.value += 1;
+    assignedSessionAttempted.value += 1;
+    if (answer === "correct") assignedSessionCorrect.value += 1;
     answersByTermId.value = {
         ...answersByTermId.value,
         [id]: answer,
@@ -944,18 +966,8 @@ watch(
     { flush: "post" },
 );
 
-watch(isFinished, (finished) => {
-    if (!finished || !set.value) return;
-    void completeAssignedAttempt({
-        assignmentId: assignedAssignmentId.value,
-        setId: set.value.id,
-        mode: "flashcards",
-        scoreEarned: correctCount.value,
-        scorePossible: attemptedCount.value,
-    });
-});
-
 onMounted(async () => {
+    window.addEventListener("pagehide", onPageHide);
     try {
         if (isWebPreview.value) {
             set.value = createWebPreviewDemoSet(t);
@@ -1041,7 +1053,13 @@ onMounted(async () => {
     }
 });
 
+onBeforeRouteLeave(() => {
+    finishClassroomFlashcards();
+});
+
 onBeforeUnmount(() => {
+    finishClassroomFlashcards();
+    window.removeEventListener("pagehide", onPageHide);
     if (flashcardFlipSwapTimeout) clearTimeout(flashcardFlipSwapTimeout);
     if (flashcardFlipEndTimeout) clearTimeout(flashcardFlipEndTimeout);
     cancelFlashcardAnswerFeedback();

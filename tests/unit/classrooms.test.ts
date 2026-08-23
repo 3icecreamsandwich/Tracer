@@ -22,6 +22,7 @@ const manageClassPageUrl = new URL('../../pages/teacher/classes/[id]/manage.vue'
 const dashboardPageUrl = new URL('../../pages/teacher/index.vue', import.meta.url)
 const assignClassPageUrl = new URL('../../pages/teacher/classes/[id]/assign.vue', import.meta.url)
 const studentClassPageUrl = new URL('../../pages/student/classes/[id].vue', import.meta.url)
+const setPageUrl = new URL('../../pages/set/[id].vue', import.meta.url)
 const detailedClassPageSource = readFileSync(fileURLToPath(detailedClassPageUrl), 'utf8')
 const manageClassPageSource = readFileSync(fileURLToPath(manageClassPageUrl), 'utf8')
 const dashboardPageSource = readFileSync(fileURLToPath(dashboardPageUrl), 'utf8')
@@ -52,6 +53,10 @@ const classroomProgressSql = readFileSync(
 )
 const classroomJoinFixSql = readFileSync(
   fileURLToPath(new URL('../../supabase/migrations/20260823015850_fix_class_join_assignment_recipients.sql', import.meta.url)),
+  'utf8',
+)
+const allowEmptyAttemptsSql = readFileSync(
+  fileURLToPath(new URL('../../supabase/migrations/20260823024230_allow_empty_classroom_attempt_sessions.sql', import.meta.url)),
   'utf8',
 )
 
@@ -159,6 +164,8 @@ describe('teacher classroom routes', () => {
     expect(studentSource).toContain("t('classroom.recentSets')")
     expect(studentSource).toContain('listClassroomAssignments')
     expect(studentSource).toContain('prepareClassroomAssignmentForStudy')
+    expect(studentSource).toContain('openAssignmentSet')
+    expect(studentSource).toContain('path: `/set/${localSetId}`')
   })
 
   it('records all four scored assigned modes while leaving Chat untracked', () => {
@@ -167,6 +174,10 @@ describe('teacher classroom routes', () => {
       expect(source).toContain('assignedAssignmentId')
     }
     expect(readFileSync(fileURLToPath(studentClassPageUrl), 'utf8')).not.toContain("value: 'chat'")
+    const setPageSource = readFileSync(fileURLToPath(setPageUrl), 'utf8')
+    expect(setPageSource).toContain('finishInlineAssignedMode')
+    expect(setPageSource).toContain('recordInlineAssignedAnswer')
+    expect(setPageSource).toContain("fullscreenModePath('flashcards')")
   })
 
   it('loads teacher routes through the optimized concurrent classroom pipeline', () => {
@@ -187,6 +198,10 @@ describe('teacher classroom routes', () => {
 })
 
 describe('classroom progress migration', () => {
+  it('allows a session with no answers without treating it as zero-percent accuracy', () => {
+    expect(allowEmptyAttemptsSql).toContain('requested_score_possible < 0')
+    expect(allowEmptyAttemptsSql).not.toContain('requested_score_possible <= 0')
+  })
   it('keeps class ownership normalized through assignments and adds the reporting index', () => {
     expect(classroomProgressSql).not.toMatch(/add column if not exists class_id/)
     expect(classroomProgressSql).toContain('attempts_assignment_student_submitted_idx')

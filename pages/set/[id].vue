@@ -124,7 +124,7 @@
                                 >
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=flashcards`"
+                                        :to="setModePath('flashcards')"
                                         class="w-5/6"
                                     >
                                         <p
@@ -170,7 +170,7 @@
                                 >
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=learn`"
+                                        :to="setModePath('learn')"
                                         class="w-5/6"
                                     >
                                         <p
@@ -199,7 +199,7 @@
                                 >
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=match`"
+                                        :to="setModePath('match')"
                                         class="w-5/6"
                                     >
                                         <p
@@ -224,7 +224,7 @@
                                 </div>
                                 <NuxtLink
                                     replace
-                                    :to="`/set/${set.id}?mode=chat`"
+                                    :to="setModePath('chat')"
                                     class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
                                     <p
@@ -346,21 +346,21 @@
                   </NuxtLink>  -->
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=chat`"
+                                        :to="setModePath('chat')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         {{ t('set.chat') }}
                                     </NuxtLink>
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=learn`"
+                                        :to="setModePath('learn')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         {{ t('set.learn') }}
                                     </NuxtLink>
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=match`"
+                                        :to="setModePath('match')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         {{ t('set.match') }}
@@ -700,7 +700,7 @@
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=flashcards`"
+                                        :to="setModePath('flashcards')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         {{ t('set.flashcards') }}
@@ -708,7 +708,7 @@
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=chat`"
+                                        :to="setModePath('chat')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         {{ t('set.chat') }}
@@ -716,7 +716,7 @@
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=match`"
+                                        :to="setModePath('match')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         {{ t('set.match') }}
@@ -1122,7 +1122,7 @@
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=flashcards`"
+                                        :to="setModePath('flashcards')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         {{ t('set.flashcards') }}
@@ -1130,7 +1130,7 @@
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=learn`"
+                                        :to="setModePath('learn')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         {{ t('set.learn') }}
@@ -1138,7 +1138,7 @@
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=chat`"
+                                        :to="setModePath('chat')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         Chat
@@ -1211,7 +1211,7 @@
                             <div class="mt-4 flex flex-wrap gap-2">
                                 <NuxtLink
                                     replace
-                                    :to="`/set/${set.id}?mode=flashcards`"
+                                    :to="setModePath('flashcards')"
                                     class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
                                     {{ t('common.continue') }} · {{ t('set.flashcards') }}
@@ -1224,8 +1224,8 @@
                                 class="study-mode-bar flex flex-nowrap gap-3 overflow-x-auto pb-1"
                             >
                                 <StudyModeTile
-                                    :to="`/set/${set.id}?mode=flashcards`"
-                                    :fullscreen-to="`/set/${set.id}-flashcards`"
+                                    :to="setModePath('flashcards')"
+                                    :fullscreen-to="fullscreenModePath('flashcards')"
                                     :icon="flashcardsModeIcon"
                                     :title="t('set.flashcards')"
                                     :hint="t('set.flashcardsHint')"
@@ -1233,8 +1233,8 @@
                                     replace
                                 />
                                 <StudyModeTile
-                                    :to="`/set/${set.id}?mode=learn`"
-                                    :fullscreen-to="`/set/${set.id}-learn`"
+                                    :to="setModePath('learn')"
+                                    :fullscreen-to="fullscreenModePath('learn')"
                                     :icon="practiceModeIcon"
                                     :title="t('set.learn')"
                                     :hint="t('set.learnHint')"
@@ -1242,7 +1242,7 @@
                                     replace
                                 />
                                 <StudyModeTile
-                                    :to="`/set/${set.id}?mode=chat`"
+                                    :to="setModePath('chat')"
                                     :icon="chatModeIcon"
                                     :title="t('set.chat')"
                                     :hint="t('set.chatHint')"
@@ -1251,8 +1251,8 @@
                                     replace
                                 />
                                 <StudyModeTile
-                                    :to="`/set/${set.id}?mode=match`"
-                                    :fullscreen-to="`/set/${set.id}-match`"
+                                    :to="setModePath('match')"
+                                    :fullscreen-to="fullscreenModePath('match')"
                                     :icon="matchModeIcon"
                                     :title="t('set.match')"
                                     :hint="t('set.matchHint')"
@@ -1723,6 +1723,11 @@ import {
     syncLinkedFolder,
     unlinkFolder,
 } from "~/src/composables/generate/linked-folders";
+import {
+    beginAssignedAttempt,
+    completeAssignedAttempt,
+    parseAssignedAssignmentId,
+} from "~/src/composables/assignment-progress";
 
 const route = useRoute();
 const router = useRouter();
@@ -1737,6 +1742,30 @@ const isNestedSetRoute = computed(() =>
 const isWebPreview = computed(() => !hasTauriRuntime());
 
 type SetMode = "flashcards" | "learn" | "match" | "chat";
+type TrackedSetMode = Exclude<SetMode, "chat">;
+
+const assignedAssignmentId = computed(() =>
+    parseAssignedAssignmentId(route.query.assignment),
+);
+const assignedClassId = computed(() =>
+    typeof route.query.class === "string" ? route.query.class : null,
+);
+
+function assignedQuery(extra: Record<string, string> = {}) {
+    const query = new URLSearchParams(extra);
+    if (assignedAssignmentId.value) query.set("assignment", assignedAssignmentId.value);
+    if (assignedClassId.value) query.set("class", assignedClassId.value);
+    const encoded = query.toString();
+    return encoded ? `?${encoded}` : "";
+}
+
+function setModePath(nextMode: SetMode) {
+    return `/set/${set.value?.id ?? route.params.id}${assignedQuery({ mode: nextMode })}`;
+}
+
+function fullscreenModePath(nextMode: TrackedSetMode) {
+    return `/set/${set.value?.id ?? route.params.id}-${nextMode}${assignedQuery()}`;
+}
 
 const mode = computed<SetMode>(() => {
     const m =
@@ -1749,6 +1778,48 @@ const mode = computed<SetMode>(() => {
 const busy = ref(true);
 const loadError = ref<string | null>(null);
 const set = ref<FlashcardSet | null>(null);
+const assignedScores = reactive<Record<TrackedSetMode, { correct: number; attempted: number }>>({
+    flashcards: { correct: 0, attempted: 0 },
+    learn: { correct: 0, attempted: 0 },
+    match: { correct: 0, attempted: 0 },
+});
+let activeAssignedMode: TrackedSetMode | null = null;
+
+function finishInlineAssignedMode() {
+    if (!activeAssignedMode || !set.value) return;
+    const active = activeAssignedMode;
+    activeAssignedMode = null;
+    const score = assignedScores[active];
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: active === "learn" ? "practice" : active,
+        scoreEarned: score.correct,
+        scorePossible: score.attempted,
+    });
+}
+
+function beginInlineAssignedMode(nextMode: SetMode) {
+    if (!assignedAssignmentId.value || !set.value || nextMode === "chat") return;
+    const trackedMode = nextMode as TrackedSetMode;
+    assignedScores[trackedMode] = { correct: 0, attempted: 0 };
+    activeAssignedMode = trackedMode;
+    beginAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: trackedMode === "learn" ? "practice" : trackedMode,
+    });
+}
+
+function recordInlineAssignedAnswer(trackedMode: TrackedSetMode, correct: boolean) {
+    if (activeAssignedMode !== trackedMode) return;
+    assignedScores[trackedMode].attempted += 1;
+    if (correct) assignedScores[trackedMode].correct += 1;
+}
+
+function onAssignedPageHide() {
+    finishInlineAssignedMode();
+}
 const studyGuideSetId = ref<Uuid | null>(null);
 const linkedFolder = ref<LinkedFolder | null>(null);
 const linkedFolderBusy = ref(false);
@@ -2692,6 +2763,7 @@ async function onMatchTileClick(tile: MatchTile) {
 
     matchAttemptsCount.value += 1;
     const isMatch = a.pairId === b.pairId && a.kind !== b.kind;
+    recordInlineAssignedAnswer("match", isMatch);
     if (isMatch) {
         matchCorrectAttemptsCount.value += 1;
         matchMatchedPairIds.value = new Set([
@@ -2850,6 +2922,9 @@ function learnFindNextUnattempted(fromIndex: number) {
 }
 
 function learnMarkAnswered(questionId: string, isCorrect: boolean) {
+    if (learnAnswersByQuestionId.value[questionId] === undefined) {
+        recordInlineAssignedAnswer("learn", isCorrect);
+    }
     learnAnswersByQuestionId.value = {
         ...learnAnswersByQuestionId.value,
         [questionId]: isCorrect,
@@ -3443,6 +3518,7 @@ function commitAnswer(answer: FlashcardsAnswer) {
     if (!t) return;
     const id = t.id as Uuid;
     answerAttemptsCount.value += 1;
+    recordInlineAssignedAnswer("flashcards", answer === "correct");
     answersByTermId.value = {
         ...answersByTermId.value,
         [id]: answer,
@@ -4169,7 +4245,19 @@ async function openSetPage() {
 }
 
 onMounted(async () => {
+    window.addEventListener("pagehide", onAssignedPageHide);
     await openSetPage();
+    beginInlineAssignedMode(mode.value);
+});
+
+watch(mode, (next, previous) => {
+    if (next === previous || isNestedSetRoute.value) return;
+    finishInlineAssignedMode();
+    beginInlineAssignedMode(next);
+});
+
+onBeforeRouteLeave(() => {
+    finishInlineAssignedMode();
 });
 
 watch(
@@ -4264,6 +4352,8 @@ watch(
 );
 
 onBeforeUnmount(() => {
+    finishInlineAssignedMode();
+    window.removeEventListener("pagehide", onAssignedPageHide);
     if (flashcardFlipSwapTimeout) clearTimeout(flashcardFlipSwapTimeout);
     if (flashcardFlipEndTimeout) clearTimeout(flashcardFlipEndTimeout);
     cancelFlashcardAnswerFeedback();
