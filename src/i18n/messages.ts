@@ -104,7 +104,7 @@ const en: Messages = {
   'set.match': 'Match',
   'set.matchHint': 'Find pairs under pressure',
   'set.chat': 'Chat',
-  'set.chatHint': 'Chat with TracerAI',
+  'set.chatHint': 'Chat with Tracer',
   'set.studyGuide': 'Study guide',
   'set.studyGuideHint': 'Markdown',
   'set.terms': 'Terms',
@@ -298,61 +298,61 @@ const detailMessages: Record<AppLanguage, Messages> = {
   en: {
     'common.choose': 'Choose', 'common.select': 'Select', 'common.enter': 'Enter',
     'create.themeHint': 'A hint for the synthesis focus (for example: exam 2, core concepts, definitions only).', 'create.themePlaceholder': 'Theme…', 'create.generatedSetPlaceholder': 'Generated set…', 'create.instructionsPlaceholder': 'For example: focus on key definitions and common exam questions', 'create.sourceLimits': 'Limits: up to {pages} PDF pages total and {images} images.', 'create.chooseFiles': 'Choose files', 'create.checking': 'Checking…', 'create.parsing': 'Parsing…', 'create.generating': 'Generating…',
-    'set.synthesizedFrom': 'Synthesized from:', 'set.termLabel': 'Term:', 'set.definitionLabel': 'Definition:',
+    'set.synthesizedFrom': 'Synthesized from:', 'set.termLabel': 'Term:', 'set.definitionLabel': 'Definition:', 'set.filterTerms': 'Filter terms', 'set.filterAll': 'All', 'set.filterStarred': 'Starred', 'set.filterUnstarred': 'Unstarred', 'set.flashcardSettings': 'Flashcard settings', 'set.definitionAtFront': 'Definition at front', 'set.termAtFront': 'Term at front',
     'settings.compatible': 'Compatible', 'settings.advanced': 'Advanced', 'settings.baseUrl': 'Base URL', 'settings.configured': 'configured', 'settings.apiKeySet': 'API key set', 'settings.models': 'Models', 'settings.backToProviders': 'Back to providers',
   },
   es: {
     'common.choose': 'Elegir', 'common.select': 'Seleccionar', 'common.enter': 'Entrar',
     'create.themeHint': 'Una pista para orientar la síntesis (por ejemplo: examen 2, conceptos clave, solo definiciones).', 'create.themePlaceholder': 'Tema…', 'create.generatedSetPlaceholder': 'Conjunto generado…', 'create.instructionsPlaceholder': 'Por ejemplo: centrarse en definiciones clave y preguntas frecuentes de examen', 'create.sourceLimits': 'Límites: hasta {pages} páginas PDF en total y {images} imágenes.', 'create.chooseFiles': 'Elegir archivos', 'create.checking': 'Comprobando…', 'create.parsing': 'Analizando…', 'create.generating': 'Generando…',
-    'set.synthesizedFrom': 'Sintetizado a partir de:', 'set.termLabel': 'Término:', 'set.definitionLabel': 'Definición:',
+    'set.synthesizedFrom': 'Sintetizado a partir de:', 'set.termLabel': 'Término:', 'set.definitionLabel': 'Definición:', 'set.filterTerms': 'Filtrar términos', 'set.filterAll': 'Todos', 'set.filterStarred': 'Favoritos', 'set.filterUnstarred': 'No favoritos', 'set.flashcardSettings': 'Configuración de tarjetas', 'set.definitionAtFront': 'Definición al frente', 'set.termAtFront': 'Término al frente',
     'settings.compatible': 'Compatible', 'settings.advanced': 'Avanzado', 'settings.baseUrl': 'URL base', 'settings.configured': 'configurado', 'settings.apiKeySet': 'Clave API configurada', 'settings.models': 'Modelos', 'settings.backToProviders': 'Volver a proveedores',
   },
   fr: {
     'common.choose': 'Choisir', 'common.select': 'Sélectionner', 'common.enter': 'Entrer',
     'create.themeHint': 'Une indication pour orienter la synthèse (par exemple : examen 2, concepts clés, définitions uniquement).', 'create.themePlaceholder': 'Thème…', 'create.generatedSetPlaceholder': 'Ensemble généré…', 'create.instructionsPlaceholder': 'Par exemple : se concentrer sur les définitions clés et les questions d’examen courantes', 'create.sourceLimits': 'Limites : jusqu’à {pages} pages PDF au total et {images} images.', 'create.chooseFiles': 'Choisir des fichiers', 'create.checking': 'Vérification…', 'create.parsing': 'Analyse…', 'create.generating': 'Génération…',
-    'set.synthesizedFrom': 'Synthétisé à partir de :', 'set.termLabel': 'Terme :', 'set.definitionLabel': 'Définition :',
+    'set.synthesizedFrom': 'Synthétisé à partir de :', 'set.termLabel': 'Terme :', 'set.definitionLabel': 'Définition :', 'set.filterTerms': 'Filtrer les termes', 'set.filterAll': 'Tous', 'set.filterStarred': 'Favoris', 'set.filterUnstarred': 'Non favoris', 'set.flashcardSettings': 'Paramètres des cartes', 'set.definitionAtFront': 'Définition au recto', 'set.termAtFront': 'Terme au recto',
     'settings.compatible': 'Compatible', 'settings.advanced': 'Avancé', 'settings.baseUrl': 'URL de base', 'settings.configured': 'configuré', 'settings.apiKeySet': 'Clé API configurée', 'settings.models': 'Modèles', 'settings.backToProviders': 'Retour aux fournisseurs',
   },
   'zh-CN': {
     'common.choose': '选择', 'common.select': '选择', 'common.enter': '进入',
     'create.themeHint': '用于指定综合重点的提示（例如：第二次考试、核心概念、仅定义）。', 'create.themePlaceholder': '主题…', 'create.generatedSetPlaceholder': '生成的卡片集…', 'create.instructionsPlaceholder': '例如：重点关注关键定义和常见考试题', 'create.sourceLimits': '限制：PDF 总计最多 {pages} 页，图片最多 {images} 张。', 'create.chooseFiles': '选择文件', 'create.checking': '正在检查…', 'create.parsing': '正在解析…', 'create.generating': '正在生成…',
-    'set.synthesizedFrom': '综合自：', 'set.termLabel': '术语：', 'set.definitionLabel': '定义：',
+    'set.synthesizedFrom': '综合自：', 'set.termLabel': '术语：', 'set.definitionLabel': '定义：', 'set.filterTerms': '筛选术语', 'set.filterAll': '全部', 'set.filterStarred': '已收藏', 'set.filterUnstarred': '未收藏', 'set.flashcardSettings': '闪卡设置', 'set.definitionAtFront': '定义在正面', 'set.termAtFront': '术语在正面',
     'settings.compatible': '兼容', 'settings.advanced': '高级', 'settings.baseUrl': '基础 URL', 'settings.configured': '已配置', 'settings.apiKeySet': '已设置 API 密钥', 'settings.models': '模型', 'settings.backToProviders': '返回服务提供商',
   },
   hi: {
     'common.choose': 'चुनें', 'common.select': 'चुनें', 'common.enter': 'दर्ज करें',
     'create.themeHint': 'सिंथेसिस के केंद्र के लिए संकेत (जैसे: परीक्षा 2, मुख्य अवधारणाएँ, केवल परिभाषाएँ)।', 'create.themePlaceholder': 'विषय…', 'create.generatedSetPlaceholder': 'जनरेट किया गया सेट…', 'create.instructionsPlaceholder': 'जैसे: मुख्य परिभाषाओं और सामान्य परीक्षा प्रश्नों पर ध्यान दें', 'create.sourceLimits': 'सीमा: कुल {pages} PDF पृष्ठ और {images} चित्र तक।', 'create.chooseFiles': 'फ़ाइलें चुनें', 'create.checking': 'जाँच हो रही है…', 'create.parsing': 'पार्स हो रहा है…', 'create.generating': 'जनरेट हो रहा है…',
-    'set.synthesizedFrom': 'इनसे सिंथेसाइज़ किया गया:', 'set.termLabel': 'शब्द:', 'set.definitionLabel': 'परिभाषा:',
+    'set.synthesizedFrom': 'इनसे सिंथेसाइज़ किया गया:', 'set.termLabel': 'शब्द:', 'set.definitionLabel': 'परिभाषा:', 'set.filterTerms': 'शब्द फ़िल्टर करें', 'set.filterAll': 'सभी', 'set.filterStarred': 'पसंदीदा', 'set.filterUnstarred': 'गैर-पसंदीदा', 'set.flashcardSettings': 'फ्लैशकार्ड सेटिंग्स', 'set.definitionAtFront': 'परिभाषा सामने', 'set.termAtFront': 'शब्द सामने',
     'settings.compatible': 'संगत', 'settings.advanced': 'उन्नत', 'settings.baseUrl': 'बेस URL', 'settings.configured': 'कॉन्फ़िगर किया गया', 'settings.apiKeySet': 'API कुंजी सेट है', 'settings.models': 'मॉडल', 'settings.backToProviders': 'प्रदाताओं पर वापस जाएँ',
   },
   ar: {
     'common.choose': 'اختيار', 'common.select': 'تحديد', 'common.enter': 'إدخال',
     'create.themeHint': 'تلميح لتحديد محور التوليف (مثل: الاختبار 2، المفاهيم الأساسية، التعريفات فقط).', 'create.themePlaceholder': 'الموضوع…', 'create.generatedSetPlaceholder': 'مجموعة مولّدة…', 'create.instructionsPlaceholder': 'مثال: ركّز على التعريفات الأساسية وأسئلة الاختبارات الشائعة', 'create.sourceLimits': 'الحدود: حتى {pages} صفحة PDF إجمالًا و{images} صور.', 'create.chooseFiles': 'اختيار الملفات', 'create.checking': 'جارٍ التحقق…', 'create.parsing': 'جارٍ التحليل…', 'create.generating': 'جارٍ التوليد…',
-    'set.synthesizedFrom': 'مُولّف من:', 'set.termLabel': 'المصطلح:', 'set.definitionLabel': 'التعريف:',
+    'set.synthesizedFrom': 'مُولّف من:', 'set.termLabel': 'المصطلح:', 'set.definitionLabel': 'التعريف:', 'set.filterTerms': 'تصفية المصطلحات', 'set.filterAll': 'الكل', 'set.filterStarred': 'المفضلة', 'set.filterUnstarred': 'غير المفضلة', 'set.flashcardSettings': 'إعدادات البطاقات', 'set.definitionAtFront': 'التعريف في الأمام', 'set.termAtFront': 'المصطلح في الأمام',
     'settings.compatible': 'متوافق', 'settings.advanced': 'متقدم', 'settings.baseUrl': 'عنوان URL الأساسي', 'settings.configured': 'مُعدّ', 'settings.apiKeySet': 'تم إعداد مفتاح API', 'settings.models': 'النماذج', 'settings.backToProviders': 'العودة إلى المزوّدين',
   },
   de: {
     'common.choose': 'Auswählen', 'common.select': 'Auswählen', 'common.enter': 'Eingeben',
     'create.themeHint': 'Ein Hinweis zum Schwerpunkt der Synthese (zum Beispiel: Prüfung 2, Kernkonzepte, nur Definitionen).', 'create.themePlaceholder': 'Thema…', 'create.generatedSetPlaceholder': 'Generiertes Set…', 'create.instructionsPlaceholder': 'Zum Beispiel: wichtige Definitionen und häufige Prüfungsfragen hervorheben', 'create.sourceLimits': 'Limits: insgesamt bis zu {pages} PDF-Seiten und {images} Bilder.', 'create.chooseFiles': 'Dateien auswählen', 'create.checking': 'Wird geprüft…', 'create.parsing': 'Wird analysiert…', 'create.generating': 'Wird generiert…',
-    'set.synthesizedFrom': 'Synthetisiert aus:', 'set.termLabel': 'Begriff:', 'set.definitionLabel': 'Definition:',
+    'set.synthesizedFrom': 'Synthetisiert aus:', 'set.termLabel': 'Begriff:', 'set.definitionLabel': 'Definition:', 'set.filterTerms': 'Begriffe filtern', 'set.filterAll': 'Alle', 'set.filterStarred': 'Favoriten', 'set.filterUnstarred': 'Nicht favorisiert', 'set.flashcardSettings': 'Karteikarten-Einstellungen', 'set.definitionAtFront': 'Definition vorne', 'set.termAtFront': 'Begriff vorne',
     'settings.compatible': 'Kompatibel', 'settings.advanced': 'Erweitert', 'settings.baseUrl': 'Basis-URL', 'settings.configured': 'konfiguriert', 'settings.apiKeySet': 'API-Schlüssel gesetzt', 'settings.models': 'Modelle', 'settings.backToProviders': 'Zurück zu Anbietern',
   },
   ru: {
     'common.choose': 'Выбрать', 'common.select': 'Выбрать', 'common.enter': 'Ввести',
     'create.themeHint': 'Подсказка для направления синтеза (например: экзамен 2, ключевые понятия, только определения).', 'create.themePlaceholder': 'Тема…', 'create.generatedSetPlaceholder': 'Созданный набор…', 'create.instructionsPlaceholder': 'Например: сосредоточьтесь на ключевых определениях и типовых вопросах экзамена', 'create.sourceLimits': 'Ограничения: до {pages} страниц PDF и {images} изображений.', 'create.chooseFiles': 'Выбрать файлы', 'create.checking': 'Проверка…', 'create.parsing': 'Обработка…', 'create.generating': 'Создание…',
-    'set.synthesizedFrom': 'Синтезировано из:', 'set.termLabel': 'Термин:', 'set.definitionLabel': 'Определение:',
+    'set.synthesizedFrom': 'Синтезировано из:', 'set.termLabel': 'Термин:', 'set.definitionLabel': 'Определение:', 'set.filterTerms': 'Фильтровать термины', 'set.filterAll': 'Все', 'set.filterStarred': 'Избранные', 'set.filterUnstarred': 'Неизбранные', 'set.flashcardSettings': 'Настройки карточек', 'set.definitionAtFront': 'Определение на лицевой стороне', 'set.termAtFront': 'Термин на лицевой стороне',
     'settings.compatible': 'Совместимый', 'settings.advanced': 'Расширенный', 'settings.baseUrl': 'Базовый URL', 'settings.configured': 'настроено', 'settings.apiKeySet': 'Ключ API задан', 'settings.models': 'Модели', 'settings.backToProviders': 'Назад к провайдерам',
   },
   ja: {
     'common.choose': '選択', 'common.select': '選択', 'common.enter': '決定',
     'create.themeHint': '統合の重点を示すヒント（例：試験2、重要概念、定義のみ）。', 'create.themePlaceholder': 'テーマ…', 'create.generatedSetPlaceholder': '生成されたセット…', 'create.instructionsPlaceholder': '例：重要な定義とよく出る試験問題に重点を置く', 'create.sourceLimits': '上限：PDF は合計 {pages} ページ、画像は {images} 枚まで。', 'create.chooseFiles': 'ファイルを選択', 'create.checking': '確認中…', 'create.parsing': '解析中…', 'create.generating': '生成中…',
-    'set.synthesizedFrom': '統合元：', 'set.termLabel': '用語：', 'set.definitionLabel': '定義：',
+    'set.synthesizedFrom': '統合元：', 'set.termLabel': '用語：', 'set.definitionLabel': '定義：', 'set.filterTerms': '用語を絞り込む', 'set.filterAll': 'すべて', 'set.filterStarred': 'お気に入り', 'set.filterUnstarred': 'お気に入り以外', 'set.flashcardSettings': 'フラッシュカード設定', 'set.definitionAtFront': '定義を表面に', 'set.termAtFront': '用語を表面に',
     'settings.compatible': '互換', 'settings.advanced': '詳細', 'settings.baseUrl': 'ベース URL', 'settings.configured': '設定済み', 'settings.apiKeySet': 'API キー設定済み', 'settings.models': 'モデル', 'settings.backToProviders': 'プロバイダーに戻る',
   },
   ko: {
     'common.choose': '선택', 'common.select': '선택', 'common.enter': '입력',
     'create.themeHint': '통합 초점을 정하는 힌트(예: 시험 2, 핵심 개념, 정의만).', 'create.themePlaceholder': '주제…', 'create.generatedSetPlaceholder': '생성된 세트…', 'create.instructionsPlaceholder': '예: 핵심 정의와 자주 나오는 시험 문제에 집중', 'create.sourceLimits': '제한: PDF는 총 {pages}페이지, 이미지는 {images}개까지.', 'create.chooseFiles': '파일 선택', 'create.checking': '확인 중…', 'create.parsing': '분석 중…', 'create.generating': '생성 중…',
-    'set.synthesizedFrom': '통합 출처:', 'set.termLabel': '용어:', 'set.definitionLabel': '정의:',
+    'set.synthesizedFrom': '통합 출처:', 'set.termLabel': '용어:', 'set.definitionLabel': '정의:', 'set.filterTerms': '용어 필터', 'set.filterAll': '전체', 'set.filterStarred': '즐겨찾기', 'set.filterUnstarred': '즐겨찾기 아님', 'set.flashcardSettings': '플래시카드 설정', 'set.definitionAtFront': '정의를 앞면에', 'set.termAtFront': '용어를 앞면에',
     'settings.compatible': '호환', 'settings.advanced': '고급', 'settings.baseUrl': '기본 URL', 'settings.configured': '설정됨', 'settings.apiKeySet': 'API 키 설정됨', 'settings.models': '모델', 'settings.backToProviders': '제공업체로 돌아가기',
   },
 }
@@ -711,6 +711,7 @@ for (const language of Object.keys(duplicateMessages) as AppLanguage[]) {
 const chatHistoryMessages: Record<AppLanguage, Messages> = {
   en: {
     'chat.history': 'History',
+    'chat.new': 'New chat',
     'chat.saving': 'Saving…',
     'chat.saved': 'Chat saved',
     'chat.noHistory': 'No saved chats for this set.',
@@ -724,6 +725,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   es: {
     'chat.history': 'Historial',
+    'chat.new': 'Nuevo chat',
     'chat.saving': 'Guardando…',
     'chat.saved': 'Chat guardado',
     'chat.noHistory': 'No hay chats guardados para este conjunto.',
@@ -737,6 +739,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   fr: {
     'chat.history': 'Historique',
+    'chat.new': 'Nouveau chat',
     'chat.saving': 'Enregistrement…',
     'chat.saved': 'Chat enregistré',
     'chat.noHistory': 'Aucun chat enregistré pour cet ensemble.',
@@ -750,6 +753,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   'zh-CN': {
     'chat.history': '历史记录',
+    'chat.new': '新建聊天',
     'chat.saving': '正在保存…',
     'chat.saved': '聊天已保存',
     'chat.noHistory': '此卡片集没有已保存的聊天。',
@@ -763,6 +767,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   hi: {
     'chat.history': 'इतिहास',
+    'chat.new': 'नई चैट',
     'chat.saving': 'सहेजा जा रहा है…',
     'chat.saved': 'चैट सहेजी गई',
     'chat.noHistory': 'इस सेट के लिए कोई सहेजी गई चैट नहीं है।',
@@ -776,6 +781,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   ar: {
     'chat.history': 'السجل',
+    'chat.new': 'دردشة جديدة',
     'chat.saving': 'جارٍ الحفظ…',
     'chat.saved': 'تم حفظ الدردشة',
     'chat.noHistory': 'لا توجد دردشات محفوظة لهذه المجموعة.',
@@ -789,6 +795,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   de: {
     'chat.history': 'Verlauf',
+    'chat.new': 'Neuer Chat',
     'chat.saving': 'Wird gespeichert…',
     'chat.saved': 'Chat gespeichert',
     'chat.noHistory': 'Keine gespeicherten Chats für dieses Set.',
@@ -802,6 +809,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   ru: {
     'chat.history': 'История',
+    'chat.new': 'Новый чат',
     'chat.saving': 'Сохранение…',
     'chat.saved': 'Чат сохранён',
     'chat.noHistory': 'Для этого набора нет сохранённых чатов.',
@@ -815,6 +823,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   ja: {
     'chat.history': '履歴',
+    'chat.new': '新しいチャット',
     'chat.saving': '保存中…',
     'chat.saved': 'チャットを保存しました',
     'chat.noHistory': 'このセットに保存済みのチャットはありません。',
@@ -828,6 +837,7 @@ const chatHistoryMessages: Record<AppLanguage, Messages> = {
   },
   ko: {
     'chat.history': '기록',
+    'chat.new': '새 채팅',
     'chat.saving': '저장 중…',
     'chat.saved': '채팅 저장됨',
     'chat.noHistory': '이 세트에 저장된 채팅이 없습니다.',
@@ -1079,6 +1089,80 @@ const linkedFolderMessages: Record<AppLanguage, Messages> = {
 
 for (const language of Object.keys(linkedFolderMessages) as AppLanguage[]) {
   Object.assign(messageTargets[language], linkedFolderMessages[language])
+}
+
+const authAccountMessages: Record<AppLanguage, Messages> = {
+  en: {
+    'auth.accountDescription': 'Create or access your Tracer account, then protect this device with a separate app password.', 'auth.notConfigured': 'Account signup is not configured on this build.', 'auth.google': 'Sign up with Google', 'auth.openingBrowser': 'Opening Google…', 'auth.orEmail': 'or use email', 'auth.accountPassword': 'Account password', 'auth.signUpEmail': 'Sign up with email', 'auth.signInEmail': 'Sign in with email', 'auth.haveAccount': 'Already have an account? Sign in', 'auth.needAccount': 'Need an account? Sign up', 'auth.copyBrowserLink': 'The browser could not be opened. Copy the secure authorization link and open it manually.', 'auth.checkEmail': 'We sent a verification link to {email}.', 'auth.waitingVerification': 'Waiting for email verification. This page will continue automatically when you return.', 'auth.resend': 'Resend verification email', 'auth.resendIn': 'Resend in {seconds}s', 'auth.returnToSignIn': 'Return to sign in', 'auth.localPasswordDescription': 'Your account is connected. Now create a separate password that encrypts secrets stored on this device.', 'auth.accountConnected': 'Google account connected', 'auth.localPassword': 'Local app password', 'auth.finishSetup': 'Finish setup', 'auth.errorName': 'Enter your name.', 'auth.errorEmailPassword': 'Enter a valid email and an account password of at least 8 characters.', 'auth.errorLocalPassword': 'The local app password must be at least 8 characters.', 'auth.errorPasswordsMatch': 'Passwords do not match.', 'auth.errorAccountMismatch': 'This installation belongs to a different account. Reset Tracer before switching accounts.', 'auth.errorBrowser': 'Tracer could not open your browser.', 'auth.errorTimeout': 'The authentication callback timed out. Try again.', 'auth.errorUnverified': 'Verify your email before signing in.', 'auth.errorMissingEmail': 'The provider did not return an email address.', 'auth.errorNetwork': 'Tracer could not reach the account service. Check your connection and retry.', 'auth.errorCancelled': 'Authentication was cancelled.', 'auth.errorProfile': 'Your account connected, but Tracer could not finish creating the cloud profile. Retry setup.', 'auth.errorUnknown': 'Authentication failed. Try again.', 'settings.account': 'Account', 'settings.accountOffline': 'Offline · local access available', 'settings.accountOnline': 'Connected', 'settings.reconnect': 'Reconnect', 'settings.accountSignedOut': 'Signed out · local data preserved'
+  },
+  es: {
+    'auth.accountDescription': 'Crea o accede a tu cuenta de Tracer y protege este dispositivo con una contraseña independiente.', 'auth.notConfigured': 'El registro de cuentas no está configurado en esta versión.', 'auth.google': 'Registrarse con Google', 'auth.openingBrowser': 'Abriendo Google…', 'auth.orEmail': 'o usa el correo', 'auth.accountPassword': 'Contraseña de la cuenta', 'auth.signUpEmail': 'Registrarse con correo', 'auth.signInEmail': 'Iniciar sesión con correo', 'auth.haveAccount': '¿Ya tienes cuenta? Inicia sesión', 'auth.needAccount': '¿Necesitas una cuenta? Regístrate', 'auth.copyBrowserLink': 'No se pudo abrir el navegador. Copia el enlace seguro y ábrelo manualmente.', 'auth.checkEmail': 'Enviamos un enlace de verificación a {email}.', 'auth.waitingVerification': 'Esperando la verificación del correo. Esta página continuará automáticamente.', 'auth.resend': 'Reenviar correo de verificación', 'auth.resendIn': 'Reenviar en {seconds}s', 'auth.returnToSignIn': 'Volver a iniciar sesión', 'auth.localPasswordDescription': 'Tu cuenta está conectada. Crea una contraseña independiente para cifrar los secretos de este dispositivo.', 'auth.accountConnected': 'Cuenta de Google conectada', 'auth.localPassword': 'Contraseña local de la aplicación', 'auth.finishSetup': 'Finalizar configuración', 'auth.errorName': 'Introduce tu nombre.', 'auth.errorEmailPassword': 'Introduce un correo válido y una contraseña de al menos 8 caracteres.', 'auth.errorLocalPassword': 'La contraseña local debe tener al menos 8 caracteres.', 'auth.errorPasswordsMatch': 'Las contraseñas no coinciden.', 'auth.errorAccountMismatch': 'Esta instalación pertenece a otra cuenta. Restablece Tracer para cambiar.', 'auth.errorBrowser': 'Tracer no pudo abrir el navegador.', 'auth.errorTimeout': 'La autenticación agotó el tiempo. Inténtalo de nuevo.', 'auth.errorUnverified': 'Verifica tu correo antes de iniciar sesión.', 'auth.errorMissingEmail': 'El proveedor no devolvió un correo.', 'auth.errorNetwork': 'No se pudo acceder al servicio de cuentas. Revisa tu conexión.', 'auth.errorCancelled': 'Se canceló la autenticación.', 'auth.errorProfile': 'La cuenta se conectó, pero no se pudo crear el perfil. Reintenta.', 'auth.errorUnknown': 'Falló la autenticación. Inténtalo de nuevo.', 'settings.account': 'Cuenta', 'settings.accountOffline': 'Sin conexión · acceso local disponible', 'settings.accountOnline': 'Conectada', 'settings.reconnect': 'Reconectar', 'settings.accountSignedOut': 'Sesión cerrada · datos locales conservados'
+  },
+  fr: {
+    'auth.accountDescription': 'Créez ou ouvrez votre compte Tracer, puis protégez cet appareil avec un mot de passe distinct.', 'auth.notConfigured': 'La création de compte n’est pas configurée dans cette version.', 'auth.google': 'S’inscrire avec Google', 'auth.openingBrowser': 'Ouverture de Google…', 'auth.orEmail': 'ou utiliser l’e-mail', 'auth.accountPassword': 'Mot de passe du compte', 'auth.signUpEmail': 'S’inscrire par e-mail', 'auth.signInEmail': 'Se connecter par e-mail', 'auth.haveAccount': 'Déjà un compte ? Se connecter', 'auth.needAccount': 'Besoin d’un compte ? S’inscrire', 'auth.copyBrowserLink': 'Le navigateur n’a pas pu s’ouvrir. Copiez le lien sécurisé et ouvrez-le manuellement.', 'auth.checkEmail': 'Un lien de vérification a été envoyé à {email}.', 'auth.waitingVerification': 'En attente de la vérification. Cette page continuera automatiquement.', 'auth.resend': 'Renvoyer l’e-mail', 'auth.resendIn': 'Renvoyer dans {seconds}s', 'auth.returnToSignIn': 'Retour à la connexion', 'auth.localPasswordDescription': 'Votre compte est connecté. Créez un mot de passe distinct pour chiffrer les secrets de cet appareil.', 'auth.accountConnected': 'Compte Google connecté', 'auth.localPassword': 'Mot de passe local', 'auth.finishSetup': 'Terminer la configuration', 'auth.errorName': 'Saisissez votre nom.', 'auth.errorEmailPassword': 'Saisissez un e-mail valide et un mot de passe d’au moins 8 caractères.', 'auth.errorLocalPassword': 'Le mot de passe local doit contenir au moins 8 caractères.', 'auth.errorPasswordsMatch': 'Les mots de passe ne correspondent pas.', 'auth.errorAccountMismatch': 'Cette installation appartient à un autre compte. Réinitialisez Tracer pour changer.', 'auth.errorBrowser': 'Tracer n’a pas pu ouvrir le navigateur.', 'auth.errorTimeout': 'L’authentification a expiré. Réessayez.', 'auth.errorUnverified': 'Vérifiez votre e-mail avant de vous connecter.', 'auth.errorMissingEmail': 'Le fournisseur n’a pas renvoyé d’adresse e-mail.', 'auth.errorNetwork': 'Impossible de joindre le service de comptes. Vérifiez votre connexion.', 'auth.errorCancelled': 'Authentification annulée.', 'auth.errorProfile': 'Compte connecté, mais création du profil impossible. Réessayez.', 'auth.errorUnknown': 'Échec de l’authentification. Réessayez.', 'settings.account': 'Compte', 'settings.accountOffline': 'Hors ligne · accès local disponible', 'settings.accountOnline': 'Connecté', 'settings.reconnect': 'Reconnecter', 'settings.accountSignedOut': 'Déconnecté · données locales conservées'
+  },
+  'zh-CN': {
+    'auth.accountDescription': '创建或登录 Tracer 帐户，然后使用单独的应用密码保护此设备。', 'auth.notConfigured': '此版本未配置帐户注册。', 'auth.google': '使用 Google 注册', 'auth.openingBrowser': '正在打开 Google…', 'auth.orEmail': '或使用电子邮件', 'auth.accountPassword': '帐户密码', 'auth.signUpEmail': '使用电子邮件注册', 'auth.signInEmail': '使用电子邮件登录', 'auth.haveAccount': '已有帐户？登录', 'auth.needAccount': '需要帐户？注册', 'auth.copyBrowserLink': '无法打开浏览器。请复制安全授权链接并手动打开。', 'auth.checkEmail': '验证链接已发送至 {email}。', 'auth.waitingVerification': '正在等待电子邮件验证。返回后此页面会自动继续。', 'auth.resend': '重新发送验证邮件', 'auth.resendIn': '{seconds} 秒后重发', 'auth.returnToSignIn': '返回登录', 'auth.localPasswordDescription': '帐户已连接。现在创建一个单独的密码来加密此设备上的密钥。', 'auth.accountConnected': 'Google 帐户已连接', 'auth.localPassword': '本地应用密码', 'auth.finishSetup': '完成设置', 'auth.errorName': '请输入姓名。', 'auth.errorEmailPassword': '请输入有效电子邮件和至少 8 个字符的帐户密码。', 'auth.errorLocalPassword': '本地应用密码至少需要 8 个字符。', 'auth.errorPasswordsMatch': '密码不匹配。', 'auth.errorAccountMismatch': '此安装属于其他帐户。切换帐户前请重置 Tracer。', 'auth.errorBrowser': 'Tracer 无法打开浏览器。', 'auth.errorTimeout': '身份验证超时，请重试。', 'auth.errorUnverified': '登录前请验证电子邮件。', 'auth.errorMissingEmail': '提供商未返回电子邮件地址。', 'auth.errorNetwork': '无法连接帐户服务，请检查网络。', 'auth.errorCancelled': '身份验证已取消。', 'auth.errorProfile': '帐户已连接，但无法创建云端个人资料。请重试。', 'auth.errorUnknown': '身份验证失败，请重试。', 'settings.account': '帐户', 'settings.accountOffline': '离线 · 可使用本地功能', 'settings.accountOnline': '已连接', 'settings.reconnect': '重新连接', 'settings.accountSignedOut': '已退出 · 本地数据已保留'
+  },
+  hi: {
+    'auth.accountDescription': 'Tracer खाता बनाएँ या खोलें, फिर अलग ऐप पासवर्ड से इस डिवाइस को सुरक्षित करें।', 'auth.notConfigured': 'इस बिल्ड में खाता साइनअप कॉन्फ़िगर नहीं है।', 'auth.google': 'Google से साइन अप करें', 'auth.openingBrowser': 'Google खुल रहा है…', 'auth.orEmail': 'या ईमेल का उपयोग करें', 'auth.accountPassword': 'खाता पासवर्ड', 'auth.signUpEmail': 'ईमेल से साइन अप करें', 'auth.signInEmail': 'ईमेल से साइन इन करें', 'auth.haveAccount': 'पहले से खाता है? साइन इन करें', 'auth.needAccount': 'खाता चाहिए? साइन अप करें', 'auth.copyBrowserLink': 'ब्राउज़र नहीं खुला। सुरक्षित लिंक कॉपी करके स्वयं खोलें।', 'auth.checkEmail': '{email} पर सत्यापन लिंक भेजा गया है।', 'auth.waitingVerification': 'ईमेल सत्यापन की प्रतीक्षा है। लौटने पर यह पृष्ठ अपने आप आगे बढ़ेगा।', 'auth.resend': 'सत्यापन ईमेल फिर भेजें', 'auth.resendIn': '{seconds}से. में फिर भेजें', 'auth.returnToSignIn': 'साइन इन पर लौटें', 'auth.localPasswordDescription': 'खाता जुड़ गया है। इस डिवाइस के रहस्यों के लिए अलग पासवर्ड बनाएँ।', 'auth.accountConnected': 'Google खाता जुड़ा', 'auth.localPassword': 'स्थानीय ऐप पासवर्ड', 'auth.finishSetup': 'सेटअप पूरा करें', 'auth.errorName': 'अपना नाम दर्ज करें।', 'auth.errorEmailPassword': 'मान्य ईमेल और कम से कम 8 अक्षरों का पासवर्ड दर्ज करें।', 'auth.errorLocalPassword': 'स्थानीय पासवर्ड कम से कम 8 अक्षरों का होना चाहिए।', 'auth.errorPasswordsMatch': 'पासवर्ड मेल नहीं खाते।', 'auth.errorAccountMismatch': 'यह इंस्टॉलेशन दूसरे खाते का है। बदलने से पहले Tracer रीसेट करें।', 'auth.errorBrowser': 'Tracer ब्राउज़र नहीं खोल सका।', 'auth.errorTimeout': 'प्रमाणीकरण का समय समाप्त हुआ। फिर प्रयास करें।', 'auth.errorUnverified': 'साइन इन से पहले ईमेल सत्यापित करें।', 'auth.errorMissingEmail': 'प्रदाता ने ईमेल नहीं दिया।', 'auth.errorNetwork': 'खाता सेवा तक नहीं पहुँच सके। कनेक्शन जाँचें।', 'auth.errorCancelled': 'प्रमाणीकरण रद्द हुआ।', 'auth.errorProfile': 'खाता जुड़ा, पर प्रोफ़ाइल नहीं बन सकी। फिर प्रयास करें।', 'auth.errorUnknown': 'प्रमाणीकरण विफल। फिर प्रयास करें।', 'settings.account': 'खाता', 'settings.accountOffline': 'ऑफ़लाइन · स्थानीय पहुँच उपलब्ध', 'settings.accountOnline': 'जुड़ा हुआ', 'settings.reconnect': 'फिर जोड़ें', 'settings.accountSignedOut': 'साइन आउट · स्थानीय डेटा सुरक्षित'
+  },
+  ar: {
+    'auth.accountDescription': 'أنشئ حساب Tracer أو افتحه، ثم احمِ هذا الجهاز بكلمة مرور منفصلة.', 'auth.notConfigured': 'إنشاء الحساب غير مهيأ في هذا الإصدار.', 'auth.google': 'التسجيل باستخدام Google', 'auth.openingBrowser': 'جارٍ فتح Google…', 'auth.orEmail': 'أو استخدم البريد', 'auth.accountPassword': 'كلمة مرور الحساب', 'auth.signUpEmail': 'التسجيل بالبريد', 'auth.signInEmail': 'الدخول بالبريد', 'auth.haveAccount': 'لديك حساب؟ سجّل الدخول', 'auth.needAccount': 'تحتاج حسابًا؟ سجّل', 'auth.copyBrowserLink': 'تعذر فتح المتصفح. انسخ رابط التفويض الآمن وافتحه يدويًا.', 'auth.checkEmail': 'أرسلنا رابط تحقق إلى {email}.', 'auth.waitingVerification': 'بانتظار تحقق البريد. ستتابع الصفحة تلقائيًا عند عودتك.', 'auth.resend': 'إعادة إرسال رسالة التحقق', 'auth.resendIn': 'إعادة الإرسال خلال {seconds}ث', 'auth.returnToSignIn': 'العودة لتسجيل الدخول', 'auth.localPasswordDescription': 'تم ربط الحساب. أنشئ كلمة مرور منفصلة لتشفير أسرار هذا الجهاز.', 'auth.accountConnected': 'حساب Supabase متصل', 'auth.localPassword': 'كلمة مرور التطبيق المحلية', 'auth.finishSetup': 'إنهاء الإعداد', 'auth.errorName': 'أدخل اسمك.', 'auth.errorEmailPassword': 'أدخل بريدًا صالحًا وكلمة مرور من 8 أحرف على الأقل.', 'auth.errorLocalPassword': 'يجب أن تتكون كلمة المرور المحلية من 8 أحرف على الأقل.', 'auth.errorPasswordsMatch': 'كلمتا المرور غير متطابقتين.', 'auth.errorAccountMismatch': 'هذا التثبيت مرتبط بحساب آخر. أعد ضبط Tracer قبل التبديل.', 'auth.errorBrowser': 'تعذر على Tracer فتح المتصفح.', 'auth.errorTimeout': 'انتهت مهلة المصادقة. حاول مجددًا.', 'auth.errorUnverified': 'تحقق من بريدك قبل تسجيل الدخول.', 'auth.errorMissingEmail': 'لم يوفر المزوّد بريدًا إلكترونيًا.', 'auth.errorNetwork': 'تعذر الوصول إلى خدمة الحساب. تحقق من الاتصال.', 'auth.errorCancelled': 'أُلغيت المصادقة.', 'auth.errorProfile': 'تم ربط الحساب لكن تعذر إنشاء الملف السحابي. حاول مجددًا.', 'auth.errorUnknown': 'فشلت المصادقة. حاول مجددًا.', 'settings.account': 'الحساب', 'settings.accountOffline': 'غير متصل · الوصول المحلي متاح', 'settings.accountOnline': 'متصل', 'settings.reconnect': 'إعادة الاتصال', 'settings.accountSignedOut': 'تم تسجيل الخروج · البيانات المحلية محفوظة'
+  },
+  de: {
+    'auth.accountDescription': 'Erstelle oder öffne dein Tracer-Konto und schütze dieses Gerät mit einem separaten App-Passwort.', 'auth.notConfigured': 'Die Kontoanmeldung ist in diesem Build nicht konfiguriert.', 'auth.google': 'Mit Google registrieren', 'auth.openingBrowser': 'Google wird geöffnet…', 'auth.orEmail': 'oder E-Mail verwenden', 'auth.accountPassword': 'Kontopasswort', 'auth.signUpEmail': 'Mit E-Mail registrieren', 'auth.signInEmail': 'Mit E-Mail anmelden', 'auth.haveAccount': 'Schon ein Konto? Anmelden', 'auth.needAccount': 'Konto benötigt? Registrieren', 'auth.copyBrowserLink': 'Der Browser konnte nicht geöffnet werden. Kopiere den sicheren Link und öffne ihn manuell.', 'auth.checkEmail': 'Ein Bestätigungslink wurde an {email} gesendet.', 'auth.waitingVerification': 'E-Mail-Bestätigung ausstehend. Diese Seite fährt danach automatisch fort.', 'auth.resend': 'Bestätigungs-E-Mail erneut senden', 'auth.resendIn': 'Erneut senden in {seconds}s', 'auth.returnToSignIn': 'Zurück zur Anmeldung', 'auth.localPasswordDescription': 'Dein Konto ist verbunden. Erstelle ein separates Passwort für die Geheimnisse auf diesem Gerät.', 'auth.accountConnected': 'Google-Konto verbunden', 'auth.localPassword': 'Lokales App-Passwort', 'auth.finishSetup': 'Einrichtung abschließen', 'auth.errorName': 'Gib deinen Namen ein.', 'auth.errorEmailPassword': 'Gib eine gültige E-Mail und ein Kontopasswort mit mindestens 8 Zeichen ein.', 'auth.errorLocalPassword': 'Das lokale Passwort muss mindestens 8 Zeichen haben.', 'auth.errorPasswordsMatch': 'Die Passwörter stimmen nicht überein.', 'auth.errorAccountMismatch': 'Diese Installation gehört zu einem anderen Konto. Setze Tracer vor dem Wechsel zurück.', 'auth.errorBrowser': 'Tracer konnte den Browser nicht öffnen.', 'auth.errorTimeout': 'Zeitüberschreitung bei der Anmeldung. Versuche es erneut.', 'auth.errorUnverified': 'Bestätige vor der Anmeldung deine E-Mail.', 'auth.errorMissingEmail': 'Der Anbieter hat keine E-Mail-Adresse geliefert.', 'auth.errorNetwork': 'Der Kontodienst ist nicht erreichbar. Prüfe die Verbindung.', 'auth.errorCancelled': 'Anmeldung abgebrochen.', 'auth.errorProfile': 'Konto verbunden, Cloud-Profil konnte aber nicht erstellt werden. Versuche es erneut.', 'auth.errorUnknown': 'Anmeldung fehlgeschlagen. Versuche es erneut.', 'settings.account': 'Konto', 'settings.accountOffline': 'Offline · lokaler Zugriff verfügbar', 'settings.accountOnline': 'Verbunden', 'settings.reconnect': 'Neu verbinden', 'settings.accountSignedOut': 'Abgemeldet · lokale Daten erhalten'
+  },
+  ru: {
+    'auth.accountDescription': 'Создайте или откройте аккаунт Tracer, затем защитите устройство отдельным паролем.', 'auth.notConfigured': 'Регистрация аккаунта не настроена в этой сборке.', 'auth.google': 'Регистрация через Google', 'auth.openingBrowser': 'Открывается Google…', 'auth.orEmail': 'или используйте почту', 'auth.accountPassword': 'Пароль аккаунта', 'auth.signUpEmail': 'Регистрация по почте', 'auth.signInEmail': 'Войти по почте', 'auth.haveAccount': 'Уже есть аккаунт? Войти', 'auth.needAccount': 'Нужен аккаунт? Зарегистрироваться', 'auth.copyBrowserLink': 'Не удалось открыть браузер. Скопируйте безопасную ссылку и откройте вручную.', 'auth.checkEmail': 'Ссылка для подтверждения отправлена на {email}.', 'auth.waitingVerification': 'Ожидается подтверждение почты. После возврата страница продолжит автоматически.', 'auth.resend': 'Отправить письмо повторно', 'auth.resendIn': 'Повторить через {seconds}с', 'auth.returnToSignIn': 'Вернуться ко входу', 'auth.localPasswordDescription': 'Аккаунт подключён. Создайте отдельный пароль для шифрования секретов устройства.', 'auth.accountConnected': 'Аккаунт Google подключён', 'auth.localPassword': 'Локальный пароль приложения', 'auth.finishSetup': 'Завершить настройку', 'auth.errorName': 'Введите имя.', 'auth.errorEmailPassword': 'Введите корректную почту и пароль не короче 8 символов.', 'auth.errorLocalPassword': 'Локальный пароль должен содержать не менее 8 символов.', 'auth.errorPasswordsMatch': 'Пароли не совпадают.', 'auth.errorAccountMismatch': 'Эта установка связана с другим аккаунтом. Перед сменой сбросьте Tracer.', 'auth.errorBrowser': 'Tracer не смог открыть браузер.', 'auth.errorTimeout': 'Время ожидания истекло. Повторите попытку.', 'auth.errorUnverified': 'Подтвердите почту перед входом.', 'auth.errorMissingEmail': 'Провайдер не вернул адрес почты.', 'auth.errorNetwork': 'Сервис аккаунта недоступен. Проверьте подключение.', 'auth.errorCancelled': 'Аутентификация отменена.', 'auth.errorProfile': 'Аккаунт подключён, но профиль не создан. Повторите попытку.', 'auth.errorUnknown': 'Ошибка аутентификации. Повторите попытку.', 'settings.account': 'Аккаунт', 'settings.accountOffline': 'Офлайн · локальный доступ доступен', 'settings.accountOnline': 'Подключён', 'settings.reconnect': 'Переподключить', 'settings.accountSignedOut': 'Выход выполнен · локальные данные сохранены'
+  },
+  ja: {
+    'auth.accountDescription': 'Tracer アカウントを作成または開き、別のアプリパスワードでこの端末を保護します。', 'auth.notConfigured': 'このビルドではアカウント登録が設定されていません。', 'auth.google': 'Google で登録', 'auth.openingBrowser': 'Google を開いています…', 'auth.orEmail': 'またはメールを使用', 'auth.accountPassword': 'アカウントパスワード', 'auth.signUpEmail': 'メールで登録', 'auth.signInEmail': 'メールでサインイン', 'auth.haveAccount': 'アカウントをお持ちですか？ サインイン', 'auth.needAccount': 'アカウントが必要ですか？ 登録', 'auth.copyBrowserLink': 'ブラウザーを開けませんでした。安全なリンクをコピーして手動で開いてください。', 'auth.checkEmail': '{email} に確認リンクを送信しました。', 'auth.waitingVerification': 'メール確認を待っています。戻ると自動的に続行します。', 'auth.resend': '確認メールを再送', 'auth.resendIn': '{seconds}秒後に再送', 'auth.returnToSignIn': 'サインインに戻る', 'auth.localPasswordDescription': 'アカウントが接続されました。この端末の秘密を暗号化する別のパスワードを作成します。', 'auth.accountConnected': 'Google アカウント接続済み', 'auth.localPassword': 'ローカルアプリパスワード', 'auth.finishSetup': '設定を完了', 'auth.errorName': '名前を入力してください。', 'auth.errorEmailPassword': '有効なメールと8文字以上のパスワードを入力してください。', 'auth.errorLocalPassword': 'ローカルパスワードは8文字以上必要です。', 'auth.errorPasswordsMatch': 'パスワードが一致しません。', 'auth.errorAccountMismatch': 'このインストールは別のアカウントに属します。切り替える前に Tracer をリセットしてください。', 'auth.errorBrowser': 'ブラウザーを開けませんでした。', 'auth.errorTimeout': '認証がタイムアウトしました。再試行してください。', 'auth.errorUnverified': 'サインイン前にメールを確認してください。', 'auth.errorMissingEmail': 'プロバイダーからメールアドレスが返されませんでした。', 'auth.errorNetwork': 'アカウントサービスに接続できません。接続を確認してください。', 'auth.errorCancelled': '認証がキャンセルされました。', 'auth.errorProfile': 'アカウントは接続されましたが、プロフィールを作成できませんでした。再試行してください。', 'auth.errorUnknown': '認証に失敗しました。再試行してください。', 'settings.account': 'アカウント', 'settings.accountOffline': 'オフライン · ローカルアクセス可能', 'settings.accountOnline': '接続済み', 'settings.reconnect': '再接続', 'settings.accountSignedOut': 'サインアウト済み · ローカルデータ保持'
+  },
+  ko: {
+    'auth.accountDescription': 'Tracer 계정을 만들거나 연 다음 별도의 앱 비밀번호로 이 기기를 보호하세요.', 'auth.notConfigured': '이 빌드에는 계정 가입이 구성되지 않았습니다.', 'auth.google': 'Google로 가입', 'auth.openingBrowser': 'Google 여는 중…', 'auth.orEmail': '또는 이메일 사용', 'auth.accountPassword': '계정 비밀번호', 'auth.signUpEmail': '이메일로 가입', 'auth.signInEmail': '이메일로 로그인', 'auth.haveAccount': '계정이 있나요? 로그인', 'auth.needAccount': '계정이 필요한가요? 가입', 'auth.copyBrowserLink': '브라우저를 열 수 없습니다. 안전한 링크를 복사해 직접 여세요.', 'auth.checkEmail': '{email}로 확인 링크를 보냈습니다.', 'auth.waitingVerification': '이메일 확인을 기다리는 중입니다. 돌아오면 자동으로 계속됩니다.', 'auth.resend': '확인 이메일 다시 보내기', 'auth.resendIn': '{seconds}초 후 다시 보내기', 'auth.returnToSignIn': '로그인으로 돌아가기', 'auth.localPasswordDescription': '계정이 연결되었습니다. 이 기기의 비밀을 암호화할 별도 비밀번호를 만드세요.', 'auth.accountConnected': 'Supabase 계정 연결됨', 'auth.localPassword': '로컬 앱 비밀번호', 'auth.finishSetup': '설정 완료', 'auth.errorName': '이름을 입력하세요.', 'auth.errorEmailPassword': '올바른 이메일과 8자 이상의 비밀번호를 입력하세요.', 'auth.errorLocalPassword': '로컬 비밀번호는 8자 이상이어야 합니다.', 'auth.errorPasswordsMatch': '비밀번호가 일치하지 않습니다.', 'auth.errorAccountMismatch': '이 설치는 다른 계정에 연결되어 있습니다. 전환 전에 Tracer를 초기화하세요.', 'auth.errorBrowser': 'Tracer가 브라우저를 열 수 없습니다.', 'auth.errorTimeout': '인증 시간이 초과되었습니다. 다시 시도하세요.', 'auth.errorUnverified': '로그인 전에 이메일을 확인하세요.', 'auth.errorMissingEmail': '공급자가 이메일 주소를 반환하지 않았습니다.', 'auth.errorNetwork': '계정 서비스에 연결할 수 없습니다. 연결을 확인하세요.', 'auth.errorCancelled': '인증이 취소되었습니다.', 'auth.errorProfile': '계정은 연결되었지만 프로필을 만들 수 없습니다. 다시 시도하세요.', 'auth.errorUnknown': '인증에 실패했습니다. 다시 시도하세요.', 'settings.account': '계정', 'settings.accountOffline': '오프라인 · 로컬 사용 가능', 'settings.accountOnline': '연결됨', 'settings.reconnect': '다시 연결', 'settings.accountSignedOut': '로그아웃됨 · 로컬 데이터 유지'
+  }
+}
+
+for (const language of Object.keys(authAccountMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], authAccountMessages[language])
+}
+
+const deviceKeyVaultMessages: Record<AppLanguage, Messages> = {
+  en: {
+    'auth.googleAccountConnected': 'Google account connected', 'auth.emailAccountConnected': 'Email account connected', 'auth.deviceKeyTitle': 'No local password required', 'auth.deviceKeyDescription': 'Tracer will generate a unique encryption key and protect it with this device’s system keychain. The vault can unlock seamlessly, including while offline.', 'auth.deviceKeyTradeoff': 'Security tradeoff: anyone who can access your signed-in computer account may be able to open Tracer. If the system keychain entry is lost, there is no password recovery for this device-local vault and Tracer must be reset.', 'auth.continueWithoutPassword': 'Continue without a password', 'auth.errorDeviceKey': 'Tracer could not securely save the device key. Check system keychain access and retry.', 'settings.deviceKeyVaultDescription': 'This Google-linked vault unlocks with a device key protected by the system keychain. Password-required startup locking is unavailable.', 'settings.deviceKeychain': 'Keychain'
+  },
+  es: {
+    'auth.googleAccountConnected': 'Cuenta de Google conectada', 'auth.emailAccountConnected': 'Cuenta de correo conectada', 'auth.deviceKeyTitle': 'No se requiere contraseña local', 'auth.deviceKeyDescription': 'Tracer generará una clave de cifrado única y la protegerá con el llavero del sistema de este dispositivo. La bóveda podrá abrirse sin interrupciones, incluso sin conexión.', 'auth.deviceKeyTradeoff': 'Riesgo de seguridad: quien acceda a tu cuenta del ordenador podría abrir Tracer. Si se pierde la entrada del llavero, esta bóveda local no se puede recuperar con contraseña y habrá que restablecer Tracer.', 'auth.continueWithoutPassword': 'Continuar sin contraseña', 'auth.errorDeviceKey': 'Tracer no pudo guardar la clave del dispositivo de forma segura. Revisa el acceso al llavero e inténtalo de nuevo.', 'settings.deviceKeyVaultDescription': 'Esta bóveda vinculada a Google usa una clave protegida por el llavero del sistema. No admite contraseña al iniciar.', 'settings.deviceKeychain': 'Llavero'
+  },
+  fr: {
+    'auth.googleAccountConnected': 'Compte Google connecté', 'auth.emailAccountConnected': 'Compte e-mail connecté', 'auth.deviceKeyTitle': 'Aucun mot de passe local requis', 'auth.deviceKeyDescription': 'Tracer génère une clé de chiffrement unique protégée par le trousseau système de cet appareil. Le coffre se déverrouille sans saisie, même hors ligne.', 'auth.deviceKeyTradeoff': 'Compromis de sécurité : toute personne ayant accès à votre session ordinateur pourrait ouvrir Tracer. Si l’entrée du trousseau est perdue, aucun mot de passe ne peut récupérer ce coffre local et Tracer doit être réinitialisé.', 'auth.continueWithoutPassword': 'Continuer sans mot de passe', 'auth.errorDeviceKey': 'Tracer n’a pas pu enregistrer la clé de l’appareil. Vérifiez l’accès au trousseau et réessayez.', 'settings.deviceKeyVaultDescription': 'Ce coffre lié à Google utilise une clé protégée par le trousseau système. Le verrouillage par mot de passe au démarrage est indisponible.', 'settings.deviceKeychain': 'Trousseau'
+  },
+  'zh-CN': {
+    'auth.googleAccountConnected': 'Google 帐户已连接', 'auth.emailAccountConnected': '电子邮件帐户已连接', 'auth.deviceKeyTitle': '无需本地密码', 'auth.deviceKeyDescription': 'Tracer 会生成唯一加密密钥，并由此设备的系统钥匙串保护。保险库可无缝解锁，也可离线使用。', 'auth.deviceKeyTradeoff': '安全权衡：能访问你已登录的电脑帐户的人可能也能打开 Tracer。如果系统钥匙串条目丢失，此设备上的本地保险库无法通过密码恢复，必须重置 Tracer。', 'auth.continueWithoutPassword': '无密码继续', 'auth.errorDeviceKey': 'Tracer 无法安全保存设备密钥。请检查系统钥匙串权限后重试。', 'settings.deviceKeyVaultDescription': '此 Google 关联保险库使用系统钥匙串保护的设备密钥，无法启用启动密码锁。', 'settings.deviceKeychain': '系统钥匙串'
+  },
+  hi: {
+    'auth.googleAccountConnected': 'Google खाता जुड़ा', 'auth.emailAccountConnected': 'ईमेल खाता जुड़ा', 'auth.deviceKeyTitle': 'स्थानीय पासवर्ड की आवश्यकता नहीं', 'auth.deviceKeyDescription': 'Tracer एक अनूठी एन्क्रिप्शन कुंजी बनाएगा और उसे इस डिवाइस की सिस्टम कीचेन से सुरक्षित रखेगा। वॉल्ट ऑफ़लाइन भी बिना पासवर्ड खुल सकेगा।', 'auth.deviceKeyTradeoff': 'सुरक्षा समझौता: आपके साइन-इन कंप्यूटर खाते तक पहुँच रखने वाला व्यक्ति Tracer खोल सकता है। कीचेन प्रविष्टि खोने पर इस स्थानीय वॉल्ट को पासवर्ड से वापस नहीं पाया जा सकता और Tracer रीसेट करना होगा।', 'auth.continueWithoutPassword': 'बिना पासवर्ड जारी रखें', 'auth.errorDeviceKey': 'Tracer डिवाइस कुंजी सुरक्षित रूप से सहेज नहीं सका। सिस्टम कीचेन पहुँच जाँचकर फिर प्रयास करें।', 'settings.deviceKeyVaultDescription': 'यह Google-संबद्ध वॉल्ट सिस्टम कीचेन से सुरक्षित डिवाइस कुंजी से खुलता है। स्टार्टअप पासवर्ड लॉक उपलब्ध नहीं है।', 'settings.deviceKeychain': 'कीचेन'
+  },
+  ar: {
+    'auth.googleAccountConnected': 'تم ربط حساب Google', 'auth.emailAccountConnected': 'تم ربط حساب البريد', 'auth.deviceKeyTitle': 'لا حاجة إلى كلمة مرور محلية', 'auth.deviceKeyDescription': 'سينشئ Tracer مفتاح تشفير فريدًا ويحميه بسلسلة مفاتيح النظام على هذا الجهاز. يمكن فتح الخزنة بسلاسة حتى دون اتصال.', 'auth.deviceKeyTradeoff': 'المقايضة الأمنية: قد يتمكن من يصل إلى حساب الكمبيوتر المفتوح من فتح Tracer. إذا فُقد إدخال سلسلة المفاتيح فلا توجد استعادة بكلمة مرور لهذه الخزنة المحلية ويجب إعادة ضبط Tracer.', 'auth.continueWithoutPassword': 'المتابعة بلا كلمة مرور', 'auth.errorDeviceKey': 'تعذر حفظ مفتاح الجهاز بأمان. تحقق من الوصول إلى سلسلة مفاتيح النظام وأعد المحاولة.', 'settings.deviceKeyVaultDescription': 'تستخدم هذه الخزنة المرتبطة بـ Google مفتاح جهاز تحميه سلسلة مفاتيح النظام. قفل بدء التشغيل بكلمة مرور غير متاح.', 'settings.deviceKeychain': 'سلسلة المفاتيح'
+  },
+  de: {
+    'auth.googleAccountConnected': 'Google-Konto verbunden', 'auth.emailAccountConnected': 'E-Mail-Konto verbunden', 'auth.deviceKeyTitle': 'Kein lokales Passwort erforderlich', 'auth.deviceKeyDescription': 'Tracer erzeugt einen eindeutigen Verschlüsselungsschlüssel und schützt ihn im Systemschlüsselbund dieses Geräts. Der Tresor lässt sich auch offline nahtlos entsperren.', 'auth.deviceKeyTradeoff': 'Sicherheitsabwägung: Wer auf dein angemeldetes Computerkonto zugreifen kann, kann möglicherweise Tracer öffnen. Geht der Schlüsselbundeintrag verloren, gibt es keine Passwortwiederherstellung und Tracer muss zurückgesetzt werden.', 'auth.continueWithoutPassword': 'Ohne Passwort fortfahren', 'auth.errorDeviceKey': 'Tracer konnte den Geräteschlüssel nicht sicher speichern. Prüfe den Schlüsselbundzugriff und versuche es erneut.', 'settings.deviceKeyVaultDescription': 'Dieser Google-verknüpfte Tresor wird mit einem im Systemschlüsselbund geschützten Geräteschlüssel entsperrt. Ein Startpasswort ist nicht verfügbar.', 'settings.deviceKeychain': 'Schlüsselbund'
+  },
+  ru: {
+    'auth.googleAccountConnected': 'Аккаунт Google подключён', 'auth.emailAccountConnected': 'Аккаунт электронной почты подключён', 'auth.deviceKeyTitle': 'Локальный пароль не требуется', 'auth.deviceKeyDescription': 'Tracer создаст уникальный ключ шифрования и защитит его системным хранилищем ключей устройства. Хранилище будет открываться без пароля, в том числе офлайн.', 'auth.deviceKeyTradeoff': 'Компромисс безопасности: пользователь с доступом к вашей активной учётной записи компьютера может открыть Tracer. При утрате записи системного хранилища парольного восстановления нет — потребуется сброс Tracer.', 'auth.continueWithoutPassword': 'Продолжить без пароля', 'auth.errorDeviceKey': 'Tracer не удалось безопасно сохранить ключ устройства. Проверьте доступ к системному хранилищу ключей и повторите попытку.', 'settings.deviceKeyVaultDescription': 'Это связанное с Google хранилище открывается ключом устройства из системного хранилища ключей. Пароль при запуске недоступен.', 'settings.deviceKeychain': 'Хранилище ключей'
+  },
+  ja: {
+    'auth.googleAccountConnected': 'Google アカウント接続済み', 'auth.emailAccountConnected': 'メールアカウント接続済み', 'auth.deviceKeyTitle': 'ローカルパスワードは不要です', 'auth.deviceKeyDescription': 'Tracer は固有の暗号化キーを生成し、この端末のシステムキーチェーンで保護します。オフラインでもパスワードなしで保管庫を解除できます。', 'auth.deviceKeyTradeoff': 'セキュリティ上の注意：ログイン中のコンピューターアカウントを使用できる人は Tracer を開ける可能性があります。キーチェーン項目を失うとパスワードでは復元できず、Tracer のリセットが必要です。', 'auth.continueWithoutPassword': 'パスワードなしで続行', 'auth.errorDeviceKey': '端末キーを安全に保存できませんでした。システムキーチェーンへのアクセスを確認して再試行してください。', 'settings.deviceKeyVaultDescription': 'この Google 連携保管庫はシステムキーチェーン内の端末キーで解除します。起動時パスワードは利用できません。', 'settings.deviceKeychain': 'キーチェーン'
+  },
+  ko: {
+    'auth.googleAccountConnected': 'Google 계정 연결됨', 'auth.emailAccountConnected': '이메일 계정 연결됨', 'auth.deviceKeyTitle': '로컬 비밀번호가 필요하지 않습니다', 'auth.deviceKeyDescription': 'Tracer가 고유한 암호화 키를 생성하고 이 기기의 시스템 키체인으로 보호합니다. 오프라인에서도 비밀번호 없이 보관함을 열 수 있습니다.', 'auth.deviceKeyTradeoff': '보안상 주의: 로그인된 컴퓨터 계정에 접근할 수 있는 사람은 Tracer를 열 수도 있습니다. 키체인 항목을 잃으면 비밀번호로 복구할 수 없으며 Tracer를 재설정해야 합니다.', 'auth.continueWithoutPassword': '비밀번호 없이 계속', 'auth.errorDeviceKey': '기기 키를 안전하게 저장하지 못했습니다. 시스템 키체인 접근을 확인하고 다시 시도하세요.', 'settings.deviceKeyVaultDescription': '이 Google 연결 보관함은 시스템 키체인이 보호하는 기기 키로 열립니다. 시작 비밀번호 잠금은 사용할 수 없습니다.', 'settings.deviceKeychain': '키체인'
+  }
+}
+
+for (const language of Object.keys(deviceKeyVaultMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], deviceKeyVaultMessages[language])
 }
 
 export const messages: Record<AppLanguage, Messages> = messageTargets

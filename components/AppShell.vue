@@ -9,6 +9,8 @@
     <main>
       <slot />
     </main>
+
+    <FloatingPageChat v-if="!hideFloatingChat" />
   </div>
 </template>
 
@@ -22,6 +24,7 @@
  const router = useRouter()
 
  const hideNavbar = computed(() => route.meta?.hideNavbar === true)
+ const hideFloatingChat = computed(() => route.meta?.hideFloatingChat === true)
 
  const hideFloatingBackButton = computed(() => {
    if (route.meta?.hideBackButton === true) return true

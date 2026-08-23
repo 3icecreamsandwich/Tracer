@@ -274,30 +274,45 @@
                                     >
                                         {{ ratioText }}
                                     </p>
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        @click="shuffleRun"
-                                    >
-                                        {{ t('set.shuffle') }}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="starredStudyCount === 0"
-                                        :aria-pressed="starredOnly"
-                                        @click="toggleStarredOnly"
-                                    >
-                                        <StarGlyph :active="starredOnly" class="mr-1" /> {{ t('set.starredOnly') }}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="allStudyTermIds.length === 0"
-                                        @click="restartRun"
-                                    >
-                                        {{ t('common.restart') }}
-                                    </button>
+                                    <div ref="flashcardSettingsMenuRoot" class="relative">
+                                        <button
+                                            ref="flashcardSettingsButtonEl"
+                                            type="button"
+                                            class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                            :aria-label="t('set.flashcardSettings')"
+                                            :title="t('set.flashcardSettings')"
+                                            :aria-expanded="flashcardSettingsOpen"
+                                            aria-haspopup="menu"
+                                            @click="flashcardSettingsOpen = !flashcardSettingsOpen"
+                                        >
+                                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                                                <circle cx="12" cy="12" r="3" />
+                                            </svg>
+                                        </button>
+
+                                        <div
+                                            v-if="flashcardSettingsOpen"
+                                            class="absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                                            role="menu"
+                                            :aria-label="t('set.flashcardSettings')"
+                                        >
+                                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="totalCount === 0" @click="shuffleFromFlashcardSettings">
+                                                {{ t('set.shuffle') }}
+                                            </button>
+                                            <button type="button" role="menuitemcheckbox" :aria-checked="starredOnly" class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="starredStudyCount === 0 && !starredOnly" @click="toggleStarredOnlyFromFlashcardSettings">
+                                                <span>{{ t('set.starredOnly') }}</span>
+                                                <span class="w-4 text-center" aria-hidden="true">{{ starredOnly ? "✓" : "" }}</span>
+                                            </button>
+                                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="allStudyTermIds.length === 0" @click="restartFromFlashcardSettings">
+                                                {{ t('common.restart') }}
+                                            </button>
+                                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
+                                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="flashcardFrontPreferenceBusy" @click="togglePreferredFlashcardFront">
+                                                {{ preferredFlashcardFrontOptionLabel }}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -390,7 +405,7 @@
                                     <p
                                         class="absolute top-6 left-6 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        {{ isFlipped ? t('create.definition') : t('create.term') }}
+                                        {{ showingDefinition ? t('create.definition') : t('create.term') }}
                                     </p>
                                     <div
                                         class="flashcard-content-row flex w-full flex-row items-center justify-center text-center text-2xl text-slate-900 dark:text-slate-50"
@@ -514,26 +529,17 @@
                                     </p>
                                     <button
                                         type="button"
-                                        class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :disabled="practiceAnswerBusy"
                                         :aria-expanded="practiceSettingsOpen"
+                                        aria-label="Practice settings"
+                                        title="Practice settings"
                                         @click="openPracticeSettings"
                                     >
-                                        <span aria-hidden="true">⚙</span>
-                                        Settings
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="
-                                            learnBusy ||
-                                            practiceAnswerBusy ||
-                                            !set ||
-                                            learnQuestions.length === 0
-                                        "
-                                        @click="restartLearnRun"
-                                    >
-                                        {{ t('common.restart') }}
+                                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
@@ -728,11 +734,14 @@
 
                                 <div
                                     v-else
-                                    class="flex flex-1 flex-col rounded-md border border-amber-200 bg-amber-50/20 p-5 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10"
-                                    :class="{
-                                        'animate-slide-left':
-                                            learnIsNavigating,
-                                    }"
+                                    class="flex flex-1 flex-col rounded-md border p-5 shadow-sm"
+                                    :class="[
+                                        practiceQuestionSurfaceClass(),
+                                        {
+                                            'animate-slide-left':
+                                                learnIsNavigating,
+                                        },
+                                    ]"
                                 >
                                     <p
                                         class="text-xs font-medium text-slate-500 dark:text-slate-400"
@@ -822,18 +831,86 @@
                                                 <MarkdownRenderer :markdown="opt" variant="compact" />
                                             </button>
                                         </template>
-                                        <form v-else class="grid gap-3" @submit.prevent="answerLearnWritten">
-                                            <label for="practice-written-answer" class="text-sm font-medium text-slate-700 dark:text-slate-200">Your answer</label>
-                                            <textarea
-                                                id="practice-written-answer"
-                                                v-model="practiceWrittenAnswer"
-                                                rows="4"
-                                                autofocus
-                                                class="w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-orange-900"
-                                                placeholder="Type the definition..."
-                                            />
-                                            <button type="submit" class="justify-self-end rounded-lg bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-white dark:text-slate-950" :disabled="!practiceWrittenAnswer.trim() || practiceAnswerBusy">Submit answer</button>
+                                        <form
+                                            v-else
+                                            class="grid gap-2"
+                                            @submit.prevent="answerLearnWritten"
+                                        >
+                                            <label
+                                                for="practice-written-answer"
+                                                class="sr-only"
+                                            >
+                                                Your answer
+                                            </label>
+                                            <div class="flex items-end gap-2">
+                                                <textarea
+                                                    id="practice-written-answer"
+                                                    v-model="practiceWrittenAnswer"
+                                                    rows="1"
+                                                    autofocus
+                                                    class="h-12 w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
+                                                    placeholder="Type your answer…"
+                                                    :disabled="
+                                                        practiceAnswerBusy ||
+                                                        Boolean(
+                                                            practiceWrittenFeedback,
+                                                        )
+                                                    "
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    class="inline-flex h-12 shrink-0 items-center rounded-lg border border-amber-500 bg-amber-400 px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                                                    :disabled="
+                                                        !practiceWrittenAnswer.trim() ||
+                                                        practiceAnswerBusy ||
+                                                        Boolean(
+                                                            practiceWrittenFeedback,
+                                                        )
+                                                    "
+                                                >
+                                                    {{
+                                                        practiceAnswerBusy
+                                                            ? "Checking…"
+                                                            : "Save"
+                                                    }}
+                                                </button>
+                                            </div>
                                         </form>
+                                    </div>
+                                </div>
+
+                                <div
+                                    v-if="practiceWrittenFeedback"
+                                    class="mt-3 rounded-md border p-4 shadow-sm"
+                                    :class="
+                                        practiceWrittenFeedback.isCorrect
+                                            ? 'border-emerald-300 bg-emerald-50/80 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100'
+                                            : 'border-red-300 bg-red-50/80 text-red-950 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100'
+                                    "
+                                >
+                                    <p class="text-sm font-semibold">
+                                        {{
+                                            practiceWrittenFeedback.isCorrect
+                                                ? "Correct"
+                                                : "Not quite"
+                                        }}
+                                    </p>
+                                    <p class="mt-1 text-sm">
+                                        {{
+                                            practiceWrittenFeedback.explanation
+                                        }}
+                                    </p>
+                                    <div class="mt-3 flex justify-end">
+                                        <button
+                                            type="button"
+                                            class="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                                            :disabled="practiceAnswerBusy"
+                                            @click="
+                                                continueAfterWrittenFeedback
+                                            "
+                                        >
+                                            Continue
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -868,39 +945,25 @@
                                     >
                                         {{ t('chat.history') }}
                                     </button>
-                                    <div class="inline-flex items-center gap-1.5">
-                                        <button
-                                            type="button"
-                                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                            :disabled="
-                                                chatBusy ||
-                                                chatSaveBusy ||
-                                                chatIsSaved ||
-                                                !firstChatQuestion ||
-                                                isWebPreview
-                                            "
-                                            @click="saveChat"
-                                        >
-                                            {{ chatSaveBusy ? t('chat.saving') : t('common.save') }}
-                                        </button>
-                                        <span
-                                            v-if="chatSavedFeedback"
-                                            class="text-sm font-semibold text-emerald-600 dark:text-emerald-400"
-                                            :aria-label="t('chat.saved')"
-                                            aria-live="polite"
-                                        >
-                                            ✓
-                                        </span>
-                                    </div>
                                     <button
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :disabled="
                                             chatBusy || chatSaveBusy || chatMessages.length === 0
                                         "
-                                        @click="resetChat"
+                                        @click="clearCurrentChat"
                                     >
                                         {{ t('common.clear') }}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-lg font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        :disabled="chatBusy || chatSaveBusy || !set"
+                                        :aria-label="t('chat.new')"
+                                        :title="t('chat.new')"
+                                        @click="startNewChat"
+                                    >
+                                        <span aria-hidden="true">+</span>
                                     </button>
                                 </div>
                             </div>
@@ -1151,7 +1214,9 @@
                         </section>
 
                         <section :aria-label="t('set.studyModes')">
-                            <div class="flex flex-nowrap gap-3 overflow-x-auto pb-1">
+                            <div
+                                class="study-mode-bar flex flex-nowrap gap-3 overflow-x-auto pb-1"
+                            >
                                 <StudyModeTile
                                     :to="`/set/${set.id}?mode=flashcards`"
                                     :fullscreen-to="`/set/${set.id}-flashcards`"
@@ -1211,22 +1276,77 @@
                                 >
                                     {{ t('set.terms') }}
                                 </h2>
-                                <span
-                                    class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                                >
-                                    {{ set.terms.length }}
-                                </span>
+                                <div class="flex shrink-0 items-center gap-2">
+                                    <span
+                                        class="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                    >
+                                        {{ filteredTerms.length }}
+                                    </span>
+                                    <div ref="termsFilterMenuRoot" class="relative">
+                                        <button
+                                            ref="termsFilterButtonEl"
+                                            type="button"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                            :aria-label="t('set.filterTerms')"
+                                            :title="t('set.filterTerms')"
+                                            :aria-expanded="termsFilterMenuOpen"
+                                            :disabled="set.terms.length === 0"
+                                            aria-haspopup="menu"
+                                            @click="termsFilterMenuOpen = !termsFilterMenuOpen"
+                                        >
+                                            <svg
+                                                aria-hidden="true"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="1.8"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                class="h-4 w-4"
+                                            >
+                                                <path d="M4 6h16" />
+                                                <path d="M7 12h10" />
+                                                <path d="M10 18h4" />
+                                            </svg>
+                                        </button>
+
+                                        <div
+                                            v-if="termsFilterMenuOpen"
+                                            class="absolute end-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                                            role="menu"
+                                            :aria-label="t('set.filterTerms')"
+                                        >
+                                            <button
+                                                v-for="option in termsFilterOptions"
+                                                :key="option.value"
+                                                type="button"
+                                                role="menuitemradio"
+                                                :aria-checked="termsFilter === option.value"
+                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500"
+                                                @click="selectTermsFilter(option.value)"
+                                            >
+                                                <span>{{ t(option.labelKey) }}</span>
+                                                <span
+                                                    class="w-4 text-center"
+                                                    aria-hidden="true"
+                                                >
+                                                    {{ termsFilter === option.value ? "✓" : "" }}
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div
-                                v-if="set.terms.length === 0"
+                                v-if="filteredTerms.length === 0"
                                 class="mt-3 text-sm text-slate-700 dark:text-slate-200"
                             >
                                 {{ t('set.noCards') }}
                             </div>
 
                             <ul v-else class="mt-3 space-y-3">
-                                <li v-for="(term, idx) in set.terms" :key="term.id">
+                                <li v-for="(term, idx) in filteredTerms" :key="term.id">
                                     <div
                                         class="relative rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                                     >
@@ -1532,6 +1652,7 @@ import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import { useLockSession } from "~/src/composables/lock-session";
 import {
     createChatsRepo,
+    createFlashcardProgressRepo,
     createLinkedFoldersRepo,
     createProfileRepo,
     createSettingsRepo,
@@ -1550,12 +1671,16 @@ import type {
 import { resolveAiModel } from "~/src/composables/ai/registry";
 import { hasTauriRuntime } from "~/src/composables/tauri";
 import {
+    loadPracticeProgress,
+    savePracticeProgress,
+    type PracticeProgress,
+} from "~/src/composables/practice-progress";
+import {
     generateLearnQuestions,
     type LearnQuestion,
     type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
 import {
-    buildChatTitlePrompt,
     buildGroundedChatSystemPrompt,
     normalizeGeneratedChatTitle,
     streamGroundedChatText,
@@ -1575,6 +1700,12 @@ import {
     isAiErrorCandidate,
     type AiErrorUx,
 } from "~/src/composables/ai/ux-errors";
+import {
+    gradeWebPreviewWrittenAnswer,
+    gradeWrittenAnswer,
+    type WrittenAnswerGrade,
+    type WrittenAnswerGradeInput,
+} from "~/src/composables/ai/written-answer-grader";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 import {
@@ -1652,6 +1783,167 @@ const retryTermIds = ref<Set<Uuid>>(new Set());
 const starredTermIds = ref<Set<Uuid>>(new Set());
 const starBusy = ref(false);
 const starredOnly = ref(false);
+const flashcardSettingsOpen = ref(false);
+const flashcardSettingsMenuRoot = ref<HTMLElement | null>(null);
+const flashcardSettingsButtonEl = ref<HTMLButtonElement | null>(null);
+const flashcardsDefinitionFirst = ref(false);
+const flashcardFrontPreferenceBusy = ref(false);
+const savedFlashcardTermId = ref<Uuid | null>(null);
+const savedFlashcardCorrectTermIds = ref<Uuid[]>([]);
+const savedFlashcardProgressSignature = ref<string | null>(null);
+
+type SavedFlashcardProgress = {
+    currentTermId: Uuid;
+    correctTermIds: Uuid[];
+};
+
+const WEB_FLASHCARD_FRONT_KEY = "tracer:flashcards-definition-first";
+const webFlashcardProgressKey = (setId: Uuid) =>
+    `tracer:flashcard-progress:${setId}`;
+
+const preferredFlashcardFrontOptionLabel = computed(() =>
+    flashcardsDefinitionFirst.value
+        ? t("set.termAtFront")
+        : t("set.definitionAtFront"),
+);
+
+function readWebFlashcardFrontPreference() {
+    try {
+        return window.localStorage.getItem(WEB_FLASHCARD_FRONT_KEY) === "true";
+    } catch {
+        return false;
+    }
+}
+
+function readWebFlashcardProgress(setId: Uuid): SavedFlashcardProgress | null {
+    try {
+        const raw = window.localStorage.getItem(webFlashcardProgressKey(setId));
+        if (!raw) return null;
+        try {
+            const parsed = JSON.parse(raw) as Partial<SavedFlashcardProgress>;
+            if (typeof parsed.currentTermId !== "string") return null;
+            return {
+                currentTermId: parsed.currentTermId,
+                correctTermIds: Array.isArray(parsed.correctTermIds)
+                    ? parsed.correctTermIds.filter(
+                          (id): id is Uuid => typeof id === "string",
+                      )
+                    : [],
+            };
+        } catch {
+            return { currentTermId: raw, correctTermIds: [] };
+        }
+    } catch {
+        return null;
+    }
+}
+
+async function loadSavedFlashcardProgress(setId: Uuid) {
+    if (isWebPreview.value) return readWebFlashcardProgress(setId);
+    try {
+        const db = await useTracerDb();
+        return await createFlashcardProgressRepo(db).get(setId);
+    } catch {
+        return null;
+    }
+}
+
+function persistFlashcardProgress(termId: Uuid) {
+    const setId = set.value?.id as Uuid | undefined;
+    if (!setId) return;
+    const correctTermIds = allStudyTermIds.value.filter(
+        (id) => answersByTermId.value[id] === "correct",
+    );
+    const progress = { currentTermId: termId, correctTermIds };
+    const signature = JSON.stringify(progress);
+    if (savedFlashcardProgressSignature.value === signature) return;
+    savedFlashcardTermId.value = termId;
+    savedFlashcardCorrectTermIds.value = correctTermIds;
+    savedFlashcardProgressSignature.value = signature;
+    if (isWebPreview.value) {
+        try {
+            window.localStorage.setItem(
+                webFlashcardProgressKey(setId),
+                signature,
+            );
+        } catch {}
+        return;
+    }
+    void useTracerDb()
+        .then((db) =>
+            createFlashcardProgressRepo(db).save(setId, progress),
+        )
+        .catch(() => {});
+}
+
+async function togglePreferredFlashcardFront() {
+    if (flashcardFrontPreferenceBusy.value) return;
+    const previous = flashcardsDefinitionFirst.value;
+    const next = !previous;
+    flashcardSettingsOpen.value = false;
+    flashcardsDefinitionFirst.value = next;
+    isFlipped.value = false;
+    flashcardFrontPreferenceBusy.value = true;
+    try {
+        if (isWebPreview.value) {
+            window.localStorage.setItem(WEB_FLASHCARD_FRONT_KEY, String(next));
+        } else {
+            const db = await useTracerDb();
+            await createSettingsRepo(db).set({
+                flashcardsDefinitionFirst: next,
+            });
+        }
+    } catch {
+        flashcardsDefinitionFirst.value = previous;
+    } finally {
+        flashcardFrontPreferenceBusy.value = false;
+        nextTick(() => flashcardSettingsButtonEl.value?.focus());
+    }
+}
+
+function onDocumentFlashcardSettingsPointerDown(event: PointerEvent) {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (flashcardSettingsMenuRoot.value?.contains(target)) return;
+    flashcardSettingsOpen.value = false;
+}
+
+type TermsFilter = "all" | "starred" | "unstarred";
+const termsFilter = ref<TermsFilter>("all");
+const termsFilterMenuOpen = ref(false);
+const termsFilterMenuRoot = ref<HTMLElement | null>(null);
+const termsFilterButtonEl = ref<HTMLButtonElement | null>(null);
+const termsFilterOptions: Array<{
+    value: TermsFilter;
+    labelKey: string;
+}> = [
+    { value: "all", labelKey: "set.filterAll" },
+    { value: "starred", labelKey: "set.filterStarred" },
+    { value: "unstarred", labelKey: "set.filterUnstarred" },
+];
+
+const filteredTerms = computed(() => {
+    const terms = set.value?.terms ?? [];
+    if (termsFilter.value === "all") return terms;
+    const showStarred = termsFilter.value === "starred";
+    return terms.filter(
+        (term) =>
+            starredTermIds.value.has(term.id as Uuid) === showStarred,
+    );
+});
+
+function selectTermsFilter(filter: TermsFilter) {
+    termsFilter.value = filter;
+    termsFilterMenuOpen.value = false;
+    nextTick(() => termsFilterButtonEl.value?.focus());
+}
+
+function onDocumentTermsFilterPointerDown(event: PointerEvent) {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (termsFilterMenuRoot.value?.contains(target)) return;
+    termsFilterMenuOpen.value = false;
+}
 
 const baseSeed = computed(() => {
     const raw = route.query.seed;
@@ -1673,9 +1965,7 @@ const chatLogEl = ref<HTMLDivElement | null>(null);
 const chatTextareaEl = ref<HTMLTextAreaElement | null>(null);
 const activeSavedChatId = ref<Uuid | null>(null);
 const chatSaveBusy = ref(false);
-const chatSaveAbort = shallowRef<AbortController | null>(null);
-const chatSavedFeedback = ref(false);
-let chatSavedFeedbackTimer: number | null = null;
+let chatSessionVersion = 0;
 const chatHistoryOpen = ref(false);
 const chatHistoryBusy = ref(false);
 const chatHistoryError = ref<string | null>(null);
@@ -1689,11 +1979,9 @@ const firstChatQuestion = computed(
             (message) => message.role === "user" && message.content.trim(),
         )?.content.trim() ?? "",
 );
-const chatIsSaved = computed(() => activeSavedChatId.value !== null);
-
 const aiError = ref<AiErrorUx | null>(null);
 const aiErrorOpen = ref(false);
-const aiRetryAction = ref<"chat" | "save">("chat");
+const aiRetryAction = ref<"chat" | "written">("chat");
 const lastChatText = ref<string | null>(null);
 const cachedChatModel = shallowRef<{ id: string; model: any } | null>(null);
 const cachedChatModelPromise = shallowRef<
@@ -1858,9 +2146,9 @@ async function retryChat() {
 }
 
 async function retryAiRequest() {
-    if (aiRetryAction.value === "save") {
+    if (aiRetryAction.value === "written") {
         closeAiError();
-        await saveChat();
+        await retryPracticeWrittenAnswer();
         return;
     }
     await retryChat();
@@ -1873,6 +2161,8 @@ const learnRunCounter = ref(0);
 const learnCursorIndex = ref(0);
 const learnQuestions = ref<LearnQuestion[]>([]);
 const learnAnswersByQuestionId = ref<Record<string, boolean>>({});
+const practiceProgressReady = ref(false);
+const savedPracticeProgressSignature = ref<string | null>(null);
 const practiceSettingsOpen = ref(false);
 const practiceSessionChoices = ["practice", "test"] as const;
 const practiceQuestionTypeChoices: {
@@ -1887,7 +2177,7 @@ const practiceSessionMode = ref<"practice" | "test">("practice");
 const practiceQuestionTypes = reactive<Record<LearnQuestionKind, boolean>>({
     multiple_choice: true,
     true_false: true,
-    written: false,
+    written: true,
 });
 const practiceQuestionCount = ref(10);
 const practiceShuffle = ref(true);
@@ -1904,6 +2194,14 @@ type PracticeAnswerFeedback = {
     correct: PracticeChoiceValue;
 };
 const practiceAnswerFeedback = ref<PracticeAnswerFeedback | null>(null);
+type PracticeWrittenFeedback = WrittenAnswerGrade & {
+    questionId: string;
+};
+const practiceWrittenFeedback = ref<PracticeWrittenFeedback | null>(null);
+const lastPracticeWrittenInput = ref<
+    (WrittenAnswerGradeInput & { questionId: string }) | null
+>(null);
+const practiceWrittenAbort = shallowRef<AbortController | null>(null);
 const practiceAnswerBusy = ref(false);
 const learnIsNavigating = ref(false);
 const practiceAnswerTransitionId = ref(0);
@@ -2003,7 +2301,7 @@ async function onLinkedFolderStatus(event: Event) {
     }
 }
 
-async function initWebDemoSet() {
+async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
     const demoId =
         typeof route.params.id === "string" && route.params.id.trim()
             ? route.params.id
@@ -2013,9 +2311,20 @@ async function initWebDemoSet() {
     studyGuideSetId.value = set.value.id;
     busy.value = false;
     isFlipped.value = false;
+    flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
     await loadStars(set.value.id);
-    startRun({ resetCounter: true });
-    await startLearnRun({ resetCounter: true });
+    const savedProgress = await loadSavedFlashcardProgress(set.value.id);
+    savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
+    savedFlashcardCorrectTermIds.value = savedProgress?.correctTermIds ?? [];
+    savedFlashcardProgressSignature.value = savedProgress
+        ? JSON.stringify(savedProgress)
+        : null;
+    startRun({
+        resetCounter: true,
+        resumeTermId: savedProgress?.currentTermId,
+        resumeCorrectTermIds: savedProgress?.correctTermIds,
+    });
+    await initializePracticeRun({ forceNew: options?.forceNewPractice });
     resetMatchStateForRun();
     matchPrepareTiles(set.value);
     await nextTick();
@@ -2026,6 +2335,11 @@ async function initWebDemoSet() {
     }
     window.addEventListener("keydown", onKeydown);
     document.addEventListener("pointerdown", onDocumentMatchPointerDown);
+    document.addEventListener("pointerdown", onDocumentTermsFilterPointerDown);
+    document.addEventListener(
+        "pointerdown",
+        onDocumentFlashcardSettingsPointerDown,
+    );
 }
 
 const allStudyTermIds = computed(() => {
@@ -2085,10 +2399,14 @@ const currentTerm = computed(() => {
     return termById.value.get(id) ?? null;
 });
 
+const showingDefinition = computed(
+    () => flashcardsDefinitionFirst.value !== isFlipped.value,
+);
+
 const viewerText = computed(() => {
     const t = currentTerm.value;
     if (!t) return "No cards.";
-    return isFlipped.value ? t.back : t.front;
+    return showingDefinition.value ? t.back : t.front;
 });
 
 const viewerHasText = computed(() => viewerText.value.trim().length > 0);
@@ -2096,7 +2414,7 @@ const viewerHasText = computed(() => viewerText.value.trim().length > 0);
 const viewerImage = computed(() => {
     const t = currentTerm.value;
     if (!t) return null;
-    return isFlipped.value ? t.backImage ?? null : t.frontImage ?? null;
+    return showingDefinition.value ? t.backImage ?? null : t.frontImage ?? null;
 });
 
 const flashcardSurfaceClass = computed(() => {
@@ -2557,7 +2875,11 @@ function practiceMultipleChoiceClass(choice: number) {
 
 function cancelPracticeAnswerFeedback() {
     practiceAnswerTransitionId.value += 1;
+    practiceWrittenAbort.value?.abort();
+    practiceWrittenAbort.value = null;
     practiceAnswerFeedback.value = null;
+    practiceWrittenFeedback.value = null;
+    lastPracticeWrittenInput.value = null;
     practiceAnswerBusy.value = false;
     learnIsNavigating.value = false;
 }
@@ -2598,13 +2920,18 @@ function answerLearnMultipleChoice(selectedIndex: number) {
     void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
 }
 
-function normalizeWrittenAnswer(value: string) {
-    return value
-        .toLocaleLowerCase()
-        .replace(/[`*_~#[\]()]/g, "")
-        .replace(/[^\p{L}\p{N}\s]/gu, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+function practiceQuestionSurfaceClass() {
+    const question = learnCurrentQuestion.value;
+    const feedback = practiceWrittenFeedback.value;
+    if (
+        question?.kind === "written" &&
+        feedback?.questionId === question.id
+    ) {
+        return feedback.isCorrect
+            ? "border-2 border-emerald-600 bg-emerald-50/40 dark:border-emerald-500 dark:bg-emerald-950/20"
+            : "border-2 border-red-700 bg-red-50/40 dark:border-red-500 dark:bg-red-950/20";
+    }
+    return "border-amber-200 bg-amber-50/20 dark:border-amber-900/60 dark:bg-amber-950/10";
 }
 
 async function answerLearnWritten() {
@@ -2616,16 +2943,100 @@ async function answerLearnWritten() {
         practiceAnswerBusy.value
     )
         return;
+    const input = {
+        questionId: q.id,
+        question: q.prompt,
+        referenceAnswer: q.answer,
+        studentAnswer: practiceWrittenAnswer.value.trim(),
+    };
+    lastPracticeWrittenInput.value = input;
+    await runPracticeWrittenGrade(input);
+}
+
+async function runPracticeWrittenGrade(
+    input: WrittenAnswerGradeInput & { questionId: string },
+) {
+    if (practiceAnswerBusy.value) return;
+    const question = learnCurrentQuestion.value;
+    if (
+        !question ||
+        question.kind !== "written" ||
+        question.id !== input.questionId
+    )
+        return;
+
     const transitionId = ++practiceAnswerTransitionId.value;
-    const isCorrect =
-        normalizeWrittenAnswer(practiceWrittenAnswer.value) ===
-        normalizeWrittenAnswer(q.answer);
+    const controller = new AbortController();
+    practiceWrittenAbort.value?.abort();
+    practiceWrittenAbort.value = controller;
+    practiceAnswerBusy.value = true;
+    practiceWrittenFeedback.value = null;
+    learnError.value = null;
+
+    try {
+        let grade: WrittenAnswerGrade;
+        if (isWebPreview.value) {
+            await waitForFeedback(250);
+            grade = gradeWebPreviewWrittenAnswer(input);
+        } else {
+            if (!defaultModelId.value) {
+                aiRetryAction.value = "written";
+                aiError.value = aiErrorForMissingDefaultModel();
+                aiErrorOpen.value = true;
+                return;
+            }
+            grade = await gradeWrittenAnswer({
+                model: await getCachedChatModel(defaultModelId.value),
+                input,
+                abortSignal: controller.signal,
+            });
+        }
+
+        if (
+            controller.signal.aborted ||
+            transitionId !== practiceAnswerTransitionId.value
+        )
+            return;
+        practiceWrittenFeedback.value = {
+            questionId: input.questionId,
+            ...grade,
+        };
+    } catch (error) {
+        if (controller.signal.aborted) return;
+        aiRetryAction.value = "written";
+        aiError.value = normalizeAiError(error);
+        aiErrorOpen.value = true;
+    } finally {
+        if (practiceWrittenAbort.value === controller) {
+            practiceWrittenAbort.value = null;
+        }
+        if (
+            !controller.signal.aborted &&
+            transitionId === practiceAnswerTransitionId.value
+        ) {
+            practiceAnswerBusy.value = false;
+        }
+    }
+}
+
+async function retryPracticeWrittenAnswer() {
+    const input = lastPracticeWrittenInput.value;
+    if (!input) return;
+    await runPracticeWrittenGrade(input);
+}
+
+async function continueAfterWrittenFeedback() {
+    const feedback = practiceWrittenFeedback.value;
+    if (!feedback || practiceAnswerBusy.value) return;
+    const transitionId = ++practiceAnswerTransitionId.value;
     practiceAnswerBusy.value = true;
     learnIsNavigating.value = true;
     await waitForFeedback(250);
     if (transitionId !== practiceAnswerTransitionId.value) return;
-    learnMarkAnswered(q.id, isCorrect);
+    learnMarkAnswered(feedback.questionId, feedback.isCorrect);
     practiceWrittenAnswer.value = "";
+    practiceWrittenFeedback.value = null;
+    lastPracticeWrittenInput.value = null;
     practiceAnswerBusy.value = false;
     learnIsNavigating.value = false;
 }
@@ -2790,9 +3201,77 @@ async function startLearnRun(options?: {
     }
 }
 
-function restartLearnRun() {
-    learnRunCounter.value += 1;
-    void startLearnRun({ startTimer: true });
+function currentPracticeProgress(): PracticeProgress | null {
+    const currentSet = set.value;
+    if (!currentSet || learnQuestions.value.length === 0) return null;
+    return {
+        setUpdatedAt: currentSet.updatedAt,
+        currentQuestionId: learnCurrentQuestion.value?.id ?? null,
+        questions: learnQuestions.value,
+        answersByQuestionId: learnAnswersByQuestionId.value,
+    };
+}
+
+function persistPracticeRun() {
+    if (!practiceProgressReady.value) return;
+    const currentSet = set.value;
+    const progress = currentPracticeProgress();
+    if (!currentSet || !progress) return;
+    const signature = JSON.stringify(progress);
+    if (signature === savedPracticeProgressSignature.value) return;
+    savedPracticeProgressSignature.value = signature;
+    void savePracticeProgress(currentSet.id, progress, isWebPreview.value).catch(
+        () => {},
+    );
+}
+
+async function initializePracticeRun(options?: { forceNew?: boolean }) {
+    const currentSet = set.value;
+    if (!currentSet) return;
+    practiceProgressReady.value = false;
+    const saved = await loadPracticeProgress(
+        currentSet.id,
+        isWebPreview.value,
+    );
+    if (
+        !options?.forceNew &&
+        saved &&
+        (isWebPreview.value || saved.setUpdatedAt === currentSet.updatedAt) &&
+        saved.questions.length > 0
+    ) {
+        const questionIds = new Set(saved.questions.map((question) => question.id));
+        learnQuestions.value = saved.questions;
+        learnAnswersByQuestionId.value = Object.fromEntries(
+            Object.entries(saved.answersByQuestionId).filter(
+                ([questionId]) => questionIds.has(questionId),
+            ),
+        );
+        const savedIndex = saved.currentQuestionId
+            ? saved.questions.findIndex(
+                  (question) => question.id === saved.currentQuestionId,
+              )
+            : -1;
+        const firstUnansweredIndex = saved.questions.findIndex(
+            (question) =>
+                learnAnswersByQuestionId.value[question.id] === undefined,
+        );
+        learnCursorIndex.value =
+            savedIndex >= 0
+                ? savedIndex
+                : firstUnansweredIndex >= 0
+                  ? firstUnansweredIndex
+                  : 0;
+        savedPracticeProgressSignature.value = JSON.stringify(
+            currentPracticeProgress(),
+        );
+        practiceProgressReady.value = true;
+        return;
+    }
+
+    await startLearnRun({ resetCounter: true });
+    savedPracticeProgressSignature.value = null;
+    practiceProgressReady.value = true;
+    persistPracticeRun();
 }
 
 function applyPracticeSettings() {
@@ -2868,7 +3347,11 @@ function shuffleRun() {
     nextTick(() => viewerButtonEl.value?.focus());
 }
 
-function startRun(options?: { resetCounter?: boolean }) {
+function startRun(options?: {
+    resetCounter?: boolean;
+    resumeTermId?: Uuid | null;
+    resumeCorrectTermIds?: Uuid[];
+}) {
     cancelFlashcardAnswerFeedback();
     const s = set.value;
     if (!s) return;
@@ -2878,9 +3361,17 @@ function startRun(options?: { resetCounter?: boolean }) {
     // Default run order matches the saved set order; shuffle is an explicit action.
     lastOrder.value = ids;
     order.value = ids;
-    cursorIndex.value = 0;
-    answersByTermId.value = {};
-    answerAttemptsCount.value = 0;
+    const resumeIndex = options?.resumeTermId
+        ? ids.indexOf(options.resumeTermId)
+        : -1;
+    cursorIndex.value = resumeIndex >= 0 ? resumeIndex : 0;
+    const correctTermIds = (options?.resumeCorrectTermIds ?? []).filter((id) =>
+        ids.includes(id),
+    );
+    answersByTermId.value = Object.fromEntries(
+        correctTermIds.map((id) => [id, "correct" as const]),
+    );
+    answerAttemptsCount.value = correctTermIds.length;
     retryTermIds.value = new Set();
     isFlipped.value = false;
 }
@@ -2897,6 +3388,21 @@ function restartRun() {
 function toggleStarredOnly() {
     if (!starredOnly.value && starredStudyCount.value === 0) return;
     starredOnly.value = !starredOnly.value;
+    restartRun();
+}
+
+function shuffleFromFlashcardSettings() {
+    flashcardSettingsOpen.value = false;
+    shuffleRun();
+}
+
+function toggleStarredOnlyFromFlashcardSettings() {
+    flashcardSettingsOpen.value = false;
+    toggleStarredOnly();
+}
+
+function restartFromFlashcardSettings() {
+    flashcardSettingsOpen.value = false;
     restartRun();
 }
 
@@ -3055,8 +3561,19 @@ function shouldIgnoreKey(e: KeyboardEvent) {
 }
 
 function onKeydown(e: KeyboardEvent) {
+    if (e.key === "Escape" && flashcardSettingsOpen.value) {
+        flashcardSettingsOpen.value = false;
+        flashcardSettingsButtonEl.value?.focus();
+        return;
+    }
+    if (e.key === "Escape" && termsFilterMenuOpen.value) {
+        termsFilterMenuOpen.value = false;
+        termsFilterButtonEl.value?.focus();
+        return;
+    }
     if (shouldIgnoreKey(e)) return;
     if (isExportOpen.value) return;
+    if (termsFilterMenuOpen.value || flashcardSettingsOpen.value) return;
     if (mode.value !== "flashcards") return;
 
     if (e.key === " " || e.code === "Space") {
@@ -3133,90 +3650,41 @@ function currentSavedChatPayload(): SavedChatPayload {
     };
 }
 
-function clearChatSavedFeedback() {
-    chatSavedFeedback.value = false;
-    if (chatSavedFeedbackTimer !== null) {
-        window.clearTimeout(chatSavedFeedbackTimer);
-        chatSavedFeedbackTimer = null;
-    }
-}
-
-function showChatSavedFeedback() {
-    clearChatSavedFeedback();
-    chatSavedFeedback.value = true;
-    chatSavedFeedbackTimer = window.setTimeout(() => {
-        chatSavedFeedback.value = false;
-        chatSavedFeedbackTimer = null;
-    }, 1500);
-}
-
-async function saveChat() {
+async function ensureActiveChatSaved() {
     const s = set.value;
     const firstQuestion = firstChatQuestion.value;
-    if (!s || !firstQuestion || chatBusy.value || chatSaveBusy.value) return;
-    if (activeSavedChatId.value || isWebPreview.value) return;
-
-    if (!defaultModelId.value) {
-        aiRetryAction.value = "save";
-        aiError.value = aiErrorForMissingDefaultModel();
-        aiErrorOpen.value = true;
+    if (!s || !firstQuestion || activeSavedChatId.value || isWebPreview.value)
         return;
-    }
+    if (chatSaveBusy.value) return;
 
-    flushChatRevealJobs();
-    chatError.value = null;
-    const controller = new AbortController();
-    chatSaveAbort.value?.abort();
-    chatSaveAbort.value = controller;
+    const sessionVersion = chatSessionVersion;
+    const payload = currentSavedChatPayload();
     chatSaveBusy.value = true;
-
     try {
-        const model = await getCachedChatModel(defaultModelId.value);
-        const result = await generateText({
-            model,
-            prompt: buildChatTitlePrompt(firstQuestion),
-            abortSignal: controller.signal,
-        });
-        if (controller.signal.aborted) return;
-
-        const title = normalizeGeneratedChatTitle(result.text);
-        if (!title) throw new Error("The AI model returned an empty chat title.");
-
         const db = await useTracerDb();
         const saved = await createChatsRepo(db).create({
             id: newMsgId() as Uuid,
             setId: s.id,
-            title,
-            payload: currentSavedChatPayload(),
+            title: normalizeGeneratedChatTitle(firstQuestion) || firstQuestion,
+            payload,
         });
-        if (controller.signal.aborted) return;
-
-        activeSavedChatId.value = saved.id;
-        showChatSavedFeedback();
+        if (chatSessionVersion === sessionVersion) {
+            activeSavedChatId.value = saved.id;
+        }
     } catch (err) {
-        if (controller.signal.aborted) return;
-        if (isAiErrorCandidate(err)) {
-            showAiError(err, "save");
-        } else {
-            chatError.value = toErrorMessage(err, t("chat.saveFailed"));
-        }
+        chatError.value = toErrorMessage(err, t("chat.saveFailed"));
     } finally {
-        if (chatSaveAbort.value === controller) {
-            chatSaveAbort.value = null;
-            chatSaveBusy.value = false;
-        }
+        chatSaveBusy.value = false;
     }
 }
 
 async function persistActiveSavedChat() {
     const id = activeSavedChatId.value;
     if (!id || isWebPreview.value) return;
+    const payload = currentSavedChatPayload();
     try {
         const db = await useTracerDb();
-        await createChatsRepo(db).updateMessages(
-            id,
-            currentSavedChatPayload(),
-        );
+        await createChatsRepo(db).updateMessages(id, payload);
     } catch (err) {
         chatError.value = toErrorMessage(err, t("chat.saveFailed"));
     }
@@ -3327,12 +3795,10 @@ async function confirmDeleteChat() {
 }
 
 function resetChat() {
+    chatSessionVersion += 1;
     chatAbort.value?.abort();
     chatAbort.value = null;
-    chatSaveAbort.value?.abort();
-    chatSaveAbort.value = null;
     cancelChatRevealJobs();
-    clearChatSavedFeedback();
     chatMessages.value = [];
     chatInput.value = "";
     chatBusy.value = false;
@@ -3340,6 +3806,33 @@ function resetChat() {
     chatError.value = null;
     activeSavedChatId.value = null;
     lastChatText.value = null;
+}
+
+function startNewChat() {
+    if (chatBusy.value || chatSaveBusy.value) return;
+    resetChat();
+    void nextTick(() => chatTextareaEl.value?.focus());
+}
+
+async function clearCurrentChat() {
+    if (chatBusy.value || chatSaveBusy.value) return;
+    const id = activeSavedChatId.value;
+    if (id && !isWebPreview.value) {
+        chatSaveBusy.value = true;
+        chatError.value = null;
+        try {
+            const db = await useTracerDb();
+            await createChatsRepo(db).delete(id);
+            savedChats.value = savedChats.value.filter((chat) => chat.id !== id);
+        } catch (err) {
+            chatError.value = toErrorMessage(err, t("chat.deleteFailed"));
+            chatSaveBusy.value = false;
+            return;
+        }
+        chatSaveBusy.value = false;
+    }
+    resetChat();
+    void nextTick(() => chatTextareaEl.value?.focus());
 }
 
 function onChatInputKeydown(e: KeyboardEvent) {
@@ -3399,6 +3892,8 @@ async function sendChat() {
         fullContent: text,
     };
     chatMessages.value = [...chatMessages.value, userMsg];
+    await ensureActiveChatSaved();
+    if (controller.signal.aborted) return;
 
     const assistantMsg: UiChatMessage = {
         id: newMsgId(),
@@ -3407,6 +3902,7 @@ async function sendChat() {
         fullContent: "",
     };
     chatMessages.value = [...chatMessages.value, assistantMsg];
+    await persistActiveSavedChat();
     await nextTick();
     scrollChatToBottom();
 
@@ -3455,6 +3951,7 @@ async function sendChat() {
         await persistActiveSavedChat();
     } catch (err) {
         if (controller.signal.aborted) return;
+        await persistActiveSavedChat();
         if (isAiErrorCandidate(err)) {
             showAiError(err);
             chatError.value = null;
@@ -3566,6 +4063,7 @@ async function openSetPage() {
         const settings = await createSettingsRepo(db).get();
         defaultModelId.value = settings.defaultModelId;
         learnHybridEnabled.value = settings.learnHybridEnabled;
+        flashcardsDefinitionFirst.value = settings.flashcardsDefinitionFirst;
 
         lockGateEvaluated = true;
         lockGateRequiresUnlock = status.requires_unlock;
@@ -3604,8 +4102,18 @@ async function openSetPage() {
 
         if (set.value) {
             await loadStars(set.value.id);
-            startRun({ resetCounter: true });
-            await startLearnRun({ resetCounter: true });
+            const savedProgress = await loadSavedFlashcardProgress(set.value.id);
+            savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
+            savedFlashcardCorrectTermIds.value = savedProgress?.correctTermIds ?? [];
+            savedFlashcardProgressSignature.value = savedProgress
+                ? JSON.stringify(savedProgress)
+                : null;
+            startRun({
+                resetCounter: true,
+                resumeTermId: savedProgress?.currentTermId,
+                resumeCorrectTermIds: savedProgress?.correctTermIds,
+            });
+            await initializePracticeRun();
             resetMatchStateForRun();
             matchPrepareTiles(set.value);
         }
@@ -3619,6 +4127,11 @@ async function openSetPage() {
         window.addEventListener("keydown", onKeydown);
         window.addEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus);
         document.addEventListener("pointerdown", onDocumentMatchPointerDown);
+        document.addEventListener("pointerdown", onDocumentTermsFilterPointerDown);
+        document.addEventListener(
+            "pointerdown",
+            onDocumentFlashcardSettingsPointerDown,
+        );
     } catch {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
@@ -3652,15 +4165,24 @@ watch(
     async (next, prev) => {
         if (isNestedSetRoute.value) return;
 
-        if (prev === "chat" && next !== "chat") resetChat();
+        flashcardSettingsOpen.value = false;
+
+        if (prev === "chat" && next !== "chat") {
+            chatAbort.value?.abort();
+            flushChatRevealJobs();
+            await persistActiveSavedChat();
+            resetChat();
+        }
         if (next === "chat") warmChatModel();
 
         if (next === "flashcards" && prev !== "flashcards") {
-            startRun({ resetCounter: true });
+            startRun({
+                resetCounter: true,
+                resumeTermId: savedFlashcardTermId.value,
+                resumeCorrectTermIds: savedFlashcardCorrectTermIds.value,
+            });
         }
-        if (next === "learn" && prev !== "learn") {
-            await startLearnRun({ resetCounter: true });
-        }
+        if (next === "learn" && prev !== "learn") persistPracticeRun();
         if (prev === "learn" && next !== "learn") {
             clearPracticeTimer();
         }
@@ -3684,9 +4206,32 @@ watch(
     { flush: "post" },
 );
 
+watch(
+    () => [
+        order.value[cursorIndex.value] ?? null,
+        allStudyTermIds.value
+            .filter((id) => answersByTermId.value[id] === "correct")
+            .join("\u0000"),
+    ] as const,
+    ([termId]) => {
+        if (!termId || mode.value !== "flashcards") return;
+        persistFlashcardProgress(termId as Uuid);
+    },
+    { flush: "post" },
+);
+
+watch(
+    () => {
+        const progress = currentPracticeProgress();
+        return progress ? JSON.stringify(progress) : null;
+    },
+    () => persistPracticeRun(),
+    { flush: "post" },
+);
+
 watch(language, async () => {
     if (!isWebPreview.value || isNestedSetRoute.value) return;
-    await initWebDemoSet();
+    await initWebDemoSet({ forceNewPractice: true });
 });
 
 watch(learnCurrentQuestion, () => {
@@ -3709,16 +4254,28 @@ watch(
 onBeforeUnmount(() => {
     cancelFlashcardAnswerFeedback();
     cancelPracticeAnswerFeedback();
+    flushChatRevealJobs();
+    void persistActiveSavedChat();
     resetChat();
     clearPracticeTimer();
     clearMatchTimer();
     window.removeEventListener("keydown", onKeydown);
     window.removeEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus);
     document.removeEventListener("pointerdown", onDocumentMatchPointerDown);
+    document.removeEventListener("pointerdown", onDocumentTermsFilterPointerDown);
+    document.removeEventListener(
+        "pointerdown",
+        onDocumentFlashcardSettingsPointerDown,
+    );
 });
 </script>
 
 <style scoped>
+.study-mode-bar {
+    justify-content: center;
+    justify-content: safe center;
+}
+
 .study-panel {
     min-height: clamp(324px, 52.2vh, 576px);
     max-height: min(70.2vh, 684px);

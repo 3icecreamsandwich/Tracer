@@ -1,0 +1,160 @@
+name: Build macOS Installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      sign_and_notarize:
+        description: Sign and notarize with Apple Developer credentials
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-macos-installer:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.88.0
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+
+      - name: Validate macOS signing secrets
+        if: ${{ inputs.sign_and_notarize == true }}
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          missing=()
+          for name in \
+            APPLE_CERTIFICATE \
+            APPLE_CERTIFICATE_PASSWORD \
+            APPLE_ID \
+            APPLE_PASSWORD \
+            APPLE_TEAM_ID \
+            KEYCHAIN_PASSWORD
+          do
+            if [[ -z "${!name}" ]]; then
+              missing+=("$name")
+            fi
+          done
+
+          if (( ${#missing[@]} )); then
+            echo "Missing required secrets for a distributable macOS DMG: ${missing[*]}" >&2
+            echo "Set Apple Developer signing/notarization secrets, or rerun with sign_and_notarize=false for local-only testing." >&2
+            exit 1
+          fi
+
+      - name: Import Apple Developer certificate
+        if: ${{ inputs.sign_and_notarize == true }}
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          certificate_path="$RUNNER_TEMP/apple-certificate.p12"
+          keychain_path="$RUNNER_TEMP/app-signing.keychain-db"
+
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$certificate_path"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$keychain_path"
+          security import "$certificate_path" \
+            -P "$APPLE_CERTIFICATE_PASSWORD" \
+            -A \
+            -k "$keychain_path" \
+            -T /usr/bin/codesign
+          security list-keychains -d user -s "$keychain_path"
+          security default-keychain -s "$keychain_path"
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$keychain_path"
+
+          identity="$(security find-identity -v -p codesigning "$keychain_path" | sed -n 's/.*"\(Developer ID Application:.*\)".*/\1/p' | head -n 1)"
+          if [[ -z "$identity" ]]; then
+            echo "No Developer ID Application signing identity found in the imported certificate." >&2
+            security find-identity -v -p codesigning "$keychain_path" >&2
+            exit 1
+          fi
+
+          echo "APPLE_SIGNING_IDENTITY=$identity" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build signed and notarized Tauri macOS installer
+        if: ${{ inputs.sign_and_notarize == true }}
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: bun run tauri build --target universal-apple-darwin --bundles dmg
+
+      - name: Build unsigned Tauri macOS installer
+        if: ${{ inputs.sign_and_notarize != true }}
+        run: bun run tauri build --target universal-apple-darwin --bundles dmg
+
+      - name: Locate macOS app bundle
+        if: ${{ inputs.sign_and_notarize == true }}
+        run: |
+          app_path=""
+          if [[ -d src-tauri/target/universal-apple-darwin/release/bundle/macos ]]; then
+            app_path="$(find src-tauri/target/universal-apple-darwin/release/bundle/macos -name "*.app" -type d | sort | head -n 1)"
+          fi
+          if [[ -z "$app_path" && -d src-tauri/target/release/bundle/macos ]]; then
+            app_path="$(find src-tauri/target/release/bundle/macos -name "*.app" -type d | sort | head -n 1)"
+          fi
+          if [[ -z "$app_path" ]]; then
+            app_path="$(find src-tauri/target -name "*.app" -type d | sort | head -n 1)"
+          fi
+
+          if [[ -z "$app_path" ]]; then
+            echo "No macOS app bundle found under src-tauri/target." >&2
+            find src-tauri/target \( -name "*.app" -o -name "*.dmg" \) -print >&2 || true
+            exit 1
+          fi
+
+          echo "MACOS_APP_PATH=$app_path" >> "$GITHUB_ENV"
+
+      - name: Verify macOS app signature
+        if: ${{ inputs.sign_and_notarize == true }}
+        run: |
+          codesign --verify --deep --strict --verbose=2 "$MACOS_APP_PATH"
+
+      - name: Verify Gatekeeper assessment
+        if: ${{ inputs.sign_and_notarize == true }}
+        run: |
+          spctl --assess --type execute --verbose=4 "$MACOS_APP_PATH"
+
+      - name: Note unsigned macOS artifact
+        if: ${{ inputs.sign_and_notarize != true }}
+        run: |
+          echo "Built without Apple Developer signing or notarization."
+          echo "macOS Gatekeeper may block this artifact outside local testing."
+
+      - name: Upload DMG installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tracer-macos-installer
+          path: |
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/*/release/bundle/dmg/*.dmg
+          if-no-files-found: error

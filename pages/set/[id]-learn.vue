@@ -1,4 +1,12 @@
 <template>
+    <AiErrorModal
+        :open="aiErrorOpen"
+        :error="aiError"
+        :from="route.fullPath"
+        :show-retry="true"
+        @close="aiErrorOpen = false"
+        @retry="retryPracticeWrittenAnswer"
+    />
     <main class="flex min-h-screen flex-col bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
         <div
@@ -19,12 +27,17 @@
                     </p>
                     <button
                         type="button"
-                        class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :disabled="practiceAnswerBusy"
                         :aria-expanded="practiceSettingsOpen"
+                        aria-label="Practice settings"
+                        title="Practice settings"
                         @click="openPracticeSettings"
                     >
-                        <span aria-hidden="true">⚙</span> Settings
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -275,14 +288,6 @@
                     </p>
 
                     <div class="mt-6 flex flex-wrap justify-center gap-2">
-                        <button
-                            type="button"
-                            class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                            :disabled="!set || learnQuestions.length === 0"
-                            @click="restartLearnRun"
-                        >
-                            {{ t("common.restart") }}
-                        </button>
                         <NuxtLink
                             v-if="set"
                             :to="`/set/${set.id}`"
@@ -304,10 +309,13 @@
 
             <div v-else class="w-full max-w-2xl">
                 <div
-                    class="rounded-lg border border-amber-200 bg-amber-50/20 p-8 dark:border-amber-900/60 dark:bg-amber-950/10"
-                    :class="{
-                        'animate-slide-left': learnIsNavigating,
-                    }"
+                    class="rounded-lg border p-8"
+                    :class="[
+                        practiceQuestionSurfaceClass(),
+                        {
+                            'animate-slide-left': learnIsNavigating,
+                        },
+                    ]"
                 >
                     <p
                         class="text-sm font-medium text-slate-500 dark:text-slate-400"
@@ -390,33 +398,76 @@
                         </template>
                         <form
                             v-else
-                            class="grid gap-3"
+                            class="grid gap-2"
                             @submit.prevent="answerLearnWritten"
                         >
                             <label
                                 for="fullscreen-written-answer"
-                                class="text-sm font-medium text-slate-700 dark:text-slate-200"
-                                >Your answer</label
+                                class="sr-only"
                             >
-                            <textarea
-                                id="fullscreen-written-answer"
-                                v-model="practiceWrittenAnswer"
-                                rows="5"
-                                autofocus
-                                class="w-full resize-y rounded-lg border border-amber-200 bg-white px-3 py-3 text-sm text-slate-950 shadow-sm outline-none focus:border-amber-300 focus:ring-2 focus:ring-amber-200 dark:border-amber-900/60 dark:bg-slate-950 dark:text-white"
-                                placeholder="Type the definition..."
-                            />
-                            <button
-                                type="submit"
-                                class="justify-self-end rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-50"
-                                :disabled="
-                                    !practiceWrittenAnswer.trim() ||
-                                    practiceAnswerBusy
-                                "
-                            >
-                                Submit answer
-                            </button>
+                                Your answer
+                            </label>
+                            <div class="flex items-end gap-2">
+                                <textarea
+                                    id="fullscreen-written-answer"
+                                    v-model="practiceWrittenAnswer"
+                                    rows="1"
+                                    autofocus
+                                    class="h-12 w-full resize-none rounded-lg border border-amber-200 bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none focus:border-amber-300 focus:ring-2 focus:ring-amber-200 disabled:opacity-60 dark:border-amber-900/60 dark:bg-slate-950 dark:text-white"
+                                    placeholder="Type your answer…"
+                                    :disabled="
+                                        practiceAnswerBusy ||
+                                        Boolean(practiceWrittenFeedback)
+                                    "
+                                />
+                                <button
+                                    type="submit"
+                                    class="inline-flex h-12 shrink-0 items-center rounded-lg border border-amber-500 bg-amber-400 px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                                    :disabled="
+                                        !practiceWrittenAnswer.trim() ||
+                                        practiceAnswerBusy ||
+                                        Boolean(practiceWrittenFeedback)
+                                    "
+                                >
+                                    {{
+                                        practiceAnswerBusy
+                                            ? "Checking…"
+                                            : "Save"
+                                    }}
+                                </button>
+                            </div>
                         </form>
+                    </div>
+                </div>
+
+                <div
+                    v-if="practiceWrittenFeedback"
+                    class="mt-3 rounded-lg border p-4 shadow-sm"
+                    :class="
+                        practiceWrittenFeedback.isCorrect
+                            ? 'border-emerald-300 bg-emerald-50/80 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100'
+                            : 'border-red-300 bg-red-50/80 text-red-950 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100'
+                    "
+                >
+                    <p class="text-sm font-semibold">
+                        {{
+                            practiceWrittenFeedback.isCorrect
+                                ? "Correct"
+                                : "Not quite"
+                        }}
+                    </p>
+                    <p class="mt-1 text-sm">
+                        {{ practiceWrittenFeedback.explanation }}
+                    </p>
+                    <div class="mt-3 flex justify-end">
+                        <button
+                            type="button"
+                            class="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                            :disabled="practiceAnswerBusy"
+                            @click="continueAfterWrittenFeedback"
+                        >
+                            Continue
+                        </button>
                     </div>
                 </div>
             </div>
@@ -439,12 +490,28 @@ import { lockGetStatus } from "~/src/composables/lock";
 import { useLockSession } from "~/src/composables/lock-session";
 import { hasTauriRuntime } from "~/src/composables/tauri";
 import {
+    loadPracticeProgress,
+    savePracticeProgress,
+    type PracticeProgress,
+} from "~/src/composables/practice-progress";
+import {
     generateLearnQuestions,
     type LearnQuestion,
     type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
 import { resolveAiModel } from "~/src/composables/ai/registry";
 import { generateText } from "ai";
+import {
+    aiErrorForMissingDefaultModel,
+    normalizeAiError,
+    type AiErrorUx,
+} from "~/src/composables/ai/ux-errors";
+import {
+    gradeWebPreviewWrittenAnswer,
+    gradeWrittenAnswer,
+    type WrittenAnswerGrade,
+    type WrittenAnswerGradeInput,
+} from "~/src/composables/ai/written-answer-grader";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 
@@ -468,6 +535,8 @@ const learnRunCounter = ref(0);
 const learnCursorIndex = ref(0);
 const learnQuestions = ref<LearnQuestion[]>([]);
 const learnAnswersByQuestionId = ref<Record<string, boolean>>({});
+const practiceProgressReady = ref(false);
+const savedPracticeProgressSignature = ref<string | null>(null);
 const practiceSettingsOpen = ref(false);
 const practiceSessionChoices = ["practice", "test"] as const;
 const practiceQuestionTypeChoices: {
@@ -482,7 +551,7 @@ const practiceSessionMode = ref<"practice" | "test">("practice");
 const practiceQuestionTypes = reactive<Record<LearnQuestionKind, boolean>>({
     multiple_choice: true,
     true_false: true,
-    written: false,
+    written: true,
 });
 const practiceQuestionCount = ref(10);
 const practiceShuffle = ref(true);
@@ -499,6 +568,17 @@ type PracticeAnswerFeedback = {
     correct: PracticeChoiceValue;
 };
 const practiceAnswerFeedback = ref<PracticeAnswerFeedback | null>(null);
+type PracticeWrittenFeedback = WrittenAnswerGrade & {
+    questionId: string;
+};
+const practiceWrittenFeedback = ref<PracticeWrittenFeedback | null>(null);
+const lastPracticeWrittenInput = ref<
+    (WrittenAnswerGradeInput & { questionId: string }) | null
+>(null);
+const practiceWrittenAbort = shallowRef<AbortController | null>(null);
+const cachedWrittenModel = shallowRef<{ id: string; model: any } | null>(null);
+const aiError = ref<AiErrorUx | null>(null);
+const aiErrorOpen = ref(false);
 const practiceAnswerBusy = ref(false);
 const learnIsNavigating = ref(false);
 const practiceAnswerTransitionId = ref(0);
@@ -694,7 +774,11 @@ function waitForFeedback(ms: number) {
 
 function cancelPracticeAnswerFeedback() {
     practiceAnswerTransitionId.value += 1;
+    practiceWrittenAbort.value?.abort();
+    practiceWrittenAbort.value = null;
     practiceAnswerFeedback.value = null;
+    practiceWrittenFeedback.value = null;
+    lastPracticeWrittenInput.value = null;
     practiceAnswerBusy.value = false;
     learnIsNavigating.value = false;
 }
@@ -735,13 +819,27 @@ function answerLearnMultipleChoice(selectedIndex: number) {
     void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
 }
 
-function normalizeWrittenAnswer(value: string) {
-    return value
-        .toLocaleLowerCase()
-        .replace(/[`*_~#[\]()]/g, "")
-        .replace(/[^\p{L}\p{N}\s]/gu, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+function practiceQuestionSurfaceClass() {
+    const question = learnCurrentQuestion.value;
+    const feedback = practiceWrittenFeedback.value;
+    if (
+        question?.kind === "written" &&
+        feedback?.questionId === question.id
+    ) {
+        return feedback.isCorrect
+            ? "border-2 border-emerald-600 bg-emerald-50/40 dark:border-emerald-500 dark:bg-emerald-950/20"
+            : "border-2 border-red-700 bg-red-50/40 dark:border-red-500 dark:bg-red-950/20";
+    }
+    return "border-amber-200 bg-amber-50/20 dark:border-amber-900/60 dark:bg-amber-950/10";
+}
+
+async function getWrittenModel(modelId: string) {
+    if (cachedWrittenModel.value?.id === modelId) {
+        return cachedWrittenModel.value.model;
+    }
+    const model = await resolveAiModel(modelId);
+    cachedWrittenModel.value = { id: modelId, model };
+    return model;
 }
 
 async function answerLearnWritten() {
@@ -753,16 +851,101 @@ async function answerLearnWritten() {
         practiceAnswerBusy.value
     )
         return;
+    const input = {
+        questionId: q.id,
+        question: q.prompt,
+        referenceAnswer: q.answer,
+        studentAnswer: practiceWrittenAnswer.value.trim(),
+    };
+    lastPracticeWrittenInput.value = input;
+    await runPracticeWrittenGrade(input);
+}
+
+async function runPracticeWrittenGrade(
+    input: WrittenAnswerGradeInput & { questionId: string },
+) {
+    if (practiceAnswerBusy.value) return;
+    const question = learnCurrentQuestion.value;
+    if (
+        !question ||
+        question.kind !== "written" ||
+        question.id !== input.questionId
+    )
+        return;
+
     const transitionId = ++practiceAnswerTransitionId.value;
-    const isCorrect =
-        normalizeWrittenAnswer(practiceWrittenAnswer.value) ===
-        normalizeWrittenAnswer(q.answer);
+    const controller = new AbortController();
+    practiceWrittenAbort.value?.abort();
+    practiceWrittenAbort.value = controller;
+    practiceAnswerBusy.value = true;
+    practiceWrittenFeedback.value = null;
+    learnError.value = null;
+    aiError.value = null;
+    aiErrorOpen.value = false;
+
+    try {
+        let grade: WrittenAnswerGrade;
+        if (isWebPreview.value) {
+            await waitForFeedback(250);
+            grade = gradeWebPreviewWrittenAnswer(input);
+        } else {
+            if (!defaultModelId.value) {
+                aiError.value = aiErrorForMissingDefaultModel();
+                aiErrorOpen.value = true;
+                return;
+            }
+            grade = await gradeWrittenAnswer({
+                model: await getWrittenModel(defaultModelId.value),
+                input,
+                abortSignal: controller.signal,
+            });
+        }
+
+        if (
+            controller.signal.aborted ||
+            transitionId !== practiceAnswerTransitionId.value
+        )
+            return;
+        practiceWrittenFeedback.value = {
+            questionId: input.questionId,
+            ...grade,
+        };
+    } catch (error) {
+        if (controller.signal.aborted) return;
+        aiError.value = normalizeAiError(error);
+        aiErrorOpen.value = true;
+    } finally {
+        if (practiceWrittenAbort.value === controller) {
+            practiceWrittenAbort.value = null;
+        }
+        if (
+            !controller.signal.aborted &&
+            transitionId === practiceAnswerTransitionId.value
+        ) {
+            practiceAnswerBusy.value = false;
+        }
+    }
+}
+
+async function retryPracticeWrittenAnswer() {
+    aiErrorOpen.value = false;
+    const input = lastPracticeWrittenInput.value;
+    if (!input) return;
+    await runPracticeWrittenGrade(input);
+}
+
+async function continueAfterWrittenFeedback() {
+    const feedback = practiceWrittenFeedback.value;
+    if (!feedback || practiceAnswerBusy.value) return;
+    const transitionId = ++practiceAnswerTransitionId.value;
     practiceAnswerBusy.value = true;
     learnIsNavigating.value = true;
     await waitForFeedback(250);
     if (transitionId !== practiceAnswerTransitionId.value) return;
-    learnMarkAnswered(q.id, isCorrect);
+    learnMarkAnswered(feedback.questionId, feedback.isCorrect);
     practiceWrittenAnswer.value = "";
+    practiceWrittenFeedback.value = null;
+    lastPracticeWrittenInput.value = null;
     practiceAnswerBusy.value = false;
     learnIsNavigating.value = false;
 }
@@ -927,9 +1110,76 @@ async function startLearnRun(options?: {
     }
 }
 
-function restartLearnRun() {
-    learnRunCounter.value += 1;
-    void startLearnRun({ startTimer: true });
+function currentPracticeProgress(): PracticeProgress | null {
+    const currentSet = set.value;
+    if (!currentSet || learnQuestions.value.length === 0) return null;
+    return {
+        setUpdatedAt: currentSet.updatedAt,
+        currentQuestionId: learnCurrentQuestion.value?.id ?? null,
+        questions: learnQuestions.value,
+        answersByQuestionId: learnAnswersByQuestionId.value,
+    };
+}
+
+function persistPracticeRun() {
+    if (!practiceProgressReady.value) return;
+    const currentSet = set.value;
+    const progress = currentPracticeProgress();
+    if (!currentSet || !progress) return;
+    const signature = JSON.stringify(progress);
+    if (signature === savedPracticeProgressSignature.value) return;
+    savedPracticeProgressSignature.value = signature;
+    void savePracticeProgress(currentSet.id, progress, isWebPreview.value).catch(
+        () => {},
+    );
+}
+
+async function initializePracticeRun() {
+    const currentSet = set.value;
+    if (!currentSet) return;
+    practiceProgressReady.value = false;
+    const saved = await loadPracticeProgress(
+        currentSet.id,
+        isWebPreview.value,
+    );
+    if (
+        saved &&
+        (isWebPreview.value || saved.setUpdatedAt === currentSet.updatedAt) &&
+        saved.questions.length > 0
+    ) {
+        const questionIds = new Set(saved.questions.map((question) => question.id));
+        learnQuestions.value = saved.questions;
+        learnAnswersByQuestionId.value = Object.fromEntries(
+            Object.entries(saved.answersByQuestionId).filter(
+                ([questionId]) => questionIds.has(questionId),
+            ),
+        );
+        const savedIndex = saved.currentQuestionId
+            ? saved.questions.findIndex(
+                  (question) => question.id === saved.currentQuestionId,
+              )
+            : -1;
+        const firstUnansweredIndex = saved.questions.findIndex(
+            (question) =>
+                learnAnswersByQuestionId.value[question.id] === undefined,
+        );
+        learnCursorIndex.value =
+            savedIndex >= 0
+                ? savedIndex
+                : firstUnansweredIndex >= 0
+                  ? firstUnansweredIndex
+                  : 0;
+        savedPracticeProgressSignature.value = JSON.stringify(
+            currentPracticeProgress(),
+        );
+        practiceProgressReady.value = true;
+        return;
+    }
+
+    await startLearnRun({ resetCounter: true });
+    savedPracticeProgressSignature.value = null;
+    practiceProgressReady.value = true;
+    persistPracticeRun();
 }
 
 function applyPracticeSettings() {
@@ -978,6 +1228,15 @@ watch(learnCurrentQuestion, () => {
     practiceWrittenAnswer.value = "";
 });
 
+watch(
+    () => {
+        const progress = currentPracticeProgress();
+        return progress ? JSON.stringify(progress) : null;
+    },
+    () => persistPracticeRun(),
+    { flush: "post" },
+);
+
 watch(practiceTimed, (enabled) => {
     if (!enabled) clearPracticeTimer();
 });
@@ -987,7 +1246,7 @@ onMounted(async () => {
         if (isWebPreview.value) {
             set.value = createWebPreviewDemoSet(t);
             busy.value = false;
-            await startLearnRun({ resetCounter: true });
+            await initializePracticeRun();
             return;
         }
 
@@ -1025,7 +1284,7 @@ onMounted(async () => {
         await loadSet(idParam as Uuid);
 
         if (set.value) {
-            await startLearnRun({ resetCounter: true });
+            await initializePracticeRun();
         }
     } catch {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
@@ -1033,7 +1292,7 @@ onMounted(async () => {
         if (tauriInvoke !== "function") {
             set.value = createWebPreviewDemoSet(t);
             busy.value = false;
-            await startLearnRun({ resetCounter: true });
+            await initializePracticeRun();
             return;
         }
 

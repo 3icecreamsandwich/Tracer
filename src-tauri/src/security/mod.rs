@@ -9,11 +9,13 @@ mod types;
 
 pub use error::AppLockError;
 pub use keychain::{
-    deobfuscate_bytes_from_keychain, obfuscate_bytes_for_keychain, Keychain, OsKeychain,
+    deobfuscate_bytes_from_keychain, device_key_marker, keychain_vault_mode, password_key_marker,
+    Keychain, OsKeychain,
 };
 pub use lock::{
-    lock_first_run_set_password_with, lock_get_status_with, lock_reset_tracer_with,
-    lock_set_startup_lock_enabled_with, lock_unlock_with, stronghold_key_from_password,
+    lock_first_run_set_device_key_with, lock_first_run_set_password_with, lock_get_status_with,
+    lock_reset_tracer_with, lock_set_startup_lock_enabled_with, lock_unlock_with,
+    stronghold_key_from_password,
 };
 pub use password::{hash_password, verify_password};
 pub use paths::{possible_sqlite_paths, stronghold_salt_path, vault_path};
@@ -170,5 +172,45 @@ mod tests {
         assert!(!vault_path.exists());
         assert!(!sqlite_path.exists());
         assert!(kc.get_app_password().unwrap().is_none());
+    }
+
+    #[test]
+    fn device_key_vault_is_keychain_backed_and_cannot_enable_password_lock() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let vault_path = dir.path().join("vault.hold");
+        let salt_path = dir.path().join("stronghold_salt.txt");
+        let kc = InMemoryKeychain::new();
+
+        let key =
+            lock_first_run_set_device_key_with(&vault_path, &kc).expect("create device-key vault");
+        assert_eq!(key.len(), 32);
+        assert_eq!(
+            lock_first_run_set_device_key_with(&vault_path, &kc).expect("idempotent retry"),
+            key
+        );
+
+        let marker = kc
+            .get_app_password()
+            .expect("read keychain")
+            .expect("device key missing");
+        assert_eq!(keychain_vault_mode(&marker), "device_key");
+        assert_eq!(deobfuscate_bytes_from_keychain(&marker).unwrap(), key);
+
+        let sh = tauri_plugin_stronghold::stronghold::Stronghold::new(&vault_path, key)
+            .expect("open device-key vault");
+        assert_eq!(
+            stronghold_store_get(&sh, "vault_mode").unwrap().as_deref(),
+            Some("device_key")
+        );
+
+        let status = lock_get_status_with(&vault_path, &kc).expect("status");
+        assert_eq!(status.vault_mode.as_deref(), Some("device_key"));
+        assert!(status.can_auto_unlock);
+        assert!(!status.requires_unlock);
+
+        let error = lock_set_startup_lock_enabled_with(&vault_path, &salt_path, true, None, &kc)
+            .expect_err("device-key vault must retain its keychain key");
+        assert_err_code(error, "device_key_required");
+        assert!(kc.get_app_password().unwrap().is_some());
     }
 }

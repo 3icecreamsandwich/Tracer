@@ -51,6 +51,18 @@ function extractUserTextFromPrompt(prompt: LanguageModelV3CallOptions['prompt'])
 function chooseResponseText(options: LanguageModelV3CallOptions): string {
   const userText = extractUserTextFromPrompt(options.prompt)
 
+  if (userText.includes('<Yes/No>:<Explanation>')) {
+    const reference =
+      /<reference_answer>\s*([\s\S]*?)\s*<\/reference_answer>/i.exec(userText)?.[1]?.trim() ?? ''
+    const student =
+      /<student_answer>\s*([\s\S]*?)\s*<\/student_answer>/i.exec(userText)?.[1]?.trim() ?? ''
+    const normalize = (value: string) =>
+      value.toLocaleLowerCase().replace(/\s+/g, ' ').trim()
+    return normalize(reference) === normalize(student)
+      ? 'Yes:The answer matches the reference answer.'
+      : 'No:The answer does not match the reference answer closely enough.'
+  }
+
   if (/Return ONLY TSV lines/i.test(userText) || /Return ONLY TSV/i.test(userText)) {
     return fixedSynthesizeTsv()
   }

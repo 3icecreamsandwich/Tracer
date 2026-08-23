@@ -44,6 +44,7 @@ export type Profile = {
   id: Uuid
   name: string
   email: string
+  supabaseUserId?: string | null
   createdAt: IsoDateTimeString
 }
 
@@ -60,6 +61,8 @@ export type AppSettings = {
   defaultModelId: string | null
   darkMode: boolean
   learnHybridEnabled: boolean
+  flashcardsDefinitionFirst: boolean
+  floatingChatEnabled: boolean
   language: AppLanguage
   textScale: number
 }

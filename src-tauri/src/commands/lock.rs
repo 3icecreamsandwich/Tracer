@@ -26,6 +26,17 @@ pub(crate) async fn lock_first_run_set_password(
 }
 
 #[tauri::command]
+pub(crate) async fn lock_first_run_set_device_key(
+    app: tauri::AppHandle,
+    key_state: tauri::State<'_, VaultKeyState>,
+) -> Result<(), security::AppLockError> {
+    let path = security::vault_path(&app)?;
+    let key = security::lock_first_run_set_device_key_with(&path, &security::OsKeychain)?;
+    set_vault_key(&key_state, key);
+    Ok(())
+}
+
+#[tauri::command]
 pub(crate) async fn lock_unlock(
     app: tauri::AppHandle,
     key_state: tauri::State<'_, VaultKeyState>,

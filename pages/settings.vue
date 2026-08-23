@@ -50,6 +50,29 @@
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+        :aria-label="t('settings.account')"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-sm font-medium">{{ t('settings.account') }}</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ accountEmail || profile?.email }}</p>
+            <p class="mt-1 text-xs" :class="accountOnline ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'">
+              {{ accountSignedOut ? t('settings.accountSignedOut') : accountOnline ? t('settings.accountOnline') : t('settings.accountOffline') }}
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900" :disabled="busy || isWebPreview" @click="onReconnectAccount">
+              {{ t('settings.reconnect') }}
+            </button>
+            <button type="button" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900" :disabled="busy || isWebPreview || accountSignedOut" @click="onAccountSignOut">
+              {{ t('common.signOut') }}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         aria-label="Text size"
       >
         <div class="flex flex-wrap items-center justify-between gap-5">
@@ -208,6 +231,29 @@
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+        aria-label="Page chat button"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-sm font-medium">Page chat button</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              Show the floating, page-aware Chat button throughout Tracer.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy"
+            @click="onToggleFloatingChat"
+          >
+            {{ floatingChatEnabled ? t('common.on') : t('common.off') }}
+          </button>
+        </div>
+      </section>
+
+      <section
+        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         :aria-label="t('settings.providers')"
       >
         <h2 class="text-sm font-medium">{{ t('settings.providers') }}</h2>
@@ -354,17 +400,17 @@
           <div>
             <h2 class="text-sm font-medium">{{ t('settings.startupLock') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {{ t('settings.startupLockDescription') }}
+              {{ vaultMode === 'device_key' ? t('settings.deviceKeyVaultDescription') : t('settings.startupLockDescription') }}
             </p>
           </div>
 
           <button
             type="button"
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
+            :disabled="busy || vaultMode === 'device_key'"
             @click="onToggleStartupLock"
           >
-            {{ startupLockEnabled ? t('common.on') : t('common.off') }}
+            {{ vaultMode === 'device_key' ? t('settings.deviceKeychain') : startupLockEnabled ? t('common.on') : t('common.off') }}
           </button>
         </div>
 
@@ -560,14 +606,14 @@
         <div
           class="relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
         >
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0">
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('settings.clearApiKey') }}</h2>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                {{ providerApiKeyClearLabel }} · {{ t('settings.apiKey') }}
-              </p>
-            </div>
+          <div class="min-w-0">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('settings.clearApiKey') }}</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              {{ providerApiKeyClearLabel }} · {{ t('settings.apiKey') }}
+            </p>
+          </div>
 
+          <div class="mt-4 flex flex-wrap justify-end gap-2">
             <button
               type="button"
               class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -576,9 +622,6 @@
             >
               {{ t('common.cancel') }}
             </button>
-          </div>
-
-          <div class="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
               class="inline-flex items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
@@ -746,6 +789,18 @@ import {
 } from '../src/composables/language'
 import type { AppLanguage } from '../src/composables/db/types'
 import { applyTextScale, textScaleSet } from '../src/composables/text-scale'
+import {
+  clearAuthSession,
+  identityFromUser,
+  persistAuthSession,
+  prepareAuthenticatedProfile,
+  restoreAuthSession,
+  signInWithGoogle
+} from '../src/composables/auth'
+import {
+  floatingChatSetEnabled,
+  useFloatingChatPreference
+} from '../src/composables/floating-chat'
 
 const router = useRouter()
 const route = useRoute()
@@ -756,10 +811,15 @@ const hasTauriInternals = hasTauriRuntime()
 const isWebPreview = computed(() => !hasTauriInternals)
 
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
+const { floatingChatEnabled } = useFloatingChatPreference()
 
 const profile = ref<Profile | null>(null)
+const accountEmail = ref('')
+const accountOnline = ref(false)
+const accountSignedOut = ref(false)
 
 const startupLockEnabled = ref(true)
+const vaultMode = ref<'password' | 'device_key' | null>(null)
 const darkMode = ref(false)
 const defaultModelId = ref<string | null>(null)
 const learnHybridEnabled = ref(false)
@@ -1509,13 +1569,16 @@ onMounted(() => {
       profile.value = { id: 'web-preview', name: 'Web Preview', email: '', createdAt: '' }
       darkMode.value = document.documentElement.classList.contains('dark')
       startupLockEnabled.value = false
+      vaultMode.value = null
       defaultModelId.value = null
       learnHybridEnabled.value = false
+      floatingChatEnabled.value = true
       textScale.value = Number(document.documentElement.dataset.textScale || 0)
       return
     }
     try {
       const status = await lockGetStatus()
+      vaultMode.value = status.vault_mode
       const db = await useTracerDb()
 
       const p = await createProfileRepo(db).get()
@@ -1527,10 +1590,11 @@ onMounted(() => {
       profile.value = p
 
       const settings = await createSettingsRepo(db).get()
-      startupLockEnabled.value = settings.startupLockEnabled
+      startupLockEnabled.value = status.vault_mode === 'device_key' ? false : settings.startupLockEnabled
       darkMode.value = settings.darkMode
       defaultModelId.value = settings.defaultModelId
       learnHybridEnabled.value = settings.learnHybridEnabled
+      floatingChatEnabled.value = settings.floatingChatEnabled
       textScale.value = settings.textScale
       applyTextScale(settings.textScale)
 
@@ -1552,6 +1616,16 @@ onMounted(() => {
         }
       } else if (status.can_auto_unlock) {
         markUnlocked()
+      }
+
+      try {
+        const account = await restoreAuthSession()
+        accountEmail.value = account?.identity.email ?? p.email
+        accountOnline.value = account?.online ?? false
+        accountSignedOut.value = account === null
+      } catch {
+        accountEmail.value = p.email
+        accountOnline.value = false
       }
 
       try {
@@ -1624,11 +1698,24 @@ async function onToggleLearnHybrid() {
   }
 }
 
+async function onToggleFloatingChat() {
+  error.value = null
+  busy.value = true
+  try {
+    await floatingChatSetEnabled(!floatingChatEnabled.value)
+  } catch (e: unknown) {
+    error.value = toSafeErrorMessage(e, 'Failed to update the page chat button setting')
+  } finally {
+    busy.value = false
+  }
+}
+
 async function onToggleStartupLock() {
   if (isWebPreview.value) {
     error.value = 'Startup lock is not available in web preview.'
     return
   }
+  if (vaultMode.value === 'device_key') return
   error.value = null
   if (startupLockEnabled.value) {
     showPasswordPrompt.value = true
@@ -1685,11 +1772,52 @@ async function onReset() {
   error.value = null
   busy.value = true
   try {
+    await clearAuthSession().catch(() => {})
     await lockResetTracer()
     markLocked()
     await router.replace('/first-run')
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to reset')
+  } finally {
+    busy.value = false
+  }
+}
+
+async function onReconnectAccount() {
+  error.value = null
+  busy.value = true
+  try {
+    const session = await signInWithGoogle()
+    if (profile.value?.supabaseUserId && session.user.id !== profile.value.supabaseUserId) {
+      await clearAuthSession()
+      throw new Error(t('auth.errorAccountMismatch'))
+    }
+    const prepared = await prepareAuthenticatedProfile({
+      session,
+      submittedName: profile.value?.name,
+      language: language.value
+    })
+    profile.value = prepared.profile
+    await persistAuthSession(session)
+    accountEmail.value = identityFromUser(session.user).email
+    accountOnline.value = true
+    accountSignedOut.value = false
+  } catch (e: unknown) {
+    error.value = toSafeErrorMessage(e, t('auth.errorUnknown'))
+  } finally {
+    busy.value = false
+  }
+}
+
+async function onAccountSignOut() {
+  error.value = null
+  busy.value = true
+  try {
+    await clearAuthSession()
+    accountOnline.value = false
+    accountSignedOut.value = true
+  } catch (e: unknown) {
+    error.value = toSafeErrorMessage(e, t('auth.errorUnknown'))
   } finally {
     busy.value = false
   }

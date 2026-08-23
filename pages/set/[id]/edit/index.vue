@@ -289,15 +289,7 @@
           This removes the set, starred terms, and linked study guide from the local database.
         </p>
 
-        <div class="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
-            @click="onDelete"
-          >
-            {{ t('common.delete') }}
-          </button>
+        <div class="mt-4 flex flex-wrap justify-end gap-2">
           <button
             type="button"
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -305,6 +297,14 @@
             @click="closeDelete"
           >
             {{ t('common.cancel') }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy"
+            @click="onDelete"
+          >
+            {{ t('common.delete') }}
           </button>
         </div>
       </div>

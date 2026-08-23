@@ -72,10 +72,30 @@ describe('SQLite migrations (task 3)', () => {
         path.resolve(process.cwd(), 'src-tauri', 'migrations', '011_expand_text_scale.sql'),
         'utf8'
       )
+      const flashcardAutosaveMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '012_flashcard_autosave.sql'),
+        'utf8'
+      )
+      const flashcardScoreAutosaveMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '013_flashcard_score_autosave.sql'),
+        'utf8'
+      )
+      const practiceAutosaveMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '014_practice_autosave.sql'),
+        'utf8'
+      )
+      const floatingChatMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '015_floating_chat.sql'),
+        'utf8'
+      )
+      const supabaseProfileMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '016_profile_supabase_user.sql'),
+        'utf8'
+      )
 
       const migrateRes = await runSqlite(
         dbPath,
-        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}`
+        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}\n${flashcardAutosaveMigrationSql}\n${flashcardScoreAutosaveMigrationSql}\n${practiceAutosaveMigrationSql}\n${floatingChatMigrationSql}\n${supabaseProfileMigrationSql}`
       )
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
@@ -101,6 +121,8 @@ describe('SQLite migrations (task 3)', () => {
         'study_guides',
         'app_settings',
         'chats',
+        'flashcard_progress',
+        'practice_progress',
         'home_library_order',
         'folders',
         'linked_folders',
@@ -122,6 +144,30 @@ describe('SQLite migrations (task 3)', () => {
       )
       expect(maximumTextScaleRes.code).toBe(0)
       expect(maximumTextScaleRes.stdout.trim()).toBe('4')
+
+      const definitionFirstDefaultRes = await runSqlite(
+        dbPath,
+        ['.mode list', '.headers off', 'SELECT flashcards_definition_first FROM app_settings WHERE id = 1;'].join('\n') + '\n'
+      )
+      expect(definitionFirstDefaultRes.code).toBe(0)
+      expect(definitionFirstDefaultRes.stdout.trim()).toBe('0')
+
+      const floatingChatDefaultRes = await runSqlite(
+        dbPath,
+        ['.mode list', '.headers off', 'SELECT floating_chat_enabled FROM app_settings WHERE id = 1;'].join('\n') + '\n'
+      )
+      expect(floatingChatDefaultRes.code).toBe(0)
+      expect(floatingChatDefaultRes.stdout.trim()).toBe('1')
+
+      const profileBindingRes = await runSqlite(
+        dbPath,
+        [
+          "INSERT INTO profile (id, name, email, supabase_user_id) VALUES ('profile', 'Tracer User', 'user@example.com', '00000000-0000-4000-8000-000000000001');",
+          "SELECT supabase_user_id FROM profile WHERE id = 'profile';"
+        ].join('\n') + '\n'
+      )
+      expect(profileBindingRes.code).toBe(0)
+      expect(profileBindingRes.stdout.trim()).toBe('00000000-0000-4000-8000-000000000001')
 
       const invalidJsonRes = await runSqlite(
         dbPath,

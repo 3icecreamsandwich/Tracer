@@ -1,11 +1,24 @@
 <template>
+    <AiErrorModal
+        :open="aiErrorOpen"
+        :error="aiError"
+        :from="route.fullPath"
+        :show-retry="true"
+        @close="aiErrorOpen = false"
+        @retry="retrySubmitTest"
+    />
     <main class="min-h-screen bg-white text-slate-950 dark:bg-slate-950 dark:text-slate-50">
         <header
             class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-6 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95"
         >
             <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
                 <div class="justify-self-start">
-                    <BackButton native-window-controls-safe />
+                    <BackButton
+                        native-window-controls-safe
+                        label="Back · Quit test"
+                        prevent-navigation
+                        @activate="requestQuitTest('navigation')"
+                    />
                 </div>
                 <div class="text-center">
                     <h1 class="text-xl font-semibold">Test</h1>
@@ -173,27 +186,57 @@
                         <div v-else class="mt-8">
                             <label
                                 :for="`test-written-${index}`"
-                                class="text-sm font-medium text-slate-700 dark:text-slate-200"
+                                class="sr-only"
                             >
                                 Your answer
                             </label>
-                            <textarea
-                                :id="`test-written-${index}`"
-                                :value="String(responseFor(question.id) ?? '')"
-                                rows="4"
-                                class="mt-2 w-full resize-y rounded-lg border bg-white px-4 py-3 text-sm text-slate-950 shadow-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-default dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
-                                :class="writtenAnswerClass(question)"
-                                :disabled="testSubmitted"
-                                placeholder="Type your answer…"
-                                @input="onWrittenInput(question.id, $event)"
-                            />
-                            <p
-                                v-if="testSubmitted && !questionIsCorrect(question)"
-                                class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-200"
+                            <div class="flex items-end gap-2">
+                                <textarea
+                                    :id="`test-written-${index}`"
+                                    :value="writtenDraftFor(question.id)"
+                                    rows="1"
+                                    class="h-12 w-full resize-none rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-default disabled:opacity-70 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
+                                    :class="writtenAnswerClass(question)"
+                                    :disabled="testSubmitted || testGradingBusy"
+                                    placeholder="Type your answer…"
+                                    @input="onWrittenDraftInput(question.id, $event)"
+                                />
+                                <button
+                                    type="button"
+                                    class="inline-flex h-12 shrink-0 items-center rounded-lg border border-amber-500 bg-amber-400 px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                                    :disabled="
+                                        testSubmitted ||
+                                        testGradingBusy ||
+                                        !writtenDraftFor(question.id).trim() ||
+                                        writtenResponseIsSaved(question.id)
+                                    "
+                                    @click="saveWrittenResponse(question.id)"
+                                >
+                                    {{
+                                        writtenResponseIsSaved(question.id)
+                                            ? "Saved"
+                                            : "Save"
+                                    }}
+                                </button>
+                            </div>
+                            <div
+                                v-if="testSubmitted && writtenGradeFor(question.id)"
+                                class="mt-3 rounded-lg border px-4 py-3 text-sm"
+                                :class="
+                                    writtenGradeFor(question.id)?.isCorrect
+                                        ? 'border-emerald-300 bg-emerald-50/80 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100'
+                                        : 'border-red-300 bg-red-50/80 text-red-950 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100'
+                                "
                             >
-                                <span class="font-semibold">Correct answer:</span>
-                                {{ question.answer }}
-                            </p>
+                                <span class="font-semibold">
+                                    {{
+                                        writtenGradeFor(question.id)?.isCorrect
+                                            ? "Correct:"
+                                            : "Not quite:"
+                                    }}
+                                </span>
+                                {{ writtenGradeFor(question.id)?.explanation }}
+                            </div>
                         </div>
                     </article>
                 </section>
@@ -206,16 +249,74 @@
                     <button
                         type="button"
                         class="min-w-52 rounded-full border border-orange-500 bg-orange-400 px-8 py-3.5 text-base font-semibold text-slate-950 shadow-sm transition hover:bg-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="answeredCount < testQuestions.length"
+                        :disabled="
+                            answeredCount < testQuestions.length ||
+                            testGradingBusy
+                        "
                         @click="submitTest()"
                     >
-                        Submit test
+                        {{ testGradingBusy ? "Grading…" : "Submit test" }}
                     </button>
                     <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                        {{ answeredCount }}/{{ testQuestions.length }} answered
+                        {{
+                            testGradingBusy
+                                ? "Checking written answers with your default AI model…"
+                                : `${answeredCount}/${testQuestions.length} answered`
+                        }}
                     </p>
                 </div>
             </template>
+        </div>
+
+        <div
+            v-if="quitTestOpen"
+            class="fixed inset-0 z-50 flex items-center justify-center p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quit-test-title"
+            aria-describedby="quit-test-description"
+            @keydown.esc="quitTestOpen = false"
+        >
+            <button
+                type="button"
+                class="absolute inset-0 bg-slate-950/35 backdrop-blur-sm"
+                aria-label="Cancel quitting the test"
+                @click="quitTestOpen = false"
+            />
+
+            <div
+                class="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+            >
+                <h2
+                    id="quit-test-title"
+                    class="text-lg font-semibold text-slate-950 dark:text-slate-50"
+                >
+                    Quit this test?
+                </h2>
+                <p
+                    id="quit-test-description"
+                    class="mt-2 text-sm text-slate-600 dark:text-slate-300"
+                >
+                    Your answers and current test progress will be lost.
+                </p>
+
+                <div class="mt-5 flex flex-wrap justify-end gap-2">
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                        @click="quitTestOpen = false"
+                    >
+                        {{ t("common.cancel") }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-offset-slate-950"
+                        @click="confirmQuitTest"
+                    >
+                        Quit test
+                    </button>
+                </div>
+            </div>
         </div>
     </main>
 </template>
@@ -232,6 +333,17 @@ import {
     useTracerDb,
 } from "~/src/composables/db"
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content"
+import { resolveAiModel } from "~/src/composables/ai/registry"
+import {
+    aiErrorForMissingDefaultModel,
+    normalizeAiError,
+    type AiErrorUx,
+} from "~/src/composables/ai/ux-errors"
+import {
+    gradeWebPreviewWrittenAnswer,
+    gradeWrittenAnswer,
+    type WrittenAnswerGrade,
+} from "~/src/composables/ai/written-answer-grader"
 import { useAppLanguage } from "~/src/composables/language"
 import {
     generateLearnQuestions,
@@ -240,7 +352,11 @@ import {
 } from "~/src/composables/learn/generator"
 import { lockGetStatus } from "~/src/composables/lock"
 import { useLockSession } from "~/src/composables/lock-session"
+import { navigateBack } from "~/src/composables/navigation/app-navigation"
 import { hasTauriRuntime } from "~/src/composables/tauri"
+import { invoke } from "@tauri-apps/api/core"
+import { listen, type UnlistenFn } from "@tauri-apps/api/event"
+import { getCurrentWindow } from "@tauri-apps/api/window"
 
 type TestResponse = boolean | number | string
 
@@ -253,14 +369,27 @@ const busy = ref(true)
 const loadError = ref<string | null>(null)
 const formError = ref<string | null>(null)
 const set = ref<FlashcardSet | null>(null)
+const defaultModelId = ref<string | null>(null)
 const testQuestions = ref<LearnQuestion[]>([])
 const responses = ref<Record<string, TestResponse>>({})
+const writtenDrafts = ref<Record<string, string>>({})
+const writtenGrades = ref<Record<string, WrittenAnswerGrade>>({})
 const testSubmitted = ref(false)
+const testGradingBusy = ref(false)
 const testTimedOut = ref(false)
 const runCounter = ref(0)
 const answerResultsEl = ref<HTMLElement | null>(null)
 const timerHandle = shallowRef<number | null>(null)
 const secondsRemaining = ref(0)
+const quitTestOpen = ref(false)
+const pendingTestExit = ref<"navigation" | "app">("navigation")
+let unlistenTestWindowClose: UnlistenFn | null = null
+let unlistenTestAppQuit: UnlistenFn | null = null
+const aiError = ref<AiErrorUx | null>(null)
+const aiErrorOpen = ref(false)
+const testGradingAbort = shallowRef<AbortController | null>(null)
+const cachedWrittenModel = shallowRef<{ id: string; model: any } | null>(null)
+const lastSubmitForced = ref(false)
 
 const isWebPreview = computed(() => !hasTauriRuntime())
 
@@ -280,7 +409,9 @@ const selectedQuestionTypes = computed<LearnQuestionKind[]>(() => {
         .filter((value): value is LearnQuestionKind =>
             supported.has(value as LearnQuestionKind),
         )
-    return parsed.length > 0 ? parsed : ["multiple_choice", "true_false"]
+    return parsed.length > 0
+        ? parsed
+        : ["multiple_choice", "true_false", "written"]
 })
 
 const requestedQuestionCount = computed(() => {
@@ -346,19 +477,35 @@ function setResponse(questionId: string, value: TestResponse) {
     formError.value = null
 }
 
-function onWrittenInput(questionId: string, event: Event) {
-    const target = event.target
-    if (!(target instanceof HTMLTextAreaElement)) return
-    setResponse(questionId, target.value)
+function writtenDraftFor(questionId: string) {
+    return writtenDrafts.value[questionId] ?? ""
 }
 
-function normalizeWrittenAnswer(value: string) {
-    return value
-        .toLocaleLowerCase()
-        .replace(/[`*_~#[\]()]/g, "")
-        .replace(/[^\p{L}\p{N}\s]/gu, " ")
-        .replace(/\s+/g, " ")
-        .trim()
+function writtenResponseIsSaved(questionId: string) {
+    return (
+        hasResponse(questionId) &&
+        responseFor(questionId) === writtenDraftFor(questionId).trim()
+    )
+}
+
+function onWrittenDraftInput(questionId: string, event: Event) {
+    const target = event.target
+    if (!(target instanceof HTMLTextAreaElement)) return
+    writtenDrafts.value = {
+        ...writtenDrafts.value,
+        [questionId]: target.value,
+    }
+    formError.value = null
+}
+
+function saveWrittenResponse(questionId: string) {
+    const value = writtenDraftFor(questionId).trim()
+    if (!value || testSubmitted.value || testGradingBusy.value) return
+    setResponse(questionId, value)
+}
+
+function writtenGradeFor(questionId: string) {
+    return writtenGrades.value[questionId] ?? null
 }
 
 function questionIsCorrect(question: LearnQuestion) {
@@ -367,11 +514,7 @@ function questionIsCorrect(question: LearnQuestion) {
     if (question.kind === "multiple_choice") {
         return response === question.answerIndex
     }
-    return (
-        typeof response === "string" &&
-        normalizeWrittenAnswer(response) ===
-            normalizeWrittenAnswer(question.answer)
-    )
+    return writtenGradeFor(question.id)?.isCorrect ?? false
 }
 
 function correctChoice(question: LearnQuestion) {
@@ -451,27 +594,114 @@ function buildTest() {
         shuffle: testShuffle.value,
     })
     responses.value = {}
+    writtenDrafts.value = {}
+    writtenGrades.value = {}
     testSubmitted.value = false
+    testGradingBusy.value = false
     testTimedOut.value = false
     formError.value = null
     startTimer()
 }
 
-function submitTest(force = false) {
-    if (testSubmitted.value) return
+async function getWrittenModel(modelId: string) {
+    if (cachedWrittenModel.value?.id === modelId) {
+        return cachedWrittenModel.value.model
+    }
+    const model = await resolveAiModel(modelId)
+    cachedWrittenModel.value = { id: modelId, model }
+    return model
+}
+
+async function submitTest(force = false) {
+    if (testSubmitted.value || testGradingBusy.value) return
     if (!force && answeredCount.value < testQuestions.value.length) {
         formError.value = "Answer every question before submitting your test."
         return
     }
+    lastSubmitForced.value = force
     clearTimer()
-    testSubmitted.value = true
     formError.value = null
-    void nextTick(() => {
-        window.scrollTo({ top: 0, behavior: "smooth" })
-    })
+    aiError.value = null
+    aiErrorOpen.value = false
+    testGradingBusy.value = true
+
+    const controller = new AbortController()
+    testGradingAbort.value?.abort()
+    testGradingAbort.value = controller
+
+    try {
+        const writtenQuestions = testQuestions.value.filter(
+            (question) => question.kind === "written",
+        )
+        const answeredWrittenQuestions = writtenQuestions.filter(
+            (question) => hasResponse(question.id),
+        )
+
+        let model: any = null
+        if (answeredWrittenQuestions.length > 0 && !isWebPreview.value) {
+            if (!defaultModelId.value) {
+                aiError.value = aiErrorForMissingDefaultModel()
+                aiErrorOpen.value = true
+                return
+            }
+            model = await getWrittenModel(defaultModelId.value)
+        }
+
+        const gradeEntries = await Promise.all(
+            writtenQuestions.map(async (question) => {
+                const studentAnswer = String(responseFor(question.id) ?? "").trim()
+                if (!studentAnswer) {
+                    return [
+                        question.id,
+                        {
+                            isCorrect: false,
+                            explanation: "No answer was provided.",
+                        },
+                    ] as const
+                }
+
+                const input = {
+                    question: question.prompt,
+                    referenceAnswer: question.answer,
+                    studentAnswer,
+                }
+                const grade = isWebPreview.value
+                    ? gradeWebPreviewWrittenAnswer(input)
+                    : await gradeWrittenAnswer({
+                          model,
+                          input,
+                          abortSignal: controller.signal,
+                      })
+                return [question.id, grade] as const
+            }),
+        )
+
+        if (controller.signal.aborted) return
+        writtenGrades.value = Object.fromEntries(gradeEntries)
+        testSubmitted.value = true
+        void nextTick(() => {
+            window.scrollTo({ top: 0, behavior: "smooth" })
+        })
+    } catch (error) {
+        if (controller.signal.aborted) return
+        aiError.value = normalizeAiError(error)
+        aiErrorOpen.value = true
+    } finally {
+        if (testGradingAbort.value === controller) {
+            testGradingAbort.value = null
+        }
+        if (!controller.signal.aborted) testGradingBusy.value = false
+    }
+}
+
+async function retrySubmitTest() {
+    aiErrorOpen.value = false
+    await submitTest(lastSubmitForced.value)
 }
 
 function restartTest() {
+    testGradingAbort.value?.abort()
+    testGradingAbort.value = null
     runCounter.value += 1
     buildTest()
     void nextTick(() => {
@@ -484,6 +714,45 @@ function scrollToAnswerResults() {
         behavior: "smooth",
         block: "start",
     })
+}
+
+function requestQuitTest(source: "navigation" | "app") {
+    pendingTestExit.value = source
+    quitTestOpen.value = true
+}
+
+async function activateTestExitGuards() {
+    if (isWebPreview.value) return
+    unlistenTestAppQuit = await listen("tracer://test-quit-requested", () => {
+        requestQuitTest("app")
+    })
+    unlistenTestWindowClose = await getCurrentWindow().onCloseRequested(
+        (event) => {
+            event.preventDefault()
+            requestQuitTest("app")
+        },
+    )
+    await invoke("test_mode_set_active", { active: true })
+}
+
+function deactivateTestExitGuards() {
+    unlistenTestWindowClose?.()
+    unlistenTestWindowClose = null
+    unlistenTestAppQuit?.()
+    unlistenTestAppQuit = null
+    if (!isWebPreview.value) {
+        void invoke("test_mode_set_active", { active: false }).catch(() => {})
+    }
+}
+
+async function confirmQuitTest() {
+    quitTestOpen.value = false
+    clearTimer()
+    if (pendingTestExit.value === "app" && !isWebPreview.value) {
+        await invoke("test_mode_confirm_exit")
+        return
+    }
+    navigateBack(router, route.path, window.history.state)
 }
 
 async function loadSet(setId: Uuid) {
@@ -505,8 +774,13 @@ watch(language, () => {
     buildTest()
 })
 
+onBeforeRouteLeave(() => {
+    deactivateTestExitGuards()
+})
+
 onMounted(async () => {
     try {
+        await activateTestExitGuards()
         if (isWebPreview.value) {
             set.value = createWebPreviewDemoSet(t)
             busy.value = false
@@ -524,6 +798,7 @@ onMounted(async () => {
         }
 
         const settings = await createSettingsRepo(db).get()
+        defaultModelId.value = settings.defaultModelId
         if (settings.startupLockEnabled && status.requires_unlock) {
             if (!unlockedThisSession.value) {
                 markLocked()
@@ -557,6 +832,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+    testGradingAbort.value?.abort()
     clearTimer()
 })
 </script>

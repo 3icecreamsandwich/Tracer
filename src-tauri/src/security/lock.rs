@@ -1,7 +1,9 @@
 use super::{
-    get_password_verifier, obfuscate_bytes_for_keychain, set_password_verifier, verify_password,
-    AppLockError, AppLockStatus, Keychain,
+    device_key_marker, get_password_verifier, keychain_vault_mode, password_key_marker,
+    set_password_verifier, stronghold_store_set, verify_password, AppLockError, AppLockStatus,
+    Keychain,
 };
+use rand_core::{OsRng, RngCore};
 use std::path::{Path, PathBuf};
 use tauri_plugin_stronghold::{kdf::KeyDerivation, stronghold::Stronghold};
 
@@ -10,7 +12,7 @@ pub fn stronghold_key_from_password(password: &str, salt_path: &Path) -> Vec<u8>
 }
 
 pub fn keychain_marker_from_password(password: &str, salt_path: &Path) -> String {
-    obfuscate_bytes_for_keychain(&stronghold_key_from_password(password, salt_path))
+    password_key_marker(&stronghold_key_from_password(password, salt_path))
 }
 
 pub fn lock_get_status_with(
@@ -18,12 +20,55 @@ pub fn lock_get_status_with(
     keychain: &dyn Keychain,
 ) -> Result<AppLockStatus, AppLockError> {
     let has_vault = vault_path.exists();
-    let can_auto_unlock = keychain.get_app_password()?.is_some();
+    let keychain_marker = keychain.get_app_password()?;
+    let can_auto_unlock = keychain_marker.is_some();
     Ok(AppLockStatus {
         has_verifier: has_vault,
         requires_unlock: has_vault && !can_auto_unlock,
         can_auto_unlock,
+        vault_mode: keychain_marker
+            .as_deref()
+            .map(keychain_vault_mode)
+            .map(str::to_owned),
     })
+}
+
+pub fn lock_first_run_set_device_key_with(
+    vault_path: &Path,
+    keychain: &dyn Keychain,
+) -> Result<Vec<u8>, AppLockError> {
+    if vault_path.exists() {
+        if let Some(marker) = keychain.get_app_password()? {
+            if keychain_vault_mode(&marker) == "device_key" {
+                let key = super::deobfuscate_bytes_from_keychain(&marker)?;
+                Stronghold::new(vault_path, key.clone()).map_err(|_| {
+                    AppLockError::new("keychain", "The saved device key cannot open the vault")
+                })?;
+                return Ok(key);
+            }
+        }
+        return Err(AppLockError::new(
+            "already_initialized",
+            "App lock is already initialized",
+        ));
+    }
+
+    let mut key = vec![0_u8; 32];
+    OsRng.fill_bytes(&mut key);
+    let initialize = || -> Result<(), AppLockError> {
+        let sh = Stronghold::new(vault_path, key.clone())
+            .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+        stronghold_store_set(&sh, "vault_mode", "device_key")?;
+        keychain.set_app_password(&device_key_marker(&key))
+    };
+
+    if let Err(error) = initialize() {
+        let _ = remove_vault_file(vault_path);
+        let _ = keychain.delete_app_password();
+        return Err(error);
+    }
+
+    Ok(key)
 }
 
 pub fn lock_first_run_set_password_with(
@@ -84,6 +129,17 @@ pub fn lock_set_startup_lock_enabled_with(
     keychain: &dyn Keychain,
 ) -> Result<(), AppLockError> {
     if enabled {
+        if keychain
+            .get_app_password()?
+            .as_deref()
+            .map(keychain_vault_mode)
+            == Some("device_key")
+        {
+            return Err(AppLockError::new(
+                "device_key_required",
+                "Google device-key vaults cannot require a local password",
+            ));
+        }
         keychain.delete_app_password()?;
         return Ok(());
     }

@@ -55,6 +55,28 @@ describe('renderMarkdownHtml', () => {
     expect(html).not.toContain('$E=mc^2$')
   })
 
+  it('renders the complete L Hopital formula seen in streamed Chat output', () => {
+    const html = renderMarkdownHtml(
+      "$\\lim_{x\\to c}\\frac{f(x)}{g(x)}$ = $\\lim_{x\\to c}\\frac{f'(x)}{g'(x)}$.",
+      { repairMath: true }
+    )
+
+    expect(html.match(/class="katex"/g)?.length).toBe(2)
+    expect(html).not.toContain('katex-error')
+    expect(html).not.toContain('$\\lim')
+  })
+
+  it('repairs escaped math delimiters and doubled model command slashes', () => {
+    const html = renderMarkdownHtml(
+      String.raw`\$\\lim_{x\\to c}\\frac{f(x)}{g(x)}\$`,
+      { repairMath: true }
+    )
+
+    expect(html).toContain('katex')
+    expect(html).not.toContain('katex-error')
+    expect(html).not.toContain('$')
+  })
+
   it('renders generated math fences and LaTeX environments with KaTeX', () => {
     const html = renderMarkdownHtml([
       '```latex',

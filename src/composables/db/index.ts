@@ -22,8 +22,10 @@ export type {
 
 export {
   createChatsRepo,
+  createFlashcardProgressRepo,
   createFoldersRepo,
   createLinkedFoldersRepo,
+  createPracticeProgressRepo,
   createProfileRepo,
   createSettingsRepo,
   createSetsRepo,

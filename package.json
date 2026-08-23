@@ -1,0 +1,51 @@
+{
+  "name": "tracer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --host 127.0.0.1 --port 3000",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "tauri:dev": "bun run tauri dev",
+    "tauri:build": "bun run tauri build",
+    "test:unit": "vitest run && cd src-tauri && cargo test",
+    "test:e2e:desktop": "node ./tests/e2e/desktop/run.mjs",
+    "test:e2e:web": "node ./tests/e2e/web/run.mjs",
+    "test": "node ./tests/run.mjs"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.96",
+    "@ai-sdk/google": "^3.0.91",
+    "@ai-sdk/openai": "^3.0.84",
+    "@ai-sdk/openai-compatible": "^2.0.59",
+    "@supabase/supabase-js": "2.112.3",
+    "@tauri-apps/plugin-dialog": "^2.7.2",
+    "@tauri-apps/plugin-fs": "^2.5.1",
+    "@tauri-apps/plugin-http": "^2.5.9",
+    "ai": "^6.0.224",
+    "katex": "^0.17.0",
+    "markdown-it": "^14.3.0",
+    "nuxt": "^4.4.8",
+    "pdfjs-dist": "^6.1.200",
+    "tesseract.js": "^7.0.0",
+    "vue": "3.5.39"
+  },
+  "devDependencies": {
+    "@nuxtjs/tailwindcss": "^6.14.0",
+    "@playwright/test": "^1.61.1",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/cli": "^2.11.4",
+    "@tauri-apps/plugin-sql": "^2.4.0",
+    "@tauri-apps/plugin-stronghold": "^2.3.1",
+    "@types/markdown-it": "^14.1.2",
+    "@wdio/cli": "^9.29.1",
+    "@wdio/local-runner": "^9.29.1",
+    "@wdio/mocha-framework": "^9.29.1",
+    "@wdio/spec-reporter": "^9.29.1",
+    "autoprefixer": "^10.5.2",
+    "postcss": "^8.5.16",
+    "tailwindcss": "^3.4.19",
+    "vitest": "^3.2.7",
+    "webdriverio": "^9.29.1"
+  }
+}
