@@ -218,7 +218,9 @@ begin
     'active',
     pg_catalog.now()
   )
-  on conflict (class_id, user_id) do nothing;
+  -- Use the named constraint because the RETURNS TABLE `class_id` output
+  -- parameter is also a PL/pgSQL variable.
+  on conflict on constraint class_memberships_pkey do nothing;
 
   select cm.status into membership_status
   from public.class_memberships as cm
@@ -228,6 +230,25 @@ begin
   if membership_status <> 'active' then
     raise exception 'Class membership is not active' using errcode = '42501';
   end if;
+
+  -- Assignments snapshot their recipient list when they are published. A
+  -- student joining later must receive the same access without requiring the
+  -- teacher to remove and reassign every set.
+  insert into public.assignment_recipients (
+    assignment_id,
+    student_id,
+    assigned_at,
+    status
+  )
+  select
+    assignment.id,
+    current_user_id,
+    pg_catalog.now(),
+    'assigned'
+  from public.assignments as assignment
+  where assignment.class_id = matched_class.id
+    and assignment.status = 'published'
+  on conflict on constraint assignment_recipients_pkey do nothing;
 
   return query
   select

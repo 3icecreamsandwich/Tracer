@@ -50,6 +50,10 @@ const classroomProgressSql = readFileSync(
   fileURLToPath(new URL('../../supabase/migrations/20260822023906_classroom_progress.sql', import.meta.url)),
   'utf8',
 )
+const classroomJoinFixSql = readFileSync(
+  fileURLToPath(new URL('../../supabase/migrations/20260823015850_fix_class_join_assignment_recipients.sql', import.meta.url)),
+  'utf8',
+)
 
 describe('classroom data mapping', () => {
   it('normalizes codes without accepting punctuation as part of the code', () => {
@@ -216,6 +220,22 @@ describe('classroom Supabase migration', () => {
     expect(classroomSql).toContain('revoke all on function public.join_tracer_class(text) from public, anon')
     expect(classroomSql).toContain('grant execute on function public.join_tracer_class(text) to authenticated')
     expect(classroomSql).toMatch(/ur\.user_id = current_user_id[\s\S]*ur\.role = 'student'/)
+    expect(classroomSql).toContain('on conflict on constraint class_memberships_pkey do nothing')
+    expect(classroomSql).not.toContain('on conflict (class_id, user_id)')
+  })
+
+  it('gives late-joining students access to every published assignment', () => {
+    const membershipInsert = classroomSql.indexOf('insert into public.class_memberships')
+    const membershipCheck = classroomSql.indexOf("if membership_status <> 'active'")
+    const recipientInsert = classroomSql.lastIndexOf('insert into public.assignment_recipients')
+    expect(membershipInsert).toBeGreaterThan(-1)
+    expect(membershipCheck).toBeGreaterThan(membershipInsert)
+    expect(recipientInsert).toBeGreaterThan(membershipCheck)
+    expect(classroomSql).toMatch(/from public\.assignments as assignment[\s\S]*assignment\.class_id = matched_class\.id[\s\S]*assignment\.status = 'published'/)
+    expect(classroomSql).toContain('on conflict on constraint assignment_recipients_pkey do nothing')
+    expect(classroomJoinFixSql).toContain('on conflict on constraint class_memberships_pkey do nothing')
+    expect(classroomJoinFixSql).toMatch(/from public\.assignments as assignment[\s\S]*assignment\.class_id = matched_class\.id[\s\S]*assignment\.status = 'published'/)
+    expect(classroomJoinFixSql).toContain('on conflict on constraint assignment_recipients_pkey do nothing')
   })
 
   it('requires the teacher role for direct class inserts', () => {
