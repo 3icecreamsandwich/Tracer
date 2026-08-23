@@ -1,0 +1,1 @@
+ALTER TABLE app_settings ADD COLUMN text_scale INTEGER NOT NULL DEFAULT 0 CHECK (text_scale BETWEEN 0 AND 3);

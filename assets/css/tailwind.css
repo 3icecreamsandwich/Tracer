@@ -1,0 +1,145 @@
+/* biome-ignore-all lint/suspicious/noUnknownAtRules: Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-size: 16px;
+    --tracer-text-xs: 0.75rem;
+    --tracer-text-sm: 0.875rem;
+    --tracer-text-base: 1rem;
+    --tracer-text-lg: 1.125rem;
+    --tracer-text-xl: 1.25rem;
+    --tracer-text-2xl: 1.5rem;
+    --tracer-text-4xl: 2.25rem;
+    --tracer-leading-xs: 1rem;
+    --tracer-leading-sm: 1.25rem;
+    --tracer-leading-base: 1.5rem;
+    --tracer-leading-lg: 1.75rem;
+    --tracer-leading-xl: 1.75rem;
+    --tracer-leading-2xl: 2rem;
+    --tracer-leading-4xl: 2.5rem;
+  }
+
+  html[data-text-scale='1'] {
+    --tracer-text-xs: 0.8125rem;
+    --tracer-text-sm: 0.9375rem;
+    --tracer-text-base: 1.0625rem;
+    --tracer-text-lg: 1.1875rem;
+    --tracer-text-xl: 1.3125rem;
+    --tracer-text-2xl: 1.625rem;
+    --tracer-text-4xl: 2.375rem;
+    --tracer-leading-xs: 1.125rem;
+    --tracer-leading-sm: 1.375rem;
+    --tracer-leading-base: 1.625rem;
+    --tracer-leading-lg: 1.875rem;
+    --tracer-leading-xl: 1.875rem;
+    --tracer-leading-2xl: 2.125rem;
+    --tracer-leading-4xl: 2.75rem;
+  }
+
+  html[data-text-scale='2'] {
+    --tracer-text-xs: 0.875rem;
+    --tracer-text-sm: 1rem;
+    --tracer-text-base: 1.125rem;
+    --tracer-text-lg: 1.25rem;
+    --tracer-text-xl: 1.375rem;
+    --tracer-text-2xl: 1.75rem;
+    --tracer-text-4xl: 2.5rem;
+    --tracer-leading-xs: 1.25rem;
+    --tracer-leading-sm: 1.5rem;
+    --tracer-leading-base: 1.75rem;
+    --tracer-leading-lg: 2rem;
+    --tracer-leading-xl: 2rem;
+    --tracer-leading-2xl: 2.25rem;
+    --tracer-leading-4xl: 2.875rem;
+  }
+
+  html[data-text-scale='3'] {
+    --tracer-text-xs: 0.9375rem;
+    --tracer-text-sm: 1.0625rem;
+    --tracer-text-base: 1.25rem;
+    --tracer-text-lg: 1.375rem;
+    --tracer-text-xl: 1.5rem;
+    --tracer-text-2xl: 1.875rem;
+    --tracer-text-4xl: 2.75rem;
+    --tracer-leading-xs: 1.375rem;
+    --tracer-leading-sm: 1.625rem;
+    --tracer-leading-base: 1.875rem;
+    --tracer-leading-lg: 2.125rem;
+    --tracer-leading-xl: 2.125rem;
+    --tracer-leading-2xl: 2.5rem;
+    --tracer-leading-4xl: 3.125rem;
+  }
+
+  html[data-text-scale='4'] {
+    --tracer-text-xs: 1.125rem;
+    --tracer-text-sm: 1.275rem;
+    --tracer-text-base: 1.5rem;
+    --tracer-text-lg: 1.65rem;
+    --tracer-text-xl: 1.8rem;
+    --tracer-text-2xl: 2.25rem;
+    --tracer-text-4xl: 3.3rem;
+    --tracer-leading-xs: 1.65rem;
+    --tracer-leading-sm: 1.95rem;
+    --tracer-leading-base: 2.25rem;
+    --tracer-leading-lg: 2.55rem;
+    --tracer-leading-xl: 2.55rem;
+    --tracer-leading-2xl: 3rem;
+    --tracer-leading-4xl: 3.75rem;
+  }
+
+  html,
+  body,
+  #__nuxt {
+    min-height: 100%;
+    overscroll-behavior: none;
+    background: rgb(255 255 255);
+  }
+
+  html.dark,
+  html.dark body,
+  html.dark #__nuxt {
+    background: rgb(2 6 23);
+  }
+
+  body {
+    font-size: var(--tracer-text-base);
+  }
+
+  html[data-text-scale] .text-xs {
+    font-size: var(--tracer-text-xs);
+    line-height: var(--tracer-leading-xs);
+  }
+
+  html[data-text-scale] .text-sm {
+    font-size: var(--tracer-text-sm);
+    line-height: var(--tracer-leading-sm);
+  }
+
+  html[data-text-scale] .text-base {
+    font-size: var(--tracer-text-base);
+    line-height: var(--tracer-leading-base);
+  }
+
+  html[data-text-scale] .text-lg {
+    font-size: var(--tracer-text-lg);
+    line-height: var(--tracer-leading-lg);
+  }
+
+  html[data-text-scale] .text-xl {
+    font-size: var(--tracer-text-xl);
+    line-height: var(--tracer-leading-xl);
+  }
+
+  html[data-text-scale] .text-2xl {
+    font-size: var(--tracer-text-2xl);
+    line-height: var(--tracer-leading-2xl);
+  }
+
+  html[data-text-scale] .text-4xl {
+    font-size: var(--tracer-text-4xl);
+    line-height: var(--tracer-leading-4xl);
+  }
+}
