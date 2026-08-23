@@ -127,10 +127,19 @@ mod tests {
         let vault_path = dir.path().join("vault.hold");
         let salt_path = dir.path().join("stronghold_salt.txt");
         let sqlite_path = dir.path().join("tracer.db");
+        let sqlite_wal_path = dir.path().join("tracer.db-wal");
+        let sqlite_shm_path = dir.path().join("tracer.db-shm");
+        let sqlite_journal_path = dir.path().join("tracer.db-journal");
         let kc = InMemoryKeychain::new();
 
         let pw = "correct horse battery staple";
         lock_first_run_set_password_with(&vault_path, &salt_path, pw).expect("first run set pw");
+        lock_first_run_set_password_with(&vault_path, &salt_path, pw)
+            .expect("same-password retry is idempotent");
+        let reinitialize_error =
+            lock_first_run_set_password_with(&vault_path, &salt_path, "different password")
+                .expect_err("an existing vault must not be rebound to a new password");
+        assert_err_code(reinitialize_error, "already_initialized");
 
         let sh = tauri_plugin_stronghold::stronghold::Stronghold::new(
             &vault_path,
@@ -164,6 +173,9 @@ mod tests {
         assert!(status.requires_unlock);
 
         std::fs::write(&sqlite_path, b"not a real sqlite db").expect("write sqlite");
+        std::fs::write(&sqlite_wal_path, b"stale wal").expect("write sqlite wal");
+        std::fs::write(&sqlite_shm_path, b"stale shm").expect("write sqlite shm");
+        std::fs::write(&sqlite_journal_path, b"stale journal").expect("write sqlite journal");
         assert!(vault_path.exists());
         assert!(sqlite_path.exists());
         kc.set_app_password("marker").unwrap();
@@ -171,6 +183,9 @@ mod tests {
         lock_reset_tracer_with(&vault_path, &[sqlite_path.clone()], &kc).expect("reset tracer");
         assert!(!vault_path.exists());
         assert!(!sqlite_path.exists());
+        assert!(!sqlite_wal_path.exists());
+        assert!(!sqlite_shm_path.exists());
+        assert!(!sqlite_journal_path.exists());
         assert!(kc.get_app_password().unwrap().is_none());
     }
 

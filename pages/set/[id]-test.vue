@@ -357,6 +357,11 @@ import { hasTauriRuntime } from "~/src/composables/tauri"
 import { invoke } from "@tauri-apps/api/core"
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
 import { getCurrentWindow } from "@tauri-apps/api/window"
+import {
+    beginAssignedAttempt,
+    completeAssignedAttempt,
+    parseAssignedAssignmentId,
+} from "~/src/composables/assignment-progress"
 
 type TestResponse = boolean | number | string
 
@@ -392,6 +397,9 @@ const cachedWrittenModel = shallowRef<{ id: string; model: any } | null>(null)
 const lastSubmitForced = ref(false)
 
 const isWebPreview = computed(() => !hasTauriRuntime())
+const assignedAssignmentId = computed(() =>
+    parseAssignedAssignmentId(route.query.assignment),
+)
 
 function queryString(name: string) {
     const value = route.query[name]
@@ -600,6 +608,11 @@ function buildTest() {
     testGradingBusy.value = false
     testTimedOut.value = false
     formError.value = null
+    beginAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: currentSet.id,
+        mode: "test",
+    })
     startTimer()
 }
 
@@ -772,6 +785,17 @@ watch(language, () => {
     if (!isWebPreview.value) return
     set.value = createWebPreviewDemoSet(t)
     buildTest()
+})
+
+watch(testSubmitted, (submitted) => {
+    if (!submitted || !set.value || testQuestions.value.length === 0) return
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "test",
+        scoreEarned: correctCount.value,
+        scorePossible: testQuestions.value.length,
+    })
 })
 
 onBeforeRouteLeave(() => {

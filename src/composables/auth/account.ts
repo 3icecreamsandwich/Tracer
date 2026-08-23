@@ -8,7 +8,8 @@ import { getSupabaseClient } from './client'
 import { TracerAuthError, normalizeAuthError } from './errors'
 import { callbackUrl, cancelOAuthCallback, finishOAuthCallback, startOAuthCallback, type OAuthCallbackListener } from './oauth-callback'
 
-export type PendingEmailVerification = { listener: OAuthCallbackListener; email: string }
+export type AccountRole = 'student' | 'teacher'
+export type PendingEmailVerification = { listener: OAuthCallbackListener; email: string; role: AccountRole }
 
 export function isGoogleUser(user: User): boolean {
   const provider = user.app_metadata?.provider
@@ -26,7 +27,9 @@ export function displayNameFromUser(user: User, submittedName = ''): string {
   return ''
 }
 
-export async function signInWithGoogle(onAuthorizationUrl?: (url: string) => void): Promise<Session> {
+export async function signInWithGoogle(
+  onAuthorizationUrl?: (url: string) => void,
+): Promise<Session> {
   const listener = await startOAuthCallback()
   try {
     const redirectTo = callbackUrl(listener.port)
@@ -55,7 +58,12 @@ export async function signInWithGoogle(onAuthorizationUrl?: (url: string) => voi
   }
 }
 
-export async function signUpWithEmail(input: { name: string; email: string; password: string }): Promise<Session | PendingEmailVerification> {
+export async function signUpWithEmail(input: {
+  name: string
+  email: string
+  password: string
+  role: AccountRole
+}): Promise<Session | PendingEmailVerification> {
   const listener = await startOAuthCallback()
   const email = input.email.trim()
   try {
@@ -72,11 +80,30 @@ export async function signUpWithEmail(input: { name: string; email: string; pass
       await cancelOAuthCallback(listener.id).catch(() => {})
       return data.session
     }
-    return { listener, email }
+    return { listener, email, role: input.role }
   } catch (error) {
     await cancelOAuthCallback(listener.id).catch(() => {})
     throw normalizeAuthError(error)
   }
+}
+
+export async function initializeUserRole(role: AccountRole): Promise<AccountRole> {
+  const { data, error } = await getSupabaseClient().rpc('initialize_user_role', {
+    requested_role: role,
+  })
+  if (error) {
+    console.error('[Tracer auth] Account role initialization failed', {
+      code: error.code,
+      message: redactSensitiveText(error.message),
+      details: redactSensitiveText(error.details ?? ''),
+      hint: redactSensitiveText(error.hint ?? ''),
+    })
+    throw new TracerAuthError('role_failed', error.message)
+  }
+  if (data !== 'student' && data !== 'teacher') {
+    throw new TracerAuthError('role_failed', 'Account role was not initialized')
+  }
+  return data
 }
 
 export async function waitForEmailVerification(pending: PendingEmailVerification): Promise<Session> {
@@ -91,7 +118,7 @@ export async function waitForEmailVerification(pending: PendingEmailVerification
   }
 }
 
-export async function resendVerification(email: string): Promise<PendingEmailVerification> {
+export async function resendVerification(email: string, role: AccountRole): Promise<PendingEmailVerification> {
   const listener = await startOAuthCallback()
   try {
     const { error } = await getSupabaseClient().auth.resend({
@@ -100,7 +127,7 @@ export async function resendVerification(email: string): Promise<PendingEmailVer
       options: { emailRedirectTo: callbackUrl(listener.port) },
     })
     if (error) throw error
-    return { listener, email }
+    return { listener, email, role }
   } catch (error) {
     await cancelOAuthCallback(listener.id).catch(() => {})
     throw normalizeAuthError(error)
@@ -123,17 +150,24 @@ export async function prepareAuthenticatedProfile(input: {
   submittedName?: string
   language: AppLanguage
 }): Promise<{ profile: Profile; displayName: string; email: string }> {
+  await assertLocalAccountOwnership(input.session)
+  const prepared = await upsertAuthenticatedCloudProfile(input)
+  const profile = await saveAuthenticatedLocalProfile({
+    session: input.session,
+    ...prepared,
+  })
+  return { profile, displayName: profile.name, email: prepared.email }
+}
+
+export async function upsertAuthenticatedCloudProfile(input: {
+  session: Session
+  submittedName?: string
+  language: AppLanguage
+}): Promise<{ displayName: string; email: string }> {
   const user = input.session.user
   const email = user.email?.trim() ?? ''
   if (!email) throw new TracerAuthError('missing_email', 'The authenticated account did not provide an email address')
   const displayName = displayNameFromUser(user, input.submittedName)
-  const db = await useTracerDb()
-  const repo = createProfileRepo(db)
-  const existing = await repo.get()
-  if (existing?.supabaseUserId && existing.supabaseUserId !== user.id) {
-    await getSupabaseClient().auth.signOut({ scope: 'local' }).catch(() => {})
-    throw new TracerAuthError('account_mismatch', 'This installation is linked to a different account')
-  }
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   const { error } = await getSupabaseClient().from('profiles').upsert({
@@ -152,11 +186,41 @@ export async function prepareAuthenticatedProfile(input: {
     })
     throw new TracerAuthError('profile_failed', error.message)
   }
+  return { displayName: displayName || email.split('@')[0], email }
+}
 
-  const profile = await repo.set({
-    name: displayName || email.split('@')[0] || 'User',
-    email,
-    supabaseUserId: user.id,
-  })
-  return { profile, displayName: profile.name, email }
+export async function saveAuthenticatedLocalProfile(input: {
+  session: Session
+  displayName: string
+  email: string
+}): Promise<Profile> {
+  const db = await useTracerDb()
+  const repo = createProfileRepo(db)
+  let profile: Profile
+  try {
+    profile = await repo.set({
+      name: input.displayName || input.email.split('@')[0] || 'User',
+      email: input.email,
+      supabaseUserId: input.session.user.id,
+    })
+  } catch (error) {
+    throw new TracerAuthError('local_data_failed', error instanceof Error ? error.message : 'Could not save local profile')
+  }
+  return profile
+}
+
+export async function assertLocalAccountOwnership(session: Session): Promise<void> {
+  const user = session.user
+  const db = await useTracerDb()
+  const repo = createProfileRepo(db)
+  let existing: Profile | null
+  try {
+    existing = await repo.get()
+  } catch (error) {
+    throw new TracerAuthError('local_data_failed', error instanceof Error ? error.message : 'Could not read local profile')
+  }
+  if (existing?.supabaseUserId && existing.supabaseUserId !== user.id) {
+    await getSupabaseClient().auth.signOut({ scope: 'local' }).catch(() => {})
+    throw new TracerAuthError('account_mismatch', 'This installation is linked to a different account')
+  }
 }

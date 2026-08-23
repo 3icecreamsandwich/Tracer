@@ -67,7 +67,7 @@
                         </button>
                         <NuxtLink
                             v-if="set"
-                            :to="`/set/${set.id}`"
+                            :to="backToSetPath"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
                             {{ t("set.backToSet") }}
@@ -171,8 +171,17 @@ import {
     generateMatchTiles,
     type MatchTile,
 } from "~/src/composables/match/generator";
+import {
+    formatMatchTime,
+    MATCH_DURATION_MS,
+} from "~/src/composables/match/timer";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
+import {
+    beginAssignedAttempt,
+    completeAssignedAttempt,
+    parseAssignedAssignmentId,
+} from "~/src/composables/assignment-progress";
 
 const route = useRoute();
 const router = useRouter();
@@ -180,14 +189,21 @@ const { language, t } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isWebPreview = computed(() => !hasTauriRuntime());
+const assignedAssignmentId = computed(() =>
+    parseAssignedAssignmentId(route.query.assignment),
+);
+const backToSetPath = computed(() => {
+    const classroomId = typeof route.query.class === "string" ? route.query.class : null;
+    return assignedAssignmentId.value && classroomId && set.value
+        ? `/student/classes/${classroomId}`
+        : set.value ? `/set/${set.value.id}` : "/";
+});
 
 const busy = ref(true);
 const loadError = ref<string | null>(null);
 const set = ref<FlashcardSet | null>(null);
 
 const matchPairsRequested = 8;
-const matchDurationSeconds = 600; // 10 minutes max
-
 const matchBusy = ref(false);
 const matchError = ref<string | null>(null);
 const matchRunCounter = ref(0);
@@ -258,6 +274,15 @@ function matchStop(reason: "completed" | "timeout") {
 
     matchSelectedTileIds.value = [];
     matchBusy.value = false;
+    if (set.value) {
+        void completeAssignedAttempt({
+            assignmentId: assignedAssignmentId.value,
+            setId: set.value.id,
+            mode: "match",
+            scoreEarned: matchCorrectAttemptsCount.value,
+            scorePossible: Math.max(matchAttemptsCount.value, 1),
+        });
+    }
 }
 
 function startMatchTimer() {
@@ -265,11 +290,11 @@ function startMatchTimer() {
     matchTimerHandle.value = window.setInterval(() => {
         const now = Date.now();
         matchElapsedTimeMs.value = matchComputeElapsedMs(now);
-        if (matchElapsedTimeMs.value >= matchDurationSeconds * 1000) {
-            matchElapsedTimeMs.value = matchDurationSeconds * 1000;
+        if (matchElapsedTimeMs.value >= MATCH_DURATION_MS) {
+            matchElapsedTimeMs.value = MATCH_DURATION_MS;
             matchStop("timeout");
         }
-    }, 125);
+    }, 16);
 }
 
 function resetMatchStateForRun() {
@@ -310,6 +335,11 @@ function startMatch() {
     }
     matchStartedAtMs.value = Date.now();
     matchElapsedTimeMs.value = 0;
+    beginAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: s.id,
+        mode: "match",
+    });
     startMatchTimer();
 }
 
@@ -437,9 +467,8 @@ const matchMatchedPairsCount = computed(() => matchMatchedPairIds.value.size);
 
 const matchTopline = computed(() => {
     if (!matchIsRunning.value && !matchIsFinished.value) return "Ready";
-    const seconds = Math.floor(matchElapsedTimeMs.value / 1000);
     const pairs = `${matchMatchedPairsCount.value}/${matchPairsTarget.value}`;
-    if (matchIsRunning.value) return `Time: ${seconds}s · Matched: ${pairs}`;
+    if (matchIsRunning.value) return `Time: ${formatMatchTime(matchElapsedTimeMs.value)} · Matched: ${pairs}`;
     return `Done · Matched: ${pairs}`;
 });
 
@@ -451,9 +480,7 @@ const matchAccuracyText = computed(() => {
 });
 
 const matchTimeText = computed(() => {
-    const elapsedMs = matchElapsedTimeMs.value;
-    const elapsedS = Math.round(elapsedMs / 1000);
-    return `${elapsedS}s`;
+    return formatMatchTime(matchElapsedTimeMs.value);
 });
 
 async function loadSet(setId: Uuid) {

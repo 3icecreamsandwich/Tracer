@@ -83,12 +83,32 @@ pub fn lock_first_run_set_password_with(
         ));
     }
 
-    let sh = Stronghold::new(
-        vault_path,
-        stronghold_key_from_password(password, salt_path),
-    )
-    .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
-    set_password_verifier(&sh, password)?;
+    let key = stronghold_key_from_password(password, salt_path);
+    if vault_path.exists() {
+        let sh = Stronghold::new(vault_path, key).map_err(|_| {
+            AppLockError::new("already_initialized", "App lock is already initialized")
+        })?;
+        let verifier = get_password_verifier(&sh)?.ok_or_else(|| {
+            AppLockError::new("already_initialized", "App lock is already initialized")
+        })?;
+        if verify_password(password, &verifier)? {
+            return Ok(());
+        }
+        return Err(AppLockError::new(
+            "already_initialized",
+            "App lock is already initialized",
+        ));
+    }
+
+    let initialize = || -> Result<(), AppLockError> {
+        let sh = Stronghold::new(vault_path, key)
+            .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+        set_password_verifier(&sh, password)
+    };
+    if let Err(error) = initialize() {
+        let _ = remove_vault_file(vault_path);
+        return Err(error);
+    }
     Ok(())
 }
 
@@ -159,8 +179,15 @@ pub fn lock_reset_tracer_with(
     remove_vault_file(vault_path)?;
 
     for db_path in sqlite_paths {
-        if db_path.exists() {
-            std::fs::remove_file(db_path).map_err(|e| AppLockError::new("io", e.to_string()))?;
+        for path in [
+            db_path.clone(),
+            PathBuf::from(format!("{}-wal", db_path.display())),
+            PathBuf::from(format!("{}-shm", db_path.display())),
+            PathBuf::from(format!("{}-journal", db_path.display())),
+        ] {
+            if path.exists() {
+                std::fs::remove_file(path).map_err(|e| AppLockError::new("io", e.to_string()))?;
+            }
         }
     }
     Ok(())

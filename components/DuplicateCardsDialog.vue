@@ -63,7 +63,7 @@
               type="button"
               class="inline-flex h-9 w-9 items-center justify-center rounded-md border text-base font-semibold shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
               :class="decisionFor(issue.id) === 'keep'
-                ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/50 dark:text-emerald-100'
+                ? 'border-slate-950 bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-950'
                 : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900'"
               :aria-label="t('duplicates.keepCard', { number: issue.cardIndex + 1 })"
               @click="setDecision(issue.id, 'keep')"
@@ -74,7 +74,7 @@
               type="button"
               class="inline-flex h-9 w-9 items-center justify-center rounded-md border text-base font-semibold shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
               :class="decisionFor(issue.id) === 'remove'
-                ? 'border-red-300 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/50 dark:text-red-100'
+                ? 'border-red-600 bg-white text-red-700 dark:border-red-500 dark:bg-slate-950 dark:text-red-300'
                 : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900'"
               :aria-label="t('duplicates.removeCard', { number: issue.cardIndex + 1 })"
               @click="setDecision(issue.id, 'remove')"

@@ -290,7 +290,7 @@
                     <div class="mt-6 flex flex-wrap justify-center gap-2">
                         <NuxtLink
                             v-if="set"
-                            :to="`/set/${set.id}`"
+                            :to="backToSetPath"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
                             {{ t("set.backToSet") }}
@@ -514,6 +514,11 @@ import {
 } from "~/src/composables/ai/written-answer-grader";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
+import {
+    beginAssignedAttempt,
+    completeAssignedAttempt,
+    parseAssignedAssignmentId,
+} from "~/src/composables/assignment-progress";
 
 const route = useRoute();
 const router = useRouter();
@@ -521,6 +526,24 @@ const { language, t } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isWebPreview = computed(() => !hasTauriRuntime());
+const assignedAssignmentId = computed(() =>
+    parseAssignedAssignmentId(route.query.assignment),
+);
+const backToSetPath = computed(() => {
+    const classroomId = typeof route.query.class === "string" ? route.query.class : null;
+    return assignedAssignmentId.value && classroomId && set.value
+        ? `/student/classes/${classroomId}`
+        : set.value ? `/set/${set.value.id}` : "/";
+});
+
+function beginClassroomPractice() {
+    if (!set.value) return;
+    beginAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "practice",
+    });
+}
 
 const busy = ref(true);
 const loadError = ref<string | null>(null);
@@ -1191,6 +1214,8 @@ function applyPracticeSettings() {
         void router.push({
             path: `/set/${currentSet.id}-test`,
             query: {
+                assignment: assignedAssignmentId.value ?? undefined,
+                class: typeof route.query.class === "string" ? route.query.class : undefined,
                 types: enabledPracticeQuestionTypes().join(","),
                 count: String(practiceQuestionCount.value),
                 shuffle: practiceShuffle.value ? "1" : "0",
@@ -1203,6 +1228,7 @@ function applyPracticeSettings() {
     }
     learnRunCounter.value += 1;
     void startLearnRun({ startTimer: true });
+    beginClassroomPractice();
 }
 
 async function loadSet(setId: Uuid) {
@@ -1239,6 +1265,17 @@ watch(
 
 watch(practiceTimed, (enabled) => {
     if (!enabled) clearPracticeTimer();
+});
+
+watch(learnIsFinished, (finished) => {
+    if (!finished || !set.value) return;
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "practice",
+        scoreEarned: learnCorrectCount.value,
+        scorePossible: learnAttemptedCount.value,
+    });
 });
 
 onMounted(async () => {
@@ -1285,6 +1322,7 @@ onMounted(async () => {
 
         if (set.value) {
             await initializePracticeRun();
+            beginClassroomPractice();
         }
     } catch {
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__

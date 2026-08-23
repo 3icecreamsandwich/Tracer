@@ -3,7 +3,7 @@
     <div class="mx-auto max-w-[1280px] px-8 pb-24 pt-10">
       <div class="grid items-stretch gap-7 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         <section
-          class="min-h-[calc(100vh-13rem)] rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          class="flex min-h-[calc(100vh-13rem)] flex-col rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           aria-labelledby="home-sets"
         >
           <div class="flex items-start justify-between gap-4">
@@ -14,6 +14,7 @@
               </p>
             </div>
             <button
+              v-if="activeLibraryKind !== 'class'"
               type="button"
               class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               :disabled="busy || !hasTauriRuntime()"
@@ -23,12 +24,18 @@
             </button>
           </div>
 
-          <div class="mt-7 inline-flex overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800" role="tablist" aria-label="Library type">
-            <button type="button" role="tab" :aria-selected="activeLibraryKind === 'set'" class="min-w-40 px-6 py-2.5 text-sm font-medium text-slate-950 transition dark:text-white" :class="activeLibraryKind === 'set' ? 'bg-white shadow-sm dark:bg-slate-800' : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-900'" @click="activeLibraryKind = 'set'">
-              Flashcards
-            </button>
-            <button type="button" role="tab" :aria-selected="activeLibraryKind === 'study-guide'" class="min-w-40 border-l border-slate-200 px-6 py-2.5 text-sm font-medium text-slate-950 transition dark:border-slate-800 dark:text-white" :class="activeLibraryKind === 'study-guide' ? 'bg-white shadow-sm dark:bg-slate-800' : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-900'" @click="activeLibraryKind = 'study-guide'">
-              Study guides
+          <div class="mt-7 grid w-full max-w-[410px] grid-cols-3 rounded-[14px] border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-950" role="tablist" :aria-label="t('home.libraryType')">
+            <button
+              v-for="tab in libraryTabs"
+              :key="tab.value"
+              type="button"
+              role="tab"
+              :aria-selected="activeLibraryKind === tab.value"
+              class="h-10 rounded-xl px-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+              :class="activeLibraryKind === tab.value ? 'bg-neutral-800 text-white shadow-sm dark:bg-slate-700' : 'bg-transparent text-slate-950 hover:bg-slate-50 dark:text-white dark:hover:bg-slate-900'"
+              @click="activeLibraryKind = tab.value"
+            >
+              {{ t(tab.label) }}
             </button>
           </div>
 
@@ -52,6 +59,45 @@
                 class="mt-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
               >
                 {{ t('common.loading') }}
+              </div>
+
+              <div v-else-if="activeLibraryKind === 'class'">
+                <p v-if="classroomBusy" class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+                  {{ t('common.loading') }}
+                </p>
+                <p v-else-if="classroomError" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300" role="alert">
+                  {{ classroomError }}
+                </p>
+                <p v-else-if="classrooms.length === 0" class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+                  {{ t('home.noClasses') }}
+                </p>
+                <ul v-else class="space-y-3">
+                  <li v-for="classroom in classrooms" :key="classroom.id">
+                    <NuxtLink
+                      v-if="accountRole === 'teacher'"
+                      :to="`/teacher/classes/${classroom.id}`"
+                      class="group flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900"
+                    >
+                      <span class="min-w-0">
+                        <span class="block truncate font-semibold">{{ classroom.name }}</span>
+                        <span class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">{{ classroomSummary(classroom) }}</span>
+                      </span>
+                      <span aria-hidden="true">→</span>
+                    </NuxtLink>
+                    <NuxtLink
+                      v-else
+                      :to="`/student/classes/${classroom.id}`"
+                      class="group flex min-h-[82px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-4 text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+                    >
+                      <img :src="basicIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                      <span class="min-w-0 flex-1">
+                        <span class="block truncate font-semibold">{{ classroom.name }}</span>
+                        <span class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">{{ classroomSummary(classroom) }}</span>
+                      </span>
+                      <span class="transition group-hover:translate-x-0.5" aria-hidden="true">→</span>
+                    </NuxtLink>
+                  </li>
+                </ul>
               </div>
 
               <div
@@ -261,6 +307,12 @@
               </div>
             </div>
           </div>
+
+          <div v-if="activeLibraryKind === 'class' && accountRole === 'student'" class="mt-auto pt-7">
+            <AppButton block size="lg" @click="joinOpen = true">
+              {{ t('classroom.addClass') }}
+            </AppButton>
+          </div>
         </section>
 
         <Teleport to="body">
@@ -275,44 +327,66 @@
           </div>
         </Teleport>
 
-        <section
-          class="min-h-[calc(100vh-30rem)] rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-          aria-labelledby="home-create"
-        >
-          <h2 id="home-create" class="text-[22px] font-semibold">{{ t('home.create') }}</h2>
-          <p class="mt-1 text-[15px] text-slate-950 dark:text-slate-100">{{ t('home.chooseMode') }}</p>
+        <div class="grid content-start gap-7">
+          <section
+            class="rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            aria-labelledby="home-create"
+          >
+            <h2 id="home-create" class="text-[22px] font-semibold">{{ t('home.create') }}</h2>
+            <p class="mt-1 text-[15px] text-slate-950 dark:text-slate-100">{{ t('home.chooseMode') }}</p>
 
-          <div class="mt-8 grid w-full gap-3">
-            <NuxtLink
-              to="/create/basic"
-              class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
-            >
-              <img :src="basicIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
-              <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.basic') }}</p><p class="mt-1 text-[13px]">{{ t('home.basicHint') }}</p></div>
-              <CreateChevron />
-            </NuxtLink>
+            <div class="mt-8 grid w-full gap-3">
+              <NuxtLink
+                to="/create/basic"
+                class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+              >
+                <img :src="basicIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.basic') }}</p><p class="mt-1 text-[13px]">{{ t('home.basicHint') }}</p></div>
+                <CreateChevron />
+              </NuxtLink>
 
-            <NuxtLink
-              to="/create/synthesize"
-              class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
-            >
-              <img :src="synthesizeIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
-              <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.synthesize') }}</p><p class="mt-1 text-[13px]">{{ t('home.synthesizeHint') }}</p></div>
-              <CreateChevron />
-            </NuxtLink>
+              <NuxtLink
+                to="/create/synthesize"
+                class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+              >
+                <img :src="synthesizeIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.synthesize') }}</p><p class="mt-1 text-[13px]">{{ t('home.synthesizeHint') }}</p></div>
+                <CreateChevron />
+              </NuxtLink>
 
-            <NuxtLink
-              to="/create/generate"
-              class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
-            >
-              <img :src="generateIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
-              <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.generate') }}</p><p class="mt-1 text-[13px]">{{ t('home.generateHint') }}</p></div>
-              <CreateChevron />
-            </NuxtLink>
-          </div>
-        </section>
+              <NuxtLink
+                to="/create/generate"
+                class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+              >
+                <img :src="generateIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.generate') }}</p><p class="mt-1 text-[13px]">{{ t('home.generateHint') }}</p></div>
+                <CreateChevron />
+              </NuxtLink>
+            </div>
+          </section>
+
+          <section
+            v-if="accountRole === 'teacher'"
+            class="rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            aria-labelledby="home-dashboard"
+          >
+            <h2 id="home-dashboard" class="text-[22px] font-semibold">{{ t('classroom.dashboard') }}</h2>
+            <p class="mt-1 text-[15px] text-slate-600 dark:text-slate-300">{{ t('classroom.dashboardDescription') }}</p>
+            <AppButton class="mt-6" block size="lg" to="/teacher">
+              {{ t('classroom.dashboard') }} <span aria-hidden="true">→</span>
+            </AppButton>
+          </section>
+        </div>
       </div>
     </div>
+
+    <ClassJoinDialog
+      :open="joinOpen"
+      :busy="joinBusy"
+      :error="joinError"
+      @close="closeJoin"
+      @submit="onJoinClass"
+    />
   </main>
 </template>
 
@@ -338,6 +412,16 @@ import type {
 import { hasTauriRuntime } from '../src/composables/tauri'
 import { useAppLanguage } from '../src/composables/language'
 import { createDemoStudyGuideTitle } from '../src/composables/demo-content'
+import type { AccountRole } from '../src/composables/auth/account'
+import {
+  ClassroomError,
+  classroomErrorKey,
+  getCachedAccountRole,
+  getAccountRole,
+  joinClassroom,
+  listClassrooms,
+  type Classroom,
+} from '../src/composables/classrooms'
 import {
   assignHomeItemsToFolder,
   homeItemSetId,
@@ -382,7 +466,21 @@ type RootDropTarget = {
 const busy = ref(true)
 const loadError = ref<string | null>(null)
 const items = ref<HomeListItem[]>([])
-const activeLibraryKind = ref<'set' | 'study-guide'>('set')
+type LibraryKind = 'set' | 'study-guide' | 'class'
+
+const activeLibraryKind = ref<LibraryKind>('set')
+const libraryTabs: Array<{ value: LibraryKind; label: string }> = [
+  { value: 'set', label: 'home.flashcards' },
+  { value: 'study-guide', label: 'home.studyGuides' },
+  { value: 'class', label: 'home.classes' },
+]
+const accountRole = ref<AccountRole | null>(null)
+const classrooms = ref<Classroom[]>([])
+const classroomBusy = ref(false)
+const classroomError = ref<string | null>(null)
+const joinOpen = ref(false)
+const joinBusy = ref(false)
+const joinError = ref<string | null>(null)
 const folders = ref<SetFolder[]>([])
 const homeOrder = ref<HomeOrderEntry[]>([])
 const expandedFolderIds = ref(new Set<Uuid>())
@@ -447,6 +545,7 @@ const visibleLibraryCount = computed(() =>
 const denseLibrary = computed(() => visibleLibraryCount.value >= 4)
 
 const visibleFolders = computed(() => {
+  if (activeLibraryKind.value === 'class') return []
   const q = normalizedQuery.value
   if (!q) return folders.value
   return folders.value.filter((folder) => {
@@ -689,6 +788,49 @@ function newUuid() {
   const randomUuid = globalThis.crypto?.randomUUID
   if (typeof randomUuid === 'function') return randomUuid.call(globalThis.crypto) as Uuid
   return `${Date.now()}-${Math.random().toString(16).slice(2)}` as Uuid
+}
+
+function classroomSummary(classroom: Classroom) {
+  return [classroom.subject, classroom.section, classroom.schoolYear].filter(Boolean).join(' · ') || t('classroom.noClassDetails')
+}
+
+async function loadClassroomData() {
+  classroomBusy.value = true
+  classroomError.value = null
+  try {
+    accountRole.value = await getAccountRole()
+    classrooms.value = await listClassrooms()
+  } catch (error) {
+    if (error instanceof ClassroomError && ['signed_out', 'forbidden', 'not_configured'].includes(error.code)) {
+      accountRole.value = null
+    }
+    classrooms.value = []
+    classroomError.value = t(classroomErrorKey(error))
+  } finally {
+    classroomBusy.value = false
+  }
+}
+
+function closeJoin() {
+  if (joinBusy.value) return
+  joinOpen.value = false
+  joinError.value = null
+}
+
+async function onJoinClass(code: string) {
+  joinBusy.value = true
+  joinError.value = null
+  try {
+    const classroom = await joinClassroom(code)
+    if (!classrooms.value.some((item) => item.id === classroom.id)) {
+      classrooms.value = [classroom, ...classrooms.value]
+    }
+    joinOpen.value = false
+  } catch (error) {
+    joinError.value = t(classroomErrorKey(error))
+  } finally {
+    joinBusy.value = false
+  }
 }
 
 function replaceExpandedFolders(next: Set<Uuid>) {
@@ -1236,10 +1378,12 @@ onMounted(async () => {
       return
     }
 
+    accountRole.value = getCachedAccountRole(profile.supabaseUserId)
+
     const settings = await createSettingsRepo(db).get()
     if (settings.startupLockEnabled && status.requires_unlock) {
       if (unlockedThisSession.value) {
-        await loadHomeList()
+        await Promise.all([loadHomeList(), loadClassroomData()])
         return
       }
       markLocked()
@@ -1249,11 +1393,11 @@ onMounted(async () => {
 
     if (status.can_auto_unlock) {
       markUnlocked()
-      await loadHomeList()
+      await Promise.all([loadHomeList(), loadClassroomData()])
       return
     }
 
-    await loadHomeList()
+    await Promise.all([loadHomeList(), loadClassroomData()])
   } catch {
     loadError.value = 'Failed to load sets and study guides.'
     busy.value = false

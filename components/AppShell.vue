@@ -18,6 +18,7 @@
  import {
    navigateBack,
    resolveAppShortcut,
+   shouldPreventFullscreenExit,
  } from '~/src/composables/navigation/app-navigation'
 
  const route = useRoute()
@@ -33,6 +34,10 @@
  })
 
  function onGlobalKeydown(event: KeyboardEvent) {
+   // Cancel the native window action without stopping propagation so Escape
+   // still closes Tracer dialogs, menus, and other transient UI.
+   if (shouldPreventFullscreenExit(event)) event.preventDefault()
+
    const action = resolveAppShortcut(event, route.path)
    if (!action) return
 
@@ -51,6 +56,11 @@
 
    if (action.type === 'focus-search') {
      window.dispatchEvent(new CustomEvent('tracer:focus-search'))
+     return
+   }
+
+   if (action.type === 'reload') {
+     window.location.reload()
      return
    }
 

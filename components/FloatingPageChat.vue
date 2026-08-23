@@ -66,7 +66,7 @@
           />
           <button
             type="submit"
-            class="inline-flex h-11 shrink-0 items-center justify-center rounded-md border border-amber-500 bg-amber-400 px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300 dark:focus-visible:ring-offset-slate-950"
+            class="inline-flex h-11 shrink-0 items-center justify-center rounded-md border border-slate-950 bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-950"
             :disabled="busy || !input.trim()"
           >
             Send
@@ -79,7 +79,7 @@
     <button
       ref="triggerEl"
       type="button"
-      class="fixed bottom-6 right-6 z-[70] inline-flex h-12 w-12 items-center justify-center rounded-full border border-amber-300 bg-amber-50 shadow-lg shadow-slate-900/15 transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 dark:border-amber-800 dark:bg-amber-950 dark:hover:bg-amber-900 dark:focus-visible:ring-offset-slate-950"
+      class="fixed bottom-6 right-6 z-[70] inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-300 bg-white shadow-lg shadow-slate-900/15 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
       :aria-expanded="panelOpen"
       aria-label="Chat with Tracer"
       @click="togglePanel"

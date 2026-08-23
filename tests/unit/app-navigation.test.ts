@@ -6,6 +6,7 @@ import {
   hasInAppBackEntry,
   navigateBack,
   resolveAppShortcut,
+  shouldPreventFullscreenExit,
 } from '../../src/composables/navigation/app-navigation'
 
 function shortcut(
@@ -56,6 +57,8 @@ describe('app navigation', () => {
     expect(shortcut({ key: 'ArrowRight' })).toEqual({ type: 'forward' })
     expect(shortcut({ key: ',' })).toEqual({ type: 'navigate', to: '/settings' })
     expect(shortcut({ key: 'l' })).toEqual({ type: 'focus-search' })
+    expect(shortcut({ key: 'r' })).toEqual({ type: 'reload' })
+    expect(shortcut({ ctrlKey: true, key: 'R', metaKey: false })).toEqual({ type: 'reload' })
     expect(shortcut({ code: 'Digit1', key: '1' })).toEqual({
       type: 'navigate',
       to: '/create/basic',
@@ -71,6 +74,12 @@ describe('app navigation', () => {
     expect(shortcut({ code: 'Digit3', key: '#', shiftKey: true })).toBeNull()
   })
 
+  it('prevents only bare Escape from triggering the native fullscreen exit', () => {
+    expect(shouldPreventFullscreenExit(shortcutEvent({ key: 'Escape' }))).toBe(true)
+    expect(shouldPreventFullscreenExit(shortcutEvent({ key: 'Escape', shiftKey: true }))).toBe(false)
+    expect(shouldPreventFullscreenExit(shortcutEvent({ key: 'Enter' }))).toBe(false)
+  })
+
   it('resolves set-only Edit and study mode shortcuts', () => {
     expect(shortcut({ key: 'e' }, '/')).toBeNull()
     expect(shortcut({ key: 'e' }, '/set/demo-flashcards')).toEqual({
@@ -79,26 +88,45 @@ describe('app navigation', () => {
     })
 
     const path = '/set/demo'
-    expect(shortcut({ altKey: true, code: 'Digit1' }, path)).toEqual({
+    expect(shortcut({ altKey: true, metaKey: false, code: 'Digit1' }, path)).toEqual({
       type: 'navigate',
       to: '/set/demo?mode=flashcards',
       replace: true,
     })
-    expect(shortcut({ altKey: true, code: 'Digit2' }, path)).toEqual({
+    expect(shortcut({ altKey: true, metaKey: false, code: 'Digit2' }, path)).toEqual({
       type: 'navigate',
       to: '/set/demo?mode=learn',
       replace: true,
     })
-    expect(shortcut({ altKey: true, code: 'Digit3' }, path)).toEqual({
-      type: 'navigate',
-      to: '/set/demo?mode=match',
-      replace: true,
-    })
-    expect(shortcut({ altKey: true, code: 'Digit4' }, path)).toEqual({
+    expect(shortcut({ altKey: true, metaKey: false, code: 'Digit3' }, path)).toEqual({
       type: 'navigate',
       to: '/set/demo?mode=chat',
       replace: true,
     })
-    expect(shortcut({ altKey: true, code: 'Digit1' }, '/study-guide/demo')).toBeNull()
+    expect(shortcut({ altKey: true, metaKey: false, code: 'Digit4' }, path)).toEqual({
+      type: 'navigate',
+      to: '/set/demo?mode=match',
+      replace: true,
+    })
+    expect(shortcut({ altKey: true, metaKey: false, code: 'Digit5' }, path)).toEqual({
+      type: 'navigate',
+      to: '/study-guide/demo',
+      replace: true,
+    })
+    expect(shortcut({ altKey: true, metaKey: false, code: 'Digit1' }, '/study-guide/demo')).toBeNull()
   })
 })
+
+function shortcutEvent(
+  overrides: Partial<Parameters<typeof resolveAppShortcut>[0]>,
+): Parameters<typeof resolveAppShortcut>[0] {
+  return {
+    altKey: false,
+    code: '',
+    ctrlKey: false,
+    key: '',
+    metaKey: false,
+    shiftKey: false,
+    ...overrides,
+  }
+}

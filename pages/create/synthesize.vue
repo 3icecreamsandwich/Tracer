@@ -12,7 +12,7 @@
 
         <button
           type="button"
-          class="inline-flex items-center rounded-md border border-red-300 bg-red-100 px-3 py-2 text-sm font-semibold text-red-900 shadow-sm transition hover:bg-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:bg-red-400 dark:text-slate-950 dark:hover:bg-red-300"
+          class="inline-flex items-center rounded-md border border-slate-950 bg-slate-950 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-950"
           :disabled="createDisabled"
           @click="onCreate"
         >

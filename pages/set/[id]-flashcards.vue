@@ -103,7 +103,7 @@
                         </button>
                         <NuxtLink
                             v-if="set"
-                            :to="`/set/${set.id}`"
+                            :to="backToSetPath"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
                             {{ t("set.backToSet") }}
@@ -263,6 +263,11 @@ import {
 import { lockGetStatus } from "~/src/composables/lock";
 import { useLockSession } from "~/src/composables/lock-session";
 import { hasTauriRuntime } from "~/src/composables/tauri";
+import {
+    beginAssignedAttempt,
+    completeAssignedAttempt,
+    parseAssignedAssignmentId,
+} from "~/src/composables/assignment-progress";
 
 const { language, t } = useAppLanguage();
 
@@ -271,6 +276,24 @@ const router = useRouter();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isWebPreview = computed(() => !hasTauriRuntime());
+const assignedAssignmentId = computed(() =>
+    parseAssignedAssignmentId(route.query.assignment),
+);
+const backToSetPath = computed(() => {
+    const classroomId = typeof route.query.class === "string" ? route.query.class : null;
+    return assignedAssignmentId.value && classroomId && set.value
+        ? `/student/classes/${classroomId}`
+        : set.value ? `/set/${set.value.id}` : "/";
+});
+
+function beginClassroomFlashcards() {
+    if (!set.value) return;
+    beginAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "flashcards",
+    });
+}
 
 const busy = ref(true);
 const loadError = ref<string | null>(null);
@@ -279,6 +302,9 @@ const set = ref<FlashcardSet | null>(null);
 const isFlipped = ref(false);
 const isFlipping = ref(false);
 const isNavigating = ref<"prev" | "next" | null>(null);
+const FLASHCARD_FLIP_DURATION_MS = 320;
+let flashcardFlipSwapTimeout: ReturnType<typeof setTimeout> | null = null;
+let flashcardFlipEndTimeout: ReturnType<typeof setTimeout> | null = null;
 const flashcardAnswerFeedback = ref<"correct" | "incorrect" | null>(null);
 const flashcardAnswerBusy = ref(false);
 const flashcardAnswerTransitionId = ref(0);
@@ -652,6 +678,7 @@ function restartRun() {
         starredOnly.value = false;
     }
     startRun();
+    beginClassroomFlashcards();
     nextTick(() => viewerButtonEl.value?.focus());
 }
 
@@ -677,12 +704,20 @@ function restartFromFlashcardSettings() {
 }
 
 function toggleFlip() {
-    if (totalCount.value === 0 || flashcardAnswerBusy.value) return;
+    if (totalCount.value === 0 || flashcardAnswerBusy.value || isFlipping.value) return;
     isFlipping.value = true;
-    setTimeout(() => {
+
+    // Swap the rendered side while the card is collapsed, not after the
+    // animation has already returned to its full-size resting state.
+    flashcardFlipSwapTimeout = setTimeout(() => {
         isFlipped.value = !isFlipped.value;
+        flashcardFlipSwapTimeout = null;
+    }, FLASHCARD_FLIP_DURATION_MS / 2);
+
+    flashcardFlipEndTimeout = setTimeout(() => {
         isFlipping.value = false;
-    }, 250);
+        flashcardFlipEndTimeout = null;
+    }, FLASHCARD_FLIP_DURATION_MS);
 }
 
 function goPrev() {
@@ -909,6 +944,17 @@ watch(
     { flush: "post" },
 );
 
+watch(isFinished, (finished) => {
+    if (!finished || !set.value) return;
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "flashcards",
+        scoreEarned: correctCount.value,
+        scorePossible: attemptedCount.value,
+    });
+});
+
 onMounted(async () => {
     try {
         if (isWebPreview.value) {
@@ -961,6 +1007,7 @@ onMounted(async () => {
         if (set.value) {
             await loadStars(set.value.id);
             await restoreSavedFlashcardRun(set.value.id);
+            beginClassroomFlashcards();
         }
         await nextTick();
         viewerButtonEl.value?.focus();
@@ -995,6 +1042,8 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+    if (flashcardFlipSwapTimeout) clearTimeout(flashcardFlipSwapTimeout);
+    if (flashcardFlipEndTimeout) clearTimeout(flashcardFlipEndTimeout);
     cancelFlashcardAnswerFeedback();
     window.removeEventListener("keydown", onKeydown);
     document.removeEventListener(
@@ -1043,7 +1092,7 @@ onBeforeUnmount(() => {
 }
 
 .animate-flip {
-    animation: flip 0.25s ease-in-out;
+    animation: flip 0.32s ease-in-out;
 }
 
 .animate-slide-left {

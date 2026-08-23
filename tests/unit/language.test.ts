@@ -95,4 +95,17 @@ describe('app language', () => {
       )
     }
   })
+
+  it('resolves the already-assigned classroom label in every locale', () => {
+    const expected = {
+      en: 'Already assigned', es: 'Ya asignado', fr: 'Déjà attribué', 'zh-CN': '已分配',
+      hi: 'पहले से असाइन किया गया', ar: 'تم تعيينها بالفعل', de: 'Bereits zugewiesen',
+      ru: 'Уже назначено', ja: '割り当て済み', ko: '이미 배정됨',
+    } as const
+    const { t } = useAppLanguage()
+    for (const option of languageOptions) {
+      applyAppLanguage(option.code)
+      expect(t('classroom.alreadyAssigned')).toBe(expected[option.code])
+    }
+  })
 })

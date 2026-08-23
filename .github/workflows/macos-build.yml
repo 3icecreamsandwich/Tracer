@@ -12,6 +12,9 @@ on:
 jobs:
   build-macos-installer:
     runs-on: macos-latest
+    env:
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -99,6 +102,10 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Validate Supabase build configuration
+        run: >-
+          node -e "const required = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY']; const missing = required.filter((name) => !process.env[name]); if (missing.length) { console.error('Missing GitHub Actions variables: ' + missing.join(', ')); process.exit(1); }"
 
       - name: Build signed and notarized Tauri macOS installer
         if: ${{ inputs.sign_and_notarize == true }}

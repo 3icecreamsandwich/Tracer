@@ -6,6 +6,9 @@ on:
 jobs:
   build-linux-installer:
     runs-on: ubuntu-22.04
+    env:
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,6 +42,10 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Validate Supabase build configuration
+        run: >-
+          node -e "const required = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY']; const missing = required.filter((name) => !process.env[name]); if (missing.length) { console.error('Missing GitHub Actions variables: ' + missing.join(', ')); process.exit(1); }"
 
       - name: Build Tauri Linux installer
         run: bun run tauri build --bundles deb appimage
