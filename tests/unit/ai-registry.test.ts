@@ -53,8 +53,8 @@ describe('ai registry', () => {
   })
 
   it('returns missing credential error when secret absent', async () => {
-    await expect(resolveAiModel('openai:gpt-4o-mini')).rejects.toBeInstanceOf(MissingAiCredentialError)
-    await expect(resolveAiModel('openai:gpt-4o-mini')).rejects.toMatchObject({
+    await expect(resolveAiModel('openai:gpt-5.6-terra')).rejects.toBeInstanceOf(MissingAiCredentialError)
+    await expect(resolveAiModel('openai:gpt-5.6-terra')).rejects.toMatchObject({
       code: 'missing_credential',
       providerId: 'openai',
       credentialKind: 'openai_api_key'
@@ -93,5 +93,34 @@ describe('ai registry', () => {
     })
 
     expect(requestUrl).toBe('https://models.github.ai/inference/chat/completions')
+  })
+
+  it('falls back when the primary model is missing credentials', async () => {
+    mocks.aiSecretsGet.mockImplementation(async (kind: string) => {
+      if (kind === 'github_models_token') return 'github-token'
+      return null
+    })
+    mocks.aiHttpFetch.mockResolvedValue(new Response(
+      JSON.stringify({
+        id: 'chatcmpl-fallback',
+        object: 'chat.completion',
+        created: 0,
+        model: 'openai/gpt-4o-mini',
+        choices: [{ index: 0, message: { role: 'assistant', content: 'fallback' }, finish_reason: 'stop' }]
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } }
+    ))
+
+    const model: any = await resolveAiModel([
+      'openai:gpt-5.6-terra',
+      'github:openai/gpt-4o-mini'
+    ])
+    const result = await model.doGenerate({
+      prompt: [{ role: 'user', content: [{ type: 'text', text: 'hello' }] }]
+    })
+
+    expect(result.content).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'text', text: 'fallback' })
+    ]))
   })
 })

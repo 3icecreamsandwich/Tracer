@@ -114,6 +114,12 @@ pub fn run() {
             sql: include_str!("../migrations/016_profile_supabase_user.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 17,
+            description: "add_ai_model_fallbacks",
+            sql: include_str!("../migrations/017_ai_model_fallbacks.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     let app = tauri::Builder::default()

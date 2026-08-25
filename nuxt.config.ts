@@ -30,6 +30,7 @@ export default defineNuxtConfig({
         '@tauri-apps/api/event',
         '@tauri-apps/plugin-http',
         'ai',
+        'ollama-ai-provider-v2',
         'pdfjs-dist',
         'tesseract.js', // CJS
       ]

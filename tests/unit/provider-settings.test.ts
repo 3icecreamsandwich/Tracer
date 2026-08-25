@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
     openai: false,
     anthropic: false,
     gemini: false,
+    ollama_cloud: false,
     openai_compat: false
   })),
   aiProviderSettingsSave: vi.fn(async () => ({
@@ -29,6 +30,7 @@ describe('provider settings API key helpers', () => {
       openai: false,
       anthropic: false,
       gemini: false,
+      ollama_cloud: false,
       openai_compat: false
     })
     mocks.aiProviderSettingsSave.mockReset()
@@ -111,6 +113,7 @@ describe('provider settings API key helpers', () => {
       openai: true,
       anthropic: false,
       gemini: false,
+      ollama_cloud: true,
       openai_compat: true
     })
 
@@ -120,9 +123,10 @@ describe('provider settings API key helpers', () => {
       openai: true,
       anthropic: false,
       gemini: false,
+      ollama_cloud: true,
       openai_compat: true
     })
-    expect(Object.values(presence)).toEqual([true, false, false, true])
+    expect(Object.values(presence)).toEqual([true, false, false, true, true])
     expect(mocks.aiProviderApiKeyPresence).toHaveBeenCalledTimes(1)
   })
 

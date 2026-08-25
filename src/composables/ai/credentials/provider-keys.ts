@@ -17,6 +17,7 @@ function emptyProviderApiKeyPresence(): ProviderApiKeyPresence {
     openai: false,
     anthropic: false,
     gemini: false,
+    ollama_cloud: false,
     openai_compat: false
   }
 }
@@ -65,6 +66,7 @@ export async function aiProviderApiKeyPresence(): Promise<ProviderApiKeyPresence
       openai: maybe.openai === true,
       anthropic: maybe.anthropic === true,
       gemini: maybe.gemini === true,
+      ollama_cloud: maybe.ollama_cloud === true,
       openai_compat: maybe.openai_compat === true
     }
   } catch (e) {

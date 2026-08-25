@@ -3,6 +3,7 @@ export type AiProviderId =
   | 'anthropic'
   | 'gemini'
   | 'github'
+  | 'ollama_cloud'
   | 'openai_compat'
 
 export const aiProviderIds: readonly AiProviderId[] = [
@@ -10,6 +11,7 @@ export const aiProviderIds: readonly AiProviderId[] = [
   'anthropic',
   'gemini',
   'github',
+  'ollama_cloud',
   'openai_compat'
 ] as const
 

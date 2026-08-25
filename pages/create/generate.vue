@@ -529,7 +529,7 @@ async function prepareGenerateModelContext(): Promise<GenerateModelContext> {
   if (!settings.defaultModelId) {
     throw new Error('Choose a Default AI Model to use Generate.')
   }
-  const model = await resolveAiModel(settings.defaultModelId)
+  const model = await resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
   return { db, model }
 }
 

@@ -389,6 +389,7 @@ const loadError = ref<string | null>(null)
 const formError = ref<string | null>(null)
 const set = ref<FlashcardSet | null>(null)
 const defaultModelId = ref<string | null>(null)
+const fallbackModelIds = ref<string[]>([])
 const testQuestions = ref<LearnQuestion[]>([])
 const responses = ref<Record<string, TestResponse>>({})
 const writtenDrafts = ref<Record<string, string>>({})
@@ -649,11 +650,13 @@ function onPageHide() {
 }
 
 async function getWrittenModel(modelId: string) {
-    if (cachedWrittenModel.value?.id === modelId) {
+    const route = [modelId, ...fallbackModelIds.value]
+    const cacheId = route.join('\n')
+    if (cachedWrittenModel.value?.id === cacheId) {
         return cachedWrittenModel.value.model
     }
-    const model = await resolveAiModel(modelId)
-    cachedWrittenModel.value = { id: modelId, model }
+    const model = await resolveAiModel(route)
+    cachedWrittenModel.value = { id: cacheId, model }
     return model
 }
 
@@ -849,6 +852,7 @@ onMounted(async () => {
 
         const settings = await createSettingsRepo(db).get()
         defaultModelId.value = settings.defaultModelId
+        fallbackModelIds.value = settings.fallbackModelIds
         if (settings.startupLockEnabled && status.requires_unlock) {
             if (!unlockedThisSession.value) {
                 markLocked()

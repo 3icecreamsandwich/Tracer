@@ -61,7 +61,7 @@ const en: Messages = {
   'settings.defaultModelDescription': 'Required for Synthesize, Generate, and Chat.',
   'settings.learnHybrid': 'Practice · Hybrid (AI-augmented)',
   'settings.learnHybridDescription': 'Adds AI-generated questions in addition to the deterministic baseline.',
-  'settings.chooseModelFirst': 'Choose a Default AI Model to enable this.',
+  'settings.chooseModelFirst': 'Add an AI model to enable this.',
   'settings.providers': 'Providers',
   'settings.providersDescription': 'Provider keys and tokens are stored in the vault.',
   'settings.apiKey': 'API key',

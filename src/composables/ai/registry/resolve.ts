@@ -2,8 +2,10 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
+import { createOllama } from 'ollama-ai-provider-v2'
 import type { LanguageModel } from 'ai'
-import { AiRegistryError } from '../errors'
+import type { LanguageModelV3, LanguageModelV3CallOptions } from '@ai-sdk/provider'
+import { AiRegistryError, AiVaultLockedError } from '../errors'
 import { aiHttpFetch } from '../http'
 import {
   type AiProviderId,
@@ -24,7 +26,71 @@ const githubHeaders = {
   'X-GitHub-Api-Version': '2026-03-10'
 }
 
-export async function resolveAiModel(qualifiedId: string): Promise<LanguageModel> {
+function errorStatus(error: unknown): number | null {
+  const value = error as any
+  const status = value?.status ?? value?.response?.status ?? value?.cause?.status
+  return typeof status === 'number' && Number.isFinite(status) ? status : null
+}
+
+function isOffline(): boolean {
+  const navigator = (globalThis as any)?.navigator
+  return typeof navigator?.onLine === 'boolean' && navigator.onLine === false
+}
+
+function shouldTryFallback(error: unknown): boolean {
+  if (isOffline() || error instanceof AiVaultLockedError) return false
+  if (error instanceof AiRegistryError) {
+    return error.code === 'missing_credential' ||
+      error.code === 'missing_provider_config' ||
+      error.code === 'unknown_model' ||
+      error.code === 'unknown_provider'
+  }
+  const DomException = (globalThis as any)?.DOMException
+  if (typeof DomException === 'function' && error instanceof DomException && (error as Error).name === 'AbortError') return false
+  const status = errorStatus(error)
+  if (status === 401 || status === 403 || status === 404 || status === 408 || status === 429) return true
+  if (status !== null && status >= 500) return true
+  const message = error instanceof Error ? error.message.toLowerCase() : ''
+  return message.includes('timed out') || message.includes('timeout') || message.includes('temporarily unavailable')
+}
+
+function createRoutedModel(modelIds: readonly string[]): LanguageModelV3 {
+  const route = [...new Set(modelIds.map((id) => id.trim()).filter(Boolean))]
+  if (route.length === 0) throw new AiRegistryError('invalid_model_id', 'At least one AI model is required.')
+
+  async function attempt<T>(call: (model: LanguageModelV3, options: LanguageModelV3CallOptions) => PromiseLike<T>, options: LanguageModelV3CallOptions): Promise<T> {
+    let lastError: unknown
+    for (let index = 0; index < route.length; index += 1) {
+      try {
+        const model = await resolveSingleAiModel(route[index]!)
+        if (typeof model === 'string' || model.specificationVersion !== 'v3') {
+          throw new AiRegistryError('unknown_model', `Model '${route[index]}' is not compatible with AI routing.`)
+        }
+        return await call(model, options)
+      } catch (error) {
+        lastError = error
+        if (index === route.length - 1 || !shouldTryFallback(error)) throw error
+      }
+    }
+    throw lastError
+  }
+
+  return {
+    specificationVersion: 'v3',
+    provider: 'tracer.route',
+    modelId: route.join(' -> '),
+    supportedUrls: {},
+    doGenerate: (options) => attempt((model, current) => model.doGenerate(current), options),
+    doStream: (options) => attempt((model, current) => model.doStream(current), options)
+  }
+}
+
+export async function resolveAiModel(qualifiedId: string | readonly string[]): Promise<LanguageModel> {
+  if (Array.isArray(qualifiedId)) return createRoutedModel(qualifiedId)
+  return resolveSingleAiModel(qualifiedId as string)
+}
+
+async function resolveSingleAiModel(qualifiedId: string): Promise<LanguageModel> {
   if (isTracerTestMode() && !isTracerLiveAiEnabled()) {
     return createTracerDeterministicTestModel({ provider: 'tracer_test', modelId: qualifiedId })
   }
@@ -89,6 +155,19 @@ export async function resolveAiModel(qualifiedId: string): Promise<LanguageModel
         }
       }
     })
+  }
+
+  if (providerId === 'ollama_cloud') {
+    ensureInCuratedCatalog('ollama_cloud', modelId)
+    const apiKey = await requireSecret('ollama_cloud', 'ollama_cloud_api_key')
+    const ollama = createOllama({
+      name: 'ollama_cloud',
+      baseURL: 'https://ollama.com/api',
+      headers: { Authorization: `Bearer ${apiKey}` },
+      compatibility: 'strict',
+      fetch: aiHttpFetch
+    })
+    return ollama(modelId)
   }
 
   if (providerId === 'openai_compat') {

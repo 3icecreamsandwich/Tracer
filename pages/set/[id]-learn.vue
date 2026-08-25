@@ -569,6 +569,7 @@ const busy = ref(true);
 const loadError = ref<string | null>(null);
 const set = ref<FlashcardSet | null>(null);
 const defaultModelId = ref<string | null>(null);
+const fallbackModelIds = ref<string[]>([]);
 const learnHybridEnabled = ref(false);
 
 const learnBusy = ref(false);
@@ -878,11 +879,13 @@ function practiceQuestionSurfaceClass() {
 }
 
 async function getWrittenModel(modelId: string) {
-    if (cachedWrittenModel.value?.id === modelId) {
+    const route = [modelId, ...fallbackModelIds.value];
+    const cacheId = route.join("\n");
+    if (cachedWrittenModel.value?.id === cacheId) {
         return cachedWrittenModel.value.model;
     }
-    const model = await resolveAiModel(modelId);
-    cachedWrittenModel.value = { id: modelId, model };
+    const model = await resolveAiModel(route);
+    cachedWrittenModel.value = { id: cacheId, model };
     return model;
 }
 
@@ -1105,7 +1108,7 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
 
     learnBusy.value = true;
     try {
-        const model = await resolveAiModel(defaultModelId.value);
+        const model = await resolveAiModel([defaultModelId.value, ...fallbackModelIds.value]);
         const prompt = buildLearnAugmentPrompt({
             title: s.title,
             description: s.description,
@@ -1314,6 +1317,7 @@ onMounted(async () => {
 
         const settings = await createSettingsRepo(db).get();
         defaultModelId.value = settings.defaultModelId;
+        fallbackModelIds.value = settings.fallbackModelIds;
         learnHybridEnabled.value = settings.learnHybridEnabled;
 
         if (settings.startupLockEnabled && status.requires_unlock) {

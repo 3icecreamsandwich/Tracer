@@ -13,6 +13,7 @@ pub struct ProviderApiKeyPresence {
     pub openai: bool,
     pub anthropic: bool,
     pub gemini: bool,
+    pub ollama_cloud: bool,
     pub openai_compat: bool,
 }
 

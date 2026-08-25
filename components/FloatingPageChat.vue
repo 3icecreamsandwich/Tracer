@@ -12,16 +12,26 @@
           <img :src="chatIconUrl" alt="" class="h-7 w-7 object-contain" aria-hidden="true" />
           <h2 class="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">Chat with Tracer</h2>
         </div>
-        <button
-          type="button"
-          class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
-          aria-label="Close chat"
-          @click="closePanel"
-        >
-          <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" />
-          </svg>
-        </button>
+        <div class="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            class="inline-flex h-8 items-center justify-center rounded-md px-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
+            :disabled="messages.length === 0 && !error && !busy"
+            @click="clearChat"
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
+            aria-label="Close chat"
+            @click="closePanel"
+          >
+            <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       <div ref="messagesEl" class="m-3 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-md border border-amber-200 bg-amber-50/20 p-3 text-sm text-slate-900 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-50" aria-live="polite">
@@ -96,6 +106,7 @@ import { resolveAiModel } from '~/src/composables/ai/registry'
 import {
   buildPageAwareChatSystemPrompt,
   streamGroundedChatText,
+  takeNextChatRevealUnit,
   takeRecentChatMessages,
   type ChatMessage
 } from '~/src/composables/ai/chat'
@@ -103,7 +114,12 @@ import { createSettingsRepo, useTracerDb } from '~/src/composables/db'
 import { useFloatingChatPreference } from '~/src/composables/floating-chat'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 
-type FloatingMessage = ChatMessage & { id: string }
+type FloatingMessage = ChatMessage & { id: string; fullContent?: string }
+type ChatRevealJob = {
+  complete: boolean
+  pending: string
+  timer: number | null
+}
 
 const route = useRoute()
 const { floatingChatEnabled, floatingChatReady } = useFloatingChatPreference()
@@ -120,6 +136,8 @@ const inputEl = ref<HTMLTextAreaElement | null>(null)
 const activeRequest = shallowRef<AbortController | null>(null)
 let messageSequence = 0
 let cachedModel: { id: string; model: any } | null = null
+const chatRevealIntervalMs = 34
+const chatRevealJobs = new Map<string, ChatRevealJob>()
 
 function nextMessageId() {
   messageSequence += 1
@@ -128,6 +146,18 @@ function nextMessageId() {
 
 function closePanel() {
   panelOpen.value = false
+}
+
+function clearChat() {
+  const controller = activeRequest.value
+  activeRequest.value = null
+  controller?.abort()
+  cancelAllReveals()
+  messages.value = []
+  error.value = null
+  missingModel.value = false
+  busy.value = false
+  void nextTick(() => inputEl.value?.focus())
 }
 
 function togglePanel() {
@@ -182,6 +212,90 @@ function scrollToLatestMessage() {
   messagesEl.value.scrollTop = messagesEl.value.scrollHeight
 }
 
+function updateMessage(
+  messageId: string,
+  update: (message: FloatingMessage) => FloatingMessage
+) {
+  const index = messages.value.findIndex((message) => message.id === messageId)
+  if (index < 0) return false
+  const current = messages.value[index]
+  if (!current) return false
+  messages.value = [
+    ...messages.value.slice(0, index),
+    update(current),
+    ...messages.value.slice(index + 1)
+  ]
+  return true
+}
+
+function stopRevealTimer(messageId: string, job: ChatRevealJob) {
+  if (job.timer !== null) {
+    window.clearInterval(job.timer)
+    job.timer = null
+  }
+  chatRevealJobs.delete(messageId)
+}
+
+function revealNextUnit(messageId: string, job: ChatRevealJob) {
+  const next = takeNextChatRevealUnit(job.pending, job.complete)
+  if (!next) return false
+  job.pending = next.pending
+  const didUpdate = updateMessage(messageId, (message) => ({
+    ...message,
+    content: `${message.content}${next.unit}`
+  }))
+  if (didUpdate) void nextTick().then(scrollToLatestMessage)
+  return didUpdate
+}
+
+function startRevealTimer(messageId: string, job: ChatRevealJob) {
+  if (job.timer !== null) return
+  job.timer = window.setInterval(() => {
+    const current = chatRevealJobs.get(messageId)
+    if (!current) return
+    revealNextUnit(messageId, current)
+    if (!current.pending) stopRevealTimer(messageId, current)
+  }, chatRevealIntervalMs)
+}
+
+function enqueueReveal(messageId: string, chunk: string) {
+  if (!chunk) return
+  const didUpdate = updateMessage(messageId, (message) => ({
+    ...message,
+    fullContent: `${message.fullContent ?? message.content}${chunk}`
+  }))
+  if (!didUpdate) return
+  let job = chatRevealJobs.get(messageId)
+  if (!job) {
+    job = { complete: false, pending: '', timer: null }
+    chatRevealJobs.set(messageId, job)
+  }
+  job.pending += chunk
+  const message = messages.value.find((candidate) => candidate.id === messageId)
+  if (!message?.content) revealNextUnit(messageId, job)
+  startRevealTimer(messageId, job)
+}
+
+function finishReveal(messageId: string) {
+  const job = chatRevealJobs.get(messageId)
+  if (!job) return
+  job.complete = true
+  if (!job.pending) {
+    stopRevealTimer(messageId, job)
+    return
+  }
+  startRevealTimer(messageId, job)
+}
+
+function cancelReveal(messageId: string) {
+  const job = chatRevealJobs.get(messageId)
+  if (job) stopRevealTimer(messageId, job)
+}
+
+function cancelAllReveals() {
+  for (const [messageId, job] of chatRevealJobs) stopRevealTimer(messageId, job)
+}
+
 async function getDefaultModel() {
   if (!hasTauriRuntime()) throw new Error('Choose a default AI model in Settings to use page chat.')
   const db = await useTracerDb()
@@ -190,9 +304,11 @@ async function getDefaultModel() {
     missingModel.value = true
     throw new Error('Choose a default AI model in Settings to use page chat.')
   }
-  if (cachedModel?.id === settings.defaultModelId) return cachedModel.model
-  const model = await resolveAiModel(settings.defaultModelId)
-  cachedModel = { id: settings.defaultModelId, model }
+  const route = [settings.defaultModelId, ...settings.fallbackModelIds]
+  const cacheId = route.join('\n')
+  if (cachedModel?.id === cacheId) return cachedModel.model
+  const model = await resolveAiModel(route)
+  cachedModel = { id: cacheId, model }
   return model
 }
 
@@ -205,7 +321,12 @@ async function sendMessage() {
   input.value = ''
   const userMessage: FloatingMessage = { id: nextMessageId(), role: 'user', content: text }
   messages.value.push(userMessage)
-  const assistantMessage: FloatingMessage = { id: nextMessageId(), role: 'assistant', content: '' }
+  const assistantMessage: FloatingMessage = {
+    id: nextMessageId(),
+    role: 'assistant',
+    content: '',
+    fullContent: ''
+  }
   messages.value.push(assistantMessage)
   busy.value = true
   await nextTick()
@@ -222,7 +343,12 @@ async function sendMessage() {
       title: pageTitle(),
       context: pageContextSnapshot()
     })
-    const prior = takeRecentChatMessages(messages.value.slice(0, -1))
+    const prior = takeRecentChatMessages(
+      messages.value.slice(0, -1).map((message) => ({
+        role: message.role,
+        content: message.fullContent ?? message.content
+      }))
+    )
     const result = streamGroundedChatText({
       model,
       system,
@@ -231,12 +357,15 @@ async function sendMessage() {
     })
 
     for await (const chunk of result.textStream) {
-      assistantMessage.content += chunk
-      await nextTick()
-      scrollToLatestMessage()
+      enqueueReveal(assistantMessage.id, chunk)
     }
+    finishReveal(assistantMessage.id)
   } catch (cause) {
-    if (controller.signal.aborted) return
+    if (controller.signal.aborted) {
+      cancelReveal(assistantMessage.id)
+      return
+    }
+    cancelReveal(assistantMessage.id)
     messages.value = messages.value.filter((message) => message.id !== assistantMessage.id)
     error.value = cause instanceof Error ? cause.message : 'Failed to send message.'
   } finally {
@@ -258,6 +387,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   activeRequest.value?.abort()
+  cancelAllReveals()
   document.removeEventListener('pointerdown', onDocumentPointerDown)
   document.removeEventListener('keydown', onDocumentKeydown)
 })

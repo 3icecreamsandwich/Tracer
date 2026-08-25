@@ -22,6 +22,7 @@ fn map_ai_kind_to_store_key(kind: &str) -> Option<&'static str> {
         "openai_api_key" => Some(security::STRONGHOLD_STORE_KEY_OPENAI_API_KEY),
         "anthropic_api_key" => Some(security::STRONGHOLD_STORE_KEY_ANTHROPIC_API_KEY),
         "gemini_api_key" => Some(security::STRONGHOLD_STORE_KEY_GEMINI_API_KEY),
+        "ollama_cloud_api_key" => Some(security::STRONGHOLD_STORE_KEY_OLLAMA_CLOUD_API_KEY),
         "github_models_token" => Some(security::STRONGHOLD_STORE_KEY_GITHUB_MODELS_TOKEN),
         "openai_compat_api_key" => Some(security::STRONGHOLD_STORE_KEY_OPENAI_COMPAT_API_KEY),
         _ => None,

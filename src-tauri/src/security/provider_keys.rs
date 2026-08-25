@@ -4,6 +4,7 @@ use super::{AppLockError, ProviderApiKeyPresence, ProviderSettingsSaveResult};
 pub(crate) const STRONGHOLD_STORE_KEY_OPENAI_API_KEY: &str = "ai_openai_api_key";
 pub(crate) const STRONGHOLD_STORE_KEY_ANTHROPIC_API_KEY: &str = "ai_anthropic_api_key";
 pub(crate) const STRONGHOLD_STORE_KEY_GEMINI_API_KEY: &str = "ai_gemini_api_key";
+pub(crate) const STRONGHOLD_STORE_KEY_OLLAMA_CLOUD_API_KEY: &str = "ai_ollama_cloud_api_key";
 pub(crate) const STRONGHOLD_STORE_KEY_GITHUB_MODELS_TOKEN: &str = "ai_github_models_token";
 pub(crate) const STRONGHOLD_STORE_KEY_OPENAI_COMPAT_API_KEY: &str = "ai_openai_compat_api_key";
 pub(crate) const STRONGHOLD_STORE_KEY_OPENAI_COMPAT_CONFIG_JSON: &str =
@@ -14,6 +15,7 @@ pub enum ProviderApiKeyId {
     OpenAi,
     Anthropic,
     Gemini,
+    OllamaCloud,
     OpenAiCompat,
 }
 
@@ -23,6 +25,7 @@ impl ProviderApiKeyId {
             ProviderApiKeyId::OpenAi => "openai",
             ProviderApiKeyId::Anthropic => "anthropic",
             ProviderApiKeyId::Gemini => "gemini",
+            ProviderApiKeyId::OllamaCloud => "ollama_cloud",
             ProviderApiKeyId::OpenAiCompat => "openai_compat",
         }
     }
@@ -32,6 +35,7 @@ impl ProviderApiKeyId {
             ProviderApiKeyId::OpenAi => STRONGHOLD_STORE_KEY_OPENAI_API_KEY,
             ProviderApiKeyId::Anthropic => STRONGHOLD_STORE_KEY_ANTHROPIC_API_KEY,
             ProviderApiKeyId::Gemini => STRONGHOLD_STORE_KEY_GEMINI_API_KEY,
+            ProviderApiKeyId::OllamaCloud => STRONGHOLD_STORE_KEY_OLLAMA_CLOUD_API_KEY,
             ProviderApiKeyId::OpenAiCompat => STRONGHOLD_STORE_KEY_OPENAI_COMPAT_API_KEY,
         }
     }
@@ -42,6 +46,7 @@ pub fn provider_api_key_id_from_str(id: &str) -> Option<ProviderApiKeyId> {
         "openai" => Some(ProviderApiKeyId::OpenAi),
         "anthropic" => Some(ProviderApiKeyId::Anthropic),
         "gemini" => Some(ProviderApiKeyId::Gemini),
+        "ollama_cloud" => Some(ProviderApiKeyId::OllamaCloud),
         "openai_compat" => Some(ProviderApiKeyId::OpenAiCompat),
         _ => None,
     }
@@ -51,6 +56,7 @@ pub fn provider_api_key_presence_from_secret_bytes(
     openai: Option<&[u8]>,
     anthropic: Option<&[u8]>,
     gemini: Option<&[u8]>,
+    ollama_cloud: Option<&[u8]>,
     openai_compat: Option<&[u8]>,
 ) -> ProviderApiKeyPresence {
     fn present(value: Option<&[u8]>) -> bool {
@@ -63,6 +69,7 @@ pub fn provider_api_key_presence_from_secret_bytes(
         openai: present(openai),
         anthropic: present(anthropic),
         gemini: present(gemini),
+        ollama_cloud: present(ollama_cloud),
         openai_compat: present(openai_compat),
     }
 }
@@ -85,6 +92,9 @@ pub fn stronghold_provider_api_key_presence(
     let gemini = store
         .get(STRONGHOLD_STORE_KEY_GEMINI_API_KEY.as_bytes())
         .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
+    let ollama_cloud = store
+        .get(STRONGHOLD_STORE_KEY_OLLAMA_CLOUD_API_KEY.as_bytes())
+        .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
     let openai_compat = store
         .get(STRONGHOLD_STORE_KEY_OPENAI_COMPAT_API_KEY.as_bytes())
         .map_err(|e| AppLockError::new("stronghold", e.to_string()))?;
@@ -93,6 +103,7 @@ pub fn stronghold_provider_api_key_presence(
         openai.as_deref(),
         anthropic.as_deref(),
         gemini.as_deref(),
+        ollama_cloud.as_deref(),
         openai_compat.as_deref(),
     ))
 }

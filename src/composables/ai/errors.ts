@@ -25,6 +25,7 @@ export type AiCredentialKind =
   | 'anthropic_api_key'
   | 'gemini_api_key'
   | 'github_models_token'
+  | 'ollama_cloud_api_key'
   | 'openai_compat_api_key'
 
 export class MissingAiCredentialError extends AiRegistryError {

@@ -313,6 +313,7 @@ const imageAccept = 'image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg'
 
 const busy = ref(false)
 const defaultModelId = ref<string | null>(null)
+const fallbackModelIds = ref<string[]>([])
 const formError = ref<string | null>(null)
 const isImportOpen = ref(false)
 const importText = ref('')
@@ -333,7 +334,7 @@ const {
   run: runFactCheck,
   retry: retryFactCheck,
   closeAiError: closeFactCheckAiError
-} = useFactCheck({ language, defaultModelId })
+} = useFactCheck({ language, defaultModelId, fallbackModelIds })
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
@@ -630,6 +631,7 @@ onMounted(async () => {
 
     const settings = await createSettingsRepo(db).get()
     defaultModelId.value = settings.defaultModelId
+    fallbackModelIds.value = settings.fallbackModelIds
     if (settings.startupLockEnabled && status.requires_unlock) {
       if (!unlockedThisSession.value) {
         markLocked()

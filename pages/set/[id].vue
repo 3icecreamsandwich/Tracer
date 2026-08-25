@@ -2268,6 +2268,7 @@ const chatSystemPrompt = computed(() =>
 );
 
 const defaultModelId = ref<string | null>(null);
+const fallbackModelIds = ref<string[]>([]);
 const learnHybridEnabled = ref(false);
 
 const isFlipped = ref(false);
@@ -2617,22 +2618,24 @@ function cancelChatRevealJobs() {
 }
 
 async function getCachedChatModel(modelId: string) {
+    const route = [modelId, ...fallbackModelIds.value];
+    const cacheId = route.join("\n");
     const cached = cachedChatModel.value;
-    if (cached?.id === modelId) return cached.model;
+    if (cached?.id === cacheId) return cached.model;
     const existing = cachedChatModelPromise.value;
     const promise =
-        existing?.id === modelId
+        existing?.id === cacheId
             ? existing.promise
-            : resolveAiModel(modelId).finally(() => {
-                  if (cachedChatModelPromise.value?.id === modelId) {
+            : resolveAiModel(route).finally(() => {
+                  if (cachedChatModelPromise.value?.id === cacheId) {
                       cachedChatModelPromise.value = null;
                   }
               });
-    if (existing?.id !== modelId) {
-        cachedChatModelPromise.value = { id: modelId, promise };
+    if (existing?.id !== cacheId) {
+        cachedChatModelPromise.value = { id: cacheId, promise };
     }
     const model = await promise;
-    cachedChatModel.value = { id: modelId, model };
+    cachedChatModel.value = { id: cacheId, model };
     return model;
 }
 
@@ -3693,7 +3696,7 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
 
     learnBusy.value = true;
     try {
-        const model = await resolveAiModel(defaultModelId.value);
+        const model = await resolveAiModel([defaultModelId.value, ...fallbackModelIds.value]);
         const prompt = buildLearnAugmentPrompt({
             title: s.title,
             description: s.description,
@@ -4607,6 +4610,7 @@ async function openSetPage() {
 
         const settings = await createSettingsRepo(db).get();
         defaultModelId.value = settings.defaultModelId;
+        fallbackModelIds.value = settings.fallbackModelIds;
         learnHybridEnabled.value = settings.learnHybridEnabled;
         flashcardsDefinitionFirst.value = settings.flashcardsDefinitionFirst;
 
