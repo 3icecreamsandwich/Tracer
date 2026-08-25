@@ -33,10 +33,24 @@
                     >
                         {{ timerText }}
                     </span>
-                    <span class="text-sm font-medium text-slate-600 dark:text-slate-300">
-                        {{ progressText }}
-                    </span>
                 </div>
+            </div>
+            <div
+                class="mt-3 flex items-center gap-3 text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400"
+                role="progressbar"
+                aria-label="Test progress"
+                aria-valuemin="0"
+                :aria-valuemax="testQuestions.length"
+                :aria-valuenow="answeredCount"
+            >
+                <span>0</span>
+                <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                    <div
+                        class="h-full rounded-full bg-orange-500 transition-[width] duration-200 ease-out"
+                        :style="{ width: `${testProgressPercent}%` }"
+                    />
+                </div>
+                <span>{{ testQuestions.length }}</span>
             </div>
         </header>
 
@@ -458,11 +472,10 @@ const accuracyPercent = computed(() => {
     return Math.round((correctCount.value / testQuestions.value.length) * 100)
 })
 
-const progressText = computed(() => {
+const testProgressPercent = computed(() => {
     const total = testQuestions.value.length
-    return testSubmitted.value
-        ? `${correctCount.value}/${total}`
-        : `${answeredCount.value}/${total}`
+    if (total <= 0) return 0
+    return Math.min(100, (answeredCount.value / total) * 100)
 })
 
 const timerText = computed(() => {

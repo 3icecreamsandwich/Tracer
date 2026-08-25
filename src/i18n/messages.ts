@@ -1614,4 +1614,21 @@ for (const language of Object.keys(classroomProgressMessages) as AppLanguage[]) 
   Object.assign(messageTargets[language], classroomProgressMessages[language])
 }
 
+const matchLeaderboardMessages: Record<AppLanguage, Messages> = {
+  en: { 'matchLeaderboard.title': 'Leaderboard', 'matchLeaderboard.description': 'Fastest completed times', 'matchLeaderboard.loading': 'Loading leaderboard…', 'matchLeaderboard.empty': 'Be the first student on the leaderboard.', 'matchLeaderboard.unavailable': 'The leaderboard is unavailable right now.' },
+  es: { 'matchLeaderboard.title': 'Clasificación', 'matchLeaderboard.description': 'Tiempos completados más rápidos', 'matchLeaderboard.loading': 'Cargando clasificación…', 'matchLeaderboard.empty': 'Sé el primer estudiante en la clasificación.', 'matchLeaderboard.unavailable': 'La clasificación no está disponible ahora.' },
+  fr: { 'matchLeaderboard.title': 'Classement', 'matchLeaderboard.description': 'Temps terminés les plus rapides', 'matchLeaderboard.loading': 'Chargement du classement…', 'matchLeaderboard.empty': 'Soyez le premier élève du classement.', 'matchLeaderboard.unavailable': 'Le classement est indisponible pour le moment.' },
+  'zh-CN': { 'matchLeaderboard.title': '排行榜', 'matchLeaderboard.description': '最快完成时间', 'matchLeaderboard.loading': '正在加载排行榜…', 'matchLeaderboard.empty': '成为排行榜上的第一位学生。', 'matchLeaderboard.unavailable': '排行榜暂时不可用。' },
+  hi: { 'matchLeaderboard.title': 'लीडरबोर्ड', 'matchLeaderboard.description': 'सबसे तेज़ पूरे किए गए समय', 'matchLeaderboard.loading': 'लीडरबोर्ड लोड हो रहा है…', 'matchLeaderboard.empty': 'लीडरबोर्ड पर पहले विद्यार्थी बनें।', 'matchLeaderboard.unavailable': 'लीडरबोर्ड अभी उपलब्ध नहीं है।' },
+  ar: { 'matchLeaderboard.title': 'لوحة المتصدرين', 'matchLeaderboard.description': 'أسرع أوقات الإكمال', 'matchLeaderboard.loading': 'جارٍ تحميل لوحة المتصدرين…', 'matchLeaderboard.empty': 'كن أول طالب في لوحة المتصدرين.', 'matchLeaderboard.unavailable': 'لوحة المتصدرين غير متاحة الآن.' },
+  de: { 'matchLeaderboard.title': 'Bestenliste', 'matchLeaderboard.description': 'Schnellste Abschlusszeiten', 'matchLeaderboard.loading': 'Bestenliste wird geladen…', 'matchLeaderboard.empty': 'Sei die erste Person auf der Bestenliste.', 'matchLeaderboard.unavailable': 'Die Bestenliste ist derzeit nicht verfügbar.' },
+  ru: { 'matchLeaderboard.title': 'Таблица лидеров', 'matchLeaderboard.description': 'Самое быстрое прохождение', 'matchLeaderboard.loading': 'Загрузка таблицы лидеров…', 'matchLeaderboard.empty': 'Станьте первым учеником в таблице лидеров.', 'matchLeaderboard.unavailable': 'Таблица лидеров сейчас недоступна.' },
+  ja: { 'matchLeaderboard.title': 'リーダーボード', 'matchLeaderboard.description': '最速の完了タイム', 'matchLeaderboard.loading': 'リーダーボードを読み込み中…', 'matchLeaderboard.empty': '最初のランクインを目指しましょう。', 'matchLeaderboard.unavailable': '現在リーダーボードを利用できません。' },
+  ko: { 'matchLeaderboard.title': '리더보드', 'matchLeaderboard.description': '가장 빠른 완료 기록', 'matchLeaderboard.loading': '리더보드 불러오는 중…', 'matchLeaderboard.empty': '리더보드의 첫 번째 학생이 되어 보세요.', 'matchLeaderboard.unavailable': '현재 리더보드를 사용할 수 없습니다.' },
+}
+
+for (const language of Object.keys(matchLeaderboardMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], matchLeaderboardMessages[language])
+}
+
 export const messages: Record<AppLanguage, Messages> = messageTargets

@@ -798,8 +798,12 @@ async function loadClassroomData() {
   classroomBusy.value = true
   classroomError.value = null
   try {
-    accountRole.value = await getAccountRole()
-    classrooms.value = await listClassrooms()
+    const [nextRole, nextClassrooms] = await Promise.all([
+      getAccountRole(),
+      listClassrooms(),
+    ])
+    accountRole.value = nextRole
+    classrooms.value = nextClassrooms
   } catch (error) {
     if (error instanceof ClassroomError && ['signed_out', 'forbidden', 'not_configured'].includes(error.code)) {
       accountRole.value = null

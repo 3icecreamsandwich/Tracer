@@ -15,6 +15,8 @@ export type PendingClassroomAttempt = {
   scoreEarned: number
   scorePossible: number
   durationSeconds: number
+  durationMs: number
+  completed: boolean
 }
 
 type ActiveClassroomAttempt = Pick<PendingClassroomAttempt, 'assignmentId' | 'clientAttemptId' | 'mode' | 'startedAt'> & {
@@ -105,7 +107,6 @@ export function beginAssignedAttempt(input: {
   const key = activeKey(input.assignmentId, input.mode)
   const existing = readActive(key)
   if (existing?.setId === input.setId) {
-    void flushPendingAssignedAttempts()
     return
   }
   writeActive(key, {
@@ -115,7 +116,6 @@ export function beginAssignedAttempt(input: {
     setId: input.setId,
     startedAt: new Date().toISOString(),
   })
-  void flushPendingAssignedAttempts()
 }
 
 export async function completeAssignedAttempt(input: {
@@ -124,6 +124,8 @@ export async function completeAssignedAttempt(input: {
   mode: ClassroomAttemptMode
   scoreEarned: number
   scorePossible: number
+  durationMs?: number
+  completed?: boolean
 }) {
   if (!input.assignmentId || input.scorePossible < 0) return
   const key = activeKey(input.assignmentId, input.mode)
@@ -132,6 +134,11 @@ export async function completeAssignedAttempt(input: {
   writeActive(key, null)
   const submittedAt = new Date()
   const startedAt = new Date(active.startedAt)
+  const elapsedMs = Math.max(0, submittedAt.getTime() - startedAt.getTime())
+  const durationMs = Math.max(
+    0,
+    Math.round(Number.isFinite(input.durationMs) ? input.durationMs! : elapsedMs),
+  )
   const attempt: PendingClassroomAttempt = {
     assignmentId: input.assignmentId,
     clientAttemptId: active.clientAttemptId,
@@ -140,7 +147,9 @@ export async function completeAssignedAttempt(input: {
     submittedAt: submittedAt.toISOString(),
     scoreEarned: Math.max(0, Math.min(input.scoreEarned, input.scorePossible)),
     scorePossible: Math.max(0, input.scorePossible),
-    durationSeconds: Math.max(0, Math.round((submittedAt.getTime() - startedAt.getTime()) / 1000)),
+    durationSeconds: Math.max(0, Math.round(durationMs / 1000)),
+    durationMs,
+    completed: input.completed ?? input.mode !== 'match',
   }
   const pending = readPending()
   const queued = writePending([...pending.filter((item) => item.clientAttemptId !== attempt.clientAttemptId), attempt])
@@ -161,7 +170,15 @@ export async function flushPendingAssignedAttempts(): Promise<void> {
     const succeeded = new Set<string>()
     for (const attempt of pending) {
       try {
-        await submitClassroomAttempt(attempt)
+        await submitClassroomAttempt({
+          ...attempt,
+          durationMs: Number.isFinite(attempt.durationMs)
+            ? attempt.durationMs
+            : Math.max(0, attempt.durationSeconds * 1000),
+          completed: typeof attempt.completed === 'boolean'
+            ? attempt.completed
+            : attempt.mode !== 'match',
+        })
         succeeded.add(attempt.clientAttemptId)
       } catch {
         // Keep the attempt queued for the next online retry.

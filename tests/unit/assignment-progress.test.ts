@@ -1,12 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-
-const { submitClassroomAttempt } = vi.hoisted(() => ({
-  submitClassroomAttempt: vi.fn(async () => undefined),
-}))
-
-vi.mock('../../src/composables/classrooms', () => ({
-  submitClassroomAttempt,
-}))
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
   beginAssignedAttempt,
@@ -23,13 +15,16 @@ class MemoryStorage {
 const assignmentId = '12345678-1234-4123-8123-123456789abc'
 
 beforeEach(() => {
-  submitClassroomAttempt.mockClear()
   const windowStub = {
     localStorage: new MemoryStorage(),
     sessionStorage: new MemoryStorage(),
   }
   Object.defineProperty(globalThis, 'window', { configurable: true, value: windowStub })
 })
+
+function pendingAttempts() {
+  return JSON.parse(window.localStorage.getItem('tracer:pending-classroom-attempts') ?? '[]')
+}
 
 describe('assigned attempt lifecycle', () => {
   it('keeps one attempt identity while a mode is restarted during the same visit', async () => {
@@ -43,8 +38,8 @@ describe('assigned attempt lifecycle', () => {
       scorePossible: 2,
     })
 
-    expect(submitClassroomAttempt).toHaveBeenCalledTimes(1)
-    expect(submitClassroomAttempt).toHaveBeenCalledWith(expect.objectContaining({
+    expect(pendingAttempts()).toHaveLength(1)
+    expect(pendingAttempts()).toContainEqual(expect.objectContaining({
       scoreEarned: 1,
       scorePossible: 2,
     }))
@@ -60,9 +55,29 @@ describe('assigned attempt lifecycle', () => {
       scorePossible: 0,
     })
 
-    expect(submitClassroomAttempt).toHaveBeenCalledWith(expect.objectContaining({
+    expect(pendingAttempts()).toContainEqual(expect.objectContaining({
       scoreEarned: 0,
       scorePossible: 0,
+      completed: true,
+    }))
+  })
+
+  it('persists exact Match duration and excludes unfinished runs from the leaderboard', async () => {
+    beginAssignedAttempt({ assignmentId, setId: 'set-3', mode: 'match' })
+    await completeAssignedAttempt({
+      assignmentId,
+      setId: 'set-3',
+      mode: 'match',
+      scoreEarned: 8,
+      scorePossible: 10,
+      durationMs: 38_151,
+      completed: false,
+    })
+
+    expect(pendingAttempts()).toContainEqual(expect.objectContaining({
+      durationMs: 38_151,
+      durationSeconds: 38,
+      completed: false,
     }))
   })
 })

@@ -73,6 +73,14 @@
                             {{ t("set.backToSet") }}
                         </NuxtLink>
                     </div>
+
+                    <MatchLeaderboard
+                        :assignment-id="assignedAssignmentId"
+                        :entries="matchLeaderboard"
+                        :loading="matchLeaderboardLoading"
+                        :error="matchLeaderboardError"
+                        @retry="loadMatchLeaderboard"
+                    />
                 </div>
             </div>
 
@@ -182,6 +190,10 @@ import {
     completeAssignedAttempt,
     parseAssignedAssignmentId,
 } from "~/src/composables/assignment-progress";
+import {
+    listAssignedMatchLeaderboard,
+    type AssignedMatchLeaderboardEntry,
+} from "~/src/composables/classrooms";
 
 const route = useRoute();
 const router = useRouter();
@@ -216,13 +228,15 @@ const matchSelectedTileIds = ref<string[]>([]);
 const matchMatchedPairIds = ref<Set<Uuid>>(new Set());
 const matchAttemptsCount = ref(0);
 const matchCorrectAttemptsCount = ref(0);
-const assignedSessionAttempts = ref(0);
-const assignedSessionCorrect = ref(0);
-let assignedSessionFinished = false;
+const matchLeaderboard = ref<AssignedMatchLeaderboardEntry[]>([]);
+const matchLeaderboardLoading = ref(false);
+const matchLeaderboardError = ref(false);
+let assignedMatchActive = false;
 const matchMemoryMode = ref(false);
 
 function beginClassroomMatch() {
-    if (!set.value) return;
+    if (!set.value || !assignedAssignmentId.value) return;
+    assignedMatchActive = true;
     beginAssignedAttempt({
         assignmentId: assignedAssignmentId.value,
         setId: set.value.id,
@@ -230,16 +244,36 @@ function beginClassroomMatch() {
     });
 }
 
-function finishClassroomMatch() {
-    if (assignedSessionFinished || !set.value) return;
-    assignedSessionFinished = true;
-    void completeAssignedAttempt({
+async function loadMatchLeaderboard() {
+    const assignmentId = assignedAssignmentId.value;
+    if (!assignmentId) return;
+    matchLeaderboardLoading.value = true;
+    matchLeaderboardError.value = false;
+    try {
+        matchLeaderboard.value = await listAssignedMatchLeaderboard(assignmentId);
+    } catch {
+        matchLeaderboardError.value = true;
+    } finally {
+        matchLeaderboardLoading.value = false;
+    }
+}
+
+async function finishClassroomMatch(completed = false) {
+    if (!assignedMatchActive || !set.value) return;
+    assignedMatchActive = false;
+    const durationMs = matchStartedAtMs.value === null
+        ? matchElapsedTimeMs.value
+        : Math.max(0, Date.now() - matchStartedAtMs.value);
+    await completeAssignedAttempt({
         assignmentId: assignedAssignmentId.value,
         setId: set.value.id,
         mode: "match",
-        scoreEarned: assignedSessionCorrect.value,
-        scorePossible: assignedSessionAttempts.value,
+        scoreEarned: matchCorrectAttemptsCount.value,
+        scorePossible: matchAttemptsCount.value,
+        durationMs,
+        completed,
     });
+    if (completed) await loadMatchLeaderboard();
 }
 
 function onPageHide() {
@@ -302,6 +336,7 @@ function matchStop(reason: "completed" | "timeout") {
 
     matchSelectedTileIds.value = [];
     matchBusy.value = false;
+    void finishClassroomMatch(reason === "completed");
 }
 
 function startMatchTimer() {
@@ -359,6 +394,7 @@ function startMatch() {
 }
 
 function restartMatchRun() {
+    void finishClassroomMatch(false);
     matchRunCounter.value += 1;
     resetMatchStateForRun();
     if (set.value) matchPrepareTiles(set.value);
@@ -436,11 +472,9 @@ async function onMatchTileClick(tile: MatchTile) {
     }
 
     matchAttemptsCount.value += 1;
-    assignedSessionAttempts.value += 1;
     const isMatch = a.pairId === b.pairId && a.kind !== b.kind;
     if (isMatch) {
         matchCorrectAttemptsCount.value += 1;
-        assignedSessionCorrect.value += 1;
         matchMatchedPairIds.value = new Set([
             ...matchMatchedPairIds.value,
             a.pairId,
@@ -568,7 +602,6 @@ onMounted(async () => {
         if (set.value) {
             resetMatchStateForRun();
             matchPrepareTiles(set.value);
-            beginClassroomMatch();
         }
         document.addEventListener("pointerdown", onDocumentMatchPointerDown);
     } catch {

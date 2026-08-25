@@ -34,8 +34,19 @@
                         title="Practice settings"
                         @click="openPracticeSettings"
                     >
-                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                        <svg
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            class="h-4 w-4"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
+                            />
                             <circle cx="12" cy="12" r="3" />
                         </svg>
                     </button>
@@ -44,9 +55,7 @@
         </div>
 
         <!-- Main Content Area -->
-        <div
-            class="flex flex-1 flex-col items-center justify-start px-6 py-8"
-        >
+        <div class="flex flex-1 flex-col items-center justify-start px-6 py-8">
             <!-- Title -->
             <div class="mb-6 text-center">
                 <h1
@@ -61,7 +70,7 @@
 
             <div
                 v-if="practiceSettingsOpen"
-                class="mb-6 w-full max-w-4xl rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10"
+                class="mb-6 w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             >
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -345,12 +354,8 @@
                             <button
                                 type="button"
                                 class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                                :class="
-                                    practiceTrueFalseChoiceClass(true)
-                                "
-                                :disabled="
-                                    learnBusy || practiceAnswerBusy
-                                "
+                                :class="practiceTrueFalseChoiceClass(true)"
+                                :disabled="learnBusy || practiceAnswerBusy"
                                 @click="answerLearnTrueFalse(true)"
                             >
                                 {{ t("common.true") }}
@@ -358,12 +363,8 @@
                             <button
                                 type="button"
                                 class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                                :class="
-                                    practiceTrueFalseChoiceClass(false)
-                                "
-                                :disabled="
-                                    learnBusy || practiceAnswerBusy
-                                "
+                                :class="practiceTrueFalseChoiceClass(false)"
+                                :disabled="learnBusy || practiceAnswerBusy"
                                 @click="answerLearnTrueFalse(false)"
                             >
                                 {{ t("common.false") }}
@@ -382,12 +383,8 @@
                                 :key="`${learnCurrentQuestion.id}:${idx}`"
                                 type="button"
                                 class="inline-flex items-center justify-center rounded-md border px-4 py-3 text-sm font-medium shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
-                                :class="
-                                    practiceMultipleChoiceClass(idx)
-                                "
-                                :disabled="
-                                    learnBusy || practiceAnswerBusy
-                                "
+                                :class="practiceMultipleChoiceClass(idx)"
+                                :disabled="learnBusy || practiceAnswerBusy"
                                 @click="answerLearnMultipleChoice(idx)"
                             >
                                 <MarkdownRenderer
@@ -530,10 +527,13 @@ const assignedAssignmentId = computed(() =>
     parseAssignedAssignmentId(route.query.assignment),
 );
 const backToSetPath = computed(() => {
-    const classroomId = typeof route.query.class === "string" ? route.query.class : null;
+    const classroomId =
+        typeof route.query.class === "string" ? route.query.class : null;
     return assignedAssignmentId.value && classroomId && set.value
         ? `/student/classes/${classroomId}`
-        : set.value ? `/set/${set.value.id}` : "/";
+        : set.value
+          ? `/set/${set.value.id}`
+          : "/";
 });
 
 function beginClassroomPractice() {
@@ -869,10 +869,7 @@ function answerLearnMultipleChoice(selectedIndex: number) {
 function practiceQuestionSurfaceClass() {
     const question = learnCurrentQuestion.value;
     const feedback = practiceWrittenFeedback.value;
-    if (
-        question?.kind === "written" &&
-        feedback?.questionId === question.id
-    ) {
+    if (question?.kind === "written" && feedback?.questionId === question.id) {
         return feedback.isCorrect
             ? "border-2 border-emerald-600 bg-emerald-50/40 dark:border-emerald-500 dark:bg-emerald-950/20"
             : "border-2 border-red-700 bg-red-50/40 dark:border-red-500 dark:bg-red-950/20";
@@ -1176,29 +1173,30 @@ function persistPracticeRun() {
     const signature = JSON.stringify(progress);
     if (signature === savedPracticeProgressSignature.value) return;
     savedPracticeProgressSignature.value = signature;
-    void savePracticeProgress(currentSet.id, progress, isWebPreview.value).catch(
-        () => {},
-    );
+    void savePracticeProgress(
+        currentSet.id,
+        progress,
+        isWebPreview.value,
+    ).catch(() => {});
 }
 
 async function initializePracticeRun() {
     const currentSet = set.value;
     if (!currentSet) return;
     practiceProgressReady.value = false;
-    const saved = await loadPracticeProgress(
-        currentSet.id,
-        isWebPreview.value,
-    );
+    const saved = await loadPracticeProgress(currentSet.id, isWebPreview.value);
     if (
         saved &&
         (isWebPreview.value || saved.setUpdatedAt === currentSet.updatedAt) &&
         saved.questions.length > 0
     ) {
-        const questionIds = new Set(saved.questions.map((question) => question.id));
+        const questionIds = new Set(
+            saved.questions.map((question) => question.id),
+        );
         learnQuestions.value = saved.questions;
         learnAnswersByQuestionId.value = Object.fromEntries(
-            Object.entries(saved.answersByQuestionId).filter(
-                ([questionId]) => questionIds.has(questionId),
+            Object.entries(saved.answersByQuestionId).filter(([questionId]) =>
+                questionIds.has(questionId),
             ),
         );
         const savedIndex = saved.currentQuestionId
@@ -1239,7 +1237,10 @@ function applyPracticeSettings() {
             path: `/set/${currentSet.id}-test`,
             query: {
                 assignment: assignedAssignmentId.value ?? undefined,
-                class: typeof route.query.class === "string" ? route.query.class : undefined,
+                class:
+                    typeof route.query.class === "string"
+                        ? route.query.class
+                        : undefined,
                 types: enabledPracticeQuestionTypes().join(","),
                 count: String(practiceQuestionCount.value),
                 shuffle: practiceShuffle.value ? "1" : "0",

@@ -7,7 +7,15 @@
 
       <div v-else-if="loadError" class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
-        <AppButton class="mt-4" variant="white" @click="loadDashboard">{{ t('classroom.retry') }}</AppButton>
+        <AppButton
+          v-if="loadErrorCode === 'signed_out'"
+          class="mt-4"
+          variant="white"
+          to="/settings"
+        >
+          {{ t('settings.reconnect') }}
+        </AppButton>
+        <AppButton v-else class="mt-4" variant="white" @click="loadDashboard">{{ t('classroom.retry') }}</AppButton>
       </div>
 
       <section v-else-if="classes.length === 0" class="flex min-h-[calc(100vh-10rem)] items-center justify-center">
@@ -126,6 +134,7 @@
 
 <script setup lang="ts">
 import {
+  ClassroomError,
   classroomErrorKey,
   createClassroom,
   getAccountRole,
@@ -134,6 +143,7 @@ import {
   listClassrooms,
   summarizeClassProgress,
   type Classroom,
+  type ClassroomErrorCode,
   type ClassroomProgressRow,
   type CreateClassroomInput,
 } from '~/src/composables/classrooms'
@@ -143,6 +153,7 @@ const router = useRouter()
 const { t } = useAppLanguage()
 const loading = ref(true)
 const loadError = ref<string | null>(null)
+const loadErrorCode = ref<ClassroomErrorCode | null>(null)
 const classes = ref<Classroom[]>([])
 const selectedClassId = ref('')
 const memberCount = ref(0)
@@ -200,6 +211,7 @@ async function loadDashboard() {
 async function runDashboardLoad() {
   loading.value = true
   loadError.value = null
+  loadErrorCode.value = null
   try {
     const [role, nextClasses] = await Promise.all([
       getAccountRole(),
@@ -214,6 +226,7 @@ async function runDashboardLoad() {
       selectedClassId.value = classes.value[0]?.id ?? ''
     }
   } catch (error) {
+    loadErrorCode.value = error instanceof ClassroomError ? error.code : 'unknown'
     loadError.value = t(classroomErrorKey(error))
   } finally {
     loading.value = false

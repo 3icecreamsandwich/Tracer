@@ -47,6 +47,15 @@ export type ClassroomAssignment = {
 
 export type ClassroomAttemptMode = 'flashcards' | 'practice' | 'match' | 'test'
 
+export type AssignedMatchLeaderboardEntry = {
+  rank: number
+  studentId: string
+  displayName: string
+  avatarPath: string | null
+  durationMs: number
+  submittedAt: string
+}
+
 export type ClassroomProgressRow = {
   studentId: string
   displayName: string
@@ -188,6 +197,15 @@ type ProgressRpcRow = {
   duration_seconds: number | null
   attempt_count: number | string | null
   best_accuracy_percent: number | string | null
+}
+
+type MatchLeaderboardRpcRow = {
+  leaderboard_rank: number | string
+  student_id: string
+  display_name: string | null
+  avatar_path: string | null
+  duration_ms: number | string
+  submitted_at: string
 }
 
 export type ClassroomErrorCode =
@@ -520,6 +538,8 @@ export async function submitClassroomAttempt(input: {
   scoreEarned: number
   scorePossible: number
   durationSeconds: number
+  durationMs: number
+  completed: boolean
 }): Promise<void> {
   const session = await requireOnlineSession()
   const { error } = await getSupabaseClient().rpc('submit_tracer_assignment_attempt', {
@@ -531,9 +551,33 @@ export async function submitClassroomAttempt(input: {
     requested_score_earned: input.scoreEarned,
     requested_score_possible: input.scorePossible,
     requested_duration_seconds: input.durationSeconds,
+    requested_duration_ms: input.durationMs,
+    requested_completed: input.completed,
   })
   if (error) throw errorFromPostgrest(error)
   invalidateUserClassroomCache(session.user.id, ['progress:'])
+}
+
+export async function listAssignedMatchLeaderboard(
+  assignmentId: string,
+): Promise<AssignedMatchLeaderboardEntry[]> {
+  await requireOnlineSession()
+  const { data, error } = await getSupabaseClient().rpc(
+    'list_tracer_assignment_match_leaderboard',
+    { requested_assignment_id: assignmentId },
+  )
+  if (error) throw errorFromPostgrest(error)
+  return (data ?? []).map((raw) => {
+    const row = raw as MatchLeaderboardRpcRow
+    return {
+      rank: Number(row.leaderboard_rank),
+      studentId: row.student_id,
+      displayName: row.display_name?.trim() || 'Student',
+      avatarPath: row.avatar_path,
+      durationMs: Number(row.duration_ms),
+      submittedAt: row.submitted_at,
+    }
+  })
 }
 
 function sortedScores(rows: ClassroomProgressRow[]): number[] {
