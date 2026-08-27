@@ -106,20 +106,15 @@ import { resolveAiModel } from '~/src/composables/ai/registry'
 import {
   buildPageAwareChatSystemPrompt,
   streamGroundedChatText,
-  takeNextChatRevealUnit,
   takeRecentChatMessages,
   type ChatMessage
 } from '~/src/composables/ai/chat'
+import { createChatRevealQueue } from '~/src/composables/ai/chat-reveal'
 import { createSettingsRepo, useTracerDb } from '~/src/composables/db'
 import { useFloatingChatPreference } from '~/src/composables/floating-chat'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 
 type FloatingMessage = ChatMessage & { id: string; fullContent?: string }
-type ChatRevealJob = {
-  complete: boolean
-  pending: string
-  timer: number | null
-}
 
 const route = useRoute()
 const { floatingChatEnabled, floatingChatReady } = useFloatingChatPreference()
@@ -136,8 +131,6 @@ const inputEl = ref<HTMLTextAreaElement | null>(null)
 const activeRequest = shallowRef<AbortController | null>(null)
 let messageSequence = 0
 let cachedModel: { id: string; model: any } | null = null
-const chatRevealIntervalMs = 34
-const chatRevealJobs = new Map<string, ChatRevealJob>()
 
 function nextMessageId() {
   messageSequence += 1
@@ -228,73 +221,16 @@ function updateMessage(
   return true
 }
 
-function stopRevealTimer(messageId: string, job: ChatRevealJob) {
-  if (job.timer !== null) {
-    window.clearInterval(job.timer)
-    job.timer = null
-  }
-  chatRevealJobs.delete(messageId)
-}
-
-function revealNextUnit(messageId: string, job: ChatRevealJob) {
-  const next = takeNextChatRevealUnit(job.pending, job.complete)
-  if (!next) return false
-  job.pending = next.pending
-  const didUpdate = updateMessage(messageId, (message) => ({
-    ...message,
-    content: `${message.content}${next.unit}`
-  }))
-  if (didUpdate) void nextTick().then(scrollToLatestMessage)
-  return didUpdate
-}
-
-function startRevealTimer(messageId: string, job: ChatRevealJob) {
-  if (job.timer !== null) return
-  job.timer = window.setInterval(() => {
-    const current = chatRevealJobs.get(messageId)
-    if (!current) return
-    revealNextUnit(messageId, current)
-    if (!current.pending) stopRevealTimer(messageId, current)
-  }, chatRevealIntervalMs)
-}
-
-function enqueueReveal(messageId: string, chunk: string) {
-  if (!chunk) return
-  const didUpdate = updateMessage(messageId, (message) => ({
-    ...message,
-    fullContent: `${message.fullContent ?? message.content}${chunk}`
-  }))
-  if (!didUpdate) return
-  let job = chatRevealJobs.get(messageId)
-  if (!job) {
-    job = { complete: false, pending: '', timer: null }
-    chatRevealJobs.set(messageId, job)
-  }
-  job.pending += chunk
-  const message = messages.value.find((candidate) => candidate.id === messageId)
-  if (!message?.content) revealNextUnit(messageId, job)
-  startRevealTimer(messageId, job)
-}
-
-function finishReveal(messageId: string) {
-  const job = chatRevealJobs.get(messageId)
-  if (!job) return
-  job.complete = true
-  if (!job.pending) {
-    stopRevealTimer(messageId, job)
-    return
-  }
-  startRevealTimer(messageId, job)
-}
-
-function cancelReveal(messageId: string) {
-  const job = chatRevealJobs.get(messageId)
-  if (job) stopRevealTimer(messageId, job)
-}
-
-function cancelAllReveals() {
-  for (const [messageId, job] of chatRevealJobs) stopRevealTimer(messageId, job)
-}
+const {
+  enqueue: enqueueReveal,
+  finish: finishReveal,
+  cancel: cancelReveal,
+  cancelAll: cancelAllReveals
+} = createChatRevealQueue<FloatingMessage>({
+  getMessage: (messageId) => messages.value.find((message) => message.id === messageId),
+  updateMessage,
+  onReveal: () => void nextTick().then(scrollToLatestMessage)
+})
 
 async function getDefaultModel() {
   if (!hasTauriRuntime()) throw new Error('Choose a default AI model in Settings to use page chat.')

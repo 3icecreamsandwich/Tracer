@@ -268,6 +268,15 @@ import {
     completeAssignedAttempt,
     parseAssignedAssignmentId,
 } from "~/src/composables/assignment-progress";
+import {
+    readWebFlashcardFrontPreference,
+    readWebFlashcardProgress,
+    saveWebFlashcardFrontPreference,
+    saveWebFlashcardProgress,
+    type SavedFlashcardProgress,
+} from "~/src/composables/cards/web-flashcard-state";
+import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion";
+import { createFlashcardRun } from "~/src/composables/cards/flashcard-run";
 
 const { language, t } = useAppLanguage();
 
@@ -322,9 +331,6 @@ const set = ref<FlashcardSet | null>(null);
 const isFlipped = ref(false);
 const isFlipping = ref(false);
 const isNavigating = ref<"prev" | "next" | null>(null);
-const FLASHCARD_FLIP_DURATION_MS = 320;
-let flashcardFlipSwapTimeout: ReturnType<typeof setTimeout> | null = null;
-let flashcardFlipEndTimeout: ReturnType<typeof setTimeout> | null = null;
 const flashcardAnswerFeedback = ref<"correct" | "incorrect" | null>(null);
 const flashcardAnswerBusy = ref(false);
 const flashcardAnswerTransitionId = ref(0);
@@ -349,51 +355,11 @@ const savedFlashcardTermId = ref<Uuid | null>(null);
 const savedFlashcardCorrectTermIds = ref<Uuid[]>([]);
 const savedFlashcardProgressSignature = ref<string | null>(null);
 
-type SavedFlashcardProgress = {
-    currentTermId: Uuid;
-    correctTermIds: Uuid[];
-};
-
-const WEB_FLASHCARD_FRONT_KEY = "tracer:flashcards-definition-first";
-const webFlashcardProgressKey = (setId: Uuid) =>
-    `tracer:flashcard-progress:${setId}`;
-
 const preferredFlashcardFrontOptionLabel = computed(() =>
     flashcardsDefinitionFirst.value
         ? t("set.termAtFront")
         : t("set.definitionAtFront"),
 );
-
-function readWebFlashcardFrontPreference() {
-    try {
-        return window.localStorage.getItem(WEB_FLASHCARD_FRONT_KEY) === "true";
-    } catch {
-        return false;
-    }
-}
-
-function readWebFlashcardProgress(setId: Uuid): SavedFlashcardProgress | null {
-    try {
-        const raw = window.localStorage.getItem(webFlashcardProgressKey(setId));
-        if (!raw) return null;
-        try {
-            const parsed = JSON.parse(raw) as Partial<SavedFlashcardProgress>;
-            if (typeof parsed.currentTermId !== "string") return null;
-            return {
-                currentTermId: parsed.currentTermId,
-                correctTermIds: Array.isArray(parsed.correctTermIds)
-                    ? parsed.correctTermIds.filter(
-                          (id): id is Uuid => typeof id === "string",
-                      )
-                    : [],
-            };
-        } catch {
-            return { currentTermId: raw, correctTermIds: [] };
-        }
-    } catch {
-        return null;
-    }
-}
 
 async function loadSavedFlashcardProgress(setId: Uuid) {
     if (isWebPreview.value) return readWebFlashcardProgress(setId);
@@ -418,12 +384,7 @@ function persistFlashcardProgress(termId: Uuid) {
     savedFlashcardCorrectTermIds.value = correctTermIds;
     savedFlashcardProgressSignature.value = signature;
     if (isWebPreview.value) {
-        try {
-            window.localStorage.setItem(
-                webFlashcardProgressKey(setId),
-                signature,
-            );
-        } catch {}
+        saveWebFlashcardProgress(setId, progress);
         return;
     }
     void useTracerDb()
@@ -443,7 +404,7 @@ async function togglePreferredFlashcardFront() {
     flashcardFrontPreferenceBusy.value = true;
     try {
         if (isWebPreview.value) {
-            window.localStorage.setItem(WEB_FLASHCARD_FRONT_KEY, String(next));
+            saveWebFlashcardFrontPreference(next);
         } else {
             const db = await useTracerDb();
             await createSettingsRepo(db).set({
@@ -594,119 +555,42 @@ async function loadSet(setId: Uuid) {
     }
 }
 
-function getRandomSeed() {
-    try {
-        const buf = new Uint32Array(1);
-        (globalThis.crypto as Crypto | undefined)?.getRandomValues?.(buf);
-        const v = Number(buf[0] ?? 0);
-        if (Number.isFinite(v) && v !== 0) return v;
-    } catch {}
-    return Date.now() ^ Math.floor(Math.random() * 0xffffffff);
-}
-
-function makePrng(seed: number) {
-    let x = seed | 0 || 1;
-    return () => {
-        x ^= x << 13;
-        x ^= x >>> 17;
-        x ^= x << 5;
-        return (x >>> 0) / 4294967296;
-    };
-}
-
-function shuffle<T>(items: T[], rand: () => number) {
-    const a = items.slice();
-    for (let i = a.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(rand() * (i + 1));
-        const tmp = a[i];
-        a[i] = a[j]!;
-        a[j] = tmp!;
-    }
-    return a;
-}
-
-function shuffleRun() {
-    cancelFlashcardAnswerFeedback();
-    const s = set.value;
-    if (!s) return;
-    const ids = studyTermIds.value;
-    if (ids.length <= 1) {
-        order.value = ids;
-        cursorIndex.value = 0;
-        answersByTermId.value = {};
-        answerAttemptsCount.value = 0;
-        retryTermIds.value = new Set();
-        isFlipped.value = false;
-        return;
-    }
-
-    const seed =
-        baseSeed.value !== null
-            ? baseSeed.value + runCounter.value + 1
-            : getRandomSeed();
-    let nextOrder = shuffle(ids, makePrng(seed));
-    if (baseSeed.value === null) {
-        const prev = lastOrder.value;
-        const same =
-            prev.length === nextOrder.length &&
-            prev.every((v, i) => v === nextOrder[i]);
-        if (same) {
-            nextOrder = [...nextOrder.slice(1), nextOrder[0]!];
-        }
-    }
-    lastOrder.value = nextOrder;
-    order.value = nextOrder;
-    cursorIndex.value = 0;
-    answersByTermId.value = {};
-    answerAttemptsCount.value = 0;
-    retryTermIds.value = new Set();
-    isFlipped.value = false;
-    nextTick(() => viewerButtonEl.value?.focus());
-}
-
-function startRun(options?: {
-    resetCounter?: boolean;
-    resumeTermId?: Uuid | null;
-    resumeCorrectTermIds?: Uuid[];
-}) {
-    cancelFlashcardAnswerFeedback();
-    const s = set.value;
-    if (!s) return;
-    if (options?.resetCounter) runCounter.value = 0;
-
-    const ids = studyTermIds.value;
-    lastOrder.value = ids;
-    order.value = ids;
-    const resumeIndex = options?.resumeTermId
-        ? ids.indexOf(options.resumeTermId)
-        : -1;
-    cursorIndex.value = resumeIndex >= 0 ? resumeIndex : 0;
-    const correctTermIds = (options?.resumeCorrectTermIds ?? []).filter((id) =>
-        ids.includes(id),
-    );
-    answersByTermId.value = Object.fromEntries(
-        correctTermIds.map((id) => [id, "correct" as const]),
-    );
-    answerAttemptsCount.value = correctTermIds.length;
-    retryTermIds.value = new Set();
-    isFlipped.value = false;
-}
-
-function restartRun() {
-    runCounter.value += 1;
-    if (isStarredOnlyEmpty.value) {
-        starredOnly.value = false;
-    }
-    startRun();
-    beginClassroomFlashcards();
-    nextTick(() => viewerButtonEl.value?.focus());
-}
-
-function toggleStarredOnly() {
-    if (!starredOnly.value && starredStudyCount.value === 0) return;
-    starredOnly.value = !starredOnly.value;
-    restartRun();
-}
+const {
+    shuffleRun,
+    startRun,
+    restartRun,
+    toggleStarredOnly,
+    cancelFlashcardAnswerFeedback,
+    markCorrect,
+    markIncorrect,
+} = createFlashcardRun({
+    state: {
+        runCounter,
+        cursorIndex,
+        order,
+        lastOrder,
+        answersByTermId,
+        answerAttemptsCount,
+        retryTermIds,
+        starredOnly,
+        isFlipped,
+        isNavigating,
+        answerFeedback: flashcardAnswerFeedback,
+        answerBusy: flashcardAnswerBusy,
+        answerTransitionId: flashcardAnswerTransitionId,
+    },
+    hasSet: () => set.value !== null,
+    getStudyTermIds: () => studyTermIds.value,
+    getCurrentTermId: () => (currentTerm.value?.id as Uuid | undefined) ?? null,
+    getBaseSeed: () => baseSeed.value,
+    getStarredStudyCount: () => starredStudyCount.value,
+    onAnswer: (answer) => {
+        assignedSessionAttempted.value += 1;
+        if (answer === "correct") assignedSessionCorrect.value += 1;
+    },
+    onRestart: beginClassroomFlashcards,
+    focusViewer: () => nextTick(() => viewerButtonEl.value?.focus()),
+});
 
 function shuffleFromFlashcardSettings() {
     flashcardSettingsOpen.value = false;
@@ -723,133 +607,23 @@ function restartFromFlashcardSettings() {
     restartRun();
 }
 
-function toggleFlip() {
-    if (totalCount.value === 0 || flashcardAnswerBusy.value || isFlipping.value) return;
-    isFlipping.value = true;
-
-    // Swap the rendered side while the card is collapsed, not after the
-    // animation has already returned to its full-size resting state.
-    flashcardFlipSwapTimeout = setTimeout(() => {
-        isFlipped.value = !isFlipped.value;
-        flashcardFlipSwapTimeout = null;
-    }, FLASHCARD_FLIP_DURATION_MS / 2);
-
-    flashcardFlipEndTimeout = setTimeout(() => {
-        isFlipping.value = false;
-        flashcardFlipEndTimeout = null;
-    }, FLASHCARD_FLIP_DURATION_MS);
-}
-
-function goPrev() {
-    if (order.value.length === 0 || flashcardAnswerBusy.value) return;
-    const next = Math.min(
-        Math.max(cursorIndex.value - 1, 0),
-        order.value.length - 1,
-    );
-    if (next !== cursorIndex.value) {
-        isNavigating.value = "prev";
-        setTimeout(() => {
-            cursorIndex.value = next;
-            isFlipped.value = false;
-            isNavigating.value = null;
-        }, 250);
-    }
-}
-
-function goNext() {
-    if (order.value.length === 0 || flashcardAnswerBusy.value) return;
-    const next = Math.min(
-        Math.max(cursorIndex.value + 1, 0),
-        order.value.length - 1,
-    );
-    if (next !== cursorIndex.value) {
-        isNavigating.value = "next";
-        setTimeout(() => {
-            cursorIndex.value = next;
-            isFlipped.value = false;
-            isNavigating.value = null;
-        }, 250);
-    }
-}
-
-function findNextUnattempted(fromIndex: number) {
-    const ids = order.value;
-    if (ids.length === 0) return null;
-    const answered = answersByTermId.value;
-    for (let step = 0; step < ids.length; step += 1) {
-        const idx = (fromIndex + step) % ids.length;
-        const id = ids[idx];
-        if (!id) continue;
-        if (answered[id] !== "correct") return idx;
-    }
-    return null;
-}
-
-function commitAnswer(answer: "correct" | "incorrect") {
-    const t = currentTerm.value;
-    if (!t) return;
-    const id = t.id as Uuid;
-    answerAttemptsCount.value += 1;
-    assignedSessionAttempted.value += 1;
-    if (answer === "correct") assignedSessionCorrect.value += 1;
-    answersByTermId.value = {
-        ...answersByTermId.value,
-        [id]: answer,
-    };
-    const retries = new Set(retryTermIds.value);
-    if (answer === "incorrect") {
-        retries.add(id);
-        order.value = [...order.value, id];
-    } else {
-        retries.delete(id);
-    }
-    retryTermIds.value = retries;
-    isFlipped.value = false;
-    const next = findNextUnattempted(cursorIndex.value + 1);
-    if (next === null) {
-        return;
-    }
-    cursorIndex.value = next;
-}
-
-function waitForFeedback(ms: number) {
-    return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
-}
-
-function cancelFlashcardAnswerFeedback() {
-    flashcardAnswerTransitionId.value += 1;
-    flashcardAnswerFeedback.value = null;
-    flashcardAnswerBusy.value = false;
-    isNavigating.value = null;
-}
-
-async function markAnswer(answer: "correct" | "incorrect") {
-    if (!currentTerm.value || flashcardAnswerBusy.value) return;
-    const transitionId = ++flashcardAnswerTransitionId.value;
-    flashcardAnswerFeedback.value = answer;
-    flashcardAnswerBusy.value = true;
-    isFlipped.value = false;
-
-    await waitForFeedback(450);
-    if (transitionId !== flashcardAnswerTransitionId.value) return;
-
-    isNavigating.value = "next";
-    await waitForFeedback(250);
-    if (transitionId !== flashcardAnswerTransitionId.value) return;
-
-    commitAnswer(answer);
-    isNavigating.value = null;
-    flashcardAnswerFeedback.value = null;
-    flashcardAnswerBusy.value = false;
-}
-
-function markCorrect() {
-    void markAnswer("correct");
-}
-
-function markIncorrect() {
-    void markAnswer("incorrect");
-}
+const {
+    toggleFlip,
+    goPrev,
+    goNext,
+    cancel: cancelFlashcardMotion,
+} = createFlashcardMotion({
+    getFlipCardCount: () => totalCount.value,
+    getNavigationCardCount: () => order.value.length,
+    getCursorIndex: () => cursorIndex.value,
+    setCursorIndex: (index) => (cursorIndex.value = index),
+    getFlipped: () => isFlipped.value,
+    setFlipped: (flipped) => (isFlipped.value = flipped),
+    getFlipping: () => isFlipping.value,
+    setFlipping: (flipping) => (isFlipping.value = flipping),
+    setNavigating: (direction) => (isNavigating.value = direction),
+    isBusy: () => flashcardAnswerBusy.value,
+});
 
 async function loadStars(setId: Uuid) {
     if (isWebPreview.value) {
@@ -1060,8 +834,7 @@ onBeforeRouteLeave(() => {
 onBeforeUnmount(() => {
     finishClassroomFlashcards();
     window.removeEventListener("pagehide", onPageHide);
-    if (flashcardFlipSwapTimeout) clearTimeout(flashcardFlipSwapTimeout);
-    if (flashcardFlipEndTimeout) clearTimeout(flashcardFlipEndTimeout);
+    cancelFlashcardMotion();
     cancelFlashcardAnswerFeedback();
     window.removeEventListener("keydown", onKeydown);
     document.removeEventListener(

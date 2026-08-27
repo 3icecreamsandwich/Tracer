@@ -2073,14 +2073,19 @@ import {
     type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
 import {
+    createPracticePresentation,
+    type PracticeChoiceFeedback,
+    type PracticeChoiceValue,
+} from "~/src/composables/learn/presentation";
+import {
     buildGroundedChatSystemPrompt,
     normalizeGeneratedChatTitle,
     streamGroundedChatText,
     streamWebPreviewMockChatAnswer,
-    takeNextChatRevealUnit,
     takeRecentChatMessages,
     type ChatMessage,
 } from "~/src/composables/ai/chat";
+import { createChatRevealQueue } from "~/src/composables/ai/chat-reveal";
 import { generateText } from "ai";
 import {
     generateMatchTiles,
@@ -2118,6 +2123,18 @@ import {
     listAssignedMatchLeaderboard,
     type AssignedMatchLeaderboardEntry,
 } from "~/src/composables/classrooms";
+import {
+    createRandomSeed,
+} from "~/src/composables/random";
+import {
+    readWebFlashcardFrontPreference,
+    readWebFlashcardProgress,
+    saveWebFlashcardFrontPreference,
+    saveWebFlashcardProgress,
+    type SavedFlashcardProgress,
+} from "~/src/composables/cards/web-flashcard-state";
+import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion";
+import { createFlashcardRun } from "~/src/composables/cards/flashcard-run";
 
 const route = useRoute();
 const router = useRouter();
@@ -2274,9 +2291,6 @@ const learnHybridEnabled = ref(false);
 const isFlipped = ref(false);
 const isFlipping = ref(false);
 const isNavigating = ref<"prev" | "next" | null>(null);
-const FLASHCARD_FLIP_DURATION_MS = 320;
-let flashcardFlipSwapTimeout: ReturnType<typeof setTimeout> | null = null;
-let flashcardFlipEndTimeout: ReturnType<typeof setTimeout> | null = null;
 
 type FlashcardsAnswer = "correct" | "incorrect";
 const flashcardAnswerFeedback = ref<FlashcardsAnswer | null>(null);
@@ -2303,51 +2317,11 @@ const savedFlashcardTermId = ref<Uuid | null>(null);
 const savedFlashcardCorrectTermIds = ref<Uuid[]>([]);
 const savedFlashcardProgressSignature = ref<string | null>(null);
 
-type SavedFlashcardProgress = {
-    currentTermId: Uuid;
-    correctTermIds: Uuid[];
-};
-
-const WEB_FLASHCARD_FRONT_KEY = "tracer:flashcards-definition-first";
-const webFlashcardProgressKey = (setId: Uuid) =>
-    `tracer:flashcard-progress:${setId}`;
-
 const preferredFlashcardFrontOptionLabel = computed(() =>
     flashcardsDefinitionFirst.value
         ? t("set.termAtFront")
         : t("set.definitionAtFront"),
 );
-
-function readWebFlashcardFrontPreference() {
-    try {
-        return window.localStorage.getItem(WEB_FLASHCARD_FRONT_KEY) === "true";
-    } catch {
-        return false;
-    }
-}
-
-function readWebFlashcardProgress(setId: Uuid): SavedFlashcardProgress | null {
-    try {
-        const raw = window.localStorage.getItem(webFlashcardProgressKey(setId));
-        if (!raw) return null;
-        try {
-            const parsed = JSON.parse(raw) as Partial<SavedFlashcardProgress>;
-            if (typeof parsed.currentTermId !== "string") return null;
-            return {
-                currentTermId: parsed.currentTermId,
-                correctTermIds: Array.isArray(parsed.correctTermIds)
-                    ? parsed.correctTermIds.filter(
-                          (id): id is Uuid => typeof id === "string",
-                      )
-                    : [],
-            };
-        } catch {
-            return { currentTermId: raw, correctTermIds: [] };
-        }
-    } catch {
-        return null;
-    }
-}
 
 async function loadSavedFlashcardProgress(setId: Uuid) {
     if (isWebPreview.value) return readWebFlashcardProgress(setId);
@@ -2372,12 +2346,7 @@ function persistFlashcardProgress(termId: Uuid) {
     savedFlashcardCorrectTermIds.value = correctTermIds;
     savedFlashcardProgressSignature.value = signature;
     if (isWebPreview.value) {
-        try {
-            window.localStorage.setItem(
-                webFlashcardProgressKey(setId),
-                signature,
-            );
-        } catch {}
+        saveWebFlashcardProgress(setId, progress);
         return;
     }
     void useTracerDb()
@@ -2395,7 +2364,7 @@ async function togglePreferredFlashcardFront() {
     flashcardFrontPreferenceBusy.value = true;
     try {
         if (isWebPreview.value) {
-            window.localStorage.setItem(WEB_FLASHCARD_FRONT_KEY, String(next));
+            saveWebFlashcardFrontPreference(next);
         } else {
             const db = await useTracerDb();
             await createSettingsRepo(db).set({
@@ -2498,13 +2467,6 @@ const cachedChatModelPromise = shallowRef<{
     id: string;
     promise: Promise<any>;
 } | null>(null);
-const chatRevealIntervalMs = 34;
-type ChatRevealJob = {
-    complete: boolean;
-    pending: string;
-    timer: number | null;
-};
-const chatRevealJobs = new Map<string, ChatRevealJob>();
 
 function updateChatMessage(
     messageId: string,
@@ -2525,97 +2487,17 @@ function updateChatMessage(
     return true;
 }
 
-function takeRevealUnit(job: ChatRevealJob) {
-    const next = takeNextChatRevealUnit(job.pending, job.complete);
-    if (!next) return null;
-    job.pending = next.pending;
-    return next.unit;
-}
-
-function stopChatRevealTimer(messageId: string, job: ChatRevealJob) {
-    if (job.timer !== null) {
-        window.clearInterval(job.timer);
-        job.timer = null;
-    }
-    chatRevealJobs.delete(messageId);
-}
-
-function revealNextChatUnit(messageId: string, job: ChatRevealJob) {
-    const unit = takeRevealUnit(job);
-    if (!unit) return false;
-    const didUpdate = updateChatMessage(messageId, (message) => ({
-        ...message,
-        content: `${message.content}${unit}`,
-    }));
-    if (!didUpdate) return false;
-    void nextTick().then(scrollChatToBottom);
-    return true;
-}
-
-function startChatRevealTimer(messageId: string, job: ChatRevealJob) {
-    if (job.timer !== null) return;
-
-    job.timer = window.setInterval(() => {
-        const current = chatRevealJobs.get(messageId);
-        if (!current) return;
-        revealNextChatUnit(messageId, current);
-        if (!current.pending) {
-            stopChatRevealTimer(messageId, current);
-        }
-    }, chatRevealIntervalMs);
-}
-
-function enqueueChatReveal(messageId: string, chunk: string) {
-    if (!chunk) return;
-    updateChatMessage(messageId, (message) => ({
-        ...message,
-        fullContent: `${message.fullContent ?? message.content}${chunk}`,
-    }));
-    let job = chatRevealJobs.get(messageId);
-    if (!job) {
-        job = { complete: false, pending: "", timer: null };
-        chatRevealJobs.set(messageId, job);
-    }
-    job.pending += chunk;
-    const message = chatMessages.value.find((m) => m.id === messageId);
-    if (!message?.content) {
-        revealNextChatUnit(messageId, job);
-    }
-    startChatRevealTimer(messageId, job);
-}
-
-function finishChatRevealStream(messageId: string) {
-    const job = chatRevealJobs.get(messageId);
-    if (!job) return;
-    job.complete = true;
-    if (!job.pending) {
-        stopChatRevealTimer(messageId, job);
-        return;
-    }
-    startChatRevealTimer(messageId, job);
-}
-
-function flushChatRevealJobs() {
-    for (const [messageId, job] of chatRevealJobs.entries()) {
-        if (job.pending) {
-            const pending = job.pending;
-            updateChatMessage(messageId, (message) => ({
-                ...message,
-                content: `${message.content}${pending}`,
-            }));
-            job.pending = "";
-        }
-        stopChatRevealTimer(messageId, job);
-    }
-    void nextTick().then(scrollChatToBottom);
-}
-
-function cancelChatRevealJobs() {
-    for (const job of chatRevealJobs.values()) {
-        if (job.timer !== null) window.clearInterval(job.timer);
-    }
-    chatRevealJobs.clear();
-}
+const {
+    enqueue: enqueueChatReveal,
+    finish: finishChatRevealStream,
+    flush: flushChatRevealJobs,
+    cancelAll: cancelChatRevealJobs,
+} = createChatRevealQueue<UiChatMessage>({
+    getMessage: (messageId) =>
+        chatMessages.value.find((message) => message.id === messageId),
+    updateMessage: updateChatMessage,
+    onReveal: () => void nextTick().then(scrollChatToBottom),
+});
 
 async function getCachedChatModel(modelId: string) {
     const route = [modelId, ...fallbackModelIds.value];
@@ -2706,13 +2588,7 @@ const practiceSecondsRemaining = ref(10 * 60);
 const practiceTimedOut = ref(false);
 const practiceWrittenAnswer = ref("");
 const practiceTimerHandle = shallowRef<number | null>(null);
-type PracticeChoiceValue = boolean | number;
-type PracticeAnswerFeedback = {
-    questionId: string;
-    selected: PracticeChoiceValue;
-    correct: PracticeChoiceValue;
-};
-const practiceAnswerFeedback = ref<PracticeAnswerFeedback | null>(null);
+const practiceAnswerFeedback = ref<PracticeChoiceFeedback | null>(null);
 type PracticeWrittenFeedback = WrittenAnswerGrade & {
     questionId: string;
 };
@@ -2977,80 +2853,28 @@ const exportTsv = computed(() => {
     return s.terms.map((t) => `${t.front}\t${t.back}`).join("\n");
 });
 
-function toggleFlip() {
-    if (totalCount.value === 0 || flashcardAnswerBusy.value || isFlipping.value)
-        return;
-    isFlipping.value = true;
-
-    // Swap the rendered side while the card is collapsed, not after the
-    // animation has already returned to its full-size resting state.
-    flashcardFlipSwapTimeout = setTimeout(() => {
-        isFlipped.value = !isFlipped.value;
-        flashcardFlipSwapTimeout = null;
-    }, FLASHCARD_FLIP_DURATION_MS / 2);
-
-    flashcardFlipEndTimeout = setTimeout(() => {
-        isFlipping.value = false;
-        flashcardFlipEndTimeout = null;
-    }, FLASHCARD_FLIP_DURATION_MS);
-}
-
-function goPrev() {
-    if (order.value.length === 0 || flashcardAnswerBusy.value) return;
-    const next = Math.min(
-        Math.max(cursorIndex.value - 1, 0),
-        order.value.length - 1,
-    );
-    if (next !== cursorIndex.value) {
-        isNavigating.value = "prev";
-        setTimeout(() => {
-            cursorIndex.value = next;
-            isFlipped.value = false;
-            isNavigating.value = null;
-        }, 250);
-    }
-}
-
-function goNext() {
-    if (order.value.length === 0 || flashcardAnswerBusy.value) return;
-    const next = Math.min(
-        Math.max(cursorIndex.value + 1, 0),
-        order.value.length - 1,
-    );
-    if (next !== cursorIndex.value) {
-        isNavigating.value = "next";
-        setTimeout(() => {
-            cursorIndex.value = next;
-            isFlipped.value = false;
-            isNavigating.value = null;
-        }, 250);
-    }
-}
-
-function getRandomSeed() {
-    try {
-        const buf = new Uint32Array(1);
-        (globalThis.crypto as Crypto | undefined)?.getRandomValues?.(buf);
-        const v = Number(buf[0] ?? 0);
-        if (Number.isFinite(v) && v !== 0) return v;
-    } catch {}
-    return Date.now() ^ Math.floor(Math.random() * 0xffffffff);
-}
-
-function makePrng(seed: number) {
-    let x = seed | 0 || 1;
-    return () => {
-        x ^= x << 13;
-        x ^= x >>> 17;
-        x ^= x << 5;
-        return (x >>> 0) / 4294967296;
-    };
-}
+const {
+    toggleFlip,
+    goPrev,
+    goNext,
+    cancel: cancelFlashcardMotion,
+} = createFlashcardMotion({
+    getFlipCardCount: () => totalCount.value,
+    getNavigationCardCount: () => order.value.length,
+    getCursorIndex: () => cursorIndex.value,
+    setCursorIndex: (index) => (cursorIndex.value = index),
+    getFlipped: () => isFlipped.value,
+    setFlipped: (flipped) => (isFlipped.value = flipped),
+    getFlipping: () => isFlipping.value,
+    setFlipping: (flipping) => (isFlipping.value = flipping),
+    setNavigating: (direction) => (isNavigating.value = direction),
+    isBusy: () => flashcardAnswerBusy.value,
+});
 
 function matchSeed() {
     const s = baseSeed.value;
     if (s !== null) return s + matchRunCounter.value;
-    return getRandomSeed() ^ (matchRunCounter.value * 2654435761);
+    return createRandomSeed() ^ (matchRunCounter.value * 2654435761);
 }
 
 function clearMatchTimer() {
@@ -3390,34 +3214,18 @@ function learnMarkAnswered(questionId: string, isCorrect: boolean) {
     learnCursorIndex.value = next;
 }
 
-function practiceChoiceFeedbackClass(choice: PracticeChoiceValue) {
-    const feedback = practiceAnswerFeedback.value;
-    const question = learnCurrentQuestion.value;
-    if (!feedback || !question || feedback.questionId !== question.id) {
-        return null;
-    }
-    if (choice === feedback.correct) {
-        return "border-2 border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-200 focus-visible:ring-emerald-300 dark:border-emerald-500 dark:bg-emerald-950/35 dark:text-emerald-50 dark:ring-emerald-900/70";
-    }
-    if (choice === feedback.selected) {
-        return "border-2 border-red-700 bg-red-50/80 text-red-950 ring-2 ring-red-200 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/40 dark:text-red-50 dark:ring-red-900/70";
-    }
-    return null;
-}
+const {
+    practiceTrueFalseChoiceClass,
+    practiceMultipleChoiceClass,
+    practiceQuestionSurfaceClass,
+} = createPracticePresentation({
+    getQuestion: () => learnCurrentQuestion.value,
+    getChoiceFeedback: () => practiceAnswerFeedback.value,
+    getWrittenFeedback: () => practiceWrittenFeedback.value,
+});
 
-function practiceTrueFalseChoiceClass(choice: boolean) {
-    const feedbackClass = practiceChoiceFeedbackClass(choice);
-    if (feedbackClass) return feedbackClass;
-    if (choice) {
-        return "border-amber-500 bg-amber-400 text-slate-950 hover:bg-amber-300 focus-visible:ring-amber-300 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300";
-    }
-    return "border-slate-300 bg-white text-slate-900 hover:bg-slate-100 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900";
-}
-
-function practiceMultipleChoiceClass(choice: number) {
-    const feedbackClass = practiceChoiceFeedbackClass(choice);
-    if (feedbackClass) return feedbackClass;
-    return "border-slate-200 bg-white text-slate-900 hover:bg-slate-50 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500";
+function waitForFeedback(ms: number) {
+    return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 }
 
 function cancelPracticeAnswerFeedback() {
@@ -3465,17 +3273,6 @@ function answerLearnMultipleChoice(selectedIndex: number) {
     const q = learnCurrentQuestion.value;
     if (!q || q.kind !== "multiple_choice") return;
     void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
-}
-
-function practiceQuestionSurfaceClass() {
-    const question = learnCurrentQuestion.value;
-    const feedback = practiceWrittenFeedback.value;
-    if (question?.kind === "written" && feedback?.questionId === question.id) {
-        return feedback.isCorrect
-            ? "border-2 border-emerald-600 bg-emerald-50/40 dark:border-emerald-500 dark:bg-emerald-950/20"
-            : "border-2 border-red-700 bg-red-50/40 dark:border-red-500 dark:bg-red-950/20";
-    }
-    return "border-amber-200 bg-amber-50/20 dark:border-amber-900/60 dark:bg-amber-950/10";
 }
 
 async function answerLearnWritten() {
@@ -3842,99 +3639,39 @@ function applyPracticeSettings() {
     void startLearnRun({ startTimer: true });
 }
 
-function shuffle<T>(items: T[], rand: () => number) {
-    const a = items.slice();
-    for (let i = a.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(rand() * (i + 1));
-        const tmp = a[i];
-        a[i] = a[j]!;
-        a[j] = tmp!;
-    }
-    return a;
-}
-
-function shuffleRun() {
-    cancelFlashcardAnswerFeedback();
-    const s = set.value;
-    if (!s) return;
-    const ids = studyTermIds.value;
-    if (ids.length <= 1) {
-        order.value = ids;
-        cursorIndex.value = 0;
-        answersByTermId.value = {};
-        answerAttemptsCount.value = 0;
-        retryTermIds.value = new Set();
-        isFlipped.value = false;
-        return;
-    }
-
-    const seed =
-        baseSeed.value !== null
-            ? baseSeed.value + runCounter.value + 1
-            : getRandomSeed();
-    let nextOrder = shuffle(ids, makePrng(seed));
-    if (baseSeed.value === null) {
-        const prev = lastOrder.value;
-        const same =
-            prev.length === nextOrder.length &&
-            prev.every((v, i) => v === nextOrder[i]);
-        if (same) {
-            nextOrder = [...nextOrder.slice(1), nextOrder[0]!];
-        }
-    }
-    lastOrder.value = nextOrder;
-    order.value = nextOrder;
-    cursorIndex.value = 0;
-    answersByTermId.value = {};
-    answerAttemptsCount.value = 0;
-    retryTermIds.value = new Set();
-    isFlipped.value = false;
-    nextTick(() => viewerButtonEl.value?.focus());
-}
-
-function startRun(options?: {
-    resetCounter?: boolean;
-    resumeTermId?: Uuid | null;
-    resumeCorrectTermIds?: Uuid[];
-}) {
-    cancelFlashcardAnswerFeedback();
-    const s = set.value;
-    if (!s) return;
-    if (options?.resetCounter) runCounter.value = 0;
-
-    const ids = studyTermIds.value;
-    // Default run order matches the saved set order; shuffle is an explicit action.
-    lastOrder.value = ids;
-    order.value = ids;
-    const resumeIndex = options?.resumeTermId
-        ? ids.indexOf(options.resumeTermId)
-        : -1;
-    cursorIndex.value = resumeIndex >= 0 ? resumeIndex : 0;
-    const correctTermIds = (options?.resumeCorrectTermIds ?? []).filter((id) =>
-        ids.includes(id),
-    );
-    answersByTermId.value = Object.fromEntries(
-        correctTermIds.map((id) => [id, "correct" as const]),
-    );
-    answerAttemptsCount.value = correctTermIds.length;
-    retryTermIds.value = new Set();
-    isFlipped.value = false;
-}
-
-function restartRun() {
-    runCounter.value += 1;
-    if (isStarredOnlyEmpty.value) {
-        starredOnly.value = false;
-    }
-    startRun();
-    nextTick(() => viewerButtonEl.value?.focus());
-}
-
-function toggleStarredOnly() {
-    if (!starredOnly.value && starredStudyCount.value === 0) return;
-    starredOnly.value = !starredOnly.value;
-    restartRun();
-}
+const {
+    shuffleRun,
+    startRun,
+    restartRun,
+    toggleStarredOnly,
+    cancelFlashcardAnswerFeedback,
+    markCorrect,
+    markIncorrect,
+} = createFlashcardRun({
+    state: {
+        runCounter,
+        cursorIndex,
+        order,
+        lastOrder,
+        answersByTermId,
+        answerAttemptsCount,
+        retryTermIds,
+        starredOnly,
+        isFlipped,
+        isNavigating,
+        answerFeedback: flashcardAnswerFeedback,
+        answerBusy: flashcardAnswerBusy,
+        answerTransitionId: flashcardAnswerTransitionId,
+    },
+    hasSet: () => set.value !== null,
+    getStudyTermIds: () => studyTermIds.value,
+    getCurrentTermId: () => (currentTerm.value?.id as Uuid | undefined) ?? null,
+    getBaseSeed: () => baseSeed.value,
+    getStarredStudyCount: () => starredStudyCount.value,
+    onAnswer: (answer) =>
+        recordInlineAssignedAnswer("flashcards", answer === "correct"),
+    focusViewer: () => nextTick(() => viewerButtonEl.value?.focus()),
+});
 
 function shuffleFromFlashcardSettings() {
     flashcardSettingsOpen.value = false;
@@ -3949,84 +3686,6 @@ function toggleStarredOnlyFromFlashcardSettings() {
 function restartFromFlashcardSettings() {
     flashcardSettingsOpen.value = false;
     restartRun();
-}
-
-function findNextUnattempted(fromIndex: number) {
-    const ids = order.value;
-    if (ids.length === 0) return null;
-    const answered = answersByTermId.value;
-    for (let step = 0; step < ids.length; step += 1) {
-        const idx = (fromIndex + step) % ids.length;
-        const id = ids[idx];
-        if (!id) continue;
-        if (answered[id] !== "correct") return idx;
-    }
-    return null;
-}
-
-function commitAnswer(answer: FlashcardsAnswer) {
-    const t = currentTerm.value;
-    if (!t) return;
-    const id = t.id as Uuid;
-    answerAttemptsCount.value += 1;
-    recordInlineAssignedAnswer("flashcards", answer === "correct");
-    answersByTermId.value = {
-        ...answersByTermId.value,
-        [id]: answer,
-    };
-    const retries = new Set(retryTermIds.value);
-    if (answer === "incorrect") {
-        retries.add(id);
-        order.value = [...order.value, id];
-    } else {
-        retries.delete(id);
-    }
-    retryTermIds.value = retries;
-    isFlipped.value = false;
-    const next = findNextUnattempted(cursorIndex.value + 1);
-    if (next === null) {
-        return;
-    }
-    cursorIndex.value = next;
-}
-
-function waitForFeedback(ms: number) {
-    return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
-}
-
-function cancelFlashcardAnswerFeedback() {
-    flashcardAnswerTransitionId.value += 1;
-    flashcardAnswerFeedback.value = null;
-    flashcardAnswerBusy.value = false;
-    isNavigating.value = null;
-}
-
-async function markAnswer(answer: FlashcardsAnswer) {
-    if (!currentTerm.value || flashcardAnswerBusy.value) return;
-    const transitionId = ++flashcardAnswerTransitionId.value;
-    flashcardAnswerFeedback.value = answer;
-    flashcardAnswerBusy.value = true;
-    isFlipped.value = false;
-
-    await waitForFeedback(450);
-    if (transitionId !== flashcardAnswerTransitionId.value) return;
-
-    isNavigating.value = "next";
-    await waitForFeedback(250);
-    if (transitionId !== flashcardAnswerTransitionId.value) return;
-
-    commitAnswer(answer);
-    isNavigating.value = null;
-    flashcardAnswerFeedback.value = null;
-    flashcardAnswerBusy.value = false;
-}
-
-function markCorrect() {
-    void markAnswer("correct");
-}
-
-function markIncorrect() {
-    void markAnswer("incorrect");
 }
 
 async function loadStars(setId: Uuid) {
@@ -4825,8 +4484,7 @@ watch(
 onBeforeUnmount(() => {
     finishInlineAssignedMode();
     window.removeEventListener("pagehide", onAssignedPageHide);
-    if (flashcardFlipSwapTimeout) clearTimeout(flashcardFlipSwapTimeout);
-    if (flashcardFlipEndTimeout) clearTimeout(flashcardFlipEndTimeout);
+    cancelFlashcardMotion();
     cancelFlashcardAnswerFeedback();
     cancelPracticeAnswerFeedback();
     flushChatRevealJobs();

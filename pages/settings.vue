@@ -825,25 +825,7 @@ import {
   type ProviderApiKeyPresence
 } from '../src/composables/ai/provider-settings'
 import { aiRegistryCatalog } from '../src/composables/ai/registry'
-import {
-  githubDeviceCodeRequest,
-  githubDeviceTokenPollOnce,
-  githubOAuthClientId,
-  githubPkceAuthorizeUrl,
-  githubPkceExchangeToken,
-  githubPkceFinish,
-  githubPkceStart,
-  mapDevicePollResponse,
-  openExternal,
-  pkceChallengeS256,
-  randomPkceVerifier
-} from '../src/composables/ai/github-oauth'
-import {
-  githubModelsInvalidateToken,
-  githubModelsLoadAuthState,
-  githubModelsStoreToken,
-  type GithubModelsAuthState
-} from '../src/composables/ai/github-state'
+import { useGithubModelsAuth } from '../src/composables/ai/github-models-auth'
 import { hasTauriRuntime } from '../src/composables/tauri'
 import { redactSensitiveText } from '../src/composables/security/redact'
 import { languageOptions } from '../src/i18n/messages'
@@ -914,27 +896,25 @@ const savedOpenAiCompatConfig = ref<OpenAiCompatConfig>({ baseURL: '', modelId: 
 const providerApiKeyPresence = ref<ProviderApiKeyPresence>(emptyProviderApiKeyPresence())
 const providerApiKeyClearTarget = ref<ProviderApiKeyId | null>(null)
 
-const isGithubAuthOpen = ref(false)
-
-type GithubAuthStep =
-  | 'idle'
-  | 'requesting'
-  | 'device_pending'
-  | 'device_success'
-  | 'pkce_pending'
-  | 'error'
-
-const githubAuthBusy = ref(false)
-const githubAuthStep = ref<GithubAuthStep>('idle')
-const githubAuthError = ref<string | null>(null)
-const githubAuthVerificationUri = ref<string | null>(null)
-const githubAuthUserCode = ref<string | null>(null)
-const githubAuthExpiresAt = ref<number | null>(null)
-const githubAuthNextPollIntervalSec = ref<number | null>(null)
-const githubAuthPollAbort = ref<AbortController | null>(null)
-
-const githubModelsAuthState = ref<GithubModelsAuthState>({ status: 'unauthenticated' })
-const githubModelsAvailableModelIds = ref<string[]>([])
+const {
+  isGithubAuthOpen,
+  githubAuthBusy,
+  githubAuthStep,
+  githubAuthError,
+  githubAuthVerificationUri,
+  githubAuthUserCode,
+  githubAuthNextPollIntervalSec,
+  githubModelsAuthState,
+  githubModelsAvailableModelIds,
+  openGithubAuth,
+  closeGithubAuth,
+  githubAuthReset,
+  githubRefreshAuthState,
+  onGithubAuthCopyCode,
+  onGithubAuthCopyUrl,
+  onGithubAuthSignOut,
+  onGithubAuthStart
+} = useGithubModelsAuth({ isWebPreview: () => isWebPreview.value })
 
 type ProviderId = 'openai' | 'anthropic' | 'gemini' | 'github' | 'ollama_cloud' | 'openai_compat'
 
@@ -1397,235 +1377,6 @@ watch(
     nextTick(() => modelPickerSearchEl.value?.focus())
   }
 )
-
-function openGithubAuth() {
-  isGithubAuthOpen.value = true
-  githubAuthStep.value = 'idle'
-  githubAuthError.value = null
-  githubAuthVerificationUri.value = null
-  githubAuthUserCode.value = null
-  githubAuthExpiresAt.value = null
-  githubAuthNextPollIntervalSec.value = null
-}
-
-function closeGithubAuth() {
-  githubAuthPollAbort.value?.abort()
-  githubAuthPollAbort.value = null
-  isGithubAuthOpen.value = false
-}
-
-function githubScope(): string {
-  return 'models:read'
-}
-
-async function githubRefreshAuthState() {
-  githubModelsAuthState.value = await githubModelsLoadAuthState()
-  if (githubModelsAuthState.value.status === 'authenticated') {
-    githubModelsAvailableModelIds.value = githubModelsAuthState.value.models.map((m) => m.id)
-  } else {
-    githubModelsAvailableModelIds.value = []
-  }
-}
-
-async function copyToClipboard(text: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-  } catch {
-    // ignore
-  }
-}
-
-async function onGithubAuthCopyCode() {
-  const code = githubAuthUserCode.value
-  if (!code) return
-  await copyToClipboard(code)
-}
-
-async function onGithubAuthCopyUrl() {
-  const url = githubAuthVerificationUri.value
-  if (!url) return
-  await copyToClipboard(url)
-}
-
-function githubAuthReset() {
-  githubAuthBusy.value = false
-  githubAuthStep.value = 'idle'
-  githubAuthError.value = null
-  githubAuthVerificationUri.value = null
-  githubAuthUserCode.value = null
-  githubAuthExpiresAt.value = null
-  githubAuthNextPollIntervalSec.value = null
-}
-
-async function onGithubAuthSignOut() {
-  if (isWebPreview.value) {
-    githubAuthError.value = 'GitHub authentication is not available in web preview.'
-    return
-  }
-  githubAuthBusy.value = true
-  githubAuthError.value = null
-  try {
-    await githubModelsInvalidateToken()
-    await githubRefreshAuthState()
-  } catch (e: any) {
-    githubAuthError.value = toSafeErrorMessage(e, 'Failed to sign out')
-  } finally {
-    githubAuthBusy.value = false
-  }
-}
-
-function nowMs() {
-  return Date.now()
-}
-
-async function sleep(ms: number) {
-  await new Promise((r) => setTimeout(r, ms))
-}
-
-async function pollDeviceToken(opts: {
-  clientId: string
-  deviceCode: string
-  initialIntervalSec: number
-  expiresAtMs: number
-}) {
-  const abort = new AbortController()
-  githubAuthPollAbort.value = abort
-  let intervalSec = Math.max(1, Math.floor(opts.initialIntervalSec))
-  githubAuthNextPollIntervalSec.value = intervalSec
-
-  while (!abort.signal.aborted) {
-    const remaining = opts.expiresAtMs - nowMs()
-    if (remaining <= 0) {
-      githubAuthStep.value = 'error'
-      githubAuthError.value = 'Device code expired. Try again.'
-      return
-    }
-
-    await sleep(intervalSec * 1000)
-    if (abort.signal.aborted) return
-
-    const body = await githubDeviceTokenPollOnce({
-      clientId: opts.clientId,
-      deviceCode: opts.deviceCode
-    })
-    const ev = mapDevicePollResponse(body as any, intervalSec)
-    if (ev.type === 'pending') {
-      intervalSec = ev.nextIntervalSec
-      githubAuthNextPollIntervalSec.value = intervalSec
-      continue
-    }
-    if (ev.type === 'slow_down') {
-      intervalSec = ev.nextIntervalSec
-      githubAuthNextPollIntervalSec.value = intervalSec
-      continue
-    }
-    if (ev.type === 'expired') {
-      githubAuthStep.value = 'error'
-      githubAuthError.value = 'Device code expired. Try again.'
-      return
-    }
-    if (ev.type === 'denied') {
-      githubAuthStep.value = 'error'
-      githubAuthError.value = 'Access denied. You cancelled or declined authorization.'
-      return
-    }
-    if (ev.type === 'device_flow_disabled') {
-      throw new Error('device_flow_disabled')
-    }
-    if (ev.type === 'error') {
-      githubAuthStep.value = 'error'
-      githubAuthError.value = ev.message
-      return
-    }
-    if (ev.type === 'success') {
-      await githubModelsStoreToken(ev.token.access_token)
-      await githubRefreshAuthState()
-      githubAuthStep.value = 'device_success'
-      return
-    }
-  }
-}
-
-async function tryDeviceFlow() {
-  const clientId = githubOAuthClientId()
-  const device = await githubDeviceCodeRequest({ clientId, scope: githubScope() })
-  githubAuthVerificationUri.value = device.verification_uri
-  githubAuthUserCode.value = device.user_code
-  githubAuthExpiresAt.value = nowMs() + device.expires_in * 1000
-  githubAuthStep.value = 'device_pending'
-
-  await openExternal(device.verification_uri)
-  await pollDeviceToken({
-    clientId,
-    deviceCode: device.device_code,
-    initialIntervalSec: device.interval,
-    expiresAtMs: githubAuthExpiresAt.value
-  })
-}
-
-async function tryPkceFlow() {
-  const clientId = githubOAuthClientId()
-  const start = await githubPkceStart()
-  const state = crypto.randomUUID()
-  const verifier = randomPkceVerifier()
-  const challenge = await pkceChallengeS256(verifier)
-  const url = await githubPkceAuthorizeUrl({
-    clientId,
-    port: start.port,
-    state,
-    scope: githubScope(),
-    codeChallenge: challenge
-  })
-
-  githubAuthStep.value = 'pkce_pending'
-  await openExternal(url)
-
-  const cb = await githubPkceFinish({ id: start.id, expectedState: state, timeoutMs: 120_000 })
-  const token = await githubPkceExchangeToken({
-    clientId,
-    code: cb.code,
-    port: start.port,
-    codeVerifier: verifier
-  })
-  const ev = mapDevicePollResponse(token as any, 0)
-  if (ev.type !== 'success') {
-    throw new Error((token as any)?.error ?? 'pkce_failed')
-  }
-  await githubModelsStoreToken(ev.token.access_token)
-  await githubRefreshAuthState()
-  githubAuthStep.value = 'device_success'
-}
-
-async function onGithubAuthStart() {
-  if (isWebPreview.value) {
-    githubAuthStep.value = 'error'
-    githubAuthError.value = 'GitHub authentication is not available in web preview.'
-    return
-  }
-  githubAuthBusy.value = true
-  githubAuthError.value = null
-  githubAuthPollAbort.value?.abort()
-  githubAuthPollAbort.value = null
-
-  try {
-    githubAuthStep.value = 'requesting'
-    try {
-      await tryDeviceFlow()
-    } catch (e: any) {
-      const msg = toErrorMessage(e, 'Device flow failed')
-      if (msg.includes('device_flow_disabled') || msg.includes('Device flow')) {
-        await tryPkceFlow()
-      } else {
-        await tryPkceFlow()
-      }
-    }
-  } catch (e: any) {
-    githubAuthStep.value = 'error'
-    githubAuthError.value = toSafeErrorMessage(e, 'GitHub authentication failed')
-  } finally {
-    githubAuthBusy.value = false
-  }
-}
 
 async function onSaveProviderSecret(id: ProviderApiKeyId) {
   if (isWebPreview.value) {

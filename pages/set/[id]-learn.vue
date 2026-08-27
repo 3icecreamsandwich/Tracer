@@ -496,6 +496,11 @@ import {
     type LearnQuestion,
     type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
+import {
+    createPracticePresentation,
+    type PracticeChoiceFeedback,
+    type PracticeChoiceValue,
+} from "~/src/composables/learn/presentation";
 import { resolveAiModel } from "~/src/composables/ai/registry";
 import { generateText } from "ai";
 import {
@@ -516,6 +521,7 @@ import {
     completeAssignedAttempt,
     parseAssignedAssignmentId,
 } from "~/src/composables/assignment-progress";
+import { createRandomSeed } from "~/src/composables/random";
 
 const route = useRoute();
 const router = useRouter();
@@ -605,13 +611,7 @@ const practiceSecondsRemaining = ref(10 * 60);
 const practiceTimedOut = ref(false);
 const practiceWrittenAnswer = ref("");
 const practiceTimerHandle = shallowRef<number | null>(null);
-type PracticeChoiceValue = boolean | number;
-type PracticeAnswerFeedback = {
-    questionId: string;
-    selected: PracticeChoiceValue;
-    correct: PracticeChoiceValue;
-};
-const practiceAnswerFeedback = ref<PracticeAnswerFeedback | null>(null);
+const practiceAnswerFeedback = ref<PracticeChoiceFeedback | null>(null);
 type PracticeWrittenFeedback = WrittenAnswerGrade & {
     questionId: string;
 };
@@ -634,20 +634,10 @@ const baseSeed = computed(() => {
     return Number.isFinite(n) ? n : null;
 });
 
-function getRandomSeed() {
-    try {
-        const buf = new Uint32Array(1);
-        (globalThis.crypto as Crypto | undefined)?.getRandomValues?.(buf);
-        const v = Number(buf[0] ?? 0);
-        if (Number.isFinite(v) && v !== 0) return v;
-    } catch {}
-    return Date.now() ^ Math.floor(Math.random() * 0xffffffff);
-}
-
 function learnSeed() {
     const s = baseSeed.value;
     if (s !== null) return s + learnRunCounter.value;
-    return getRandomSeed() ^ (learnRunCounter.value * 2654435761);
+    return createRandomSeed() ^ (learnRunCounter.value * 2654435761);
 }
 
 const learnAttemptedCount = computed(
@@ -786,35 +776,15 @@ function learnMarkAnswered(questionId: string, isCorrect: boolean) {
     learnCursorIndex.value = next;
 }
 
-function practiceChoiceFeedbackClass(choice: PracticeChoiceValue) {
-    const feedback = practiceAnswerFeedback.value;
-    const question = learnCurrentQuestion.value;
-    if (!feedback || !question || feedback.questionId !== question.id) {
-        return null;
-    }
-    if (choice === feedback.correct) {
-        return "border-2 border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-200 focus-visible:ring-emerald-300 dark:border-emerald-500 dark:bg-emerald-950/35 dark:text-emerald-50 dark:ring-emerald-900/70";
-    }
-    if (choice === feedback.selected) {
-        return "border-2 border-red-700 bg-red-50/80 text-red-950 ring-2 ring-red-200 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/40 dark:text-red-50 dark:ring-red-900/70";
-    }
-    return null;
-}
-
-function practiceTrueFalseChoiceClass(choice: boolean) {
-    const feedbackClass = practiceChoiceFeedbackClass(choice);
-    if (feedbackClass) return feedbackClass;
-    if (choice) {
-        return "border-amber-500 bg-amber-400 text-slate-950 hover:bg-amber-300 focus-visible:ring-amber-300 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300";
-    }
-    return "border-slate-300 bg-white text-slate-900 hover:bg-slate-100 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900";
-}
-
-function practiceMultipleChoiceClass(choice: number) {
-    const feedbackClass = practiceChoiceFeedbackClass(choice);
-    if (feedbackClass) return feedbackClass;
-    return "border-slate-200 bg-white text-slate-900 hover:bg-slate-50 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500";
-}
+const {
+    practiceTrueFalseChoiceClass,
+    practiceMultipleChoiceClass,
+    practiceQuestionSurfaceClass,
+} = createPracticePresentation({
+    getQuestion: () => learnCurrentQuestion.value,
+    getChoiceFeedback: () => practiceAnswerFeedback.value,
+    getWrittenFeedback: () => practiceWrittenFeedback.value,
+});
 
 function waitForFeedback(ms: number) {
     return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -865,17 +835,6 @@ function answerLearnMultipleChoice(selectedIndex: number) {
     const q = learnCurrentQuestion.value;
     if (!q || q.kind !== "multiple_choice") return;
     void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
-}
-
-function practiceQuestionSurfaceClass() {
-    const question = learnCurrentQuestion.value;
-    const feedback = practiceWrittenFeedback.value;
-    if (question?.kind === "written" && feedback?.questionId === question.id) {
-        return feedback.isCorrect
-            ? "border-2 border-emerald-600 bg-emerald-50/40 dark:border-emerald-500 dark:bg-emerald-950/20"
-            : "border-2 border-red-700 bg-red-50/40 dark:border-red-500 dark:bg-red-950/20";
-    }
-    return "border-amber-200 bg-amber-50/20 dark:border-amber-900/60 dark:bg-amber-950/10";
 }
 
 async function getWrittenModel(modelId: string) {

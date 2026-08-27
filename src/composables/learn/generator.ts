@@ -1,4 +1,5 @@
 import type { Term, Uuid } from '../db/types'
+import { createSeededRandom, shuffleWith } from '../random'
 
 export type LearnTrueFalseQuestion = {
   id: string
@@ -36,27 +37,6 @@ export type LearnGeneratorOptions = {
   shuffle?: boolean
 }
 
-function makePrng(seed: number) {
-  let x = (seed | 0) || 1
-  return () => {
-    x ^= x << 13
-    x ^= x >>> 17
-    x ^= x << 5
-    return (x >>> 0) / 4294967296
-  }
-}
-
-function shuffle<T>(items: T[], rand: () => number) {
-  const a = items.slice()
-  for (let i = a.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(rand() * (i + 1))
-    const tmp = a[i]
-    a[i] = a[j]!
-    a[j] = tmp!
-  }
-  return a
-}
-
 function clampMaxQuestions(v: number | undefined) {
   if (v === undefined) return 40
   const n = Math.floor(v)
@@ -91,7 +71,7 @@ function uniqueBy<T>(items: T[], key: (t: T) => string) {
 export function generateLearnQuestions(terms: Term[], options: LearnGeneratorOptions): LearnQuestion[] {
   const seed = Number.isFinite(options.seed) ? Math.floor(options.seed) : 1
   const maxQuestions = clampMaxQuestions(options.maxQuestions)
-  const rand = makePrng(seed)
+  const rand = createSeededRandom(seed)
   const requestedTypes = new Set<LearnQuestionKind>(
     options.questionTypes?.length ? options.questionTypes : ['true_false', 'multiple_choice']
   )
@@ -145,10 +125,10 @@ export function generateLearnQuestions(terms: Term[], options: LearnGeneratorOpt
         .map((x) => x.back)
 
       if (distractorCandidates.length >= 3) {
-        const shuffled = shuffle(distractorCandidates, rand)
+        const shuffled = shuffleWith(distractorCandidates, rand)
         const distractors = shuffled.slice(0, 3)
         const rawOptions = [t.back, ...distractors]
-        const choices = shuffle(rawOptions, rand)
+        const choices = shuffleWith(rawOptions, rand)
         const answerIndex = choices.indexOf(t.back)
         const unique = new Set(choices)
 
@@ -180,6 +160,6 @@ export function generateLearnQuestions(terms: Term[], options: LearnGeneratorOpt
     if (selected) questions.push(selected)
   }
 
-  const mixed = options.shuffle === false ? questions : shuffle(questions, rand)
+  const mixed = options.shuffle === false ? questions : shuffleWith(questions, rand)
   return mixed.slice(0, Math.min(maxQuestions, mixed.length))
 }

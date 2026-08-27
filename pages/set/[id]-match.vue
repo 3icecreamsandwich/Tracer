@@ -194,6 +194,7 @@ import {
     listAssignedMatchLeaderboard,
     type AssignedMatchLeaderboardEntry,
 } from "~/src/composables/classrooms";
+import { createRandomSeed } from "~/src/composables/random";
 
 const route = useRoute();
 const router = useRouter();
@@ -287,30 +288,10 @@ const baseSeed = computed(() => {
     return Number.isFinite(n) ? n : null;
 });
 
-function getRandomSeed() {
-    try {
-        const buf = new Uint32Array(1);
-        (globalThis.crypto as Crypto | undefined)?.getRandomValues?.(buf);
-        const v = Number(buf[0] ?? 0);
-        if (Number.isFinite(v) && v !== 0) return v;
-    } catch {}
-    return Date.now() ^ Math.floor(Math.random() * 0xffffffff);
-}
-
-function makePrng(seed: number) {
-    let x = seed | 0 || 1;
-    return () => {
-        x ^= x << 13;
-        x ^= x >>> 17;
-        x ^= x << 5;
-        return (x >>> 0) / 4294967296;
-    };
-}
-
 function matchSeed() {
     const s = baseSeed.value;
     if (s !== null) return s + matchRunCounter.value;
-    return getRandomSeed() ^ (matchRunCounter.value * 2654435761);
+    return createRandomSeed() ^ (matchRunCounter.value * 2654435761);
 }
 
 function clearMatchTimer() {
