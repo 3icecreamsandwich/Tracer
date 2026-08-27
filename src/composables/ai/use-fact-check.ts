@@ -18,6 +18,7 @@ const revealIntervalMs = 34
 export function useFactCheck(args: {
   language: Readonly<Ref<AppLanguage>>
   defaultModelId: Ref<string | null>
+  fallbackModelIds: Ref<string[]>
 }) {
   const busy = ref(false)
   const response = ref('')
@@ -75,9 +76,11 @@ export function useFactCheck(args: {
   }
 
   async function getModel(modelId: string) {
-    if (cachedModel.value?.id === modelId) return cachedModel.value.model
-    const model = await resolveAiModel(modelId)
-    cachedModel.value = { id: modelId, model }
+    const route = [modelId, ...args.fallbackModelIds.value]
+    const cacheId = route.join('\n')
+    if (cachedModel.value?.id === cacheId) return cachedModel.value.model
+    const model = await resolveAiModel(route)
+    cachedModel.value = { id: cacheId, model }
     return model
   }
 

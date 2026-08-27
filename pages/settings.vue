@@ -177,30 +177,85 @@
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        :aria-label="t('settings.defaultModel')"
+        aria-label="AI models"
       >
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h2 class="text-sm font-medium">{{ t('settings.defaultModel') }}</h2>
+            <h2 class="text-sm font-medium">AI models</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {{ t('settings.defaultModelDescription') }}
-            </p>
-            <p class="mt-3 text-sm text-slate-700 dark:text-slate-200">
-              <span class="font-medium text-slate-900 dark:text-slate-50">{{ t('common.current') }}</span>
-              <span v-if="defaultModelLabel" class="ml-1">{{ defaultModelLabel }}</span>
-              <span v-else class="ml-1 text-slate-500 dark:text-slate-400">{{ t('common.none') }}</span>
+              Models are tried from top to bottom when a provider is unavailable.
             </p>
           </div>
 
           <button
             type="button"
-            class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            class="inline-flex shrink-0 items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
             :disabled="busy"
             @click="openModelPicker"
           >
-            {{ defaultModelId ? t('common.change') : t('common.set') }}
+            Add model
           </button>
         </div>
+
+        <div v-if="modelRouteIds.length" class="mt-4 overflow-hidden rounded-md border border-slate-200 dark:border-slate-800">
+          <div
+            v-for="(modelId, index) in modelRouteIds"
+            :key="modelId"
+            class="flex items-center justify-between gap-3 border-b border-slate-200 px-3 py-3 last:border-b-0 dark:border-slate-800"
+          >
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="truncate text-sm font-medium text-slate-900 dark:text-slate-50">{{ modelLabel(modelId) }}</p>
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                  {{ index === 0 ? 'Primary' : `Fallback ${index}` }}
+                </span>
+              </div>
+              <p class="mt-1 text-xs" :class="modelConnectionReady(modelId) ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'">
+                {{ modelConnectionReady(modelId) ? 'Ready' : 'Connection required' }}
+              </p>
+            </div>
+            <div class="flex shrink-0 items-center gap-1">
+              <button type="button" class="rounded border border-slate-200 px-2 py-1 text-xs disabled:opacity-40 dark:border-slate-800" :disabled="busy || index === 0" aria-label="Move model up" @click="moveModelRoute(index, -1)">↑</button>
+              <button type="button" class="rounded border border-slate-200 px-2 py-1 text-xs disabled:opacity-40 dark:border-slate-800" :disabled="busy || index === modelRouteIds.length - 1" aria-label="Move model down" @click="moveModelRoute(index, 1)">↓</button>
+              <button type="button" class="rounded border border-red-200 px-2 py-1 text-xs text-red-700 dark:border-red-900 dark:text-red-300" :disabled="busy" @click="removeModelRoute(index)">{{ t('common.remove') }}</button>
+            </div>
+          </div>
+        </div>
+        <div v-else class="mt-4 rounded-md border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+          Add a model to enable Generate, Synthesize, Chat, and AI-assisted learning.
+        </div>
+
+        <details class="mt-4 rounded-md border border-slate-200 dark:border-slate-800">
+          <summary class="cursor-pointer px-3 py-3 text-sm font-medium">Manage connections</summary>
+          <div class="grid gap-3 border-t border-slate-200 p-3 dark:border-slate-800">
+            <div v-for="provider in apiKeyProviderOptions" :key="provider.id" class="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-sm font-medium">{{ provider.label }}</p>
+                <span class="text-xs" :class="providerApiKeyPresence[provider.id] ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'">
+                  {{ providerApiKeyPresence[provider.id] ? 'Connected' : 'Not connected' }}
+                </span>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <input :value="providerApiKeyDraftValue(provider.id)" type="password" autocomplete="off" :placeholder="providerApiKeyPlaceholder(provider.id, provider.placeholder)" class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" @input="setProviderApiKeyDraft(provider.id, $event)" />
+                <button type="button" :class="providerApiKeyActionClass(provider.id)" :disabled="providerApiKeyActionDisabled(provider.id)" @click="onProviderApiKeyAction(provider.id)">{{ providerApiKeyActionText(provider.id) }}</button>
+              </div>
+            </div>
+
+            <div class="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+              <div class="flex items-center justify-between gap-3"><p class="text-sm font-medium">GitHub Models</p><span class="text-xs text-slate-500 dark:text-slate-400">OAuth</span></div>
+              <button type="button" class="mt-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium dark:border-slate-800" :disabled="busy" @click="openGithubAuth">{{ githubModelsAuthState.status === 'authenticated' ? 'Reconnect' : t('common.authenticate') }}</button>
+            </div>
+
+            <details class="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+              <summary class="cursor-pointer text-sm font-medium">OpenAI Compatible · Advanced</summary>
+              <div class="mt-3 grid gap-2">
+                <input v-model="openAiCompatBaseURL" type="url" autocomplete="off" placeholder="https://api.example.com/v1" class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" />
+                <input v-model="openAiCompatModelId" type="text" autocomplete="off" placeholder="model-id" class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" />
+                <div class="flex flex-wrap gap-2"><input v-model="openAiCompatKey" type="password" autocomplete="off" :placeholder="providerApiKeyPlaceholder('openai_compat', 'api-key')" class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" /><button type="button" :class="providerApiKeyActionClass('openai_compat')" :disabled="providerApiKeyActionDisabled('openai_compat')" @click="onProviderApiKeyAction('openai_compat')">{{ providerApiKeyActionText('openai_compat') }}</button></div>
+              </div>
+            </details>
+          </div>
+        </details>
       </section>
 
       <section
@@ -253,6 +308,7 @@
       </section>
 
       <section
+        v-if="false"
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         :aria-label="t('settings.providers')"
       >
@@ -480,7 +536,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center p-6"
         role="dialog"
         aria-modal="true"
-        aria-label="Choose default AI model"
+        aria-label="Add AI model"
         @keydown.esc="closeModelPicker"
       >
         <button
@@ -496,9 +552,9 @@
         >
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('settings.defaultModel') }}</h2>
+              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">Add AI model</h2>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                {{ t('nav.search') }} · {{ t('settings.providers') }}
+                Choose a provider, then select a model.
               </p>
               <p class="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
                 ↑/↓ · Enter · Esc
@@ -769,25 +825,7 @@ import {
   type ProviderApiKeyPresence
 } from '../src/composables/ai/provider-settings'
 import { aiRegistryCatalog } from '../src/composables/ai/registry'
-import {
-  githubDeviceCodeRequest,
-  githubDeviceTokenPollOnce,
-  githubOAuthClientId,
-  githubPkceAuthorizeUrl,
-  githubPkceExchangeToken,
-  githubPkceFinish,
-  githubPkceStart,
-  mapDevicePollResponse,
-  openExternal,
-  pkceChallengeS256,
-  randomPkceVerifier
-} from '../src/composables/ai/github-oauth'
-import {
-  githubModelsInvalidateToken,
-  githubModelsLoadAuthState,
-  githubModelsStoreToken,
-  type GithubModelsAuthState
-} from '../src/composables/ai/github-state'
+import { useGithubModelsAuth } from '../src/composables/ai/github-models-auth'
 import { hasTauriRuntime } from '../src/composables/tauri'
 import { redactSensitiveText } from '../src/composables/security/redact'
 import { languageOptions } from '../src/i18n/messages'
@@ -830,6 +868,7 @@ const startupLockEnabled = ref(true)
 const vaultMode = ref<'password' | 'device_key' | null>(null)
 const darkMode = ref(false)
 const defaultModelId = ref<string | null>(null)
+const fallbackModelIds = ref<string[]>([])
 const learnHybridEnabled = ref(false)
 const textScale = ref(0)
 const languageMenuOpen = ref(false)
@@ -847,6 +886,7 @@ const showResetConfirmation = ref(false)
 const openAiKey = ref('')
 const anthropicKey = ref('')
 const geminiKey = ref('')
+const ollamaCloudKey = ref('')
 
 const openAiCompatBaseURL = ref('')
 const openAiCompatModelId = ref('')
@@ -856,29 +896,27 @@ const savedOpenAiCompatConfig = ref<OpenAiCompatConfig>({ baseURL: '', modelId: 
 const providerApiKeyPresence = ref<ProviderApiKeyPresence>(emptyProviderApiKeyPresence())
 const providerApiKeyClearTarget = ref<ProviderApiKeyId | null>(null)
 
-const isGithubAuthOpen = ref(false)
+const {
+  isGithubAuthOpen,
+  githubAuthBusy,
+  githubAuthStep,
+  githubAuthError,
+  githubAuthVerificationUri,
+  githubAuthUserCode,
+  githubAuthNextPollIntervalSec,
+  githubModelsAuthState,
+  githubModelsAvailableModelIds,
+  openGithubAuth,
+  closeGithubAuth,
+  githubAuthReset,
+  githubRefreshAuthState,
+  onGithubAuthCopyCode,
+  onGithubAuthCopyUrl,
+  onGithubAuthSignOut,
+  onGithubAuthStart
+} = useGithubModelsAuth({ isWebPreview: () => isWebPreview.value })
 
-type GithubAuthStep =
-  | 'idle'
-  | 'requesting'
-  | 'device_pending'
-  | 'device_success'
-  | 'pkce_pending'
-  | 'error'
-
-const githubAuthBusy = ref(false)
-const githubAuthStep = ref<GithubAuthStep>('idle')
-const githubAuthError = ref<string | null>(null)
-const githubAuthVerificationUri = ref<string | null>(null)
-const githubAuthUserCode = ref<string | null>(null)
-const githubAuthExpiresAt = ref<number | null>(null)
-const githubAuthNextPollIntervalSec = ref<number | null>(null)
-const githubAuthPollAbort = ref<AbortController | null>(null)
-
-const githubModelsAuthState = ref<GithubModelsAuthState>({ status: 'unauthenticated' })
-const githubModelsAvailableModelIds = ref<string[]>([])
-
-type ProviderId = 'openai' | 'anthropic' | 'gemini' | 'github' | 'openai_compat'
+type ProviderId = 'openai' | 'anthropic' | 'gemini' | 'github' | 'ollama_cloud' | 'openai_compat'
 
 type ProviderOption = {
   id: ProviderId
@@ -905,8 +943,16 @@ const modelOptionsByProvider = reactive<Record<ProviderId, ModelOption[]>>({
   anthropic: catalog.modelsByProvider.anthropic,
   gemini: catalog.modelsByProvider.gemini,
   github: [],
+  ollama_cloud: catalog.modelsByProvider.ollama_cloud,
   openai_compat: catalog.modelsByProvider.openai_compat
 })
+
+const apiKeyProviderOptions: Array<{ id: ProviderApiKeyId; label: string; placeholder: string }> = [
+  { id: 'openai', label: 'OpenAI', placeholder: 'sk-...' },
+  { id: 'anthropic', label: 'Anthropic', placeholder: 'sk-ant-...' },
+  { id: 'gemini', label: 'Gemini', placeholder: 'AIza...' },
+  { id: 'ollama_cloud', label: 'Ollama Cloud', placeholder: 'Ollama API key' }
+]
 
 watch(
   () => githubModelsAvailableModelIds.value.slice(),
@@ -942,6 +988,7 @@ const providerApiKeyLabels: Record<ProviderApiKeyId, string> = {
   openai: 'OpenAI',
   anthropic: 'Anthropic',
   gemini: 'Gemini',
+  ollama_cloud: 'Ollama Cloud',
   openai_compat: 'OpenAI Compatible'
 }
 
@@ -957,7 +1004,17 @@ function providerApiKeyDraftValue(id: ProviderApiKeyId) {
   if (id === 'openai') return openAiKey.value
   if (id === 'anthropic') return anthropicKey.value
   if (id === 'gemini') return geminiKey.value
+  if (id === 'ollama_cloud') return ollamaCloudKey.value
   return openAiCompatKey.value
+}
+
+function setProviderApiKeyDraft(id: ProviderApiKeyId, event: Event) {
+  const value = event.target instanceof HTMLInputElement ? event.target.value : ''
+  if (id === 'openai') openAiKey.value = value
+  else if (id === 'anthropic') anthropicKey.value = value
+  else if (id === 'gemini') geminiKey.value = value
+  else if (id === 'ollama_cloud') ollamaCloudKey.value = value
+  else openAiCompatKey.value = value
 }
 
 function providerApiKeyHasDraft(id: ProviderApiKeyId) {
@@ -1034,6 +1091,7 @@ function clearProviderApiKeyDraft(id?: ProviderApiKeyId) {
   if (!id || id === 'openai') openAiKey.value = ''
   if (!id || id === 'anthropic') anthropicKey.value = ''
   if (!id || id === 'gemini') geminiKey.value = ''
+  if (!id || id === 'ollama_cloud') ollamaCloudKey.value = ''
   if (!id || id === 'openai_compat') openAiCompatKey.value = ''
 }
 
@@ -1090,6 +1148,31 @@ const defaultModelLabel = computed(() => {
   if (!provider || !model) return raw
   return `${providerLabel(provider)} · ${model === 'configured' ? t('settings.configured') : model}`
 })
+
+const modelRouteIds = computed(() => defaultModelId.value
+  ? [defaultModelId.value, ...fallbackModelIds.value.filter((id) => id !== defaultModelId.value)]
+  : [])
+
+function modelLabel(qualifiedId: string) {
+  const separator = qualifiedId.indexOf(':')
+  if (separator <= 0) return qualifiedId
+  const providerId = qualifiedId.slice(0, separator) as ProviderId
+  const modelId = qualifiedId.slice(separator + 1)
+  const item = modelOptionsByProvider[providerId]?.find((model) => model.id === modelId)
+  return `${providerLabel(providerId)} · ${item?.label ?? modelId}`
+}
+
+function modelConnectionReady(qualifiedId: string) {
+  const providerId = qualifiedId.slice(0, qualifiedId.indexOf(':')) as ProviderId
+  if (providerId === 'github') return githubModelsAuthState.value.status === 'authenticated'
+  if (providerId === 'openai_compat') {
+    return providerApiKeyPresence.value.openai_compat && !!savedOpenAiCompatConfig.value.baseURL && !!savedOpenAiCompatConfig.value.modelId
+  }
+  if (providerId in providerApiKeyPresence.value) {
+    return providerApiKeyPresence.value[providerId as ProviderApiKeyId]
+  }
+  return false
+}
 
 const activeProviderLabel = computed(() => {
   const id = activeProviderId.value
@@ -1187,9 +1270,13 @@ function backToProviders() {
   nextTick(() => modelPickerSearchEl.value?.focus())
 }
 
-async function setDefaultModelId(nextId: string | null) {
+async function setModelRoute(nextIds: string[]) {
+  const normalized = [...new Set(nextIds.map((id) => id.trim()).filter(Boolean))]
+  const nextDefault = normalized[0] ?? null
+  const nextFallbacks = normalized.slice(1)
   if (isWebPreview.value) {
-    defaultModelId.value = nextId
+    defaultModelId.value = nextDefault
+    fallbackModelIds.value = nextFallbacks
     return
   }
   busy.value = true
@@ -1197,13 +1284,33 @@ async function setDefaultModelId(nextId: string | null) {
   try {
     const db = await useTracerDb()
     const repo = createSettingsRepo(db)
-    const updated = await repo.set({ defaultModelId: nextId })
+    const updated = await repo.set({ defaultModelId: nextDefault, fallbackModelIds: nextFallbacks })
     defaultModelId.value = updated.defaultModelId
+    fallbackModelIds.value = updated.fallbackModelIds
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to update default model')
   } finally {
     busy.value = false
   }
+}
+
+async function setDefaultModelId(nextId: string | null) {
+  await setModelRoute(nextId ? [nextId, ...fallbackModelIds.value.filter((id) => id !== nextId)] : [])
+}
+
+async function moveModelRoute(index: number, delta: number) {
+  const nextIndex = index + delta
+  const route = [...modelRouteIds.value]
+  if (index < 0 || nextIndex < 0 || index >= route.length || nextIndex >= route.length) return
+  const [model] = route.splice(index, 1)
+  route.splice(nextIndex, 0, model!)
+  await setModelRoute(route)
+}
+
+async function removeModelRoute(index: number) {
+  const route = [...modelRouteIds.value]
+  route.splice(index, 1)
+  await setModelRoute(route)
 }
 
 function clampIndex(next: number) {
@@ -1247,7 +1354,11 @@ function onModelPickerClick(item: ModelPickerItem) {
 
   if (item.kind === 'model' && item.providerId && item.modelId) {
     const id = `${item.providerId}:${item.modelId}`
-    setDefaultModelId(id).then(() => closeModelPicker())
+    if (modelRouteIds.value.includes(id)) {
+      error.value = 'That model is already in the route.'
+      return
+    }
+    setModelRoute([...modelRouteIds.value, id]).then(() => closeModelPicker())
   }
 }
 
@@ -1266,235 +1377,6 @@ watch(
     nextTick(() => modelPickerSearchEl.value?.focus())
   }
 )
-
-function openGithubAuth() {
-  isGithubAuthOpen.value = true
-  githubAuthStep.value = 'idle'
-  githubAuthError.value = null
-  githubAuthVerificationUri.value = null
-  githubAuthUserCode.value = null
-  githubAuthExpiresAt.value = null
-  githubAuthNextPollIntervalSec.value = null
-}
-
-function closeGithubAuth() {
-  githubAuthPollAbort.value?.abort()
-  githubAuthPollAbort.value = null
-  isGithubAuthOpen.value = false
-}
-
-function githubScope(): string {
-  return 'models:read'
-}
-
-async function githubRefreshAuthState() {
-  githubModelsAuthState.value = await githubModelsLoadAuthState()
-  if (githubModelsAuthState.value.status === 'authenticated') {
-    githubModelsAvailableModelIds.value = githubModelsAuthState.value.models.map((m) => m.id)
-  } else {
-    githubModelsAvailableModelIds.value = []
-  }
-}
-
-async function copyToClipboard(text: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-  } catch {
-    // ignore
-  }
-}
-
-async function onGithubAuthCopyCode() {
-  const code = githubAuthUserCode.value
-  if (!code) return
-  await copyToClipboard(code)
-}
-
-async function onGithubAuthCopyUrl() {
-  const url = githubAuthVerificationUri.value
-  if (!url) return
-  await copyToClipboard(url)
-}
-
-function githubAuthReset() {
-  githubAuthBusy.value = false
-  githubAuthStep.value = 'idle'
-  githubAuthError.value = null
-  githubAuthVerificationUri.value = null
-  githubAuthUserCode.value = null
-  githubAuthExpiresAt.value = null
-  githubAuthNextPollIntervalSec.value = null
-}
-
-async function onGithubAuthSignOut() {
-  if (isWebPreview.value) {
-    githubAuthError.value = 'GitHub authentication is not available in web preview.'
-    return
-  }
-  githubAuthBusy.value = true
-  githubAuthError.value = null
-  try {
-    await githubModelsInvalidateToken()
-    await githubRefreshAuthState()
-  } catch (e: any) {
-    githubAuthError.value = toSafeErrorMessage(e, 'Failed to sign out')
-  } finally {
-    githubAuthBusy.value = false
-  }
-}
-
-function nowMs() {
-  return Date.now()
-}
-
-async function sleep(ms: number) {
-  await new Promise((r) => setTimeout(r, ms))
-}
-
-async function pollDeviceToken(opts: {
-  clientId: string
-  deviceCode: string
-  initialIntervalSec: number
-  expiresAtMs: number
-}) {
-  const abort = new AbortController()
-  githubAuthPollAbort.value = abort
-  let intervalSec = Math.max(1, Math.floor(opts.initialIntervalSec))
-  githubAuthNextPollIntervalSec.value = intervalSec
-
-  while (!abort.signal.aborted) {
-    const remaining = opts.expiresAtMs - nowMs()
-    if (remaining <= 0) {
-      githubAuthStep.value = 'error'
-      githubAuthError.value = 'Device code expired. Try again.'
-      return
-    }
-
-    await sleep(intervalSec * 1000)
-    if (abort.signal.aborted) return
-
-    const body = await githubDeviceTokenPollOnce({
-      clientId: opts.clientId,
-      deviceCode: opts.deviceCode
-    })
-    const ev = mapDevicePollResponse(body as any, intervalSec)
-    if (ev.type === 'pending') {
-      intervalSec = ev.nextIntervalSec
-      githubAuthNextPollIntervalSec.value = intervalSec
-      continue
-    }
-    if (ev.type === 'slow_down') {
-      intervalSec = ev.nextIntervalSec
-      githubAuthNextPollIntervalSec.value = intervalSec
-      continue
-    }
-    if (ev.type === 'expired') {
-      githubAuthStep.value = 'error'
-      githubAuthError.value = 'Device code expired. Try again.'
-      return
-    }
-    if (ev.type === 'denied') {
-      githubAuthStep.value = 'error'
-      githubAuthError.value = 'Access denied. You cancelled or declined authorization.'
-      return
-    }
-    if (ev.type === 'device_flow_disabled') {
-      throw new Error('device_flow_disabled')
-    }
-    if (ev.type === 'error') {
-      githubAuthStep.value = 'error'
-      githubAuthError.value = ev.message
-      return
-    }
-    if (ev.type === 'success') {
-      await githubModelsStoreToken(ev.token.access_token)
-      await githubRefreshAuthState()
-      githubAuthStep.value = 'device_success'
-      return
-    }
-  }
-}
-
-async function tryDeviceFlow() {
-  const clientId = githubOAuthClientId()
-  const device = await githubDeviceCodeRequest({ clientId, scope: githubScope() })
-  githubAuthVerificationUri.value = device.verification_uri
-  githubAuthUserCode.value = device.user_code
-  githubAuthExpiresAt.value = nowMs() + device.expires_in * 1000
-  githubAuthStep.value = 'device_pending'
-
-  await openExternal(device.verification_uri)
-  await pollDeviceToken({
-    clientId,
-    deviceCode: device.device_code,
-    initialIntervalSec: device.interval,
-    expiresAtMs: githubAuthExpiresAt.value
-  })
-}
-
-async function tryPkceFlow() {
-  const clientId = githubOAuthClientId()
-  const start = await githubPkceStart()
-  const state = crypto.randomUUID()
-  const verifier = randomPkceVerifier()
-  const challenge = await pkceChallengeS256(verifier)
-  const url = await githubPkceAuthorizeUrl({
-    clientId,
-    port: start.port,
-    state,
-    scope: githubScope(),
-    codeChallenge: challenge
-  })
-
-  githubAuthStep.value = 'pkce_pending'
-  await openExternal(url)
-
-  const cb = await githubPkceFinish({ id: start.id, expectedState: state, timeoutMs: 120_000 })
-  const token = await githubPkceExchangeToken({
-    clientId,
-    code: cb.code,
-    port: start.port,
-    codeVerifier: verifier
-  })
-  const ev = mapDevicePollResponse(token as any, 0)
-  if (ev.type !== 'success') {
-    throw new Error((token as any)?.error ?? 'pkce_failed')
-  }
-  await githubModelsStoreToken(ev.token.access_token)
-  await githubRefreshAuthState()
-  githubAuthStep.value = 'device_success'
-}
-
-async function onGithubAuthStart() {
-  if (isWebPreview.value) {
-    githubAuthStep.value = 'error'
-    githubAuthError.value = 'GitHub authentication is not available in web preview.'
-    return
-  }
-  githubAuthBusy.value = true
-  githubAuthError.value = null
-  githubAuthPollAbort.value?.abort()
-  githubAuthPollAbort.value = null
-
-  try {
-    githubAuthStep.value = 'requesting'
-    try {
-      await tryDeviceFlow()
-    } catch (e: any) {
-      const msg = toErrorMessage(e, 'Device flow failed')
-      if (msg.includes('device_flow_disabled') || msg.includes('Device flow')) {
-        await tryPkceFlow()
-      } else {
-        await tryPkceFlow()
-      }
-    }
-  } catch (e: any) {
-    githubAuthStep.value = 'error'
-    githubAuthError.value = toSafeErrorMessage(e, 'GitHub authentication failed')
-  } finally {
-    githubAuthBusy.value = false
-  }
-}
 
 async function onSaveProviderSecret(id: ProviderApiKeyId) {
   if (isWebPreview.value) {
@@ -1581,6 +1463,7 @@ onMounted(() => {
       startupLockEnabled.value = false
       vaultMode.value = null
       defaultModelId.value = null
+      fallbackModelIds.value = []
       learnHybridEnabled.value = false
       floatingChatEnabled.value = true
       textScale.value = Number(document.documentElement.dataset.textScale || 0)
@@ -1603,6 +1486,7 @@ onMounted(() => {
       startupLockEnabled.value = status.vault_mode === 'device_key' ? false : settings.startupLockEnabled
       darkMode.value = settings.darkMode
       defaultModelId.value = settings.defaultModelId
+      fallbackModelIds.value = settings.fallbackModelIds
       learnHybridEnabled.value = settings.learnHybridEnabled
       floatingChatEnabled.value = settings.floatingChatEnabled
       textScale.value = settings.textScale

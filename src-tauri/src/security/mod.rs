@@ -25,7 +25,8 @@ pub use provider_keys::{
 };
 pub(crate) use provider_keys::{
     STRONGHOLD_STORE_KEY_ANTHROPIC_API_KEY, STRONGHOLD_STORE_KEY_GEMINI_API_KEY,
-    STRONGHOLD_STORE_KEY_GITHUB_MODELS_TOKEN, STRONGHOLD_STORE_KEY_OPENAI_API_KEY,
+    STRONGHOLD_STORE_KEY_GITHUB_MODELS_TOKEN, STRONGHOLD_STORE_KEY_OLLAMA_CLOUD_API_KEY,
+    STRONGHOLD_STORE_KEY_OPENAI_API_KEY,
     STRONGHOLD_STORE_KEY_OPENAI_COMPAT_API_KEY, STRONGHOLD_STORE_KEY_OPENAI_COMPAT_CONFIG_JSON,
 };
 pub use store::{
@@ -86,6 +87,7 @@ mod tests {
             Some(b"sk-openai"),
             Some(b"   "),
             None,
+            Some(b"ollama-key"),
             Some(b"compat-key\n"),
         );
 
@@ -95,6 +97,7 @@ mod tests {
                 openai: true,
                 anthropic: false,
                 gemini: false,
+                ollama_cloud: true,
                 openai_compat: true,
             }
         );
@@ -113,6 +116,10 @@ mod tests {
         assert_eq!(
             provider_api_key_id_from_str("gemini").map(ProviderApiKeyId::as_str),
             Some("gemini")
+        );
+        assert_eq!(
+            provider_api_key_id_from_str("ollama_cloud").map(ProviderApiKeyId::as_str),
+            Some("ollama_cloud")
         );
         assert_eq!(
             provider_api_key_id_from_str("openai_compat").map(ProviderApiKeyId::as_str),

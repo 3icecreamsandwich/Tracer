@@ -450,7 +450,7 @@ async function onCreate() {
       return
     }
 
-    const modelPromise = resolveAiModel(settings.defaultModelId)
+    const modelPromise = resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
     const sourceSets = (await sourceSetsPromise).filter((s): s is FlashcardSet => !!s)
     if (sourceSets.length === 0) {
       throw new Error('Selected sets could not be loaded.')

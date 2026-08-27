@@ -3,6 +3,7 @@ import type { Session, User } from '@supabase/supabase-js'
 
 import { hasTauriRuntime } from '../tauri'
 import { clearSupabaseMemorySession, getSupabaseClient } from './client'
+import { normalizeAuthError } from './errors'
 
 export type StoredAuthSession = {
   accessToken: string
@@ -12,6 +13,17 @@ export type StoredAuthSession = {
 }
 
 export type AuthIdentity = StoredAuthSession['user']
+export type RestoredAuthSession = { identity: AuthIdentity; online: boolean }
+
+let restoreSessionRequest: Promise<RestoredAuthSession | null> | null = null
+
+export function isInvalidStoredSessionError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false
+  const code = String((error as { code?: unknown }).code ?? '')
+  return code === 'refresh_token_already_used'
+    || code === 'refresh_token_not_found'
+    || code === 'invalid_refresh_token'
+}
 
 export function identityFromUser(user: User): AuthIdentity {
   return {
@@ -51,7 +63,23 @@ export async function readStoredAuthSession(): Promise<StoredAuthSession | null>
   return raw ? parseStoredSession(raw) : null
 }
 
-export async function restoreAuthSession(): Promise<{ identity: AuthIdentity; online: boolean } | null> {
+async function persistRestoredSession(session: Session): Promise<void> {
+  let lastError: unknown = null
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await persistAuthSession(session)
+      return
+    } catch (error) {
+      lastError = error
+      if (attempt === 0) {
+        await new Promise(resolve => setTimeout(resolve, 50))
+      }
+    }
+  }
+  throw lastError
+}
+
+async function runRestoreAuthSession(): Promise<RestoredAuthSession | null> {
   const stored = await readStoredAuthSession()
   if (!stored) return null
   try {
@@ -60,11 +88,36 @@ export async function restoreAuthSession(): Promise<{ identity: AuthIdentity; on
       refresh_token: stored.refreshToken,
     })
     if (error || !data.session) throw error ?? new Error('Session unavailable')
-    await persistAuthSession(data.session)
+    try {
+      await persistRestoredSession(data.session)
+    } catch {
+      // The refreshed session is already usable in memory. Do not misreport a
+      // keychain write problem as lost connectivity for the current launch.
+      console.error('[Tracer auth] Could not persist refreshed session')
+    }
     return { identity: identityFromUser(data.session.user), online: true }
-  } catch {
-    return { identity: stored.user, online: false }
+  } catch (error) {
+    if (normalizeAuthError(error).code === 'network') {
+      return { identity: stored.user, online: false }
+    }
+
+    if (isInvalidStoredSessionError(error)) {
+      // Invalid/reused refresh tokens require reconnecting. Removing the stale
+      // token prevents every Retry or startup from repeating the failed refresh.
+      await clearAuthSession({ remote: false })
+      return null
+    }
+    throw error
   }
+}
+
+export async function restoreAuthSession(): Promise<RestoredAuthSession | null> {
+  if (restoreSessionRequest) return restoreSessionRequest
+  const request = runRestoreAuthSession().finally(() => {
+    if (restoreSessionRequest === request) restoreSessionRequest = null
+  })
+  restoreSessionRequest = request
+  return request
 }
 
 export async function clearAuthSession(options: { remote?: boolean } = {}): Promise<void> {

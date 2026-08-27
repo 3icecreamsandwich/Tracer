@@ -5,6 +5,7 @@ export const providerApiKeyIds: ProviderApiKeyId[] = [
   'openai',
   'anthropic',
   'gemini',
+  'ollama_cloud',
   'openai_compat'
 ]
 
@@ -12,6 +13,7 @@ export const providerApiKeyCredentialKinds: Record<ProviderApiKeyId, AiCredentia
   openai: 'openai_api_key',
   anthropic: 'anthropic_api_key',
   gemini: 'gemini_api_key',
+  ollama_cloud: 'ollama_cloud_api_key',
   openai_compat: 'openai_compat_api_key'
 }
 

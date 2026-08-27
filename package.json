@@ -26,6 +26,7 @@
     "katex": "^0.17.0",
     "markdown-it": "^14.3.0",
     "nuxt": "^4.4.8",
+    "ollama-ai-provider-v2": "3",
     "pdfjs-dist": "^6.1.200",
     "tesseract.js": "^7.0.0",
     "vue": "3.5.39"

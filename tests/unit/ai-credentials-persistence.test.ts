@@ -42,6 +42,7 @@ describe('AI credentials invoke payloads', () => {
       openai: true,
       anthropic: 'sk-secret',
       gemini: 1,
+      ollama_cloud: false,
       openai_compat: false,
       extra: 'secret'
     } as any)
@@ -53,9 +54,10 @@ describe('AI credentials invoke payloads', () => {
       openai: true,
       anthropic: false,
       gemini: false,
+      ollama_cloud: false,
       openai_compat: false
     })
-    expect(Object.values(presence)).toEqual([true, false, false, false])
+    expect(Object.values(presence)).toEqual([true, false, false, false, false])
   })
 
   it('skips batched provider save when drafts are blank and config is unchanged', async () => {

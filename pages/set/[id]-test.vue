@@ -33,10 +33,24 @@
                     >
                         {{ timerText }}
                     </span>
-                    <span class="text-sm font-medium text-slate-600 dark:text-slate-300">
-                        {{ progressText }}
-                    </span>
                 </div>
+            </div>
+            <div
+                class="mt-3 flex items-center gap-3 text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400"
+                role="progressbar"
+                aria-label="Test progress"
+                aria-valuemin="0"
+                :aria-valuemax="testQuestions.length"
+                :aria-valuenow="answeredCount"
+            >
+                <span>0</span>
+                <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                    <div
+                        class="h-full rounded-full bg-orange-500 transition-[width] duration-200 ease-out"
+                        :style="{ width: `${testProgressPercent}%` }"
+                    />
+                </div>
+                <span>{{ testQuestions.length }}</span>
             </div>
         </header>
 
@@ -375,6 +389,7 @@ const loadError = ref<string | null>(null)
 const formError = ref<string | null>(null)
 const set = ref<FlashcardSet | null>(null)
 const defaultModelId = ref<string | null>(null)
+const fallbackModelIds = ref<string[]>([])
 const testQuestions = ref<LearnQuestion[]>([])
 const responses = ref<Record<string, TestResponse>>({})
 const writtenDrafts = ref<Record<string, string>>({})
@@ -395,6 +410,9 @@ const aiErrorOpen = ref(false)
 const testGradingAbort = shallowRef<AbortController | null>(null)
 const cachedWrittenModel = shallowRef<{ id: string; model: any } | null>(null)
 const lastSubmitForced = ref(false)
+const assignedPriorCorrect = ref(0)
+const assignedPriorAttempted = ref(0)
+let assignedSessionFinished = false
 
 const isWebPreview = computed(() => !hasTauriRuntime())
 const assignedAssignmentId = computed(() =>
@@ -455,11 +473,10 @@ const accuracyPercent = computed(() => {
     return Math.round((correctCount.value / testQuestions.value.length) * 100)
 })
 
-const progressText = computed(() => {
+const testProgressPercent = computed(() => {
     const total = testQuestions.value.length
-    return testSubmitted.value
-        ? `${correctCount.value}/${total}`
-        : `${answeredCount.value}/${total}`
+    if (total <= 0) return 0
+    return Math.min(100, (answeredCount.value / total) * 100)
 })
 
 const timerText = computed(() => {
@@ -616,12 +633,30 @@ function buildTest() {
     startTimer()
 }
 
+function finishClassroomTest() {
+    if (assignedSessionFinished || !set.value) return
+    assignedSessionFinished = true
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "test",
+        scoreEarned: assignedPriorCorrect.value + correctCount.value,
+        scorePossible: assignedPriorAttempted.value + answeredCount.value,
+    })
+}
+
+function onPageHide() {
+    finishClassroomTest()
+}
+
 async function getWrittenModel(modelId: string) {
-    if (cachedWrittenModel.value?.id === modelId) {
+    const route = [modelId, ...fallbackModelIds.value]
+    const cacheId = route.join('\n')
+    if (cachedWrittenModel.value?.id === cacheId) {
         return cachedWrittenModel.value.model
     }
-    const model = await resolveAiModel(modelId)
-    cachedWrittenModel.value = { id: modelId, model }
+    const model = await resolveAiModel(route)
+    cachedWrittenModel.value = { id: cacheId, model }
     return model
 }
 
@@ -713,6 +748,8 @@ async function retrySubmitTest() {
 }
 
 function restartTest() {
+    assignedPriorCorrect.value += correctCount.value
+    assignedPriorAttempted.value += answeredCount.value
     testGradingAbort.value?.abort()
     testGradingAbort.value = null
     runCounter.value += 1
@@ -761,6 +798,7 @@ function deactivateTestExitGuards() {
 async function confirmQuitTest() {
     quitTestOpen.value = false
     clearTimer()
+    finishClassroomTest()
     if (pendingTestExit.value === "app" && !isWebPreview.value) {
         await invoke("test_mode_confirm_exit")
         return
@@ -787,22 +825,13 @@ watch(language, () => {
     buildTest()
 })
 
-watch(testSubmitted, (submitted) => {
-    if (!submitted || !set.value || testQuestions.value.length === 0) return
-    void completeAssignedAttempt({
-        assignmentId: assignedAssignmentId.value,
-        setId: set.value.id,
-        mode: "test",
-        scoreEarned: correctCount.value,
-        scorePossible: testQuestions.value.length,
-    })
-})
-
 onBeforeRouteLeave(() => {
+    finishClassroomTest()
     deactivateTestExitGuards()
 })
 
 onMounted(async () => {
+    window.addEventListener("pagehide", onPageHide)
     try {
         await activateTestExitGuards()
         if (isWebPreview.value) {
@@ -823,6 +852,7 @@ onMounted(async () => {
 
         const settings = await createSettingsRepo(db).get()
         defaultModelId.value = settings.defaultModelId
+        fallbackModelIds.value = settings.fallbackModelIds
         if (settings.startupLockEnabled && status.requires_unlock) {
             if (!unlockedThisSession.value) {
                 markLocked()
@@ -856,6 +886,8 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+    finishClassroomTest()
+    window.removeEventListener("pagehide", onPageHide)
     testGradingAbort.value?.abort()
     clearTimer()
 })

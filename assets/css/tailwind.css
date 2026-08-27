@@ -3,6 +3,28 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .tracer-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border font-semibold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-slate-950;
+  }
+
+  .tracer-button--sm { @apply min-h-9 px-3 py-1.5 text-sm; }
+  .tracer-button--md { @apply min-h-10 px-4 py-2 text-sm; }
+  .tracer-button--lg { @apply min-h-12 px-5 py-3 text-base; }
+  .tracer-button--block { @apply w-full; }
+  .tracer-button--dark { @apply border-slate-950 bg-slate-950 text-white hover:bg-slate-800 focus-visible:ring-slate-500 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200; }
+  .tracer-button--white { @apply border-slate-300 bg-white text-slate-950 hover:bg-slate-50 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900; }
+  .tracer-button--danger { @apply border-red-600 bg-white text-red-700 hover:bg-red-50 focus-visible:ring-red-500 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30; }
+
+  .tracer-panel {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950;
+  }
+
+  .tracer-input {
+    @apply min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-950 shadow-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-slate-500 dark:focus:ring-slate-700;
+  }
+}
+
 @layer base {
   html {
     font-size: 16px;

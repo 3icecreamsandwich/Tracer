@@ -28,15 +28,22 @@
           <ul v-else class="mt-6 space-y-3">
             <li v-for="assignment in assignments" :key="assignment.id">
               <article class="flex min-h-[88px] flex-wrap items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <img :src="setIconSrc(assignment.iconKey)" :style="setIconToneStyle(assignment.iconTone)" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
-                <div class="min-w-0 flex-1">
-                  <p class="truncate font-semibold">{{ assignment.title }}</p>
-                  <p class="mt-1 truncate text-sm text-slate-600 dark:text-slate-300">
-                    {{ assignment.kind === 'study-guide' ? t('home.studyGuide') : t('classroom.cardCount', { count: assignment.cardCount }) }}
-                    <span aria-hidden="true"> · </span>{{ formatAssignedDate(assignment.createdAt) }}
-                  </p>
-                  <p v-if="assignment.description" class="mt-1 truncate text-sm text-slate-500 dark:text-slate-400">{{ assignment.description }}</p>
-                </div>
+                <button
+                  type="button"
+                  class="flex min-w-0 flex-1 items-center gap-5 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-4 dark:focus-visible:ring-offset-slate-950"
+                  :disabled="openingAssignmentId === assignment.id"
+                  @click="openAssignmentSet(assignment)"
+                >
+                  <img :src="setIconSrc(assignment.iconKey)" :style="setIconToneStyle(assignment.iconTone)" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate font-semibold">{{ assignment.title }}</span>
+                    <span class="mt-1 block truncate text-sm text-slate-600 dark:text-slate-300">
+                      {{ assignment.kind === 'study-guide' ? t('home.studyGuide') : t('classroom.cardCount', { count: assignment.cardCount }) }}
+                      <span aria-hidden="true"> · </span>{{ formatAssignedDate(assignment.createdAt) }}
+                    </span>
+                    <span v-if="assignment.description" class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">{{ assignment.description }}</span>
+                  </span>
+                </button>
                 <div class="flex flex-wrap gap-2">
                   <AppButton
                     v-for="mode in studyModes"
@@ -141,6 +148,25 @@ async function openAssignment(assignment: ClassroomAssignment, mode: ClassroomAt
     const suffix = mode === 'practice' ? 'learn' : mode
     await router.push({
       path: `/set/${localSetId}-${suffix}`,
+      query: { assignment: assignment.id, class: classId.value },
+    })
+  } catch (error) {
+    assignmentErrorId.value = assignment.id
+    assignmentError.value = t(classroomErrorKey(error))
+  } finally {
+    openingAssignmentId.value = null
+  }
+}
+
+async function openAssignmentSet(assignment: ClassroomAssignment) {
+  if (openingAssignmentId.value) return
+  openingAssignmentId.value = assignment.id
+  assignmentErrorId.value = null
+  assignmentError.value = null
+  try {
+    const localSetId = await prepareClassroomAssignmentForStudy(assignment)
+    await router.push({
+      path: `/set/${localSetId}`,
       query: { assignment: assignment.id, class: classId.value },
     })
   } catch (error) {

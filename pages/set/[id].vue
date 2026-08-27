@@ -16,7 +16,7 @@
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
                         <h1 class="truncate text-2xl font-semibold">
-                            {{ set?.title ?? t('home.setKind') }}
+                            {{ set?.title ?? t("home.setKind") }}
                         </h1>
                         <p
                             v-if="set?.description"
@@ -32,7 +32,7 @@
                             :to="`/set/${set.id}/edit`"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
                         >
-                            {{ t('common.edit') }}
+                            {{ t("common.edit") }}
                         </NuxtLink>
                         <button
                             type="button"
@@ -40,7 +40,7 @@
                             :disabled="busy || !set"
                             @click="openExport"
                         >
-                            {{ t('common.export') }}
+                            {{ t("common.export") }}
                         </button>
                     </div>
                 </div>
@@ -49,11 +49,15 @@
                     v-if="linkedFolder"
                     class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900"
                 >
-                    <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div
+                        class="flex flex-wrap items-center justify-between gap-3"
+                    >
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span aria-hidden="true">📁</span>
-                                <p class="truncate font-medium text-slate-900 dark:text-slate-50">
+                                <p
+                                    class="truncate font-medium text-slate-900 dark:text-slate-50"
+                                >
                                     {{ linkedFolderName }}
                                 </p>
                                 <span
@@ -63,7 +67,10 @@
                                     {{ linkedFolderStatusLabel }}
                                 </span>
                             </div>
-                            <p class="mt-1 truncate text-xs text-slate-500 dark:text-slate-400" :title="linkedFolder.path">
+                            <p
+                                class="mt-1 truncate text-xs text-slate-500 dark:text-slate-400"
+                                :title="linkedFolder.path"
+                            >
                                 {{ linkedFolder.path }}
                             </p>
                             <p
@@ -77,18 +84,24 @@
                             <button
                                 type="button"
                                 class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800"
-                                :disabled="linkedFolderBusy || linkedFolder.status === 'syncing'"
+                                :disabled="
+                                    linkedFolderBusy ||
+                                    linkedFolder.status === 'syncing'
+                                "
                                 @click="syncLinkedFolderNow"
                             >
-                                {{ t('linkedFolder.syncNow') }}
+                                {{ t("linkedFolder.syncNow") }}
                             </button>
                             <button
                                 type="button"
                                 class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800"
-                                :disabled="linkedFolderBusy || linkedFolder.status === 'syncing'"
+                                :disabled="
+                                    linkedFolderBusy ||
+                                    linkedFolder.status === 'syncing'
+                                "
                                 @click="unlinkCurrentFolder"
                             >
-                                {{ t('linkedFolder.unlink') }}
+                                {{ t("linkedFolder.unlink") }}
                             </button>
                         </div>
                     </div>
@@ -106,7 +119,7 @@
                         v-else-if="busy"
                         class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                     >
-                        {{ t('common.loading') }}
+                        {{ t("common.loading") }}
                     </div>
 
                     <div
@@ -124,18 +137,18 @@
                                 >
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=flashcards`"
+                                        :to="setModePath('flashcards')"
                                         class="w-5/6"
                                     >
                                         <p
                                             class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                         >
-                                            {{ t('set.flashcards') }}
+                                            {{ t("set.flashcards") }}
                                         </p>
                                         <p
                                             class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                         >
-                                            {{ t('set.flashcardsHint') }}
+                                            {{ t("set.flashcardsHint") }}
                                         </p>
                                     </NuxtLink>
                                     <NuxtLink
@@ -156,7 +169,7 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        {{ t('set.studyGuide') }}
+                                        {{ t("set.studyGuide") }}
                                     </p>
                                     <p
                                         class="mt-1 text-sm text-slate-600 dark:text-slate-300"
@@ -170,18 +183,18 @@
                                 >
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=learn`"
+                                        :to="setModePath('learn')"
                                         class="w-5/6"
                                     >
                                         <p
                                             class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                         >
-                                            {{ t('set.learn') }}
+                                            {{ t("set.learn") }}
                                         </p>
                                         <p
                                             class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                         >
-                                            {{ t('set.learnHint') }}
+                                            {{ t("set.learnHint") }}
                                         </p>
                                     </NuxtLink>
                                     <NuxtLink
@@ -199,18 +212,18 @@
                                 >
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=match`"
+                                        :to="setModePath('match')"
                                         class="w-5/6"
                                     >
                                         <p
                                             class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                         >
-                                            {{ t('set.match') }}
+                                            {{ t("set.match") }}
                                         </p>
                                         <p
                                             class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                         >
-                                            {{ t('set.matchHint') }}
+                                            {{ t("set.matchHint") }}
                                         </p>
                                     </NuxtLink>
                                     <NuxtLink
@@ -224,18 +237,18 @@
                                 </div>
                                 <NuxtLink
                                     replace
-                                    :to="`/set/${set.id}?mode=chat`"
+                                    :to="setModePath('chat')"
                                     class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        {{ t('set.chat') }}
+                                        {{ t("set.chat") }}
                                     </p>
                                     <p
                                         class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                     >
-                                        {{ t('set.chatHint') }}
+                                        {{ t("set.chatHint") }}
                                     </p>
                                 </NuxtLink>
                             </div>
@@ -253,12 +266,12 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        {{ t('set.flashcards') }}
+                                        {{ t("set.flashcards") }}
                                     </p>
                                     <p
                                         class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        {{ t('set.flashcardInstructions') }}
+                                        {{ t("set.flashcardInstructions") }}
                                     </p>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
@@ -274,19 +287,40 @@
                                     >
                                         {{ ratioText }}
                                     </p>
-                                    <div ref="flashcardSettingsMenuRoot" class="relative">
+                                    <div
+                                        ref="flashcardSettingsMenuRoot"
+                                        class="relative"
+                                    >
                                         <button
                                             ref="flashcardSettingsButtonEl"
                                             type="button"
                                             class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                            :aria-label="t('set.flashcardSettings')"
+                                            :aria-label="
+                                                t('set.flashcardSettings')
+                                            "
                                             :title="t('set.flashcardSettings')"
-                                            :aria-expanded="flashcardSettingsOpen"
+                                            :aria-expanded="
+                                                flashcardSettingsOpen
+                                            "
                                             aria-haspopup="menu"
-                                            @click="flashcardSettingsOpen = !flashcardSettingsOpen"
+                                            @click="
+                                                flashcardSettingsOpen =
+                                                    !flashcardSettingsOpen
+                                            "
                                         >
-                                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                                            <svg
+                                                aria-hidden="true"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="1.8"
+                                                class="h-4 w-4"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
+                                                />
                                                 <circle cx="12" cy="12" r="3" />
                                             </svg>
                                         </button>
@@ -295,21 +329,75 @@
                                             v-if="flashcardSettingsOpen"
                                             class="absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
                                             role="menu"
-                                            :aria-label="t('set.flashcardSettings')"
+                                            :aria-label="
+                                                t('set.flashcardSettings')
+                                            "
                                         >
-                                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="totalCount === 0" @click="shuffleFromFlashcardSettings">
-                                                {{ t('set.shuffle') }}
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
+                                                :disabled="totalCount === 0"
+                                                @click="
+                                                    shuffleFromFlashcardSettings
+                                                "
+                                            >
+                                                {{ t("set.shuffle") }}
                                             </button>
-                                            <button type="button" role="menuitemcheckbox" :aria-checked="starredOnly" class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="starredStudyCount === 0 && !starredOnly" @click="toggleStarredOnlyFromFlashcardSettings">
-                                                <span>{{ t('set.starredOnly') }}</span>
-                                                <span class="w-4 text-center" aria-hidden="true">{{ starredOnly ? "✓" : "" }}</span>
+                                            <button
+                                                type="button"
+                                                role="menuitemcheckbox"
+                                                :aria-checked="starredOnly"
+                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
+                                                :disabled="
+                                                    starredStudyCount === 0 &&
+                                                    !starredOnly
+                                                "
+                                                @click="
+                                                    toggleStarredOnlyFromFlashcardSettings
+                                                "
+                                            >
+                                                <span>{{
+                                                    t("set.starredOnly")
+                                                }}</span>
+                                                <span
+                                                    class="w-4 text-center"
+                                                    aria-hidden="true"
+                                                    >{{
+                                                        starredOnly ? "✓" : ""
+                                                    }}</span
+                                                >
                                             </button>
-                                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="allStudyTermIds.length === 0" @click="restartFromFlashcardSettings">
-                                                {{ t('common.restart') }}
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
+                                                :disabled="
+                                                    allStudyTermIds.length === 0
+                                                "
+                                                @click="
+                                                    restartFromFlashcardSettings
+                                                "
+                                            >
+                                                {{ t("common.restart") }}
                                             </button>
-                                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
-                                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="flashcardFrontPreferenceBusy" @click="togglePreferredFlashcardFront">
-                                                {{ preferredFlashcardFrontOptionLabel }}
+                                            <div
+                                                class="my-1 border-t border-slate-200 dark:border-slate-800"
+                                            />
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
+                                                :disabled="
+                                                    flashcardFrontPreferenceBusy
+                                                "
+                                                @click="
+                                                    togglePreferredFlashcardFront
+                                                "
+                                            >
+                                                {{
+                                                    preferredFlashcardFrontOptionLabel
+                                                }}
                                             </button>
                                         </div>
                                     </div>
@@ -320,12 +408,12 @@
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                                 >
-                                    {{ t('common.results') }}
+                                    {{ t("common.results") }}
                                 </h2>
                                 <p
                                     class="mt-2 text-sm text-slate-700 dark:text-slate-200"
                                 >
-                                    {{ t('set.accuracy') }}
+                                    {{ t("set.accuracy") }}
                                     <span class="font-medium">{{
                                         accuracyText
                                     }}</span>
@@ -333,7 +421,8 @@
                                 <p
                                     class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    {{ t('set.correct') }} {{ correctCount }} · {{ t('set.attempted') }}
+                                    {{ t("set.correct") }} {{ correctCount }} ·
+                                    {{ t("set.attempted") }}
                                     {{ attemptedCount }}
                                 </p>
 
@@ -346,24 +435,24 @@
                   </NuxtLink>  -->
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=chat`"
+                                        :to="setModePath('chat')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        {{ t('set.chat') }}
+                                        {{ t("set.chat") }}
                                     </NuxtLink>
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=learn`"
+                                        :to="setModePath('learn')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        {{ t('set.learn') }}
+                                        {{ t("set.learn") }}
                                     </NuxtLink>
                                     <NuxtLink
                                         replace
-                                        :to="`/set/${set.id}?mode=match`"
+                                        :to="setModePath('match')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        {{ t('set.match') }}
+                                        {{ t("set.match") }}
                                     </NuxtLink>
                                 </div>
                             </div>
@@ -372,7 +461,7 @@
                                 v-else-if="isStarredOnlyEmpty"
                                 class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                             >
-                                {{ t('set.noStarred') }}
+                                {{ t("set.noStarred") }}
                             </div>
 
                             <div v-else>
@@ -391,8 +480,7 @@
                                         },
                                     ]"
                                     :disabled="
-                                        totalCount === 0 ||
-                                        flashcardAnswerBusy
+                                        totalCount === 0 || flashcardAnswerBusy
                                     "
                                     @click="toggleFlip"
                                 >
@@ -400,16 +488,23 @@
                                         v-if="isCurrentRetry"
                                         class="absolute top-3 right-3 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100"
                                     >
-                                        {{ t('set.tryAgain') }}
+                                        {{ t("set.tryAgain") }}
                                     </span>
                                     <p
                                         class="absolute top-6 left-6 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        {{ showingDefinition ? t('create.definition') : t('create.term') }}
+                                        {{
+                                            showingDefinition
+                                                ? t("create.definition")
+                                                : t("create.term")
+                                        }}
                                     </p>
                                     <div
                                         class="flashcard-content-row flex w-full flex-row items-center justify-center text-center text-2xl text-slate-900 dark:text-slate-50"
-                                        :class="{ 'flashcard-content-row--paired': viewerImage && viewerHasText }"
+                                        :class="{
+                                            'flashcard-content-row--paired':
+                                                viewerImage && viewerHasText,
+                                        }"
                                     >
                                         <img
                                             v-if="viewerImage"
@@ -420,9 +515,15 @@
                                         <div
                                             v-if="viewerHasText"
                                             class="flashcard-side-text"
-                                            :class="{ 'flashcard-side-text--paired': viewerImage }"
+                                            :class="{
+                                                'flashcard-side-text--paired':
+                                                    viewerImage,
+                                            }"
                                         >
-                                            <MarkdownRenderer :markdown="viewerText" variant="flashcard" />
+                                            <MarkdownRenderer
+                                                :markdown="viewerText"
+                                                variant="flashcard"
+                                            />
                                         </div>
                                     </div>
                                 </button>
@@ -443,7 +544,7 @@
                                             "
                                             @click="goPrev"
                                         >
-                                        ← {{ t('set.previous') }}
+                                            ← {{ t("set.previous") }}
                                         </button>
 
                                         <button
@@ -457,7 +558,7 @@
                                             "
                                             @click="goNext"
                                         >
-                                        {{ t('set.next') }} →
+                                            {{ t("set.next") }} →
                                         </button>
                                     </div>
 
@@ -469,10 +570,16 @@
                                             class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-amber-500 bg-white p-0 text-sm font-medium text-amber-500 shadow-sm hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-amber-400 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
                                             :disabled="!currentTerm || starBusy"
                                             :aria-pressed="isCurrentStarred"
-                                            :aria-label="isCurrentStarred ? 'Unstar card' : 'Star card'"
+                                            :aria-label="
+                                                isCurrentStarred
+                                                    ? 'Unstar card'
+                                                    : 'Star card'
+                                            "
                                             @click="toggleStar"
                                         >
-                                            <StarGlyph :active="isCurrentStarred" />
+                                            <StarGlyph
+                                                :active="isCurrentStarred"
+                                            />
                                         </button>
                                         <button
                                             type="button"
@@ -483,7 +590,7 @@
                                             "
                                             @click="markIncorrect"
                                         >
-                                        {{ t('set.missed') }}
+                                            {{ t("set.missed") }}
                                         </button>
                                         <button
                                             type="button"
@@ -494,7 +601,7 @@
                                             "
                                             @click="markCorrect"
                                         >
-                                        {{ t('set.gotIt') }}
+                                            {{ t("set.gotIt") }}
                                         </button>
                                     </div>
                                 </div>
@@ -513,12 +620,12 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        {{ t('set.learn') }}
+                                        {{ t("set.learn") }}
                                     </p>
                                     <p
                                         class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        {{ t('set.learnInstructions') }}
+                                        {{ t("set.learnInstructions") }}
                                     </p>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
@@ -536,8 +643,19 @@
                                         title="Practice settings"
                                         @click="openPracticeSettings"
                                     >
-                                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                                        <svg
+                                            aria-hidden="true"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                            class="h-4 w-4"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
+                                            />
                                             <circle cx="12" cy="12" r="3" />
                                         </svg>
                                     </button>
@@ -555,19 +673,38 @@
                                 v-if="practiceSettingsOpen"
                                 class="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60"
                             >
-                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div
+                                    class="flex flex-wrap items-start justify-between gap-3"
+                                >
                                     <div>
-                                        <h2 class="text-base font-semibold text-slate-950 dark:text-white">Practice settings</h2>
-                                        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Build a session that fits how you want to study.</p>
+                                        <h2
+                                            class="text-base font-semibold text-slate-950 dark:text-white"
+                                        >
+                                            Practice settings
+                                        </h2>
+                                        <p
+                                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                                        >
+                                            Build a session that fits how you
+                                            want to study.
+                                        </p>
                                     </div>
-                                    <div class="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-950">
+                                    <div
+                                        class="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-950"
+                                    >
                                         <button
                                             v-for="choice in practiceSessionChoices"
                                             :key="choice"
                                             type="button"
                                             class="rounded-md px-4 py-2 text-sm font-semibold capitalize transition"
-                                            :class="practiceSessionMode === choice ? 'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-950' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'"
-                                            @click="practiceSessionMode = choice"
+                                            :class="
+                                                practiceSessionMode === choice
+                                                    ? 'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-950'
+                                                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                                            "
+                                            @click="
+                                                practiceSessionMode = choice
+                                            "
                                         >
                                             {{ choice }}
                                         </button>
@@ -576,25 +713,55 @@
 
                                 <div class="mt-5 grid gap-5 md:grid-cols-2">
                                     <div>
-                                        <p class="text-sm font-semibold text-slate-900 dark:text-white">Question types</p>
+                                        <p
+                                            class="text-sm font-semibold text-slate-900 dark:text-white"
+                                        >
+                                            Question types
+                                        </p>
                                         <div class="mt-2 grid gap-2">
                                             <button
                                                 v-for="item in practiceQuestionTypeChoices"
                                                 :key="item.kind"
                                                 type="button"
                                                 class="flex min-h-12 items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition"
-                                                :class="practiceQuestionTypes[item.kind] ? 'border-orange-300 bg-orange-50 text-slate-950 dark:border-orange-700 dark:bg-orange-950/30 dark:text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300'"
-                                                :aria-pressed="practiceQuestionTypes[item.kind]"
-                                                @click="togglePracticeQuestionType(item.kind)"
+                                                :class="
+                                                    practiceQuestionTypes[
+                                                        item.kind
+                                                    ]
+                                                        ? 'border-orange-300 bg-orange-50 text-slate-950 dark:border-orange-700 dark:bg-orange-950/30 dark:text-white'
+                                                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300'
+                                                "
+                                                :aria-pressed="
+                                                    practiceQuestionTypes[
+                                                        item.kind
+                                                    ]
+                                                "
+                                                @click="
+                                                    togglePracticeQuestionType(
+                                                        item.kind,
+                                                    )
+                                                "
                                             >
                                                 {{ item.label }}
                                                 <span
                                                     class="relative h-5 w-9 shrink-0 rounded-full transition"
-                                                    :class="practiceQuestionTypes[item.kind] ? 'bg-orange-500' : 'bg-slate-300 dark:bg-slate-700'"
+                                                    :class="
+                                                        practiceQuestionTypes[
+                                                            item.kind
+                                                        ]
+                                                            ? 'bg-orange-500'
+                                                            : 'bg-slate-300 dark:bg-slate-700'
+                                                    "
                                                 >
                                                     <span
                                                         class="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all"
-                                                        :class="practiceQuestionTypes[item.kind] ? 'left-[18px]' : 'left-0.5'"
+                                                        :class="
+                                                            practiceQuestionTypes[
+                                                                item.kind
+                                                            ]
+                                                                ? 'left-[18px]'
+                                                                : 'left-0.5'
+                                                        "
                                                     />
                                                 </span>
                                             </button>
@@ -602,16 +769,25 @@
                                     </div>
 
                                     <div class="space-y-4">
-                                        <label class="flex items-center justify-between gap-4">
-                                            <span class="text-sm font-semibold text-slate-900 dark:text-white">Questions</span>
+                                        <label
+                                            class="flex items-center justify-between gap-4"
+                                        >
+                                            <span
+                                                class="text-sm font-semibold text-slate-900 dark:text-white"
+                                                >Questions</span
+                                            >
                                             <input
-                                                v-model.number="practiceQuestionCount"
+                                                v-model.number="
+                                                    practiceQuestionCount
+                                                "
                                                 type="number"
                                                 min="1"
                                                 :max="practiceQuestionLimit"
                                                 step="1"
                                                 class="w-24 rounded-lg border border-slate-300 bg-white px-3 py-2 text-right text-sm font-semibold text-slate-950 shadow-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
-                                                @change="clampPracticeQuestionCount"
+                                                @change="
+                                                    clampPracticeQuestionCount
+                                                "
                                             />
                                         </label>
 
@@ -619,14 +795,38 @@
                                             type="button"
                                             class="flex w-full items-center justify-between text-left"
                                             :aria-pressed="practiceShuffle"
-                                            @click="practiceShuffle = !practiceShuffle"
+                                            @click="
+                                                practiceShuffle =
+                                                    !practiceShuffle
+                                            "
                                         >
                                             <span>
-                                                <span class="block text-sm font-semibold text-slate-900 dark:text-white">Shuffle questions</span>
-                                                <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">Mix question types and terms</span>
+                                                <span
+                                                    class="block text-sm font-semibold text-slate-900 dark:text-white"
+                                                    >Shuffle questions</span
+                                                >
+                                                <span
+                                                    class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400"
+                                                    >Mix question types and
+                                                    terms</span
+                                                >
                                             </span>
-                                            <span class="relative h-6 w-11 rounded-full transition" :class="practiceShuffle ? 'bg-orange-500' : 'bg-slate-300 dark:bg-slate-700'">
-                                                <span class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all" :class="practiceShuffle ? 'left-6' : 'left-1'" />
+                                            <span
+                                                class="relative h-6 w-11 rounded-full transition"
+                                                :class="
+                                                    practiceShuffle
+                                                        ? 'bg-orange-500'
+                                                        : 'bg-slate-300 dark:bg-slate-700'
+                                                "
+                                            >
+                                                <span
+                                                    class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all"
+                                                    :class="
+                                                        practiceShuffle
+                                                            ? 'left-6'
+                                                            : 'left-1'
+                                                    "
+                                                />
                                             </span>
                                         </button>
 
@@ -634,23 +834,62 @@
                                             type="button"
                                             class="flex w-full items-center justify-between text-left"
                                             :aria-pressed="practiceTimed"
-                                            @click="practiceTimed = !practiceTimed"
+                                            @click="
+                                                practiceTimed = !practiceTimed
+                                            "
                                         >
                                             <span>
-                                                <span class="block text-sm font-semibold text-slate-900 dark:text-white">Time limit</span>
-                                                <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">Finish before the countdown ends</span>
+                                                <span
+                                                    class="block text-sm font-semibold text-slate-900 dark:text-white"
+                                                    >Time limit</span
+                                                >
+                                                <span
+                                                    class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400"
+                                                    >Finish before the countdown
+                                                    ends</span
+                                                >
                                             </span>
-                                            <span class="relative h-6 w-11 rounded-full transition" :class="practiceTimed ? 'bg-orange-500' : 'bg-slate-300 dark:bg-slate-700'">
-                                                <span class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all" :class="practiceTimed ? 'left-6' : 'left-1'" />
+                                            <span
+                                                class="relative h-6 w-11 rounded-full transition"
+                                                :class="
+                                                    practiceTimed
+                                                        ? 'bg-orange-500'
+                                                        : 'bg-slate-300 dark:bg-slate-700'
+                                                "
+                                            >
+                                                <span
+                                                    class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all"
+                                                    :class="
+                                                        practiceTimed
+                                                            ? 'left-6'
+                                                            : 'left-1'
+                                                    "
+                                                />
                                             </span>
                                         </button>
 
-                                        <label v-if="practiceTimed" class="block">
-                                            <span class="flex items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200">
+                                        <label
+                                            v-if="practiceTimed"
+                                            class="block"
+                                        >
+                                            <span
+                                                class="flex items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200"
+                                            >
                                                 Minutes
-                                                <span>{{ practiceTimeLimitMinutes }}</span>
+                                                <span>{{
+                                                    practiceTimeLimitMinutes
+                                                }}</span>
                                             </span>
-                                            <input v-model.number="practiceTimeLimitMinutes" type="range" min="1" max="60" step="1" class="mt-2 w-full accent-orange-500" />
+                                            <input
+                                                v-model.number="
+                                                    practiceTimeLimitMinutes
+                                                "
+                                                type="range"
+                                                min="1"
+                                                max="60"
+                                                step="1"
+                                                class="mt-2 w-full accent-orange-500"
+                                            />
                                         </label>
                                     </div>
                                 </div>
@@ -659,10 +898,19 @@
                                     <button
                                         type="button"
                                         class="rounded-lg bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
-                                        :disabled="learnBusy || enabledPracticeQuestionTypes().length === 0"
+                                        :disabled="
+                                            learnBusy ||
+                                            enabledPracticeQuestionTypes()
+                                                .length === 0
+                                        "
                                         @click="applyPracticeSettings"
                                     >
-                                        Restart {{ practiceSessionMode === 'test' ? 'test' : 'practice' }}
+                                        Restart
+                                        {{
+                                            practiceSessionMode === "test"
+                                                ? "test"
+                                                : "practice"
+                                        }}
                                     </button>
                                 </div>
                             </div>
@@ -671,20 +919,29 @@
                                 v-if="learnBusy"
                                 class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                             >
-                                {{ t('common.loading') }}
+                                {{ t("common.loading") }}
                             </div>
 
-                            <div v-else-if="learnIsFinished" class="mt-4 select-none">
+                            <div
+                                v-else-if="learnIsFinished"
+                                class="mt-4 select-none"
+                            >
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                                 >
-                                    {{ t('common.results') }}
+                                    {{ t("common.results") }}
                                 </h2>
-                                <p v-if="practiceTimedOut" class="mt-2 text-sm font-semibold text-orange-700 dark:text-orange-300">Time is up. Unanswered questions were counted as missed.</p>
+                                <p
+                                    v-if="practiceTimedOut"
+                                    class="mt-2 text-sm font-semibold text-orange-700 dark:text-orange-300"
+                                >
+                                    Time is up. Unanswered questions were
+                                    counted as missed.
+                                </p>
                                 <p
                                     class="mt-2 text-sm text-slate-700 dark:text-slate-200"
                                 >
-                                    {{ t('set.accuracy') }}
+                                    {{ t("set.accuracy") }}
                                     <span class="font-medium">{{
                                         learnAccuracyText
                                     }}</span>
@@ -692,34 +949,36 @@
                                 <p
                                     class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    {{ t('set.correct') }} {{ learnCorrectCount }} ·
-                                    {{ t('set.attempted') }} {{ learnAttemptedCount }}
+                                    {{ t("set.correct") }}
+                                    {{ learnCorrectCount }} ·
+                                    {{ t("set.attempted") }}
+                                    {{ learnAttemptedCount }}
                                 </p>
 
                                 <div class="mt-4 flex flex-wrap gap-2">
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=flashcards`"
+                                        :to="setModePath('flashcards')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        {{ t('set.flashcards') }}
+                                        {{ t("set.flashcards") }}
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=chat`"
+                                        :to="setModePath('chat')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        {{ t('set.chat') }}
+                                        {{ t("set.chat") }}
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=match`"
+                                        :to="setModePath('match')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        {{ t('set.match') }}
+                                        {{ t("set.match") }}
                                     </NuxtLink>
                                 </div>
                             </div>
@@ -746,10 +1005,17 @@
                                     <p
                                         class="text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        {{ t('set.question') }}
+                                        {{ t("set.question") }}
                                     </p>
-                                    <div class="mt-3 text-2xl font-medium text-slate-900 dark:text-slate-50">
-                                        <MarkdownRenderer :markdown="learnCurrentQuestion.prompt" variant="flashcard" />
+                                    <div
+                                        class="mt-3 text-2xl font-medium text-slate-900 dark:text-slate-50"
+                                    >
+                                        <MarkdownRenderer
+                                            :markdown="
+                                                learnCurrentQuestion.prompt
+                                            "
+                                            variant="flashcard"
+                                        />
                                     </div>
 
                                     <div
@@ -805,7 +1071,12 @@
                                             </button>
                                         </template>
 
-                                        <template v-else-if="learnCurrentQuestion.kind === 'multiple_choice'">
+                                        <template
+                                            v-else-if="
+                                                learnCurrentQuestion.kind ===
+                                                'multiple_choice'
+                                            "
+                                        >
                                             <button
                                                 v-for="(
                                                     opt, idx
@@ -828,7 +1099,10 @@
                                                     )
                                                 "
                                             >
-                                                <MarkdownRenderer :markdown="opt" variant="compact" />
+                                                <MarkdownRenderer
+                                                    :markdown="opt"
+                                                    variant="compact"
+                                                />
                                             </button>
                                         </template>
                                         <form
@@ -845,7 +1119,9 @@
                                             <div class="flex items-end gap-2">
                                                 <textarea
                                                     id="practice-written-answer"
-                                                    v-model="practiceWrittenAnswer"
+                                                    v-model="
+                                                        practiceWrittenAnswer
+                                                    "
                                                     rows="1"
                                                     autofocus
                                                     class="h-12 w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
@@ -928,37 +1204,46 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        {{ t('set.chat') }}
+                                        {{ t("set.chat") }}
                                     </p>
                                     <p
                                         class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        {{ t('set.chatHint') }}
+                                        {{ t("set.chatHint") }}
                                     </p>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <button
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="chatBusy || chatSaveBusy || !set || isWebPreview"
+                                        :disabled="
+                                            chatBusy ||
+                                            chatSaveBusy ||
+                                            !set ||
+                                            isWebPreview
+                                        "
                                         @click="openChatHistory"
                                     >
-                                        {{ t('chat.history') }}
+                                        {{ t("chat.history") }}
                                     </button>
                                     <button
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :disabled="
-                                            chatBusy || chatSaveBusy || chatMessages.length === 0
+                                            chatBusy ||
+                                            chatSaveBusy ||
+                                            chatMessages.length === 0
                                         "
                                         @click="clearCurrentChat"
                                     >
-                                        {{ t('common.clear') }}
+                                        {{ t("common.clear") }}
                                     </button>
                                     <button
                                         type="button"
                                         class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-lg font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="chatBusy || chatSaveBusy || !set"
+                                        :disabled="
+                                            chatBusy || chatSaveBusy || !set
+                                        "
                                         :aria-label="t('chat.new')"
                                         :title="t('chat.new')"
                                         @click="startNewChat"
@@ -984,7 +1269,7 @@
                                     v-if="chatMessages.length === 0"
                                     class="text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    {{ t('set.chatHint') }}
+                                    {{ t("set.chatHint") }}
                                 </p>
 
                                 <div
@@ -1006,7 +1291,11 @@
                                         "
                                     >
                                         <span
-                                            v-if="m.role === 'assistant' && chatBusy && !m.content"
+                                            v-if="
+                                                m.role === 'assistant' &&
+                                                chatBusy &&
+                                                !m.content
+                                            "
                                             class="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-700 dark:border-t-slate-200"
                                             aria-label="Loading response"
                                         />
@@ -1020,7 +1309,9 @@
                             </div>
 
                             <div class="mt-3 flex gap-2">
-                                <label class="sr-only" for="chat-input">{{ t('set.chat') }}</label>
+                                <label class="sr-only" for="chat-input">{{
+                                    t("set.chat")
+                                }}</label>
                                 <textarea
                                     id="chat-input"
                                     ref="chatTextareaEl"
@@ -1036,11 +1327,18 @@
                                     type="button"
                                     class="inline-flex shrink-0 items-center rounded-md border border-amber-500 bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
                                     :disabled="
-                                        chatBusy || chatSaveBusy || !set || !chatInput.trim()
+                                        chatBusy ||
+                                        chatSaveBusy ||
+                                        !set ||
+                                        !chatInput.trim()
                                     "
                                     @click="sendChat"
                                 >
-                                    {{ chatBusy ? `${t('set.chat')}…` : t('set.chat') }}
+                                    {{
+                                        chatBusy
+                                            ? `${t("set.chat")}…`
+                                            : t("set.chat")
+                                    }}
                                 </button>
                             </div>
 
@@ -1063,12 +1361,12 @@
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                     >
-                                        {{ t('set.match') }}
+                                        {{ t("set.match") }}
                                     </p>
                                     <p
                                         class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
-                                        {{ t('set.matchInstructions') }}
+                                        {{ t("set.matchInstructions") }}
                                     </p>
                                 </div>
                             </div>
@@ -1080,16 +1378,19 @@
                                 {{ matchError }}
                             </p>
 
-                            <div v-if="matchIsFinished" class="mt-4 select-none">
+                            <div
+                                v-if="matchIsFinished"
+                                class="mt-4 select-none"
+                            >
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                                 >
-                                    {{ t('common.results') }}
+                                    {{ t("common.results") }}
                                 </h2>
                                 <p
                                     class="mt-2 text-sm text-slate-700 dark:text-slate-200"
                                 >
-                                    {{ t('set.accuracy') }}
+                                    {{ t("set.accuracy") }}
                                     <span class="font-medium">{{
                                         matchAccuracyText
                                     }}</span>
@@ -1097,15 +1398,17 @@
                                 <p
                                     class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    {{ t('set.matched') }} {{ matchMatchedPairsCount }}/{{
+                                    {{ t("set.matched") }}
+                                    {{ matchMatchedPairsCount }}/{{
                                         matchPairsTarget
                                     }}
-                                    · {{ t('set.attempts') }} {{ matchAttemptsCount }}
+                                    · {{ t("set.attempts") }}
+                                    {{ matchAttemptsCount }}
                                 </p>
                                 <p
                                     class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    {{ t('set.time') }} {{ matchTimeText }}
+                                    {{ t("set.time") }} {{ matchTimeText }}
                                 </p>
 
                                 <div class="mt-4 flex flex-wrap gap-2">
@@ -1117,33 +1420,40 @@
                                         "
                                         @click="restartMatchRun"
                                     >
-                                        {{ t('set.playAgain') }}
+                                        {{ t("set.playAgain") }}
                                     </button>
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=flashcards`"
+                                        :to="setModePath('flashcards')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        {{ t('set.flashcards') }}
+                                        {{ t("set.flashcards") }}
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=learn`"
+                                        :to="setModePath('learn')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
-                                        {{ t('set.learn') }}
+                                        {{ t("set.learn") }}
                                     </NuxtLink>
                                     <NuxtLink
                                         v-if="set"
                                         replace
-                                        :to="`/set/${set.id}?mode=chat`"
+                                        :to="setModePath('chat')"
                                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     >
                                         Chat
                                     </NuxtLink>
                                 </div>
+                                <MatchLeaderboard
+                                    :assignment-id="assignedAssignmentId"
+                                    :entries="matchLeaderboard"
+                                    :loading="matchLeaderboardLoading"
+                                    :error="matchLeaderboardError"
+                                    @retry="loadMatchLeaderboard"
+                                />
                             </div>
 
                             <div v-else class="mt-4 flex flex-1 flex-col">
@@ -1157,18 +1467,23 @@
                                     v-if="!matchIsRunning"
                                     class="flex flex-1 flex-col items-center justify-center rounded-md border border-amber-200 bg-amber-50/20 p-4 text-center text-sm text-slate-700 dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-200"
                                 >
-                                    <p>{{ t('set.matchInstructions') }}</p>
+                                    <p>{{ t("set.matchInstructions") }}</p>
                                     <button
                                         type="button"
                                         class="mt-4 inline-flex items-center rounded-md border border-orange-600 bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-orange-500 dark:bg-orange-500 dark:hover:bg-orange-400"
-                                        :disabled="!set || set.terms.length === 0"
+                                        :disabled="
+                                            !set || set.terms.length === 0
+                                        "
                                         @click="startMatch"
                                     >
-                                        {{ t('set.start') }}
+                                        {{ t("set.start") }}
                                     </button>
                                 </div>
 
-                                <div v-else class="grid flex-1 auto-rows-fr grid-cols-4 gap-2">
+                                <div
+                                    v-else
+                                    class="grid flex-1 auto-rows-fr grid-cols-4 gap-2"
+                                >
                                     <button
                                         v-for="tile in matchTiles"
                                         :key="tile.id"
@@ -1181,12 +1496,17 @@
                                         "
                                         @click.stop="onMatchTileClick(tile)"
                                     >
-                                        <span class="sr-only">{{ t('set.tile') }}</span>
+                                        <span class="sr-only">{{
+                                            t("set.tile")
+                                        }}</span>
                                         <span
                                             v-if="matchIsTileRevealed(tile)"
                                             class="block h-full overflow-hidden text-xs font-medium leading-snug"
                                         >
-                                            <MarkdownRenderer :markdown="tile.text" variant="tile" />
+                                            <MarkdownRenderer
+                                                :markdown="tile.text"
+                                                variant="tile"
+                                            />
                                         </span>
                                     </button>
                                 </div>
@@ -1201,20 +1521,21 @@
                             <p
                                 class="text-sm font-medium text-slate-900 dark:text-slate-50"
                             >
-                                {{ t('set.comingSoon') }}
+                                {{ t("set.comingSoon") }}
                             </p>
                             <p
                                 class="mt-2 text-sm text-slate-600 dark:text-slate-300"
                             >
-                                {{ t('set.notImplemented') }}
+                                {{ t("set.notImplemented") }}
                             </p>
                             <div class="mt-4 flex flex-wrap gap-2">
                                 <NuxtLink
                                     replace
-                                    :to="`/set/${set.id}?mode=flashcards`"
+                                    :to="setModePath('flashcards')"
                                     class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
-                                    {{ t('common.continue') }} · {{ t('set.flashcards') }}
+                                    {{ t("common.continue") }} ·
+                                    {{ t("set.flashcards") }}
                                 </NuxtLink>
                             </div>
                         </section>
@@ -1224,8 +1545,10 @@
                                 class="study-mode-bar flex flex-nowrap gap-3 overflow-x-auto pb-1"
                             >
                                 <StudyModeTile
-                                    :to="`/set/${set.id}?mode=flashcards`"
-                                    :fullscreen-to="`/set/${set.id}-flashcards`"
+                                    :to="setModePath('flashcards')"
+                                    :fullscreen-to="
+                                        fullscreenModePath('flashcards')
+                                    "
                                     :icon="flashcardsModeIcon"
                                     :title="t('set.flashcards')"
                                     :hint="t('set.flashcardsHint')"
@@ -1233,8 +1556,8 @@
                                     replace
                                 />
                                 <StudyModeTile
-                                    :to="`/set/${set.id}?mode=learn`"
-                                    :fullscreen-to="`/set/${set.id}-learn`"
+                                    :to="setModePath('learn')"
+                                    :fullscreen-to="fullscreenModePath('learn')"
                                     :icon="practiceModeIcon"
                                     :title="t('set.learn')"
                                     :hint="t('set.learnHint')"
@@ -1242,7 +1565,7 @@
                                     replace
                                 />
                                 <StudyModeTile
-                                    :to="`/set/${set.id}?mode=chat`"
+                                    :to="setModePath('chat')"
                                     :icon="chatModeIcon"
                                     :title="t('set.chat')"
                                     :hint="t('set.chatHint')"
@@ -1251,8 +1574,8 @@
                                     replace
                                 />
                                 <StudyModeTile
-                                    :to="`/set/${set.id}?mode=match`"
-                                    :fullscreen-to="`/set/${set.id}-match`"
+                                    :to="setModePath('match')"
+                                    :fullscreen-to="fullscreenModePath('match')"
                                     :icon="matchModeIcon"
                                     :title="t('set.match')"
                                     :hint="t('set.matchHint')"
@@ -1280,7 +1603,7 @@
                                 <h2
                                     class="text-sm font-medium text-slate-900 dark:text-slate-50"
                                 >
-                                    {{ t('set.terms') }}
+                                    {{ t("set.terms") }}
                                 </h2>
                                 <div class="flex shrink-0 items-center gap-2">
                                     <span
@@ -1288,7 +1611,10 @@
                                     >
                                         {{ filteredTerms.length }}
                                     </span>
-                                    <div ref="termsFilterMenuRoot" class="relative">
+                                    <div
+                                        ref="termsFilterMenuRoot"
+                                        class="relative"
+                                    >
                                         <button
                                             ref="termsFilterButtonEl"
                                             type="button"
@@ -1298,7 +1624,10 @@
                                             :aria-expanded="termsFilterMenuOpen"
                                             :disabled="set.terms.length === 0"
                                             aria-haspopup="menu"
-                                            @click="termsFilterMenuOpen = !termsFilterMenuOpen"
+                                            @click="
+                                                termsFilterMenuOpen =
+                                                    !termsFilterMenuOpen
+                                            "
                                         >
                                             <svg
                                                 aria-hidden="true"
@@ -1327,16 +1656,29 @@
                                                 :key="option.value"
                                                 type="button"
                                                 role="menuitemradio"
-                                                :aria-checked="termsFilter === option.value"
+                                                :aria-checked="
+                                                    termsFilter === option.value
+                                                "
                                                 class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500"
-                                                @click="selectTermsFilter(option.value)"
+                                                @click="
+                                                    selectTermsFilter(
+                                                        option.value,
+                                                    )
+                                                "
                                             >
-                                                <span>{{ t(option.labelKey) }}</span>
+                                                <span>{{
+                                                    t(option.labelKey)
+                                                }}</span>
                                                 <span
                                                     class="w-4 text-center"
                                                     aria-hidden="true"
                                                 >
-                                                    {{ termsFilter === option.value ? "✓" : "" }}
+                                                    {{
+                                                        termsFilter ===
+                                                        option.value
+                                                            ? "✓"
+                                                            : ""
+                                                    }}
                                                 </span>
                                             </button>
                                         </div>
@@ -1348,11 +1690,14 @@
                                 v-if="filteredTerms.length === 0"
                                 class="mt-3 text-sm text-slate-700 dark:text-slate-200"
                             >
-                                {{ t('set.noCards') }}
+                                {{ t("set.noCards") }}
                             </div>
 
                             <ul v-else class="mt-3 space-y-3">
-                                <li v-for="(term, idx) in filteredTerms" :key="term.id">
+                                <li
+                                    v-for="(term, idx) in filteredTerms"
+                                    :key="term.id"
+                                >
                                     <div
                                         class="relative rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                                     >
@@ -1360,19 +1705,29 @@
                                             type="button"
                                             class="absolute top-3 right-3 inline-flex items-center justify-center w-6 h-6 rounded-md text-sm transition-colors"
                                             :class="
-                                                starredTermIds.has(term.id as Uuid)
+                                                starredTermIds.has(
+                                                    term.id as Uuid,
+                                                )
                                                     ? 'border border-amber-300 bg-amber-50 text-amber-500 dark:border-amber-800 dark:bg-amber-950/30'
                                                     : 'border border-slate-200 text-amber-500 hover:border-amber-200 hover:bg-amber-50 dark:border-slate-700 dark:hover:bg-amber-950/30'
                                             "
                                             :aria-pressed="
-                                                starredTermIds.has(term.id as Uuid)
+                                                starredTermIds.has(
+                                                    term.id as Uuid,
+                                                )
                                             "
                                             :disabled="starBusy"
                                             @click="
                                                 toggleTermStar(term.id as Uuid)
                                             "
                                         >
-                                            <StarGlyph :active="starredTermIds.has(term.id as Uuid)" />
+                                            <StarGlyph
+                                                :active="
+                                                    starredTermIds.has(
+                                                        term.id as Uuid,
+                                                    )
+                                                "
+                                            />
                                         </button>
                                         <p
                                             class="text-xs font-medium text-slate-500 dark:text-slate-400"
@@ -1384,10 +1739,13 @@
                                         >
                                             <span
                                                 class="font-medium text-slate-900 dark:text-slate-50"
-                                                >{{ t('set.termLabel') }}
+                                                >{{ t("set.termLabel") }}
                                             </span>
                                             <div class="mt-1">
-                                                <MarkdownRenderer :markdown="term.front" variant="compact" />
+                                                <MarkdownRenderer
+                                                    :markdown="term.front"
+                                                    variant="compact"
+                                                />
                                             </div>
                                         </div>
                                         <div
@@ -1395,10 +1753,13 @@
                                         >
                                             <span
                                                 class="font-medium text-slate-900 dark:text-slate-50"
-                                                >{{ t('set.definitionLabel') }}
+                                                >{{ t("set.definitionLabel") }}
                                             </span>
                                             <div class="mt-1">
-                                                <MarkdownRenderer :markdown="term.back" variant="compact" />
+                                                <MarkdownRenderer
+                                                    :markdown="term.back"
+                                                    variant="compact"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -1430,10 +1791,14 @@
             >
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">
-                            {{ t('chat.history') }}
+                        <h2
+                            class="text-lg font-semibold text-slate-900 dark:text-slate-50"
+                        >
+                            {{ t("chat.history") }}
                         </h2>
-                        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
                             {{ set?.title }}
                         </p>
                     </div>
@@ -1442,7 +1807,7 @@
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         @click="closeChatHistory"
                     >
-                        {{ t('common.close') }}
+                        {{ t("common.close") }}
                     </button>
                 </div>
 
@@ -1457,13 +1822,13 @@
                         v-else-if="chatHistoryBusy"
                         class="text-sm text-slate-600 dark:text-slate-300"
                     >
-                        {{ t('common.loading') }}
+                        {{ t("common.loading") }}
                     </p>
                     <p
                         v-else-if="savedChats.length === 0"
                         class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                     >
-                        {{ t('chat.noHistory') }}
+                        {{ t("chat.noHistory") }}
                     </p>
                     <ul v-else class="space-y-2">
                         <li
@@ -1477,17 +1842,30 @@
                                 :disabled="chatHistoryBusy || chatDeleteBusy"
                                 @click="openSavedChat(savedChat.id)"
                             >
-                                <span class="block truncate text-sm font-medium text-slate-900 dark:text-slate-50">
+                                <span
+                                    class="block truncate text-sm font-medium text-slate-900 dark:text-slate-50"
+                                >
                                     {{ savedChat.title }}
                                 </span>
-                                <span class="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400">
-                                    {{ set?.title }} · {{ formatSavedChatDate(savedChat.lastOpenedAt) }}
+                                <span
+                                    class="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400"
+                                >
+                                    {{ set?.title }} ·
+                                    {{
+                                        formatSavedChatDate(
+                                            savedChat.lastOpenedAt,
+                                        )
+                                    }}
                                 </span>
                             </button>
                             <button
                                 type="button"
                                 class="absolute top-1/2 right-3 inline-flex -translate-y-1/2 items-center justify-center rounded-md p-2 text-slate-500 opacity-0 hover:bg-red-50 hover:text-red-700 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
-                                :aria-label="t('chat.deleteNamed', { title: savedChat.title })"
+                                :aria-label="
+                                    t('chat.deleteNamed', {
+                                        title: savedChat.title,
+                                    })
+                                "
                                 :disabled="chatDeleteBusy"
                                 @click.stop="requestDeleteChat(savedChat)"
                             >
@@ -1528,11 +1906,17 @@
             <div
                 class="relative w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
             >
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">
-                    {{ t('chat.deleteTitle') }}
+                <h2
+                    class="text-lg font-semibold text-slate-900 dark:text-slate-50"
+                >
+                    {{ t("chat.deleteTitle") }}
                 </h2>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                    {{ t('chat.deleteDescription', { title: chatDeleteTarget.title }) }}
+                    {{
+                        t("chat.deleteDescription", {
+                            title: chatDeleteTarget.title,
+                        })
+                    }}
                 </p>
                 <div class="mt-5 flex justify-end gap-2">
                     <button
@@ -1541,7 +1925,7 @@
                         :disabled="chatDeleteBusy"
                         @click="cancelDeleteChat"
                     >
-                        {{ t('common.cancel') }}
+                        {{ t("common.cancel") }}
                     </button>
                     <button
                         type="button"
@@ -1549,7 +1933,7 @@
                         :disabled="chatDeleteBusy"
                         @click="confirmDeleteChat"
                     >
-                        {{ t('common.delete') }}
+                        {{ t("common.delete") }}
                     </button>
                 </div>
             </div>
@@ -1578,12 +1962,12 @@
                         <h2
                             class="text-lg font-semibold text-slate-900 dark:text-slate-50"
                         >
-                            {{ t('common.export') }}
+                            {{ t("common.export") }}
                         </h2>
                         <p
                             class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                         >
-                            TSV · {{ t('common.export') }}
+                            TSV · {{ t("common.export") }}
                         </p>
                     </div>
 
@@ -1592,12 +1976,14 @@
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         @click="closeExport"
                     >
-                        {{ t('common.close') }}
+                        {{ t("common.close") }}
                     </button>
                 </div>
 
                 <div class="mt-4">
-                    <label class="sr-only" for="export-tsv">TSV {{ t('common.export') }}</label>
+                    <label class="sr-only" for="export-tsv"
+                        >TSV {{ t("common.export") }}</label
+                    >
                     <textarea
                         id="export-tsv"
                         ref="exportTextareaEl"
@@ -1623,7 +2009,7 @@
                         :disabled="!exportTsv"
                         @click="copyExport"
                     >
-                        {{ t('common.copy') }}
+                        {{ t("common.copy") }}
                     </button>
                     <button
                         type="button"
@@ -1631,7 +2017,7 @@
                         :disabled="!exportTsv"
                         @click="downloadExport"
                     >
-                        {{ t('common.download') }}
+                        {{ t("common.download") }}
                     </button>
                     <button
                         type="button"
@@ -1639,7 +2025,7 @@
                         :disabled="!exportTsv"
                         @click="selectAllExport"
                     >
-                        {{ t('common.selectAll') }}
+                        {{ t("common.selectAll") }}
                     </button>
                 </div>
             </div>
@@ -1687,14 +2073,19 @@ import {
     type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
 import {
+    createPracticePresentation,
+    type PracticeChoiceFeedback,
+    type PracticeChoiceValue,
+} from "~/src/composables/learn/presentation";
+import {
     buildGroundedChatSystemPrompt,
     normalizeGeneratedChatTitle,
     streamGroundedChatText,
     streamWebPreviewMockChatAnswer,
-    takeNextChatRevealUnit,
     takeRecentChatMessages,
     type ChatMessage,
 } from "~/src/composables/ai/chat";
+import { createChatRevealQueue } from "~/src/composables/ai/chat-reveal";
 import { generateText } from "ai";
 import {
     generateMatchTiles,
@@ -1723,6 +2114,27 @@ import {
     syncLinkedFolder,
     unlinkFolder,
 } from "~/src/composables/generate/linked-folders";
+import {
+    beginAssignedAttempt,
+    completeAssignedAttempt,
+    parseAssignedAssignmentId,
+} from "~/src/composables/assignment-progress";
+import {
+    listAssignedMatchLeaderboard,
+    type AssignedMatchLeaderboardEntry,
+} from "~/src/composables/classrooms";
+import {
+    createRandomSeed,
+} from "~/src/composables/random";
+import {
+    readWebFlashcardFrontPreference,
+    readWebFlashcardProgress,
+    saveWebFlashcardFrontPreference,
+    saveWebFlashcardProgress,
+    type SavedFlashcardProgress,
+} from "~/src/composables/cards/web-flashcard-state";
+import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion";
+import { createFlashcardRun } from "~/src/composables/cards/flashcard-run";
 
 const route = useRoute();
 const router = useRouter();
@@ -1731,12 +2143,38 @@ const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
 const isNestedSetRoute = computed(() =>
     route.matched.some(
-        (match) => match.name === "set-id-edit" || match.name === "set-id-results",
+        (match) =>
+            match.name === "set-id-edit" || match.name === "set-id-results",
     ),
 );
 const isWebPreview = computed(() => !hasTauriRuntime());
 
 type SetMode = "flashcards" | "learn" | "match" | "chat";
+type TrackedSetMode = Exclude<SetMode, "chat">;
+
+const assignedAssignmentId = computed(() =>
+    parseAssignedAssignmentId(route.query.assignment),
+);
+const assignedClassId = computed(() =>
+    typeof route.query.class === "string" ? route.query.class : null,
+);
+
+function assignedQuery(extra: Record<string, string> = {}) {
+    const query = new URLSearchParams(extra);
+    if (assignedAssignmentId.value)
+        query.set("assignment", assignedAssignmentId.value);
+    if (assignedClassId.value) query.set("class", assignedClassId.value);
+    const encoded = query.toString();
+    return encoded ? `?${encoded}` : "";
+}
+
+function setModePath(nextMode: SetMode) {
+    return `/set/${set.value?.id ?? route.params.id}${assignedQuery({ mode: nextMode })}`;
+}
+
+function fullscreenModePath(nextMode: TrackedSetMode) {
+    return `/set/${set.value?.id ?? route.params.id}-${nextMode}${assignedQuery()}`;
+}
 
 const mode = computed<SetMode>(() => {
     const m =
@@ -1749,6 +2187,81 @@ const mode = computed<SetMode>(() => {
 const busy = ref(true);
 const loadError = ref<string | null>(null);
 const set = ref<FlashcardSet | null>(null);
+const assignedScores = reactive<
+    Record<TrackedSetMode, { correct: number; attempted: number }>
+>({
+    flashcards: { correct: 0, attempted: 0 },
+    learn: { correct: 0, attempted: 0 },
+    match: { correct: 0, attempted: 0 },
+});
+let activeAssignedMode: TrackedSetMode | null = null;
+const matchLeaderboard = ref<AssignedMatchLeaderboardEntry[]>([]);
+const matchLeaderboardLoading = ref(false);
+const matchLeaderboardError = ref(false);
+
+async function loadMatchLeaderboard() {
+    const assignmentId = assignedAssignmentId.value;
+    if (!assignmentId) return;
+    matchLeaderboardLoading.value = true;
+    matchLeaderboardError.value = false;
+    try {
+        matchLeaderboard.value =
+            await listAssignedMatchLeaderboard(assignmentId);
+    } catch {
+        matchLeaderboardError.value = true;
+    } finally {
+        matchLeaderboardLoading.value = false;
+    }
+}
+
+async function finishInlineAssignedMode(
+    options: {
+        completed?: boolean;
+        durationMs?: number;
+    } = {},
+) {
+    if (!activeAssignedMode || !set.value) return;
+    const active = activeAssignedMode;
+    activeAssignedMode = null;
+    const score = assignedScores[active];
+    await completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: active === "learn" ? "practice" : active,
+        scoreEarned: score.correct,
+        scorePossible: score.attempted,
+        durationMs: active === "match" ? options.durationMs : undefined,
+        completed: active === "match" ? options.completed === true : true,
+    });
+    if (active === "match" && options.completed) await loadMatchLeaderboard();
+}
+
+function beginInlineAssignedMode(nextMode: SetMode) {
+    if (!assignedAssignmentId.value || !set.value || nextMode === "chat")
+        return;
+    if (nextMode === "match" && matchStartedAtMs.value === null) return;
+    const trackedMode = nextMode as TrackedSetMode;
+    assignedScores[trackedMode] = { correct: 0, attempted: 0 };
+    activeAssignedMode = trackedMode;
+    beginAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: trackedMode === "learn" ? "practice" : trackedMode,
+    });
+}
+
+function recordInlineAssignedAnswer(
+    trackedMode: TrackedSetMode,
+    correct: boolean,
+) {
+    if (activeAssignedMode !== trackedMode) return;
+    assignedScores[trackedMode].attempted += 1;
+    if (correct) assignedScores[trackedMode].correct += 1;
+}
+
+function onAssignedPageHide() {
+    finishInlineAssignedMode();
+}
 const studyGuideSetId = ref<Uuid | null>(null);
 const linkedFolder = ref<LinkedFolder | null>(null);
 const linkedFolderBusy = ref(false);
@@ -1761,7 +2274,8 @@ const linkedFolderStatusLabel = computed(() =>
 );
 const linkedFolderStatusClass = computed(() => {
     const status = linkedFolder.value?.status;
-    if (status === "error") return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200";
+    if (status === "error")
+        return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200";
     if (status === "pending" || status === "syncing")
         return "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200";
     return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200";
@@ -1771,14 +2285,12 @@ const chatSystemPrompt = computed(() =>
 );
 
 const defaultModelId = ref<string | null>(null);
+const fallbackModelIds = ref<string[]>([]);
 const learnHybridEnabled = ref(false);
 
 const isFlipped = ref(false);
 const isFlipping = ref(false);
 const isNavigating = ref<"prev" | "next" | null>(null);
-const FLASHCARD_FLIP_DURATION_MS = 320;
-let flashcardFlipSwapTimeout: ReturnType<typeof setTimeout> | null = null;
-let flashcardFlipEndTimeout: ReturnType<typeof setTimeout> | null = null;
 
 type FlashcardsAnswer = "correct" | "incorrect";
 const flashcardAnswerFeedback = ref<FlashcardsAnswer | null>(null);
@@ -1805,51 +2317,11 @@ const savedFlashcardTermId = ref<Uuid | null>(null);
 const savedFlashcardCorrectTermIds = ref<Uuid[]>([]);
 const savedFlashcardProgressSignature = ref<string | null>(null);
 
-type SavedFlashcardProgress = {
-    currentTermId: Uuid;
-    correctTermIds: Uuid[];
-};
-
-const WEB_FLASHCARD_FRONT_KEY = "tracer:flashcards-definition-first";
-const webFlashcardProgressKey = (setId: Uuid) =>
-    `tracer:flashcard-progress:${setId}`;
-
 const preferredFlashcardFrontOptionLabel = computed(() =>
     flashcardsDefinitionFirst.value
         ? t("set.termAtFront")
         : t("set.definitionAtFront"),
 );
-
-function readWebFlashcardFrontPreference() {
-    try {
-        return window.localStorage.getItem(WEB_FLASHCARD_FRONT_KEY) === "true";
-    } catch {
-        return false;
-    }
-}
-
-function readWebFlashcardProgress(setId: Uuid): SavedFlashcardProgress | null {
-    try {
-        const raw = window.localStorage.getItem(webFlashcardProgressKey(setId));
-        if (!raw) return null;
-        try {
-            const parsed = JSON.parse(raw) as Partial<SavedFlashcardProgress>;
-            if (typeof parsed.currentTermId !== "string") return null;
-            return {
-                currentTermId: parsed.currentTermId,
-                correctTermIds: Array.isArray(parsed.correctTermIds)
-                    ? parsed.correctTermIds.filter(
-                          (id): id is Uuid => typeof id === "string",
-                      )
-                    : [],
-            };
-        } catch {
-            return { currentTermId: raw, correctTermIds: [] };
-        }
-    } catch {
-        return null;
-    }
-}
 
 async function loadSavedFlashcardProgress(setId: Uuid) {
     if (isWebPreview.value) return readWebFlashcardProgress(setId);
@@ -1874,18 +2346,11 @@ function persistFlashcardProgress(termId: Uuid) {
     savedFlashcardCorrectTermIds.value = correctTermIds;
     savedFlashcardProgressSignature.value = signature;
     if (isWebPreview.value) {
-        try {
-            window.localStorage.setItem(
-                webFlashcardProgressKey(setId),
-                signature,
-            );
-        } catch {}
+        saveWebFlashcardProgress(setId, progress);
         return;
     }
     void useTracerDb()
-        .then((db) =>
-            createFlashcardProgressRepo(db).save(setId, progress),
-        )
+        .then((db) => createFlashcardProgressRepo(db).save(setId, progress))
         .catch(() => {});
 }
 
@@ -1899,7 +2364,7 @@ async function togglePreferredFlashcardFront() {
     flashcardFrontPreferenceBusy.value = true;
     try {
         if (isWebPreview.value) {
-            window.localStorage.setItem(WEB_FLASHCARD_FRONT_KEY, String(next));
+            saveWebFlashcardFrontPreference(next);
         } else {
             const db = await useTracerDb();
             await createSettingsRepo(db).set({
@@ -1940,8 +2405,7 @@ const filteredTerms = computed(() => {
     if (termsFilter.value === "all") return terms;
     const showStarred = termsFilter.value === "starred";
     return terms.filter(
-        (term) =>
-            starredTermIds.value.has(term.id as Uuid) === showStarred,
+        (term) => starredTermIds.value.has(term.id as Uuid) === showStarred,
     );
 });
 
@@ -1988,27 +2452,29 @@ const chatDeleteBusy = ref(false);
 
 const firstChatQuestion = computed(
     () =>
-        chatMessages.value.find(
-            (message) => message.role === "user" && message.content.trim(),
-        )?.content.trim() ?? "",
+        chatMessages.value
+            .find(
+                (message) => message.role === "user" && message.content.trim(),
+            )
+            ?.content.trim() ?? "",
 );
 const aiError = ref<AiErrorUx | null>(null);
 const aiErrorOpen = ref(false);
 const aiRetryAction = ref<"chat" | "written">("chat");
 const lastChatText = ref<string | null>(null);
 const cachedChatModel = shallowRef<{ id: string; model: any } | null>(null);
-const cachedChatModelPromise = shallowRef<
-    { id: string; promise: Promise<any> } | null
->(null);
-const chatRevealIntervalMs = 34;
-type ChatRevealJob = { complete: boolean; pending: string; timer: number | null };
-const chatRevealJobs = new Map<string, ChatRevealJob>();
+const cachedChatModelPromise = shallowRef<{
+    id: string;
+    promise: Promise<any>;
+} | null>(null);
 
 function updateChatMessage(
     messageId: string,
     update: (message: UiChatMessage) => UiChatMessage,
 ) {
-    const index = chatMessages.value.findIndex((message) => message.id === messageId);
+    const index = chatMessages.value.findIndex(
+        (message) => message.id === messageId,
+    );
     if (index < 0) return false;
     const current = chatMessages.value[index];
     if (!current) return false;
@@ -2021,115 +2487,37 @@ function updateChatMessage(
     return true;
 }
 
-function takeRevealUnit(job: ChatRevealJob) {
-    const next = takeNextChatRevealUnit(job.pending, job.complete);
-    if (!next) return null;
-    job.pending = next.pending;
-    return next.unit;
-}
-
-function stopChatRevealTimer(messageId: string, job: ChatRevealJob) {
-    if (job.timer !== null) {
-        window.clearInterval(job.timer);
-        job.timer = null;
-    }
-    chatRevealJobs.delete(messageId);
-}
-
-function revealNextChatUnit(messageId: string, job: ChatRevealJob) {
-    const unit = takeRevealUnit(job);
-    if (!unit) return false;
-    const didUpdate = updateChatMessage(messageId, (message) => ({
-        ...message,
-        content: `${message.content}${unit}`,
-    }));
-    if (!didUpdate) return false;
-    void nextTick().then(scrollChatToBottom);
-    return true;
-}
-
-function startChatRevealTimer(messageId: string, job: ChatRevealJob) {
-    if (job.timer !== null) return;
-
-    job.timer = window.setInterval(() => {
-        const current = chatRevealJobs.get(messageId);
-        if (!current) return;
-        revealNextChatUnit(messageId, current);
-        if (!current.pending) {
-            stopChatRevealTimer(messageId, current);
-        }
-    }, chatRevealIntervalMs);
-}
-
-function enqueueChatReveal(messageId: string, chunk: string) {
-    if (!chunk) return;
-    updateChatMessage(messageId, (message) => ({
-        ...message,
-        fullContent: `${message.fullContent ?? message.content}${chunk}`,
-    }));
-    let job = chatRevealJobs.get(messageId);
-    if (!job) {
-        job = { complete: false, pending: "", timer: null };
-        chatRevealJobs.set(messageId, job);
-    }
-    job.pending += chunk;
-    const message = chatMessages.value.find((m) => m.id === messageId);
-    if (!message?.content) {
-        revealNextChatUnit(messageId, job);
-    }
-    startChatRevealTimer(messageId, job);
-}
-
-function finishChatRevealStream(messageId: string) {
-    const job = chatRevealJobs.get(messageId);
-    if (!job) return;
-    job.complete = true;
-    if (!job.pending) {
-        stopChatRevealTimer(messageId, job);
-        return;
-    }
-    startChatRevealTimer(messageId, job);
-}
-
-function flushChatRevealJobs() {
-    for (const [messageId, job] of chatRevealJobs.entries()) {
-        if (job.pending) {
-            const pending = job.pending;
-            updateChatMessage(messageId, (message) => ({
-                ...message,
-                content: `${message.content}${pending}`,
-            }));
-            job.pending = "";
-        }
-        stopChatRevealTimer(messageId, job);
-    }
-    void nextTick().then(scrollChatToBottom);
-}
-
-function cancelChatRevealJobs() {
-    for (const job of chatRevealJobs.values()) {
-        if (job.timer !== null) window.clearInterval(job.timer);
-    }
-    chatRevealJobs.clear();
-}
+const {
+    enqueue: enqueueChatReveal,
+    finish: finishChatRevealStream,
+    flush: flushChatRevealJobs,
+    cancelAll: cancelChatRevealJobs,
+} = createChatRevealQueue<UiChatMessage>({
+    getMessage: (messageId) =>
+        chatMessages.value.find((message) => message.id === messageId),
+    updateMessage: updateChatMessage,
+    onReveal: () => void nextTick().then(scrollChatToBottom),
+});
 
 async function getCachedChatModel(modelId: string) {
+    const route = [modelId, ...fallbackModelIds.value];
+    const cacheId = route.join("\n");
     const cached = cachedChatModel.value;
-    if (cached?.id === modelId) return cached.model;
+    if (cached?.id === cacheId) return cached.model;
     const existing = cachedChatModelPromise.value;
     const promise =
-        existing?.id === modelId
+        existing?.id === cacheId
             ? existing.promise
-            : resolveAiModel(modelId).finally(() => {
-                  if (cachedChatModelPromise.value?.id === modelId) {
+            : resolveAiModel(route).finally(() => {
+                  if (cachedChatModelPromise.value?.id === cacheId) {
                       cachedChatModelPromise.value = null;
                   }
               });
-    if (existing?.id !== modelId) {
-        cachedChatModelPromise.value = { id: modelId, promise };
+    if (existing?.id !== cacheId) {
+        cachedChatModelPromise.value = { id: cacheId, promise };
     }
     const model = await promise;
-    cachedChatModel.value = { id: modelId, model };
+    cachedChatModel.value = { id: cacheId, model };
     return model;
 }
 
@@ -2200,13 +2588,7 @@ const practiceSecondsRemaining = ref(10 * 60);
 const practiceTimedOut = ref(false);
 const practiceWrittenAnswer = ref("");
 const practiceTimerHandle = shallowRef<number | null>(null);
-type PracticeChoiceValue = boolean | number;
-type PracticeAnswerFeedback = {
-    questionId: string;
-    selected: PracticeChoiceValue;
-    correct: PracticeChoiceValue;
-};
-const practiceAnswerFeedback = ref<PracticeAnswerFeedback | null>(null);
+const practiceAnswerFeedback = ref<PracticeChoiceFeedback | null>(null);
 type PracticeWrittenFeedback = WrittenAnswerGrade & {
     questionId: string;
 };
@@ -2295,13 +2677,16 @@ async function unlinkCurrentFolder() {
 }
 
 async function onLinkedFolderStatus(event: Event) {
-    const detail = (event as CustomEvent<{ setId: Uuid; linkedFolder: LinkedFolder | null }>).detail;
+    const detail = (
+        event as CustomEvent<{ setId: Uuid; linkedFolder: LinkedFolder | null }>
+    ).detail;
     if (!set.value || detail?.setId !== set.value.id) return;
     const previousStatus = linkedFolder.value?.status;
     linkedFolder.value = detail.linkedFolder;
     if (
         detail.linkedFolder &&
-        (detail.linkedFolder.status === "synced" || detail.linkedFolder.status === "error") &&
+        (detail.linkedFolder.status === "synced" ||
+            detail.linkedFolder.status === "error") &&
         (previousStatus === "pending" || previousStatus === "syncing")
     ) {
         const db = await useTracerDb();
@@ -2425,7 +2810,9 @@ const viewerHasText = computed(() => viewerText.value.trim().length > 0);
 const viewerImage = computed(() => {
     const t = currentTerm.value;
     if (!t) return null;
-    return showingDefinition.value ? t.backImage ?? null : t.frontImage ?? null;
+    return showingDefinition.value
+        ? (t.backImage ?? null)
+        : (t.frontImage ?? null);
 });
 
 const flashcardSurfaceClass = computed(() => {
@@ -2448,7 +2835,9 @@ const isCurrentRetry = computed(() => {
     const t = currentTerm.value;
     if (!t) return false;
     const id = t.id as Uuid;
-    return retryTermIds.value.has(id) && answersByTermId.value[id] === "incorrect";
+    return (
+        retryTermIds.value.has(id) && answersByTermId.value[id] === "incorrect"
+    );
 });
 
 const accuracyText = computed(() => {
@@ -2464,79 +2853,28 @@ const exportTsv = computed(() => {
     return s.terms.map((t) => `${t.front}\t${t.back}`).join("\n");
 });
 
-function toggleFlip() {
-    if (totalCount.value === 0 || flashcardAnswerBusy.value || isFlipping.value) return;
-    isFlipping.value = true;
-
-    // Swap the rendered side while the card is collapsed, not after the
-    // animation has already returned to its full-size resting state.
-    flashcardFlipSwapTimeout = setTimeout(() => {
-        isFlipped.value = !isFlipped.value;
-        flashcardFlipSwapTimeout = null;
-    }, FLASHCARD_FLIP_DURATION_MS / 2);
-
-    flashcardFlipEndTimeout = setTimeout(() => {
-        isFlipping.value = false;
-        flashcardFlipEndTimeout = null;
-    }, FLASHCARD_FLIP_DURATION_MS);
-}
-
-function goPrev() {
-    if (order.value.length === 0 || flashcardAnswerBusy.value) return;
-    const next = Math.min(
-        Math.max(cursorIndex.value - 1, 0),
-        order.value.length - 1,
-    );
-    if (next !== cursorIndex.value) {
-        isNavigating.value = "prev";
-        setTimeout(() => {
-            cursorIndex.value = next;
-            isFlipped.value = false;
-            isNavigating.value = null;
-        }, 250);
-    }
-}
-
-function goNext() {
-    if (order.value.length === 0 || flashcardAnswerBusy.value) return;
-    const next = Math.min(
-        Math.max(cursorIndex.value + 1, 0),
-        order.value.length - 1,
-    );
-    if (next !== cursorIndex.value) {
-        isNavigating.value = "next";
-        setTimeout(() => {
-            cursorIndex.value = next;
-            isFlipped.value = false;
-            isNavigating.value = null;
-        }, 250);
-    }
-}
-
-function getRandomSeed() {
-    try {
-        const buf = new Uint32Array(1);
-        (globalThis.crypto as Crypto | undefined)?.getRandomValues?.(buf);
-        const v = Number(buf[0] ?? 0);
-        if (Number.isFinite(v) && v !== 0) return v;
-    } catch {}
-    return Date.now() ^ Math.floor(Math.random() * 0xffffffff);
-}
-
-function makePrng(seed: number) {
-    let x = seed | 0 || 1;
-    return () => {
-        x ^= x << 13;
-        x ^= x >>> 17;
-        x ^= x << 5;
-        return (x >>> 0) / 4294967296;
-    };
-}
+const {
+    toggleFlip,
+    goPrev,
+    goNext,
+    cancel: cancelFlashcardMotion,
+} = createFlashcardMotion({
+    getFlipCardCount: () => totalCount.value,
+    getNavigationCardCount: () => order.value.length,
+    getCursorIndex: () => cursorIndex.value,
+    setCursorIndex: (index) => (cursorIndex.value = index),
+    getFlipped: () => isFlipped.value,
+    setFlipped: (flipped) => (isFlipped.value = flipped),
+    getFlipping: () => isFlipping.value,
+    setFlipping: (flipping) => (isFlipping.value = flipping),
+    setNavigating: (direction) => (isNavigating.value = direction),
+    isBusy: () => flashcardAnswerBusy.value,
+});
 
 function matchSeed() {
     const s = baseSeed.value;
     if (s !== null) return s + matchRunCounter.value;
-    return getRandomSeed() ^ (matchRunCounter.value * 2654435761);
+    return createRandomSeed() ^ (matchRunCounter.value * 2654435761);
 }
 
 function clearMatchTimer() {
@@ -2562,6 +2900,10 @@ function matchStop(reason: "completed" | "timeout") {
 
     matchSelectedTileIds.value = [];
     matchBusy.value = false;
+    void finishInlineAssignedMode({
+        completed: reason === "completed",
+        durationMs: matchElapsedTimeMs.value,
+    });
     if (reason === "timeout") {
         // Results should still show in a calm state.
     }
@@ -2612,10 +2954,12 @@ function startMatch() {
     }
     matchStartedAtMs.value = Date.now();
     matchElapsedTimeMs.value = 0;
+    beginInlineAssignedMode("match");
     startMatchTimer();
 }
 
 function restartMatchRun() {
+    void finishInlineAssignedMode({ durationMs: matchElapsedTimeMs.value });
     matchRunCounter.value += 1;
     resetMatchStateForRun();
     if (set.value) matchPrepareTiles(set.value);
@@ -2692,6 +3036,7 @@ async function onMatchTileClick(tile: MatchTile) {
 
     matchAttemptsCount.value += 1;
     const isMatch = a.pairId === b.pairId && a.kind !== b.kind;
+    recordInlineAssignedAnswer("match", isMatch);
     if (isMatch) {
         matchCorrectAttemptsCount.value += 1;
         matchMatchedPairIds.value = new Set([
@@ -2722,7 +3067,8 @@ function onDocumentMatchPointerDown(event: PointerEvent) {
     const target = event.target;
     if (!(target instanceof Element)) return;
     if (target.closest('[data-match-tile="true"]')) return;
-    if (target.closest('button,a,input,textarea,select,[role="button"]')) return;
+    if (target.closest('button,a,input,textarea,select,[role="button"]'))
+        return;
     matchSelectedTileIds.value = [];
 }
 
@@ -2787,7 +3133,10 @@ function clampPracticeQuestionCount() {
 }
 
 function togglePracticeQuestionType(kind: LearnQuestionKind) {
-    if (practiceQuestionTypes[kind] && enabledPracticeQuestionTypes().length === 1) {
+    if (
+        practiceQuestionTypes[kind] &&
+        enabledPracticeQuestionTypes().length === 1
+    ) {
         learnError.value = "Choose at least one question type.";
         return;
     }
@@ -2850,6 +3199,9 @@ function learnFindNextUnattempted(fromIndex: number) {
 }
 
 function learnMarkAnswered(questionId: string, isCorrect: boolean) {
+    if (learnAnswersByQuestionId.value[questionId] === undefined) {
+        recordInlineAssignedAnswer("learn", isCorrect);
+    }
     learnAnswersByQuestionId.value = {
         ...learnAnswersByQuestionId.value,
         [questionId]: isCorrect,
@@ -2862,34 +3214,18 @@ function learnMarkAnswered(questionId: string, isCorrect: boolean) {
     learnCursorIndex.value = next;
 }
 
-function practiceChoiceFeedbackClass(choice: PracticeChoiceValue) {
-    const feedback = practiceAnswerFeedback.value;
-    const question = learnCurrentQuestion.value;
-    if (!feedback || !question || feedback.questionId !== question.id) {
-        return null;
-    }
-    if (choice === feedback.correct) {
-        return "border-2 border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-200 focus-visible:ring-emerald-300 dark:border-emerald-500 dark:bg-emerald-950/35 dark:text-emerald-50 dark:ring-emerald-900/70";
-    }
-    if (choice === feedback.selected) {
-        return "border-2 border-red-700 bg-red-50/80 text-red-950 ring-2 ring-red-200 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/40 dark:text-red-50 dark:ring-red-900/70";
-    }
-    return null;
-}
+const {
+    practiceTrueFalseChoiceClass,
+    practiceMultipleChoiceClass,
+    practiceQuestionSurfaceClass,
+} = createPracticePresentation({
+    getQuestion: () => learnCurrentQuestion.value,
+    getChoiceFeedback: () => practiceAnswerFeedback.value,
+    getWrittenFeedback: () => practiceWrittenFeedback.value,
+});
 
-function practiceTrueFalseChoiceClass(choice: boolean) {
-    const feedbackClass = practiceChoiceFeedbackClass(choice);
-    if (feedbackClass) return feedbackClass;
-    if (choice) {
-        return "border-amber-500 bg-amber-400 text-slate-950 hover:bg-amber-300 focus-visible:ring-amber-300 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300";
-    }
-    return "border-slate-300 bg-white text-slate-900 hover:bg-slate-100 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900";
-}
-
-function practiceMultipleChoiceClass(choice: number) {
-    const feedbackClass = practiceChoiceFeedbackClass(choice);
-    if (feedbackClass) return feedbackClass;
-    return "border-slate-200 bg-white text-slate-900 hover:bg-slate-50 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500";
+function waitForFeedback(ms: number) {
+    return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 }
 
 function cancelPracticeAnswerFeedback() {
@@ -2937,20 +3273,6 @@ function answerLearnMultipleChoice(selectedIndex: number) {
     const q = learnCurrentQuestion.value;
     if (!q || q.kind !== "multiple_choice") return;
     void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
-}
-
-function practiceQuestionSurfaceClass() {
-    const question = learnCurrentQuestion.value;
-    const feedback = practiceWrittenFeedback.value;
-    if (
-        question?.kind === "written" &&
-        feedback?.questionId === question.id
-    ) {
-        return feedback.isCorrect
-            ? "border-2 border-emerald-600 bg-emerald-50/40 dark:border-emerald-500 dark:bg-emerald-950/20"
-            : "border-2 border-red-700 bg-red-50/40 dark:border-red-500 dark:bg-red-950/20";
-    }
-    return "border-amber-200 bg-amber-50/20 dark:border-amber-900/60 dark:bg-amber-950/10";
 }
 
 async function answerLearnWritten() {
@@ -3171,7 +3493,7 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
 
     learnBusy.value = true;
     try {
-        const model = await resolveAiModel(defaultModelId.value);
+        const model = await resolveAiModel([defaultModelId.value, ...fallbackModelIds.value]);
         const prompt = buildLearnAugmentPrompt({
             title: s.title,
             description: s.description,
@@ -3239,30 +3561,31 @@ function persistPracticeRun() {
     const signature = JSON.stringify(progress);
     if (signature === savedPracticeProgressSignature.value) return;
     savedPracticeProgressSignature.value = signature;
-    void savePracticeProgress(currentSet.id, progress, isWebPreview.value).catch(
-        () => {},
-    );
+    void savePracticeProgress(
+        currentSet.id,
+        progress,
+        isWebPreview.value,
+    ).catch(() => {});
 }
 
 async function initializePracticeRun(options?: { forceNew?: boolean }) {
     const currentSet = set.value;
     if (!currentSet) return;
     practiceProgressReady.value = false;
-    const saved = await loadPracticeProgress(
-        currentSet.id,
-        isWebPreview.value,
-    );
+    const saved = await loadPracticeProgress(currentSet.id, isWebPreview.value);
     if (
         !options?.forceNew &&
         saved &&
         (isWebPreview.value || saved.setUpdatedAt === currentSet.updatedAt) &&
         saved.questions.length > 0
     ) {
-        const questionIds = new Set(saved.questions.map((question) => question.id));
+        const questionIds = new Set(
+            saved.questions.map((question) => question.id),
+        );
         learnQuestions.value = saved.questions;
         learnAnswersByQuestionId.value = Object.fromEntries(
-            Object.entries(saved.answersByQuestionId).filter(
-                ([questionId]) => questionIds.has(questionId),
+            Object.entries(saved.answersByQuestionId).filter(([questionId]) =>
+                questionIds.has(questionId),
             ),
         );
         const savedIndex = saved.currentQuestionId
@@ -3316,99 +3639,39 @@ function applyPracticeSettings() {
     void startLearnRun({ startTimer: true });
 }
 
-function shuffle<T>(items: T[], rand: () => number) {
-    const a = items.slice();
-    for (let i = a.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(rand() * (i + 1));
-        const tmp = a[i];
-        a[i] = a[j]!;
-        a[j] = tmp!;
-    }
-    return a;
-}
-
-function shuffleRun() {
-    cancelFlashcardAnswerFeedback();
-    const s = set.value;
-    if (!s) return;
-    const ids = studyTermIds.value;
-    if (ids.length <= 1) {
-        order.value = ids;
-        cursorIndex.value = 0;
-        answersByTermId.value = {};
-        answerAttemptsCount.value = 0;
-        retryTermIds.value = new Set();
-        isFlipped.value = false;
-        return;
-    }
-
-    const seed =
-        baseSeed.value !== null
-            ? baseSeed.value + runCounter.value + 1
-            : getRandomSeed();
-    let nextOrder = shuffle(ids, makePrng(seed));
-    if (baseSeed.value === null) {
-        const prev = lastOrder.value;
-        const same =
-            prev.length === nextOrder.length &&
-            prev.every((v, i) => v === nextOrder[i]);
-        if (same) {
-            nextOrder = [...nextOrder.slice(1), nextOrder[0]!];
-        }
-    }
-    lastOrder.value = nextOrder;
-    order.value = nextOrder;
-    cursorIndex.value = 0;
-    answersByTermId.value = {};
-    answerAttemptsCount.value = 0;
-    retryTermIds.value = new Set();
-    isFlipped.value = false;
-    nextTick(() => viewerButtonEl.value?.focus());
-}
-
-function startRun(options?: {
-    resetCounter?: boolean;
-    resumeTermId?: Uuid | null;
-    resumeCorrectTermIds?: Uuid[];
-}) {
-    cancelFlashcardAnswerFeedback();
-    const s = set.value;
-    if (!s) return;
-    if (options?.resetCounter) runCounter.value = 0;
-
-    const ids = studyTermIds.value;
-    // Default run order matches the saved set order; shuffle is an explicit action.
-    lastOrder.value = ids;
-    order.value = ids;
-    const resumeIndex = options?.resumeTermId
-        ? ids.indexOf(options.resumeTermId)
-        : -1;
-    cursorIndex.value = resumeIndex >= 0 ? resumeIndex : 0;
-    const correctTermIds = (options?.resumeCorrectTermIds ?? []).filter((id) =>
-        ids.includes(id),
-    );
-    answersByTermId.value = Object.fromEntries(
-        correctTermIds.map((id) => [id, "correct" as const]),
-    );
-    answerAttemptsCount.value = correctTermIds.length;
-    retryTermIds.value = new Set();
-    isFlipped.value = false;
-}
-
-function restartRun() {
-    runCounter.value += 1;
-    if (isStarredOnlyEmpty.value) {
-        starredOnly.value = false;
-    }
-    startRun();
-    nextTick(() => viewerButtonEl.value?.focus());
-}
-
-function toggleStarredOnly() {
-    if (!starredOnly.value && starredStudyCount.value === 0) return;
-    starredOnly.value = !starredOnly.value;
-    restartRun();
-}
+const {
+    shuffleRun,
+    startRun,
+    restartRun,
+    toggleStarredOnly,
+    cancelFlashcardAnswerFeedback,
+    markCorrect,
+    markIncorrect,
+} = createFlashcardRun({
+    state: {
+        runCounter,
+        cursorIndex,
+        order,
+        lastOrder,
+        answersByTermId,
+        answerAttemptsCount,
+        retryTermIds,
+        starredOnly,
+        isFlipped,
+        isNavigating,
+        answerFeedback: flashcardAnswerFeedback,
+        answerBusy: flashcardAnswerBusy,
+        answerTransitionId: flashcardAnswerTransitionId,
+    },
+    hasSet: () => set.value !== null,
+    getStudyTermIds: () => studyTermIds.value,
+    getCurrentTermId: () => (currentTerm.value?.id as Uuid | undefined) ?? null,
+    getBaseSeed: () => baseSeed.value,
+    getStarredStudyCount: () => starredStudyCount.value,
+    onAnswer: (answer) =>
+        recordInlineAssignedAnswer("flashcards", answer === "correct"),
+    focusViewer: () => nextTick(() => viewerButtonEl.value?.focus()),
+});
 
 function shuffleFromFlashcardSettings() {
     flashcardSettingsOpen.value = false;
@@ -3423,83 +3686,6 @@ function toggleStarredOnlyFromFlashcardSettings() {
 function restartFromFlashcardSettings() {
     flashcardSettingsOpen.value = false;
     restartRun();
-}
-
-function findNextUnattempted(fromIndex: number) {
-    const ids = order.value;
-    if (ids.length === 0) return null;
-    const answered = answersByTermId.value;
-    for (let step = 0; step < ids.length; step += 1) {
-        const idx = (fromIndex + step) % ids.length;
-        const id = ids[idx];
-        if (!id) continue;
-        if (answered[id] !== "correct") return idx;
-    }
-    return null;
-}
-
-function commitAnswer(answer: FlashcardsAnswer) {
-    const t = currentTerm.value;
-    if (!t) return;
-    const id = t.id as Uuid;
-    answerAttemptsCount.value += 1;
-    answersByTermId.value = {
-        ...answersByTermId.value,
-        [id]: answer,
-    };
-    const retries = new Set(retryTermIds.value);
-    if (answer === "incorrect") {
-        retries.add(id);
-        order.value = [...order.value, id];
-    } else {
-        retries.delete(id);
-    }
-    retryTermIds.value = retries;
-    isFlipped.value = false;
-    const next = findNextUnattempted(cursorIndex.value + 1);
-    if (next === null) {
-        return;
-    }
-    cursorIndex.value = next;
-}
-
-function waitForFeedback(ms: number) {
-    return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
-}
-
-function cancelFlashcardAnswerFeedback() {
-    flashcardAnswerTransitionId.value += 1;
-    flashcardAnswerFeedback.value = null;
-    flashcardAnswerBusy.value = false;
-    isNavigating.value = null;
-}
-
-async function markAnswer(answer: FlashcardsAnswer) {
-    if (!currentTerm.value || flashcardAnswerBusy.value) return;
-    const transitionId = ++flashcardAnswerTransitionId.value;
-    flashcardAnswerFeedback.value = answer;
-    flashcardAnswerBusy.value = true;
-    isFlipped.value = false;
-
-    await waitForFeedback(450);
-    if (transitionId !== flashcardAnswerTransitionId.value) return;
-
-    isNavigating.value = "next";
-    await waitForFeedback(250);
-    if (transitionId !== flashcardAnswerTransitionId.value) return;
-
-    commitAnswer(answer);
-    isNavigating.value = null;
-    flashcardAnswerFeedback.value = null;
-    flashcardAnswerBusy.value = false;
-}
-
-function markCorrect() {
-    void markAnswer("correct");
-}
-
-function markIncorrect() {
-    void markAnswer("incorrect");
 }
 
 async function loadStars(setId: Uuid) {
@@ -3623,7 +3809,8 @@ const matchMatchedPairsCount = computed(() => matchMatchedPairIds.value.size);
 const matchTopline = computed(() => {
     if (!matchIsRunning.value && !matchIsFinished.value) return "Ready";
     const pairs = `${matchMatchedPairsCount.value}/${matchPairsTarget.value}`;
-    if (matchIsRunning.value) return `Time: ${formatMatchTime(matchElapsedTimeMs.value)} · Matched: ${pairs}`;
+    if (matchIsRunning.value)
+        return `Time: ${formatMatchTime(matchElapsedTimeMs.value)} · Matched: ${pairs}`;
     return `Done · Matched: ${pairs}`;
 });
 
@@ -3727,7 +3914,12 @@ async function loadSavedChats() {
 }
 
 async function openChatHistory() {
-    if (!set.value || chatBusy.value || chatSaveBusy.value || isWebPreview.value)
+    if (
+        !set.value ||
+        chatBusy.value ||
+        chatSaveBusy.value ||
+        isWebPreview.value
+    )
         return;
     chatHistoryOpen.value = true;
     await loadSavedChats();
@@ -3740,7 +3932,8 @@ function closeChatHistory() {
 }
 
 async function openSavedChat(id: Uuid) {
-    if (chatHistoryBusy.value || chatDeleteBusy.value || isWebPreview.value) return;
+    if (chatHistoryBusy.value || chatDeleteBusy.value || isWebPreview.value)
+        return;
     chatHistoryBusy.value = true;
     chatHistoryError.value = null;
     try {
@@ -3835,7 +4028,9 @@ async function clearCurrentChat() {
         try {
             const db = await useTracerDb();
             await createChatsRepo(db).delete(id);
-            savedChats.value = savedChats.value.filter((chat) => chat.id !== id);
+            savedChats.value = savedChats.value.filter(
+                (chat) => chat.id !== id,
+            );
         } catch (err) {
             chatError.value = toErrorMessage(err, t("chat.deleteFailed"));
             chatSaveBusy.value = false;
@@ -3921,14 +4116,13 @@ async function sendChat() {
     chatBusy.value = true;
     try {
         const prior: ChatMessage[] = takeRecentChatMessages(
-            chatMessages.value
-                .slice(0, -1)
-                .map((m) => ({
-                    role: m.role,
-                    content: m.fullContent ?? m.content,
-                })),
+            chatMessages.value.slice(0, -1).map((m) => ({
+                role: m.role,
+                content: m.fullContent ?? m.content,
+            })),
         );
-        const system = chatSystemPrompt.value || buildGroundedChatSystemPrompt(s);
+        const system =
+            chatSystemPrompt.value || buildGroundedChatSystemPrompt(s);
 
         if (isWebPreview.value) {
             for await (const chunk of streamWebPreviewMockChatAnswer({
@@ -3948,7 +4142,8 @@ async function sendChat() {
             return;
         }
 
-        const model = await (modelPromise ?? getCachedChatModel(defaultModelId.value));
+        const model = await (modelPromise ??
+            getCachedChatModel(defaultModelId.value));
         const result = streamGroundedChatText({
             model,
             system,
@@ -4074,6 +4269,7 @@ async function openSetPage() {
 
         const settings = await createSettingsRepo(db).get();
         defaultModelId.value = settings.defaultModelId;
+        fallbackModelIds.value = settings.fallbackModelIds;
         learnHybridEnabled.value = settings.learnHybridEnabled;
         flashcardsDefinitionFirst.value = settings.flashcardsDefinitionFirst;
 
@@ -4114,9 +4310,12 @@ async function openSetPage() {
 
         if (set.value) {
             await loadStars(set.value.id);
-            const savedProgress = await loadSavedFlashcardProgress(set.value.id);
+            const savedProgress = await loadSavedFlashcardProgress(
+                set.value.id,
+            );
             savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
-            savedFlashcardCorrectTermIds.value = savedProgress?.correctTermIds ?? [];
+            savedFlashcardCorrectTermIds.value =
+                savedProgress?.correctTermIds ?? [];
             savedFlashcardProgressSignature.value = savedProgress
                 ? JSON.stringify(savedProgress)
                 : null;
@@ -4137,9 +4336,15 @@ async function openSetPage() {
         }
 
         window.addEventListener("keydown", onKeydown);
-        window.addEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus);
+        window.addEventListener(
+            LINKED_FOLDER_STATUS_EVENT,
+            onLinkedFolderStatus,
+        );
         document.addEventListener("pointerdown", onDocumentMatchPointerDown);
-        document.addEventListener("pointerdown", onDocumentTermsFilterPointerDown);
+        document.addEventListener(
+            "pointerdown",
+            onDocumentTermsFilterPointerDown,
+        );
         document.addEventListener(
             "pointerdown",
             onDocumentFlashcardSettingsPointerDown,
@@ -4169,7 +4374,19 @@ async function openSetPage() {
 }
 
 onMounted(async () => {
+    window.addEventListener("pagehide", onAssignedPageHide);
     await openSetPage();
+    beginInlineAssignedMode(mode.value);
+});
+
+watch(mode, (next, previous) => {
+    if (next === previous || isNestedSetRoute.value) return;
+    finishInlineAssignedMode();
+    beginInlineAssignedMode(next);
+});
+
+onBeforeRouteLeave(() => {
+    finishInlineAssignedMode();
 });
 
 watch(
@@ -4219,12 +4436,13 @@ watch(
 );
 
 watch(
-    () => [
-        order.value[cursorIndex.value] ?? null,
-        allStudyTermIds.value
-            .filter((id) => answersByTermId.value[id] === "correct")
-            .join("\u0000"),
-    ] as const,
+    () =>
+        [
+            order.value[cursorIndex.value] ?? null,
+            allStudyTermIds.value
+                .filter((id) => answersByTermId.value[id] === "correct")
+                .join("\u0000"),
+        ] as const,
     ([termId]) => {
         if (!termId || mode.value !== "flashcards") return;
         persistFlashcardProgress(termId as Uuid);
@@ -4264,8 +4482,9 @@ watch(
 );
 
 onBeforeUnmount(() => {
-    if (flashcardFlipSwapTimeout) clearTimeout(flashcardFlipSwapTimeout);
-    if (flashcardFlipEndTimeout) clearTimeout(flashcardFlipEndTimeout);
+    finishInlineAssignedMode();
+    window.removeEventListener("pagehide", onAssignedPageHide);
+    cancelFlashcardMotion();
     cancelFlashcardAnswerFeedback();
     cancelPracticeAnswerFeedback();
     flushChatRevealJobs();
@@ -4274,9 +4493,15 @@ onBeforeUnmount(() => {
     clearPracticeTimer();
     clearMatchTimer();
     window.removeEventListener("keydown", onKeydown);
-    window.removeEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus);
+    window.removeEventListener(
+        LINKED_FOLDER_STATUS_EVENT,
+        onLinkedFolderStatus,
+    );
     document.removeEventListener("pointerdown", onDocumentMatchPointerDown);
-    document.removeEventListener("pointerdown", onDocumentTermsFilterPointerDown);
+    document.removeEventListener(
+        "pointerdown",
+        onDocumentTermsFilterPointerDown,
+    );
     document.removeEventListener(
         "pointerdown",
         onDocumentFlashcardSettingsPointerDown,

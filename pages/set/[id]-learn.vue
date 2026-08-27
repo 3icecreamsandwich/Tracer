@@ -34,8 +34,19 @@
                         title="Practice settings"
                         @click="openPracticeSettings"
                     >
-                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                        <svg
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            class="h-4 w-4"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
+                            />
                             <circle cx="12" cy="12" r="3" />
                         </svg>
                     </button>
@@ -44,9 +55,7 @@
         </div>
 
         <!-- Main Content Area -->
-        <div
-            class="flex flex-1 flex-col items-center justify-start px-6 py-8"
-        >
+        <div class="flex flex-1 flex-col items-center justify-start px-6 py-8">
             <!-- Title -->
             <div class="mb-6 text-center">
                 <h1
@@ -61,7 +70,7 @@
 
             <div
                 v-if="practiceSettingsOpen"
-                class="mb-6 w-full max-w-4xl rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10"
+                class="mb-6 w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             >
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -345,12 +354,8 @@
                             <button
                                 type="button"
                                 class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                                :class="
-                                    practiceTrueFalseChoiceClass(true)
-                                "
-                                :disabled="
-                                    learnBusy || practiceAnswerBusy
-                                "
+                                :class="practiceTrueFalseChoiceClass(true)"
+                                :disabled="learnBusy || practiceAnswerBusy"
                                 @click="answerLearnTrueFalse(true)"
                             >
                                 {{ t("common.true") }}
@@ -358,12 +363,8 @@
                             <button
                                 type="button"
                                 class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                                :class="
-                                    practiceTrueFalseChoiceClass(false)
-                                "
-                                :disabled="
-                                    learnBusy || practiceAnswerBusy
-                                "
+                                :class="practiceTrueFalseChoiceClass(false)"
+                                :disabled="learnBusy || practiceAnswerBusy"
                                 @click="answerLearnTrueFalse(false)"
                             >
                                 {{ t("common.false") }}
@@ -382,12 +383,8 @@
                                 :key="`${learnCurrentQuestion.id}:${idx}`"
                                 type="button"
                                 class="inline-flex items-center justify-center rounded-md border px-4 py-3 text-sm font-medium shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
-                                :class="
-                                    practiceMultipleChoiceClass(idx)
-                                "
-                                :disabled="
-                                    learnBusy || practiceAnswerBusy
-                                "
+                                :class="practiceMultipleChoiceClass(idx)"
+                                :disabled="learnBusy || practiceAnswerBusy"
                                 @click="answerLearnMultipleChoice(idx)"
                             >
                                 <MarkdownRenderer
@@ -499,6 +496,11 @@ import {
     type LearnQuestion,
     type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
+import {
+    createPracticePresentation,
+    type PracticeChoiceFeedback,
+    type PracticeChoiceValue,
+} from "~/src/composables/learn/presentation";
 import { resolveAiModel } from "~/src/composables/ai/registry";
 import { generateText } from "ai";
 import {
@@ -519,6 +521,7 @@ import {
     completeAssignedAttempt,
     parseAssignedAssignmentId,
 } from "~/src/composables/assignment-progress";
+import { createRandomSeed } from "~/src/composables/random";
 
 const route = useRoute();
 const router = useRouter();
@@ -530,10 +533,13 @@ const assignedAssignmentId = computed(() =>
     parseAssignedAssignmentId(route.query.assignment),
 );
 const backToSetPath = computed(() => {
-    const classroomId = typeof route.query.class === "string" ? route.query.class : null;
+    const classroomId =
+        typeof route.query.class === "string" ? route.query.class : null;
     return assignedAssignmentId.value && classroomId && set.value
         ? `/student/classes/${classroomId}`
-        : set.value ? `/set/${set.value.id}` : "/";
+        : set.value
+          ? `/set/${set.value.id}`
+          : "/";
 });
 
 function beginClassroomPractice() {
@@ -545,10 +551,31 @@ function beginClassroomPractice() {
     });
 }
 
+let assignedSessionFinished = false;
+const assignedSessionCorrect = ref(0);
+const assignedSessionAttempted = ref(0);
+
+function finishClassroomPractice() {
+    if (assignedSessionFinished || !set.value) return;
+    assignedSessionFinished = true;
+    void completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "practice",
+        scoreEarned: assignedSessionCorrect.value,
+        scorePossible: assignedSessionAttempted.value,
+    });
+}
+
+function onPageHide() {
+    finishClassroomPractice();
+}
+
 const busy = ref(true);
 const loadError = ref<string | null>(null);
 const set = ref<FlashcardSet | null>(null);
 const defaultModelId = ref<string | null>(null);
+const fallbackModelIds = ref<string[]>([]);
 const learnHybridEnabled = ref(false);
 
 const learnBusy = ref(false);
@@ -584,13 +611,7 @@ const practiceSecondsRemaining = ref(10 * 60);
 const practiceTimedOut = ref(false);
 const practiceWrittenAnswer = ref("");
 const practiceTimerHandle = shallowRef<number | null>(null);
-type PracticeChoiceValue = boolean | number;
-type PracticeAnswerFeedback = {
-    questionId: string;
-    selected: PracticeChoiceValue;
-    correct: PracticeChoiceValue;
-};
-const practiceAnswerFeedback = ref<PracticeAnswerFeedback | null>(null);
+const practiceAnswerFeedback = ref<PracticeChoiceFeedback | null>(null);
 type PracticeWrittenFeedback = WrittenAnswerGrade & {
     questionId: string;
 };
@@ -613,20 +634,10 @@ const baseSeed = computed(() => {
     return Number.isFinite(n) ? n : null;
 });
 
-function getRandomSeed() {
-    try {
-        const buf = new Uint32Array(1);
-        (globalThis.crypto as Crypto | undefined)?.getRandomValues?.(buf);
-        const v = Number(buf[0] ?? 0);
-        if (Number.isFinite(v) && v !== 0) return v;
-    } catch {}
-    return Date.now() ^ Math.floor(Math.random() * 0xffffffff);
-}
-
 function learnSeed() {
     const s = baseSeed.value;
     if (s !== null) return s + learnRunCounter.value;
-    return getRandomSeed() ^ (learnRunCounter.value * 2654435761);
+    return createRandomSeed() ^ (learnRunCounter.value * 2654435761);
 }
 
 const learnAttemptedCount = computed(
@@ -749,6 +760,10 @@ function learnFindNextUnattempted(fromIndex: number) {
 }
 
 function learnMarkAnswered(questionId: string, isCorrect: boolean) {
+    if (learnAnswersByQuestionId.value[questionId] === undefined) {
+        assignedSessionAttempted.value += 1;
+        if (isCorrect) assignedSessionCorrect.value += 1;
+    }
     learnAnswersByQuestionId.value = {
         ...learnAnswersByQuestionId.value,
         [questionId]: isCorrect,
@@ -761,35 +776,15 @@ function learnMarkAnswered(questionId: string, isCorrect: boolean) {
     learnCursorIndex.value = next;
 }
 
-function practiceChoiceFeedbackClass(choice: PracticeChoiceValue) {
-    const feedback = practiceAnswerFeedback.value;
-    const question = learnCurrentQuestion.value;
-    if (!feedback || !question || feedback.questionId !== question.id) {
-        return null;
-    }
-    if (choice === feedback.correct) {
-        return "border-2 border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-200 focus-visible:ring-emerald-300 dark:border-emerald-500 dark:bg-emerald-950/35 dark:text-emerald-50 dark:ring-emerald-900/70";
-    }
-    if (choice === feedback.selected) {
-        return "border-2 border-red-700 bg-red-50/80 text-red-950 ring-2 ring-red-200 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/40 dark:text-red-50 dark:ring-red-900/70";
-    }
-    return null;
-}
-
-function practiceTrueFalseChoiceClass(choice: boolean) {
-    const feedbackClass = practiceChoiceFeedbackClass(choice);
-    if (feedbackClass) return feedbackClass;
-    if (choice) {
-        return "border-amber-500 bg-amber-400 text-slate-950 hover:bg-amber-300 focus-visible:ring-amber-300 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300";
-    }
-    return "border-slate-300 bg-white text-slate-900 hover:bg-slate-100 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900";
-}
-
-function practiceMultipleChoiceClass(choice: number) {
-    const feedbackClass = practiceChoiceFeedbackClass(choice);
-    if (feedbackClass) return feedbackClass;
-    return "border-slate-200 bg-white text-slate-900 hover:bg-slate-50 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500";
-}
+const {
+    practiceTrueFalseChoiceClass,
+    practiceMultipleChoiceClass,
+    practiceQuestionSurfaceClass,
+} = createPracticePresentation({
+    getQuestion: () => learnCurrentQuestion.value,
+    getChoiceFeedback: () => practiceAnswerFeedback.value,
+    getWrittenFeedback: () => practiceWrittenFeedback.value,
+});
 
 function waitForFeedback(ms: number) {
     return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -842,26 +837,14 @@ function answerLearnMultipleChoice(selectedIndex: number) {
     void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
 }
 
-function practiceQuestionSurfaceClass() {
-    const question = learnCurrentQuestion.value;
-    const feedback = practiceWrittenFeedback.value;
-    if (
-        question?.kind === "written" &&
-        feedback?.questionId === question.id
-    ) {
-        return feedback.isCorrect
-            ? "border-2 border-emerald-600 bg-emerald-50/40 dark:border-emerald-500 dark:bg-emerald-950/20"
-            : "border-2 border-red-700 bg-red-50/40 dark:border-red-500 dark:bg-red-950/20";
-    }
-    return "border-amber-200 bg-amber-50/20 dark:border-amber-900/60 dark:bg-amber-950/10";
-}
-
 async function getWrittenModel(modelId: string) {
-    if (cachedWrittenModel.value?.id === modelId) {
+    const route = [modelId, ...fallbackModelIds.value];
+    const cacheId = route.join("\n");
+    if (cachedWrittenModel.value?.id === cacheId) {
         return cachedWrittenModel.value.model;
     }
-    const model = await resolveAiModel(modelId);
-    cachedWrittenModel.value = { id: modelId, model };
+    const model = await resolveAiModel(route);
+    cachedWrittenModel.value = { id: cacheId, model };
     return model;
 }
 
@@ -1084,7 +1067,7 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
 
     learnBusy.value = true;
     try {
-        const model = await resolveAiModel(defaultModelId.value);
+        const model = await resolveAiModel([defaultModelId.value, ...fallbackModelIds.value]);
         const prompt = buildLearnAugmentPrompt({
             title: s.title,
             description: s.description,
@@ -1152,29 +1135,30 @@ function persistPracticeRun() {
     const signature = JSON.stringify(progress);
     if (signature === savedPracticeProgressSignature.value) return;
     savedPracticeProgressSignature.value = signature;
-    void savePracticeProgress(currentSet.id, progress, isWebPreview.value).catch(
-        () => {},
-    );
+    void savePracticeProgress(
+        currentSet.id,
+        progress,
+        isWebPreview.value,
+    ).catch(() => {});
 }
 
 async function initializePracticeRun() {
     const currentSet = set.value;
     if (!currentSet) return;
     practiceProgressReady.value = false;
-    const saved = await loadPracticeProgress(
-        currentSet.id,
-        isWebPreview.value,
-    );
+    const saved = await loadPracticeProgress(currentSet.id, isWebPreview.value);
     if (
         saved &&
         (isWebPreview.value || saved.setUpdatedAt === currentSet.updatedAt) &&
         saved.questions.length > 0
     ) {
-        const questionIds = new Set(saved.questions.map((question) => question.id));
+        const questionIds = new Set(
+            saved.questions.map((question) => question.id),
+        );
         learnQuestions.value = saved.questions;
         learnAnswersByQuestionId.value = Object.fromEntries(
-            Object.entries(saved.answersByQuestionId).filter(
-                ([questionId]) => questionIds.has(questionId),
+            Object.entries(saved.answersByQuestionId).filter(([questionId]) =>
+                questionIds.has(questionId),
             ),
         );
         const savedIndex = saved.currentQuestionId
@@ -1215,7 +1199,10 @@ function applyPracticeSettings() {
             path: `/set/${currentSet.id}-test`,
             query: {
                 assignment: assignedAssignmentId.value ?? undefined,
-                class: typeof route.query.class === "string" ? route.query.class : undefined,
+                class:
+                    typeof route.query.class === "string"
+                        ? route.query.class
+                        : undefined,
                 types: enabledPracticeQuestionTypes().join(","),
                 count: String(practiceQuestionCount.value),
                 shuffle: practiceShuffle.value ? "1" : "0",
@@ -1267,18 +1254,8 @@ watch(practiceTimed, (enabled) => {
     if (!enabled) clearPracticeTimer();
 });
 
-watch(learnIsFinished, (finished) => {
-    if (!finished || !set.value) return;
-    void completeAssignedAttempt({
-        assignmentId: assignedAssignmentId.value,
-        setId: set.value.id,
-        mode: "practice",
-        scoreEarned: learnCorrectCount.value,
-        scorePossible: learnAttemptedCount.value,
-    });
-});
-
 onMounted(async () => {
+    window.addEventListener("pagehide", onPageHide);
     try {
         if (isWebPreview.value) {
             set.value = createWebPreviewDemoSet(t);
@@ -1299,6 +1276,7 @@ onMounted(async () => {
 
         const settings = await createSettingsRepo(db).get();
         defaultModelId.value = settings.defaultModelId;
+        fallbackModelIds.value = settings.fallbackModelIds;
         learnHybridEnabled.value = settings.learnHybridEnabled;
 
         if (settings.startupLockEnabled && status.requires_unlock) {
@@ -1339,7 +1317,13 @@ onMounted(async () => {
     }
 });
 
+onBeforeRouteLeave(() => {
+    finishClassroomPractice();
+});
+
 onBeforeUnmount(() => {
+    finishClassroomPractice();
+    window.removeEventListener("pagehide", onPageHide);
     cancelPracticeAnswerFeedback();
     clearPracticeTimer();
 });

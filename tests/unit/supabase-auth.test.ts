@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { displayNameFromUser, isGoogleUser } from '../../src/composables/auth/account'
 import { normalizeAuthError, TracerAuthError } from '../../src/composables/auth/errors'
-import { parseStoredSession } from '../../src/composables/auth/session'
+import { isInvalidStoredSessionError, parseStoredSession } from '../../src/composables/auth/session'
 
 describe('Supabase account authentication', () => {
   it('prefers a submitted display name and falls back to provider metadata', () => {
@@ -39,5 +39,11 @@ describe('Supabase account authentication', () => {
     expect(normalizeAuthError({ code: 'already_initialized', message: 'App lock is already initialized' }).code).toBe('local_data_failed')
     expect(normalizeAuthError(new Error('database disk I/O error')).code).toBe('local_data_failed')
     expect(normalizeAuthError(new TracerAuthError('role_failed', 'role setup failed')).code).toBe('role_failed')
+  })
+
+  it('distinguishes stale refresh tokens from connectivity failures', () => {
+    expect(isInvalidStoredSessionError({ code: 'refresh_token_already_used' })).toBe(true)
+    expect(isInvalidStoredSessionError({ code: 'refresh_token_not_found' })).toBe(true)
+    expect(isInvalidStoredSessionError(new Error('Failed to fetch'))).toBe(false)
   })
 })

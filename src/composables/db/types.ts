@@ -59,6 +59,7 @@ export type SetFolder = {
 export type AppSettings = {
   startupLockEnabled: boolean
   defaultModelId: string | null
+  fallbackModelIds: string[]
   darkMode: boolean
   learnHybridEnabled: boolean
   flashcardsDefinitionFirst: boolean

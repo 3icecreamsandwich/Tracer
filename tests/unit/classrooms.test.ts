@@ -22,6 +22,7 @@ const manageClassPageUrl = new URL('../../pages/teacher/classes/[id]/manage.vue'
 const dashboardPageUrl = new URL('../../pages/teacher/index.vue', import.meta.url)
 const assignClassPageUrl = new URL('../../pages/teacher/classes/[id]/assign.vue', import.meta.url)
 const studentClassPageUrl = new URL('../../pages/student/classes/[id].vue', import.meta.url)
+const setPageUrl = new URL('../../pages/set/[id].vue', import.meta.url)
 const detailedClassPageSource = readFileSync(fileURLToPath(detailedClassPageUrl), 'utf8')
 const manageClassPageSource = readFileSync(fileURLToPath(manageClassPageUrl), 'utf8')
 const dashboardPageSource = readFileSync(fileURLToPath(dashboardPageUrl), 'utf8')
@@ -52,6 +53,26 @@ const classroomProgressSql = readFileSync(
 )
 const classroomJoinFixSql = readFileSync(
   fileURLToPath(new URL('../../supabase/migrations/20260823015850_fix_class_join_assignment_recipients.sql', import.meta.url)),
+  'utf8',
+)
+const allowEmptyAttemptsSql = readFileSync(
+  fileURLToPath(new URL('../../supabase/migrations/20260823024230_allow_empty_classroom_attempt_sessions.sql', import.meta.url)),
+  'utf8',
+)
+const matchLeaderboardSql = readFileSync(
+  fileURLToPath(new URL('../../supabase/migrations/20260824013548_assigned_match_leaderboard.sql', import.meta.url)),
+  'utf8',
+)
+const hardenedMatchAttemptSql = readFileSync(
+  fileURLToPath(new URL('../../supabase/migrations/20260824015007_harden_match_attempt_rpc.sql', import.meta.url)),
+  'utf8',
+)
+const matchLeaderboardComponentSource = readFileSync(
+  fileURLToPath(new URL('../../components/MatchLeaderboard.vue', import.meta.url)),
+  'utf8',
+)
+const testModeSource = readFileSync(
+  fileURLToPath(new URL('../../pages/set/[id]-test.vue', import.meta.url)),
   'utf8',
 )
 
@@ -159,6 +180,8 @@ describe('teacher classroom routes', () => {
     expect(studentSource).toContain("t('classroom.recentSets')")
     expect(studentSource).toContain('listClassroomAssignments')
     expect(studentSource).toContain('prepareClassroomAssignmentForStudy')
+    expect(studentSource).toContain('openAssignmentSet')
+    expect(studentSource).toContain('path: `/set/${localSetId}`')
   })
 
   it('records all four scored assigned modes while leaving Chat untracked', () => {
@@ -167,6 +190,10 @@ describe('teacher classroom routes', () => {
       expect(source).toContain('assignedAssignmentId')
     }
     expect(readFileSync(fileURLToPath(studentClassPageUrl), 'utf8')).not.toContain("value: 'chat'")
+    const setPageSource = readFileSync(fileURLToPath(setPageUrl), 'utf8')
+    expect(setPageSource).toContain('finishInlineAssignedMode')
+    expect(setPageSource).toContain('recordInlineAssignedAnswer')
+    expect(setPageSource).toContain("fullscreenModePath('flashcards')")
   })
 
   it('loads teacher routes through the optimized concurrent classroom pipeline', () => {
@@ -187,6 +214,10 @@ describe('teacher classroom routes', () => {
 })
 
 describe('classroom progress migration', () => {
+  it('allows a session with no answers without treating it as zero-percent accuracy', () => {
+    expect(allowEmptyAttemptsSql).toContain('requested_score_possible < 0')
+    expect(allowEmptyAttemptsSql).not.toContain('requested_score_possible <= 0')
+  })
   it('keeps class ownership normalized through assignments and adds the reporting index', () => {
     expect(classroomProgressSql).not.toMatch(/add column if not exists class_id/)
     expect(classroomProgressSql).toContain('attempts_assignment_student_submitted_idx')
@@ -205,6 +236,37 @@ describe('classroom progress migration', () => {
     expect(classroomProgressSql).toMatch(/list_tracer_class_progress[\s\S]*security invoker/)
     expect(classroomProgressSql).toMatch(/teacher_membership\.role = 'teacher'[\s\S]*teacher_membership\.status = 'active'/)
     expect(classroomProgressSql).toMatch(/order by attempt\.submitted_at desc[\s\S]*limit 1/)
+  })
+
+  it('stores precise completed Match results and returns only six best student times', () => {
+    expect(matchLeaderboardSql).toContain('add column if not exists duration_ms integer')
+    expect(matchLeaderboardSql).toContain('add column if not exists completed boolean')
+    expect(matchLeaderboardSql).toMatch(/private\.list_tracer_assignment_match_leaderboard[\s\S]*security definer[\s\S]*set search_path = ''/)
+    expect(matchLeaderboardSql).toMatch(/public\.list_tracer_assignment_match_leaderboard[\s\S]*security invoker[\s\S]*private\.list_tracer_assignment_match_leaderboard/)
+    expect(matchLeaderboardSql).toMatch(/assignment_recipients[\s\S]*recipient\.student_id = current_user_id[\s\S]*membership\.status = 'active'/)
+    expect(matchLeaderboardSql).toMatch(/distinct on \(attempt\.student_id\)[\s\S]*attempt\.completed[\s\S]*limit 6/)
+    expect(matchLeaderboardSql).toContain('from public, anon')
+    expect(matchLeaderboardSql).toContain('to authenticated')
+    expect(hardenedMatchAttemptSql).toMatch(/alter function public\.submit_tracer_assignment_attempt[\s\S]*set schema private/)
+    expect(hardenedMatchAttemptSql).toMatch(/create function public\.submit_tracer_assignment_attempt[\s\S]*security invoker[\s\S]*private\.submit_tracer_assignment_attempt/)
+  })
+
+  it('shows assigned Match leaderboards on both result surfaces with avatar fallbacks', () => {
+    expect(studyModeSources[2]).toContain('<MatchLeaderboard')
+    expect(readFileSync(fileURLToPath(setPageUrl), 'utf8')).toContain('<MatchLeaderboard')
+    expect(matchLeaderboardComponentSource).toContain('entries.slice(0, 6)')
+    expect(matchLeaderboardComponentSource).toContain('initials(entry.displayName)')
+    expect(matchLeaderboardComponentSource).toContain('formatMatchTime(entry.durationMs)')
+  })
+
+  it('renders answered Test progress over a neutral bar from zero to total questions', () => {
+    expect(testModeSource).toContain('role="progressbar"')
+    expect(testModeSource).toContain(':aria-valuenow="answeredCount"')
+    expect(testModeSource).toContain('bg-slate-200')
+    expect(testModeSource).toContain('bg-orange-500')
+    expect(testModeSource).toContain('testProgressPercent')
+    expect(testModeSource).toContain('<span>0</span>')
+    expect(testModeSource).toContain('<span>{{ testQuestions.length }}</span>')
   })
 })
 

@@ -3,7 +3,7 @@ export type OpenAiCompatConfig = {
   modelId: string
 }
 
-export type ProviderApiKeyId = 'openai' | 'anthropic' | 'gemini' | 'openai_compat'
+export type ProviderApiKeyId = 'openai' | 'anthropic' | 'gemini' | 'ollama_cloud' | 'openai_compat'
 
 export type ProviderApiKeyPresence = Record<ProviderApiKeyId, boolean>
 

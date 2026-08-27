@@ -21,6 +21,7 @@ const providerApiKeyKinds: Record<ProviderApiKeyId, AiCredentialKind> = {
   openai: 'openai_api_key',
   anthropic: 'anthropic_api_key',
   gemini: 'gemini_api_key',
+  ollama_cloud: 'ollama_cloud_api_key',
   openai_compat: 'openai_compat_api_key'
 }
 
@@ -29,6 +30,7 @@ export function emptyProviderApiKeyPresence(): ProviderApiKeyPresence {
     openai: false,
     anthropic: false,
     gemini: false,
+    ollama_cloud: false,
     openai_compat: false
   }
 }

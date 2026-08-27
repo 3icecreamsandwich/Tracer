@@ -63,7 +63,7 @@ async function resolveDefaultModel() {
   const db = await useTracerDb()
   const settings = await createSettingsRepo(db).get()
   if (!settings.defaultModelId) throw new Error('Choose a Default AI Model to sync linked folders.')
-  const model = await resolveAiModel(settings.defaultModelId)
+  const model = await resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
   if (!model) throw new Error('The Default AI Model could not be loaded.')
   return { db, model }
 }

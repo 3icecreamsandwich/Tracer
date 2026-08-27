@@ -71,7 +71,9 @@ async function applyMigrations(dbPath: string) {
     '012_flashcard_autosave.sql',
     '013_flashcard_score_autosave.sql',
     '014_practice_autosave.sql',
-    '015_floating_chat.sql'
+    '015_floating_chat.sql',
+    '016_profile_supabase_user.sql',
+    '017_ai_model_fallbacks.sql'
   ]
   const migrations = await Promise.all(
     names.map((name) => readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8'))
@@ -125,6 +127,14 @@ describe('flashcard autosave persistence (sqlite:tracer.db)', () => {
       expect((await settingsRepo.get()).flashcardsDefinitionFirst).toBe(true)
       await settingsRepo.set({ floatingChatEnabled: false })
       expect((await settingsRepo.get()).floatingChatEnabled).toBe(false)
+      await settingsRepo.set({
+        defaultModelId: 'openai:gpt-5.6-terra',
+        fallbackModelIds: ['anthropic:claude-haiku-4-5-20251001', 'gemini:gemini-3.7-flash']
+      })
+      expect(await settingsRepo.get()).toMatchObject({
+        defaultModelId: 'openai:gpt-5.6-terra',
+        fallbackModelIds: ['anthropic:claude-haiku-4-5-20251001', 'gemini:gemini-3.7-flash']
+      })
 
       await db.execute(`DELETE FROM flashcard_sets WHERE id = 'set-1';`)
       expect(await progressRepo.get('set-1')).toBeNull()

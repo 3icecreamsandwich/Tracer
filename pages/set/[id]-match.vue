@@ -73,6 +73,14 @@
                             {{ t("set.backToSet") }}
                         </NuxtLink>
                     </div>
+
+                    <MatchLeaderboard
+                        :assignment-id="assignedAssignmentId"
+                        :entries="matchLeaderboard"
+                        :loading="matchLeaderboardLoading"
+                        :error="matchLeaderboardError"
+                        @retry="loadMatchLeaderboard"
+                    />
                 </div>
             </div>
 
@@ -182,6 +190,11 @@ import {
     completeAssignedAttempt,
     parseAssignedAssignmentId,
 } from "~/src/composables/assignment-progress";
+import {
+    listAssignedMatchLeaderboard,
+    type AssignedMatchLeaderboardEntry,
+} from "~/src/composables/classrooms";
+import { createRandomSeed } from "~/src/composables/random";
 
 const route = useRoute();
 const router = useRouter();
@@ -216,7 +229,57 @@ const matchSelectedTileIds = ref<string[]>([]);
 const matchMatchedPairIds = ref<Set<Uuid>>(new Set());
 const matchAttemptsCount = ref(0);
 const matchCorrectAttemptsCount = ref(0);
+const matchLeaderboard = ref<AssignedMatchLeaderboardEntry[]>([]);
+const matchLeaderboardLoading = ref(false);
+const matchLeaderboardError = ref(false);
+let assignedMatchActive = false;
 const matchMemoryMode = ref(false);
+
+function beginClassroomMatch() {
+    if (!set.value || !assignedAssignmentId.value) return;
+    assignedMatchActive = true;
+    beginAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "match",
+    });
+}
+
+async function loadMatchLeaderboard() {
+    const assignmentId = assignedAssignmentId.value;
+    if (!assignmentId) return;
+    matchLeaderboardLoading.value = true;
+    matchLeaderboardError.value = false;
+    try {
+        matchLeaderboard.value = await listAssignedMatchLeaderboard(assignmentId);
+    } catch {
+        matchLeaderboardError.value = true;
+    } finally {
+        matchLeaderboardLoading.value = false;
+    }
+}
+
+async function finishClassroomMatch(completed = false) {
+    if (!assignedMatchActive || !set.value) return;
+    assignedMatchActive = false;
+    const durationMs = matchStartedAtMs.value === null
+        ? matchElapsedTimeMs.value
+        : Math.max(0, Date.now() - matchStartedAtMs.value);
+    await completeAssignedAttempt({
+        assignmentId: assignedAssignmentId.value,
+        setId: set.value.id,
+        mode: "match",
+        scoreEarned: matchCorrectAttemptsCount.value,
+        scorePossible: matchAttemptsCount.value,
+        durationMs,
+        completed,
+    });
+    if (completed) await loadMatchLeaderboard();
+}
+
+function onPageHide() {
+    finishClassroomMatch();
+}
 
 const baseSeed = computed(() => {
     const raw = route.query.seed;
@@ -225,30 +288,10 @@ const baseSeed = computed(() => {
     return Number.isFinite(n) ? n : null;
 });
 
-function getRandomSeed() {
-    try {
-        const buf = new Uint32Array(1);
-        (globalThis.crypto as Crypto | undefined)?.getRandomValues?.(buf);
-        const v = Number(buf[0] ?? 0);
-        if (Number.isFinite(v) && v !== 0) return v;
-    } catch {}
-    return Date.now() ^ Math.floor(Math.random() * 0xffffffff);
-}
-
-function makePrng(seed: number) {
-    let x = seed | 0 || 1;
-    return () => {
-        x ^= x << 13;
-        x ^= x >>> 17;
-        x ^= x << 5;
-        return (x >>> 0) / 4294967296;
-    };
-}
-
 function matchSeed() {
     const s = baseSeed.value;
     if (s !== null) return s + matchRunCounter.value;
-    return getRandomSeed() ^ (matchRunCounter.value * 2654435761);
+    return createRandomSeed() ^ (matchRunCounter.value * 2654435761);
 }
 
 function clearMatchTimer() {
@@ -274,15 +317,7 @@ function matchStop(reason: "completed" | "timeout") {
 
     matchSelectedTileIds.value = [];
     matchBusy.value = false;
-    if (set.value) {
-        void completeAssignedAttempt({
-            assignmentId: assignedAssignmentId.value,
-            setId: set.value.id,
-            mode: "match",
-            scoreEarned: matchCorrectAttemptsCount.value,
-            scorePossible: Math.max(matchAttemptsCount.value, 1),
-        });
-    }
+    void finishClassroomMatch(reason === "completed");
 }
 
 function startMatchTimer() {
@@ -335,15 +370,12 @@ function startMatch() {
     }
     matchStartedAtMs.value = Date.now();
     matchElapsedTimeMs.value = 0;
-    beginAssignedAttempt({
-        assignmentId: assignedAssignmentId.value,
-        setId: s.id,
-        mode: "match",
-    });
+    beginClassroomMatch();
     startMatchTimer();
 }
 
 function restartMatchRun() {
+    void finishClassroomMatch(false);
     matchRunCounter.value += 1;
     resetMatchStateForRun();
     if (set.value) matchPrepareTiles(set.value);
@@ -504,6 +536,7 @@ watch(language, () => {
 });
 
 onMounted(async () => {
+    window.addEventListener("pagehide", onPageHide);
     try {
         if (isWebPreview.value) {
             set.value = createWebPreviewDemoSet(t, { termCount: 4 });
@@ -572,7 +605,13 @@ onMounted(async () => {
     }
 });
 
+onBeforeRouteLeave(() => {
+    finishClassroomMatch();
+});
+
 onBeforeUnmount(() => {
+    finishClassroomMatch();
+    window.removeEventListener("pagehide", onPageHide);
     resetMatchStateForRun();
     matchMemoryMode.value = false;
     document.removeEventListener("pointerdown", onDocumentMatchPointerDown);
