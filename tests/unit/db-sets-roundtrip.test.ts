@@ -88,6 +88,8 @@ describe('sets repo roundtrip (sqlite:tracer.db)', () => {
       const db = createSqliteCliDb(dbPath)
 
       const { createSetsRepo } = await import('../../src/composables/db/repos/sets.repo')
+      const { createStudyGuidesRepo } = await import('../../src/composables/db/repos/study-guides.repo')
+      const { restoreAssignmentStudyGuide } = await import('../../src/composables/classrooms')
       const repo = createSetsRepo(db)
 
       const setId = '00000000-0000-4000-8000-000000000123'
@@ -145,10 +147,13 @@ describe('sets repo roundtrip (sqlite:tracer.db)', () => {
         `INSERT INTO starred_terms (set_id, term_id) VALUES (?, ?);`,
         [setId, '00000000-0000-4000-8000-000000000001']
       )
-      await db.execute(
-        `INSERT INTO study_guides (id, set_id, markdown) VALUES (?, ?, ?);`,
-        ['guide-1', setId, '# Guide']
-      )
+      await restoreAssignmentStudyGuide(db, setId, { markdown: '# Guide' })
+      await restoreAssignmentStudyGuide(db, setId, { markdown: '# Updated guide' })
+      expect(await createStudyGuidesRepo(db).getBySetId(setId)).toMatchObject({
+        id: setId,
+        setId,
+        markdown: '# Updated guide'
+      })
 
       await repo.delete(setId)
 

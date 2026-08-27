@@ -3,8 +3,8 @@ import type { PostgrestError, Session } from '@supabase/supabase-js'
 import type { AccountRole } from './auth/account'
 import { getSupabaseClient, isSupabaseConfigured } from './auth/client'
 import { restoreAuthSession } from './auth/session'
-import { createSetsRepo, useTracerDb } from './db'
-import type { FlashcardSet, StudyGuide, Term, TermImage } from './db/types'
+import { createSetsRepo, createStudyGuidesRepo, useTracerDb } from './db'
+import type { DbClient, FlashcardSet, StudyGuide, Term, TermImage, Uuid } from './db/types'
 import { createAsyncRequestCache } from './request-cache'
 
 const ROLE_CACHE_STORAGE_KEY = 'tracer:supabase-account-role'
@@ -181,6 +181,11 @@ type AssignmentSnapshot = {
   iconKey?: unknown
   iconTone?: unknown
   terms?: unknown
+  studyGuide?: unknown
+}
+
+export type AssignmentStudyGuideSnapshot = {
+  markdown: string
 }
 
 type ProgressRpcRow = {
@@ -310,6 +315,43 @@ export function mapAssignmentSettings(value: unknown): Pick<ClassroomAssignment,
       ? Math.max(0, Math.floor(settings.card_count))
       : 0,
   }
+}
+
+export function parseAssignmentStudyGuideSnapshot(
+  kind: ClassroomAssignment['kind'],
+  snapshot: { studyGuide?: unknown },
+): AssignmentStudyGuideSnapshot | null {
+  if (kind !== 'study-guide') return null
+  const guide = snapshot.studyGuide && typeof snapshot.studyGuide === 'object'
+    ? snapshot.studyGuide as { markdown?: unknown }
+    : null
+  if (!guide || typeof guide.markdown !== 'string') {
+    throw new ClassroomError('invalid_input', 'The assigned study guide snapshot was invalid')
+  }
+  return { markdown: guide.markdown }
+}
+
+export function classroomAssignmentMaterialPath(
+  kind: ClassroomAssignment['kind'],
+  localSetId: string,
+): string {
+  return kind === 'study-guide'
+    ? `/study-guide/${localSetId}`
+    : `/set/${localSetId}`
+}
+
+export async function restoreAssignmentStudyGuide(
+  db: DbClient,
+  localSetId: Uuid,
+  guide: AssignmentStudyGuideSnapshot,
+): Promise<void> {
+  const repo = createStudyGuidesRepo(db)
+  const existing = await repo.getBySetId(localSetId)
+  if (existing) {
+    await repo.update({ id: existing.id, markdown: guide.markdown })
+    return
+  }
+  await repo.create({ id: localSetId, setId: localSetId, markdown: guide.markdown })
 }
 
 export function parseCachedAccountRole(value: string | null, userId: string | null | undefined): AccountRole | null {
@@ -664,6 +706,7 @@ export async function prepareClassroomAssignmentForStudy(assignment: ClassroomAs
   if (!snapshot || snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.terms)) {
     throw new ClassroomError('invalid_input', 'The assigned set snapshot was invalid')
   }
+  const studyGuide = parseAssignmentStudyGuideSnapshot(assignment.kind, snapshot)
 
   const terms: Term[] = await Promise.all(snapshot.terms.map(async (raw, index) => {
     const term = raw && typeof raw === 'object' ? raw as SnapshotTerm : {}
@@ -680,7 +723,7 @@ export async function prepareClassroomAssignmentForStudy(assignment: ClassroomAs
   }))
 
   const db = await useTracerDb()
-  const repo = createSetsRepo(db)
+  const setsRepo = createSetsRepo(db)
   const localSet = {
     id: row.id,
     title: typeof snapshot.title === 'string' ? snapshot.title : assignment.setTitle,
@@ -689,9 +732,10 @@ export async function prepareClassroomAssignmentForStudy(assignment: ClassroomAs
     iconTone: typeof snapshot.iconTone === 'string' ? snapshot.iconTone : assignment.iconTone,
     terms,
   }
-  const existing = await repo.get(row.id)
-  if (existing) await repo.update(localSet)
-  else await repo.create(localSet)
+  const existing = await setsRepo.get(row.id)
+  if (existing) await setsRepo.update(localSet)
+  else await setsRepo.create(localSet)
+  if (studyGuide) await restoreAssignmentStudyGuide(db, row.id, studyGuide)
   await Promise.all([
     db.execute('DELETE FROM flashcard_progress WHERE set_id = ?', [row.id]),
     db.execute('DELETE FROM practice_progress WHERE set_id = ?', [row.id]),

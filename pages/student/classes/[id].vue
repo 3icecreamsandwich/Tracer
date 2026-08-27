@@ -32,7 +32,7 @@
                   type="button"
                   class="flex min-w-0 flex-1 items-center gap-5 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-4 dark:focus-visible:ring-offset-slate-950"
                   :disabled="openingAssignmentId === assignment.id"
-                  @click="openAssignmentSet(assignment)"
+                  @click="openAssignmentMaterial(assignment)"
                 >
                   <img :src="setIconSrc(assignment.iconKey)" :style="setIconToneStyle(assignment.iconTone)" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
                   <span class="min-w-0 flex-1">
@@ -44,7 +44,7 @@
                     <span v-if="assignment.description" class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">{{ assignment.description }}</span>
                   </span>
                 </button>
-                <div class="flex flex-wrap gap-2">
+                <div v-if="assignment.kind === 'set'" class="flex flex-wrap gap-2">
                   <AppButton
                     v-for="mode in studyModes"
                     :key="mode.value"
@@ -71,6 +71,7 @@
 <script setup lang="ts">
 import {
   classroomErrorKey,
+  classroomAssignmentMaterialPath,
   getAccountRole,
   getClassroom,
   listClassroomAssignments,
@@ -158,7 +159,7 @@ async function openAssignment(assignment: ClassroomAssignment, mode: ClassroomAt
   }
 }
 
-async function openAssignmentSet(assignment: ClassroomAssignment) {
+async function openAssignmentMaterial(assignment: ClassroomAssignment) {
   if (openingAssignmentId.value) return
   openingAssignmentId.value = assignment.id
   assignmentErrorId.value = null
@@ -166,7 +167,7 @@ async function openAssignmentSet(assignment: ClassroomAssignment) {
   try {
     const localSetId = await prepareClassroomAssignmentForStudy(assignment)
     await router.push({
-      path: `/set/${localSetId}`,
+      path: classroomAssignmentMaterialPath(assignment.kind, localSetId),
       query: { assignment: assignment.id, class: classId.value },
     })
   } catch (error) {
