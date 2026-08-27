@@ -4,10 +4,12 @@ import { describe, expect, it } from 'vitest'
 
 import {
   ClassroomError,
+  classroomAssignmentMaterialPath,
   classroomErrorKey,
   mapAssignmentSettings,
   mapClassroomRow,
   normalizeClassCode,
+  parseAssignmentStudyGuideSnapshot,
   parseCachedAccountRole,
   summarizeClassProgress,
   summarizeStudentProgress,
@@ -122,6 +124,21 @@ describe('classroom data mapping', () => {
     expect(mapAssignmentSettings(null)).toEqual({ kind: 'set', iconKey: null, iconTone: null, cardCount: 0 })
   })
 
+  it('validates assigned study-guide snapshots without requiring guide data for sets', () => {
+    expect(parseAssignmentStudyGuideSnapshot('set', { studyGuide: null })).toBeNull()
+    expect(parseAssignmentStudyGuideSnapshot('study-guide', {
+      studyGuide: { id: 'guide-1', markdown: '# Assigned guide' },
+    })).toEqual({ markdown: '# Assigned guide' })
+    expect(() => parseAssignmentStudyGuideSnapshot('study-guide', { studyGuide: null }))
+      .toThrow('The assigned study guide snapshot was invalid')
+  })
+
+  it('opens each classroom assignment at its material route', () => {
+    expect(classroomAssignmentMaterialPath('set', 'version-1')).toBe('/set/version-1')
+    expect(classroomAssignmentMaterialPath('study-guide', 'version-2'))
+      .toBe('/study-guide/version-2')
+  })
+
   it('summarizes latest assignment scores without counting missing attempts', () => {
     const rows = [
       { studentId: 'one', displayName: 'One', assignmentId: 'a', assignmentTitle: 'A', attemptId: 'x', mode: 'test' as const, scoreEarned: 8, scorePossible: 10, accuracyPercent: 80, submittedAt: '2026-08-20T10:00:00Z', durationSeconds: 60, attemptCount: 2, bestAccuracyPercent: 90 },
@@ -180,8 +197,10 @@ describe('teacher classroom routes', () => {
     expect(studentSource).toContain("t('classroom.recentSets')")
     expect(studentSource).toContain('listClassroomAssignments')
     expect(studentSource).toContain('prepareClassroomAssignmentForStudy')
-    expect(studentSource).toContain('openAssignmentSet')
-    expect(studentSource).toContain('path: `/set/${localSetId}`')
+    expect(studentSource).toContain('openAssignmentMaterial')
+    expect(studentSource).toContain('classroomAssignmentMaterialPath(assignment.kind, localSetId)')
+    expect(studentSource).toContain('v-if="assignment.kind === \'set\'"')
+    expect(classroomComposableSource).toContain('restoreAssignmentStudyGuide(db, row.id, studyGuide)')
   })
 
   it('records all four scored assigned modes while leaving Chat untracked', () => {
