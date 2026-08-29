@@ -419,6 +419,7 @@ import {
   getCachedAccountRole,
   getAccountRole,
   joinClassroom,
+  listClassroomAssignmentSetVersionIds,
   listClassrooms,
   type Classroom,
 } from '../src/composables/classrooms'
@@ -798,12 +799,23 @@ async function loadClassroomData() {
   classroomBusy.value = true
   classroomError.value = null
   try {
-    const [nextRole, nextClassrooms] = await Promise.all([
+    const [nextRole, nextClassrooms, assignedSetVersionIds] = await Promise.all([
       getAccountRole(),
       listClassrooms(),
+      listClassroomAssignmentSetVersionIds(),
     ])
     accountRole.value = nextRole
     classrooms.value = nextClassrooms
+    if (assignedSetVersionIds.length > 0) {
+      const hiddenIds = new Set(assignedSetVersionIds)
+      const db = await useTracerDb()
+      await createSetsRepo(db).hideManyFromLibrary(assignedSetVersionIds as Uuid[])
+      items.value = items.value.filter((item) =>
+        item.kind === 'set'
+          ? !hiddenIds.has(item.id)
+          : !item.setId || !hiddenIds.has(item.setId)
+      )
+    }
   } catch (error) {
     if (error instanceof ClassroomError && ['signed_out', 'forbidden', 'not_configured'].includes(error.code)) {
       accountRole.value = null
@@ -1387,7 +1399,8 @@ onMounted(async () => {
     const settings = await createSettingsRepo(db).get()
     if (settings.startupLockEnabled && status.requires_unlock) {
       if (unlockedThisSession.value) {
-        await Promise.all([loadHomeList(), loadClassroomData()])
+        await loadHomeList()
+        await loadClassroomData()
         return
       }
       markLocked()
@@ -1397,11 +1410,13 @@ onMounted(async () => {
 
     if (status.can_auto_unlock) {
       markUnlocked()
-      await Promise.all([loadHomeList(), loadClassroomData()])
+      await loadHomeList()
+      await loadClassroomData()
       return
     }
 
-    await Promise.all([loadHomeList(), loadClassroomData()])
+    await loadHomeList()
+    await loadClassroomData()
   } catch {
     loadError.value = 'Failed to load sets and study guides.'
     busy.value = false

@@ -33,3 +33,7 @@ Thumbs.db
 .sisyphus/
 notes.md
 ./.agentinstruct/
+
+/tracer-screenshots
+/test-results
+/.omo

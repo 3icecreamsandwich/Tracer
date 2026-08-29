@@ -1397,6 +1397,11 @@ async function onSaveProviderSecret(id: ProviderApiKeyId) {
         : undefined
     })
     markProviderApiKeysPresent(result.savedApiKeyIds)
+    if (result.savedApiKeyIds.length > 0) {
+      const settings = await createSettingsRepo(await useTracerDb()).get()
+      defaultModelId.value = settings.defaultModelId
+      fallbackModelIds.value = settings.fallbackModelIds
+    }
     if (result.savedOpenAiCompatConfig) {
       savedOpenAiCompatConfig.value = nextOpenAiCompatConfig
     }
@@ -1517,6 +1522,9 @@ onMounted(() => {
         accountEmail.value = account?.identity.email ?? p.email
         accountOnline.value = account?.online ?? false
         accountSignedOut.value = account === null
+        const syncedSettings = await createSettingsRepo(db).get()
+        defaultModelId.value = syncedSettings.defaultModelId
+        fallbackModelIds.value = syncedSettings.fallbackModelIds
       } catch {
         accountEmail.value = p.email
         accountOnline.value = false

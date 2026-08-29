@@ -226,6 +226,7 @@ import {
 } from '../src/composables/auth'
 import { createProfileRepo, createSettingsRepo, useTracerDb } from '../src/composables/db'
 import { lockFirstRunSetDeviceKey, lockFirstRunSetPassword, lockGetStatus, lockResetTracer } from '../src/composables/lock'
+import { syncCloudProviderApiKeysToDevice } from '../src/composables/ai/cloud-provider-keys'
 import { useLockSession } from '../src/composables/lock-session'
 import { useAppLanguage } from '../src/composables/language'
 import { hasTauriRuntime } from '../src/composables/tauri'
@@ -412,6 +413,11 @@ async function onLocalSetup() {
     if (pendingSignupRole.value) await initializeUserRole(pendingSignupRole.value)
     await saveAuthenticatedLocalProfile({ session: activeSession.value, ...prepared })
     await persistAuthSession(activeSession.value)
+    try {
+      await syncCloudProviderApiKeysToDevice()
+    } catch {
+      console.error('[Tracer auth] Could not restore cloud provider API keys')
+    }
     localPassword.value = ''; localConfirm.value = ''; pendingEmailPassword.value = ''
     markUnlocked()
     await router.replace('/')

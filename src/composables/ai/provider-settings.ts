@@ -9,6 +9,11 @@ import {
   type ProviderApiKeyPresence,
   type ProviderSettingsSaveResult
 } from './credentials'
+import {
+  deleteProviderApiKeyFromCloud,
+  saveProviderApiKeysToCloud,
+} from './cloud-provider-keys'
+import { ensureProviderDefaultModels } from './provider-model-defaults'
 
 export type {
   ProviderApiKeyDrafts,
@@ -56,12 +61,18 @@ export async function saveProviderApiKeyDrafts(
   if (Object.keys(apiKeys).length === 0 && !options?.openAiCompatConfig) {
     return { savedApiKeyIds: [], savedOpenAiCompatConfig: false }
   }
-  return await aiProviderSettingsSave({
+  const result = await aiProviderSettingsSave({
     apiKeys,
     openAiCompatConfig: options?.openAiCompatConfig
   })
+  await ensureProviderDefaultModels(result.savedApiKeyIds, {
+    openAiCompatModelId: options?.openAiCompatConfig?.modelId,
+  })
+  if (Object.keys(apiKeys).length > 0) await saveProviderApiKeysToCloud(apiKeys)
+  return result
 }
 
 export async function clearProviderApiKey(id: ProviderApiKeyId): Promise<void> {
+  await deleteProviderApiKeyFromCloud(id)
   await aiSecretsDelete(providerApiKeyKinds[id])
 }

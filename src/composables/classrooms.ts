@@ -533,6 +533,18 @@ export async function listClassroomAssignments(classId: string): Promise<Classro
   })
 }
 
+export async function listClassroomAssignmentSetVersionIds(): Promise<string[]> {
+  const session = await requireOnlineSession()
+  return classroomRequests.get(userCacheKey(session.user.id, 'assignment-set-version-ids'), async () => {
+    const { data, error } = await getSupabaseClient()
+      .from('assignments')
+      .select('set_version_id')
+      .eq('status', 'published')
+    if (error) throw errorFromPostgrest(error)
+    return [...new Set((data ?? []).map((row) => row.set_version_id))]
+  })
+}
+
 function optionalNumber(value: number | string | null): number | null {
   if (value === null) return null
   const parsed = Number(value)
@@ -735,6 +747,7 @@ export async function prepareClassroomAssignmentForStudy(assignment: ClassroomAs
   const existing = await setsRepo.get(row.id)
   if (existing) await setsRepo.update(localSet)
   else await setsRepo.create(localSet)
+  await setsRepo.hideFromLibrary(row.id)
   if (studyGuide) await restoreAssignmentStudyGuide(db, row.id, studyGuide)
   await Promise.all([
     db.execute('DELETE FROM flashcard_progress WHERE set_id = ?', [row.id]),

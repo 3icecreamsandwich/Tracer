@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import type { Session, User } from '@supabase/supabase-js'
 
 import { hasTauriRuntime } from '../tauri'
+import { syncCloudProviderApiKeysToDevice } from '../ai/cloud-provider-keys'
 import { clearSupabaseMemorySession, getSupabaseClient } from './client'
 import { normalizeAuthError } from './errors'
 
@@ -94,6 +95,11 @@ async function runRestoreAuthSession(): Promise<RestoredAuthSession | null> {
       // The refreshed session is already usable in memory. Do not misreport a
       // keychain write problem as lost connectivity for the current launch.
       console.error('[Tracer auth] Could not persist refreshed session')
+    }
+    try {
+      await syncCloudProviderApiKeysToDevice()
+    } catch {
+      console.error('[Tracer auth] Could not restore cloud provider API keys')
     }
     return { identity: identityFromUser(data.session.user), online: true }
   } catch (error) {

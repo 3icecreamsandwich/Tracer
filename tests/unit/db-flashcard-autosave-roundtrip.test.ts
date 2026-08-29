@@ -73,7 +73,8 @@ async function applyMigrations(dbPath: string) {
     '014_practice_autosave.sql',
     '015_floating_chat.sql',
     '016_profile_supabase_user.sql',
-    '017_ai_model_fallbacks.sql'
+    '017_ai_model_fallbacks.sql',
+    '018_hide_assigned_set_copies.sql'
   ]
   const migrations = await Promise.all(
     names.map((name) => readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8'))

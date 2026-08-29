@@ -72,6 +72,7 @@ export function createSetsRepo(db: DbClient) {
       const rows = await db.select<DbSetListRow>(
         `SELECT id, folder_id, title, description, icon_key, icon_tone, terms_json, created_at, updated_at
          FROM flashcard_sets
+         WHERE hidden_from_library = 0
          ORDER BY updated_at DESC, created_at DESC;`
       )
       return rows.map(rowToSetListItem)
@@ -145,6 +146,22 @@ export function createSetsRepo(db: DbClient) {
 
     async delete(id: Uuid): Promise<void> {
       await db.execute(`DELETE FROM flashcard_sets WHERE id = ?;`, [id])
+    },
+
+    async hideFromLibrary(id: Uuid): Promise<void> {
+      await db.execute(
+        `UPDATE flashcard_sets SET hidden_from_library = 1 WHERE id = ?;`,
+        [id]
+      )
+    },
+
+    async hideManyFromLibrary(ids: Uuid[]): Promise<void> {
+      if (ids.length === 0) return
+      const placeholders = ids.map(() => '?').join(', ')
+      await db.execute(
+        `UPDATE flashcard_sets SET hidden_from_library = 1 WHERE id IN (${placeholders});`,
+        ids
+      )
     }
   }
 }
