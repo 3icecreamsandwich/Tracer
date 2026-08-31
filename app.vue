@@ -12,6 +12,11 @@ import { floatingChatInitFromDb } from '~/src/composables/floating-chat'
 import { useLockSession } from '~/src/composables/lock-session'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 import {
+  initializeConnectionStatuses,
+  installConnectionStatusListeners,
+  uninstallConnectionStatusListeners,
+} from '~/src/composables/connection-status'
+import {
   startLinkedFolderSyncManager,
   stopLinkedFolderSyncManager
 } from '~/src/composables/generate/linked-folders'
@@ -19,20 +24,28 @@ import {
 const { unlockedThisSession } = useLockSession()
 
 onMounted(() => {
+  installConnectionStatusListeners()
   themeInitFromDb().catch(() => {})
   languageInit().catch(() => {})
   textScaleInit().catch(() => {})
   floatingChatInitFromDb().catch(() => {})
   if (hasTauriRuntime() && unlockedThisSession.value) {
     startLinkedFolderSyncManager().catch(() => {})
+    initializeConnectionStatuses().catch(() => {})
   }
 })
 
 watch(unlockedThisSession, (unlocked) => {
   if (!hasTauriRuntime()) return
-  if (unlocked) startLinkedFolderSyncManager().catch(() => {})
+  if (unlocked) {
+    startLinkedFolderSyncManager().catch(() => {})
+    initializeConnectionStatuses().catch(() => {})
+  }
   else stopLinkedFolderSyncManager()
 })
 
-onBeforeUnmount(stopLinkedFolderSyncManager)
+onBeforeUnmount(() => {
+  stopLinkedFolderSyncManager()
+  uninstallConnectionStatusListeners()
+})
 </script>

@@ -13,6 +13,11 @@ import {
   VaultSecretError,
   type OpenAiCompatConfig
 } from '../credentials'
+import {
+  setGithubConnectionState,
+  setOpenAiCompatConnectionConfig,
+  setProviderApiKeyPresence,
+} from '../../connection-status'
 
 export function mapVaultError(e: unknown): AiRegistryError {
   if (e instanceof VaultSecretError) {
@@ -46,6 +51,11 @@ export async function requireSecret(providerId: AiProviderId, kind: AiCredential
     throw mapVaultError(e)
   }
   if (!value) {
+    if (providerId === 'github') {
+      setGithubConnectionState({ status: 'unauthenticated' })
+    } else if (providerId === 'openai' || providerId === 'anthropic' || providerId === 'gemini' || providerId === 'ollama_cloud' || providerId === 'openai_compat') {
+      setProviderApiKeyPresence(providerId, false)
+    }
     throw new MissingAiCredentialError(
       providerId,
       kind,
@@ -61,6 +71,7 @@ export async function markInvalidIfUnauthorized(providerId: AiProviderId, e: unk
   if (status !== 401 && status !== 403) return
   try {
     await aiSecretsSet('github_models_token', '')
+    setGithubConnectionState({ status: 'invalid' })
   } catch {
   }
 }
@@ -73,6 +84,7 @@ export async function requireOpenAiCompatConfig(): Promise<OpenAiCompatConfig> {
     throw mapVaultError(e)
   }
   if (!cfg) {
+    setOpenAiCompatConnectionConfig({ baseURL: '', modelId: '' })
     throw new AiRegistryError(
       'missing_provider_config',
       'OpenAI compatible provider is not configured. Configure it in Settings.',

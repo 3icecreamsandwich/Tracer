@@ -15,8 +15,28 @@ export type StoredAuthSession = {
 
 export type AuthIdentity = StoredAuthSession['user']
 export type RestoredAuthSession = { identity: AuthIdentity; online: boolean }
+export type RestoreAuthSessionOptions = { waitForProviderKeySync?: boolean }
 
 let restoreSessionRequest: Promise<RestoredAuthSession | null> | null = null
+let providerKeySyncRequest: Promise<void> | null = null
+
+function startProviderKeySync(): Promise<void> {
+  if (providerKeySyncRequest) return providerKeySyncRequest
+  const request = syncCloudProviderApiKeysToDevice()
+    .then(() => undefined)
+    .catch(() => {
+      console.error('[Tracer auth] Could not restore cloud provider API keys')
+    })
+    .finally(() => {
+      if (providerKeySyncRequest === request) providerKeySyncRequest = null
+    })
+  providerKeySyncRequest = request
+  return request
+}
+
+export async function waitForProviderKeySync(): Promise<void> {
+  await providerKeySyncRequest
+}
 
 export function isInvalidStoredSessionError(error: unknown): boolean {
   if (typeof error !== 'object' || error === null) return false
@@ -96,11 +116,7 @@ async function runRestoreAuthSession(): Promise<RestoredAuthSession | null> {
       // keychain write problem as lost connectivity for the current launch.
       console.error('[Tracer auth] Could not persist refreshed session')
     }
-    try {
-      await syncCloudProviderApiKeysToDevice()
-    } catch {
-      console.error('[Tracer auth] Could not restore cloud provider API keys')
-    }
+    startProviderKeySync()
     return { identity: identityFromUser(data.session.user), online: true }
   } catch (error) {
     if (normalizeAuthError(error).code === 'network') {
@@ -117,13 +133,20 @@ async function runRestoreAuthSession(): Promise<RestoredAuthSession | null> {
   }
 }
 
-export async function restoreAuthSession(): Promise<RestoredAuthSession | null> {
-  if (restoreSessionRequest) return restoreSessionRequest
-  const request = runRestoreAuthSession().finally(() => {
-    if (restoreSessionRequest === request) restoreSessionRequest = null
-  })
-  restoreSessionRequest = request
-  return request
+export async function restoreAuthSession(
+  options: RestoreAuthSessionOptions = {}
+): Promise<RestoredAuthSession | null> {
+  if (!restoreSessionRequest) {
+    const request = runRestoreAuthSession().finally(() => {
+      if (restoreSessionRequest === request) restoreSessionRequest = null
+    })
+    restoreSessionRequest = request
+  }
+  const restored = await restoreSessionRequest
+  if (restored?.online && options.waitForProviderKeySync !== false) {
+    await waitForProviderKeySync()
+  }
+  return restored
 }
 
 export async function clearAuthSession(options: { remote?: boolean } = {}): Promise<void> {

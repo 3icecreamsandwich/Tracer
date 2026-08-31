@@ -57,13 +57,18 @@ export function normalizeCloudProviderApiKeyRows(rows: CloudProviderApiKeyRow[])
 }
 
 export async function syncCloudProviderApiKeysToDevice(): Promise<ProviderApiKeyId[]> {
-  const cloudKeys = await loadProviderApiKeysFromCloud()
+  const [cloudKeys, localKeyValues] = await Promise.all([
+    loadProviderApiKeysFromCloud(),
+    Promise.all(providerApiKeyIds.map(async (id) => ({
+      id,
+      value: (await aiSecretsGet(providerApiKeyCredentialKinds[id]))?.trim() ?? '',
+    }))),
+  ])
   if (!cloudKeys) return []
 
   const localOnlyKeys: ProviderApiKeyDrafts = {}
   const newlyRestoredProviderIds: ProviderApiKeyId[] = []
-  for (const id of providerApiKeyIds) {
-    const value = (await aiSecretsGet(providerApiKeyCredentialKinds[id]))?.trim() ?? ''
+  for (const { id, value } of localKeyValues) {
     if (cloudKeys[id]) {
       if (!value) newlyRestoredProviderIds.push(id)
       continue

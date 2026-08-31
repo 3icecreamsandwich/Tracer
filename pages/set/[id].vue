@@ -3075,7 +3075,7 @@ function onDocumentMatchPointerDown(event: PointerEvent) {
 function learnSeed() {
     const s = baseSeed.value;
     if (s !== null) return s + learnRunCounter.value;
-    return getRandomSeed() ^ (learnRunCounter.value * 2654435761);
+    return createRandomSeed() ^ (learnRunCounter.value * 2654435761);
 }
 
 const learnAttemptedCount = computed(

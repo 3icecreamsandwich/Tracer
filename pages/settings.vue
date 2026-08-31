@@ -56,15 +56,21 @@
           <div>
             <h2 class="text-sm font-medium">{{ t('settings.account') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ accountEmail || profile?.email }}</p>
-            <p class="mt-1 text-xs" :class="accountOnline ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'">
+            <span
+              v-if="accountConnectionPending"
+              class="mt-1 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-700 dark:border-t-slate-200"
+              role="status"
+              :aria-label="t('common.loading')"
+            />
+            <p v-else class="mt-1 text-xs" :class="accountOnline ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'">
               {{ accountSignedOut ? t('settings.accountSignedOut') : accountOnline ? t('settings.accountOnline') : t('settings.accountOffline') }}
             </p>
           </div>
           <div class="flex gap-2">
-            <button type="button" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900" :disabled="busy || isWebPreview" @click="onReconnectAccount">
+            <button type="button" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900" :disabled="busy || accountConnectionPending || isWebPreview" @click="onReconnectAccount">
               {{ t('settings.reconnect') }}
             </button>
-            <button type="button" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900" :disabled="busy || isWebPreview || accountSignedOut" @click="onAccountSignOut">
+            <button type="button" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900" :disabled="busy || accountConnectionPending || isWebPreview || accountSignedOut" @click="onAccountSignOut">
               {{ t('common.signOut') }}
             </button>
           </div>
@@ -210,7 +216,13 @@
                   {{ index === 0 ? 'Primary' : `Fallback ${index}` }}
                 </span>
               </div>
-              <p class="mt-1 text-xs" :class="modelConnectionReady(modelId) ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'">
+              <span
+                v-if="modelConnectionPending(modelId)"
+                class="mt-1 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-700 dark:border-t-slate-200"
+                role="status"
+                :aria-label="t('common.loading')"
+              />
+              <p v-else class="mt-1 text-xs" :class="modelConnectionReady(modelId) ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'">
                 {{ modelConnectionReady(modelId) ? 'Ready' : 'Connection required' }}
               </p>
             </div>
@@ -813,16 +825,12 @@ import {
 import { useLockSession } from '../src/composables/lock-session'
 import { themeSetDarkMode } from '../src/composables/theme'
 import {
-  aiOpenAiCompatGetConfig,
   type OpenAiCompatConfig
 } from '../src/composables/ai/credentials'
 import {
   clearProviderApiKey,
-  emptyProviderApiKeyPresence,
-  loadProviderApiKeyPresence,
   saveProviderApiKeyDrafts,
-  type ProviderApiKeyId,
-  type ProviderApiKeyPresence
+  type ProviderApiKeyId
 } from '../src/composables/ai/provider-settings'
 import { aiRegistryCatalog } from '../src/composables/ai/registry'
 import { useGithubModelsAuth } from '../src/composables/ai/github-models-auth'
@@ -840,9 +848,18 @@ import {
   identityFromUser,
   persistAuthSession,
   prepareAuthenticatedProfile,
-  restoreAuthSession,
   signInWithGoogle
 } from '../src/composables/auth'
+import {
+  initializeConnectionStatuses,
+  refreshNetworkConnectionStatuses,
+  resetConnectionStatusCache,
+  setAccountConnectionOnline,
+  setAccountConnectionSignedOut,
+  setOpenAiCompatConnectionConfig,
+  setProviderApiKeyPresence,
+  useConnectionStatus,
+} from '../src/composables/connection-status'
 import {
   floatingChatSetEnabled,
   useFloatingChatPreference
@@ -858,11 +875,24 @@ const isWebPreview = computed(() => !hasTauriInternals)
 
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 const { floatingChatEnabled } = useFloatingChatPreference()
+const {
+  accountConnectionStatus,
+  accountConnectionPending: cachedAccountConnectionPending,
+  accountIdentity,
+  providerApiKeyPresence,
+  providerApiKeyPresencePending,
+  providerKeySyncPending,
+  openAiCompatConfig: savedOpenAiCompatConfig,
+  openAiCompatConfigPending,
+  githubConnectionPending,
+} = useConnectionStatus()
 
 const profile = ref<Profile | null>(null)
-const accountEmail = ref('')
-const accountOnline = ref(false)
-const accountSignedOut = ref(false)
+const accountActionPending = ref(false)
+const accountConnectionPending = computed(() => cachedAccountConnectionPending.value || accountActionPending.value)
+const accountEmail = computed(() => accountIdentity.value?.email ?? '')
+const accountOnline = computed(() => accountConnectionStatus.value === 'online')
+const accountSignedOut = computed(() => accountConnectionStatus.value === 'signed_out')
 
 const startupLockEnabled = ref(true)
 const vaultMode = ref<'password' | 'device_key' | null>(null)
@@ -891,10 +921,19 @@ const ollamaCloudKey = ref('')
 const openAiCompatBaseURL = ref('')
 const openAiCompatModelId = ref('')
 const openAiCompatKey = ref('')
-const savedOpenAiCompatConfig = ref<OpenAiCompatConfig>({ baseURL: '', modelId: '' })
-
-const providerApiKeyPresence = ref<ProviderApiKeyPresence>(emptyProviderApiKeyPresence())
 const providerApiKeyClearTarget = ref<ProviderApiKeyId | null>(null)
+let openAiCompatDraftInitialized = false
+
+watch(
+  [openAiCompatConfigPending, savedOpenAiCompatConfig],
+  ([pending, config]) => {
+    if (pending || openAiCompatDraftInitialized) return
+    openAiCompatBaseURL.value = config.baseURL
+    openAiCompatModelId.value = config.modelId
+    openAiCompatDraftInitialized = true
+  },
+  { immediate: true }
+)
 
 const {
   isGithubAuthOpen,
@@ -909,7 +948,6 @@ const {
   openGithubAuth,
   closeGithubAuth,
   githubAuthReset,
-  githubRefreshAuthState,
   onGithubAuthCopyCode,
   onGithubAuthCopyUrl,
   onGithubAuthSignOut,
@@ -1074,17 +1112,11 @@ function openAiCompatConfigChanged() {
 }
 
 function markProviderApiKeysPresent(ids: ProviderApiKeyId[]) {
-  if (ids.length === 0) return
-  const next = { ...providerApiKeyPresence.value }
-  for (const id of ids) next[id] = true
-  providerApiKeyPresence.value = next
+  for (const id of ids) setProviderApiKeyPresence(id, true)
 }
 
 function markProviderApiKeyAbsent(id: ProviderApiKeyId) {
-  providerApiKeyPresence.value = {
-    ...providerApiKeyPresence.value,
-    [id]: false
-  }
+  setProviderApiKeyPresence(id, false)
 }
 
 function clearProviderApiKeyDraft(id?: ProviderApiKeyId) {
@@ -1093,10 +1125,6 @@ function clearProviderApiKeyDraft(id?: ProviderApiKeyId) {
   if (!id || id === 'gemini') geminiKey.value = ''
   if (!id || id === 'ollama_cloud') ollamaCloudKey.value = ''
   if (!id || id === 'openai_compat') openAiCompatKey.value = ''
-}
-
-async function refreshProviderApiKeyPresence() {
-  providerApiKeyPresence.value = await loadProviderApiKeyPresence()
 }
 
 function openProviderApiKeyClear(id: ProviderApiKeyId) {
@@ -1170,6 +1198,18 @@ function modelConnectionReady(qualifiedId: string) {
   }
   if (providerId in providerApiKeyPresence.value) {
     return providerApiKeyPresence.value[providerId as ProviderApiKeyId]
+  }
+  return false
+}
+
+function modelConnectionPending(qualifiedId: string) {
+  const providerId = qualifiedId.slice(0, qualifiedId.indexOf(':')) as ProviderId
+  if (providerId === 'github') return githubConnectionPending.value
+  if (providerId === 'openai_compat' && openAiCompatConfigPending.value) return true
+  if (providerApiKeyPresencePending.value) return true
+  if (providerId in providerApiKeyPresence.value) {
+    const hasLocalCredential = providerApiKeyPresence.value[providerId as ProviderApiKeyId]
+    return !hasLocalCredential && providerKeySyncPending.value
   }
   return false
 }
@@ -1403,7 +1443,7 @@ async function onSaveProviderSecret(id: ProviderApiKeyId) {
       fallbackModelIds.value = settings.fallbackModelIds
     }
     if (result.savedOpenAiCompatConfig) {
-      savedOpenAiCompatConfig.value = nextOpenAiCompatConfig
+      setOpenAiCompatConnectionConfig(nextOpenAiCompatConfig)
     }
     clearProviderApiKeyDraft(id)
   } catch (e: any) {
@@ -1472,6 +1512,7 @@ onMounted(() => {
       learnHybridEnabled.value = false
       floatingChatEnabled.value = true
       textScale.value = Number(document.documentElement.dataset.textScale || 0)
+      void initializeConnectionStatuses()
       return
     }
     try {
@@ -1497,16 +1538,6 @@ onMounted(() => {
       textScale.value = settings.textScale
       applyTextScale(settings.textScale)
 
-      try {
-        const compat = await aiOpenAiCompatGetConfig()
-        const normalizedCompat = normalizedOpenAiCompatConfig(compat)
-        openAiCompatBaseURL.value = normalizedCompat.baseURL
-        openAiCompatModelId.value = normalizedCompat.modelId
-        savedOpenAiCompatConfig.value = normalizedCompat
-      } catch {
-        // ignore
-      }
-
       if (settings.startupLockEnabled && status.requires_unlock) {
         if (!unlockedThisSession.value) {
           markLocked()
@@ -1517,26 +1548,17 @@ onMounted(() => {
         markUnlocked()
       }
 
-      try {
-        const account = await restoreAuthSession()
-        accountEmail.value = account?.identity.email ?? p.email
-        accountOnline.value = account?.online ?? false
-        accountSignedOut.value = account === null
-        const syncedSettings = await createSettingsRepo(db).get()
-        defaultModelId.value = syncedSettings.defaultModelId
-        fallbackModelIds.value = syncedSettings.fallbackModelIds
-      } catch {
-        accountEmail.value = p.email
-        accountOnline.value = false
-      }
-
-      try {
-        await refreshProviderApiKeyPresence()
-      } catch (e: unknown) {
-        error.value = toSafeErrorMessage(e, 'Failed to load provider key status')
-      }
-
-      await githubRefreshAuthState()
+      void (async () => {
+        try {
+          await initializeConnectionStatuses()
+          const syncedSettings = await createSettingsRepo(db).get()
+          defaultModelId.value = syncedSettings.defaultModelId
+          fallbackModelIds.value = syncedSettings.fallbackModelIds
+          void refreshNetworkConnectionStatuses()
+        } catch (e: unknown) {
+          error.value = toSafeErrorMessage(e, 'Failed to load provider key status')
+        }
+      })()
     } catch {
       markLocked()
       await router.replace('/unlock')
@@ -1688,6 +1710,7 @@ async function onConfirmReset() {
   try {
     await clearAuthSession().catch(() => {})
     await lockResetTracer()
+    resetConnectionStatusCache()
     markLocked()
     await router.replace('/first-run')
   } catch (e: unknown) {
@@ -1700,10 +1723,12 @@ async function onConfirmReset() {
 async function onReconnectAccount() {
   error.value = null
   busy.value = true
+  accountActionPending.value = true
   try {
     const session = await signInWithGoogle()
     if (profile.value?.supabaseUserId && session.user.id !== profile.value.supabaseUserId) {
       await clearAuthSession()
+      setAccountConnectionSignedOut()
       throw new Error(t('auth.errorAccountMismatch'))
     }
     const prepared = await prepareAuthenticatedProfile({
@@ -1713,13 +1738,13 @@ async function onReconnectAccount() {
     })
     profile.value = prepared.profile
     await persistAuthSession(session)
-    accountEmail.value = identityFromUser(session.user).email
-    accountOnline.value = true
-    accountSignedOut.value = false
+    setAccountConnectionOnline(identityFromUser(session.user))
+    void refreshNetworkConnectionStatuses({ force: true })
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, t('auth.errorUnknown'))
   } finally {
     busy.value = false
+    accountActionPending.value = false
   }
 }
 
@@ -1728,8 +1753,7 @@ async function onAccountSignOut() {
   busy.value = true
   try {
     await clearAuthSession()
-    accountOnline.value = false
-    accountSignedOut.value = true
+    setAccountConnectionSignedOut()
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, t('auth.errorUnknown'))
   } finally {

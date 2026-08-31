@@ -22,7 +22,7 @@ vi.mock('../../src/composables/ai/cloud-provider-keys', () => ({
   syncCloudProviderApiKeysToDevice: mocks.syncCloudProviderApiKeysToDevice,
 }))
 
-import { restoreAuthSession } from '../../src/composables/auth/session'
+import { restoreAuthSession, waitForProviderKeySync } from '../../src/composables/auth/session'
 
 const stored = JSON.stringify({
   accessToken: 'old-access',
@@ -64,6 +64,23 @@ describe('Supabase session restoration', () => {
     expect(mocks.syncCloudProviderApiKeysToDevice).toHaveBeenCalledTimes(1)
     expect(mocks.invoke.mock.calls.filter(([command]) => command === 'auth_session_get')).toHaveLength(1)
     expect(results.every((result) => result?.online)).toBe(true)
+  })
+
+  it('can report account connectivity before cloud provider keys finish syncing', async () => {
+    let finishProviderKeySync: (() => void) | undefined
+    mocks.setSession.mockResolvedValue({ data: { session: refreshedSession }, error: null })
+    mocks.syncCloudProviderApiKeysToDevice.mockImplementation(() => new Promise<void>((resolve) => {
+      finishProviderKeySync = resolve
+    }).then(() => []))
+
+    await expect(restoreAuthSession({ waitForProviderKeySync: false })).resolves.toMatchObject({
+      online: true,
+      identity: { id: 'user-1' },
+    })
+    expect(finishProviderKeySync).toBeTypeOf('function')
+
+    finishProviderKeySync?.()
+    await waitForProviderKeySync()
   })
 
   it('clears an invalid rotated token instead of reporting the app offline', async () => {
