@@ -163,11 +163,17 @@ describe('sets repo roundtrip (sqlite:tracer.db)', () => {
       )
       await restoreAssignmentStudyGuide(db, setId, { markdown: '# Guide' })
       await restoreAssignmentStudyGuide(db, setId, { markdown: '# Updated guide' })
-      expect(await createStudyGuidesRepo(db).getBySetId(setId)).toMatchObject({
+      const studyGuidesRepo = createStudyGuidesRepo(db)
+      expect(await studyGuidesRepo.getBySetId(setId)).toMatchObject({
         id: setId,
         setId,
         markdown: '# Updated guide'
       })
+      const guideSummaries = await studyGuidesRepo.listSummaries()
+      expect(guideSummaries).toEqual([
+        expect.objectContaining({ id: setId, setId })
+      ])
+      expect(guideSummaries[0]).not.toHaveProperty('markdown')
 
       await repo.delete(setId)
 

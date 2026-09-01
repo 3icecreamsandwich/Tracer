@@ -19,13 +19,11 @@
             <span class="text-lg" aria-hidden="true">🏆</span>
         </div>
 
-        <p
+        <LoadingSpinner
             v-if="loading"
             class="mt-4 text-sm text-slate-500 dark:text-slate-400"
-            role="status"
-        >
-            {{ t("matchLeaderboard.loading") }}
-        </p>
+            :label="t('matchLeaderboard.loading')"
+        />
         <div
             v-else-if="error"
             class="mt-4 flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-900"

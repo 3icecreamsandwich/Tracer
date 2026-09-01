@@ -55,7 +55,7 @@
                         v-if="searchBusy"
                         class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300"
                     >
-                        {{ t("common.loading") }}
+                        <LoadingSpinner size="sm" />
                     </div>
                     <div
                         v-else-if="searchError"
@@ -239,15 +239,21 @@ async function loadSearchItems() {
         const db = await useTracerDb();
         const setsRepo = createSetsRepo(db);
         const guidesRepo = createStudyGuidesRepo(db);
-        const sets = await setsRepo.list();
+        const [sets, guides] = await Promise.all([
+            setsRepo.list(),
+            guidesRepo.listSummaries(),
+        ]);
         const next: TopbarSearchItem[] = [];
 
         const setTitleById = new Map<Uuid, string>();
         for (const set of sets) setTitleById.set(set.id, set.title);
 
+        const guideBySetId = new Map(
+            guides.map((guide) => [guide.setId, guide]),
+        );
         for (const set of sets) {
             next.push(toSetSearchItem(set));
-            const guide = await guidesRepo.getBySetId(set.id);
+            const guide = guideBySetId.get(set.id);
             if (guide) {
                 next.push({
                     kind: "study-guide",
@@ -271,9 +277,7 @@ async function loadSearchItems() {
 }
 
 function openSearch() {
-    const wasOpen = searchOpen.value;
     searchOpen.value = true;
-    if (!wasOpen) searchLoaded = false;
     loadSearchItems();
 }
 

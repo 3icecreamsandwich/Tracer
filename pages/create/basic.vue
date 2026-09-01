@@ -24,7 +24,8 @@
             :disabled="busy || factCheckBusy"
             @click="onFactCheck"
           >
-            {{ factCheckBusy ? `${t('factCheck.title')}…` : t('factCheck.title') }}
+            <LoadingSpinner v-if="factCheckBusy" size="sm" :label="t('factCheck.loading')" />
+            <template v-else>{{ t('factCheck.title') }}</template>
           </button>
           <button
             type="button"
@@ -40,7 +41,8 @@
             :disabled="busy || factCheckBusy"
             @click="onCreate"
           >
-            {{ busy ? t('common.loading') : t('common.create') }}
+            <LoadingSpinner v-if="busy" size="sm" />
+            <template v-else>{{ t('common.create') }}</template>
           </button>
         </div>
       </div>

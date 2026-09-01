@@ -1,4 +1,4 @@
-import type { DbClient, StudyGuide, Uuid } from '../types'
+import type { DbClient, StudyGuide, StudyGuideSummary, Uuid } from '../types'
 import { nowIsoSql } from '../sql'
 
 type DbStudyGuideRow = {
@@ -7,6 +7,8 @@ type DbStudyGuideRow = {
   markdown: string
   created_at: string
 }
+
+type DbStudyGuideSummaryRow = Omit<DbStudyGuideRow, 'markdown'>
 
 export function createStudyGuidesRepo(db: DbClient) {
   return {
@@ -38,6 +40,27 @@ export function createStudyGuidesRepo(db: DbClient) {
         markdown: row.markdown,
         createdAt: row.created_at
       }
+    },
+
+    async listSummaries(): Promise<StudyGuideSummary[]> {
+      const rows = await db.select<DbStudyGuideSummaryRow>(
+        `SELECT id, set_id, created_at
+         FROM (
+           SELECT id, set_id, created_at,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY set_id
+                    ORDER BY created_at DESC, id DESC
+                  ) AS row_number
+           FROM study_guides
+         )
+         WHERE row_number = 1
+         ORDER BY created_at DESC;`
+      )
+      return rows.map((row) => ({
+        id: row.id as Uuid,
+        setId: row.set_id as Uuid,
+        createdAt: row.created_at
+      }))
     },
 
     async update(input: { id: Uuid; markdown: string }): Promise<StudyGuide> {

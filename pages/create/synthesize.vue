@@ -16,7 +16,8 @@
           :disabled="createDisabled"
           @click="onCreate"
         >
-          {{ busy ? t('common.loading') : t('common.create') }}
+          <LoadingSpinner v-if="busy" size="sm" />
+          <template v-else>{{ t('common.create') }}</template>
         </button>
       </div>
 
@@ -66,12 +67,7 @@
               {{ loadError }}
             </p>
 
-            <div
-              v-else-if="loading"
-              class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-            >
-              {{ t('common.loading') }}
-            </div>
+            <LoadingSpinner v-else-if="loading" centered />
 
             <div
               v-else-if="sets.length === 0"

@@ -13,7 +13,7 @@ import {
   type FactCheckDraft
 } from './fact-check'
 
-const revealIntervalMs = 34
+const revealIntervalMs = 18
 
 export function useFactCheck(args: {
   language: Readonly<Ref<AppLanguage>>

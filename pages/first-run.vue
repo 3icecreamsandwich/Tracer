@@ -36,7 +36,8 @@
           :disabled="busy || !configured"
           @click="onGoogle"
         >
-          <svg aria-hidden="true" viewBox="0 0 24 24" class="mr-auto h-6 w-6">
+          <LoadingSpinner v-if="busyProvider === 'google'" class="mr-auto" size="sm" :show-label="false" />
+          <svg v-else aria-hidden="true" viewBox="0 0 24 24" class="mr-auto h-6 w-6">
             <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.91h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.4Z" />
             <path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.37l-3.24-2.54c-.9.6-2.05.96-3.38.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z" />
             <path fill="#FBBC05" d="M6.39 13.92A6.02 6.02 0 0 1 6.07 12c0-.67.12-1.32.32-1.92V7.46H3.04A10 10 0 0 0 2 12c0 1.61.39 3.14 1.04 4.54l3.35-2.62Z" />
@@ -105,7 +106,8 @@
             </span>
           </label>
           <button type="submit" class="auth-primary" :disabled="busy || !configured">
-            {{ busyProvider === 'email' ? t('common.loading') : mode === 'signup' ? t('auth.letsGo') : t('auth.signInEmail') }}
+            <LoadingSpinner v-if="busyProvider === 'email'" size="sm" />
+            <template v-else>{{ mode === 'signup' ? t('auth.letsGo') : t('auth.signInEmail') }}</template>
           </button>
         </form>
 
@@ -173,7 +175,8 @@
             </span>
           </label>
           <button type="submit" class="auth-primary" :disabled="busy">
-            {{ busy ? t('common.loading') : usesGoogleDeviceKey ? t('auth.continueWithoutPassword') : t('auth.finishSetup') }}
+            <LoadingSpinner v-if="busy" size="sm" />
+            <template v-else>{{ usesGoogleDeviceKey ? t('auth.continueWithoutPassword') : t('auth.finishSetup') }}</template>
           </button>
         </form>
       </template>

@@ -64,7 +64,12 @@
                                     class="rounded-full px-2 py-0.5 text-xs font-medium"
                                     :class="linkedFolderStatusClass"
                                 >
-                                    {{ linkedFolderStatusLabel }}
+                                    <LoadingSpinner
+                                        v-if="linkedFolder.status === 'pending' || linkedFolder.status === 'syncing'"
+                                        size="sm"
+                                        :label="linkedFolderStatusLabel"
+                                    />
+                                    <template v-else>{{ linkedFolderStatusLabel }}</template>
                                 </span>
                             </div>
                             <p
@@ -115,12 +120,7 @@
                         {{ loadError }}
                     </p>
 
-                    <div
-                        v-else-if="busy"
-                        class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                    >
-                        {{ t("common.loading") }}
-                    </div>
+                    <LoadingSpinner v-else-if="busy" screen />
 
                     <div
                         v-else-if="!set"
@@ -915,12 +915,7 @@
                                 </div>
                             </div>
 
-                            <div
-                                v-if="learnBusy"
-                                class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                            >
-                                {{ t("common.loading") }}
-                            </div>
+                            <LoadingSpinner v-if="learnBusy" class="mt-4" centered />
 
                             <div
                                 v-else-if="learnIsFinished"
@@ -1144,11 +1139,8 @@
                                                         )
                                                     "
                                                 >
-                                                    {{
-                                                        practiceAnswerBusy
-                                                            ? "Checking…"
-                                                            : "Save"
-                                                    }}
+                                                    <LoadingSpinner v-if="practiceAnswerBusy" size="sm" label="Checking…" />
+                                                    <template v-else>Save</template>
                                                 </button>
                                             </div>
                                         </form>
@@ -1283,21 +1275,23 @@
                                     "
                                 >
                                     <div
-                                        class="max-w-[85%] rounded-lg border px-3 py-2 shadow-sm"
+                                        class="max-w-[85%] rounded-lg px-3 py-2"
                                         :class="
-                                            m.role === 'user'
-                                                ? 'border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
-                                                : 'border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50'
+                                            m.role === 'assistant' && chatBusy && !m.content
+                                                ? ''
+                                                : m.role === 'user'
+                                                ? 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
+                                                : 'border border-slate-200 bg-slate-50 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50'
                                         "
                                     >
-                                        <span
+                                        <LoadingSpinner
                                             v-if="
                                                 m.role === 'assistant' &&
                                                 chatBusy &&
                                                 !m.content
                                             "
-                                            class="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-700 dark:border-t-slate-200"
-                                            aria-label="Loading response"
+                                            label="Loading response"
+                                            :show-label="false"
                                         />
                                         <MarkdownRenderer
                                             v-else
@@ -1818,12 +1812,10 @@
                     >
                         {{ chatHistoryError }}
                     </p>
-                    <p
+                    <LoadingSpinner
                         v-else-if="chatHistoryBusy"
                         class="text-sm text-slate-600 dark:text-slate-300"
-                    >
-                        {{ t("common.loading") }}
-                    </p>
+                    />
                     <p
                         v-else-if="savedChats.length === 0"
                         class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
@@ -2631,19 +2623,14 @@ async function loadSet(setId: Uuid) {
     loadError.value = null;
     try {
         const db = await useTracerDb();
-        const [loadedSet, loadedLinkedFolder] = await Promise.all([
+        const [loadedSet, loadedLinkedFolder, guide] = await Promise.all([
             createSetsRepo(db).get(setId),
             createLinkedFoldersRepo(db).getBySetId(setId),
+            createStudyGuidesRepo(db).getBySetId(setId),
         ]);
         set.value = loadedSet;
         linkedFolder.value = loadedLinkedFolder;
-
-        if (set.value) {
-            const guide = await createStudyGuidesRepo(db).getBySetId(setId);
-            studyGuideSetId.value = guide ? setId : null;
-        } else {
-            studyGuideSetId.value = null;
-        }
+        studyGuideSetId.value = loadedSet && guide ? setId : null;
     } catch {
         loadError.value = "Failed to load set.";
     } finally {
@@ -4099,8 +4086,7 @@ async function sendChat() {
         fullContent: text,
     };
     chatMessages.value = [...chatMessages.value, userMsg];
-    await ensureActiveChatSaved();
-    if (controller.signal.aborted) return;
+    const initialSavePromise = ensureActiveChatSaved();
 
     const assistantMsg: UiChatMessage = {
         id: newMsgId(),
@@ -4109,7 +4095,6 @@ async function sendChat() {
         fullContent: "",
     };
     chatMessages.value = [...chatMessages.value, assistantMsg];
-    await persistActiveSavedChat();
     await nextTick();
     scrollChatToBottom();
 
@@ -4155,9 +4140,11 @@ async function sendChat() {
             enqueueChatReveal(assistantMsg.id, chunk);
         }
         finishChatRevealStream(assistantMsg.id);
+        await initialSavePromise;
         await persistActiveSavedChat();
     } catch (err) {
         if (controller.signal.aborted) return;
+        await initialSavePromise;
         await persistActiveSavedChat();
         if (isAiErrorCandidate(err)) {
             showAiError(err);
@@ -4257,17 +4244,21 @@ async function openSetPage() {
             return;
         }
 
-        const status = await lockGetStatus();
-        const db = await useTracerDb();
+        const [status, db] = await Promise.all([
+            lockGetStatus(),
+            useTracerDb(),
+        ]);
 
-        const profile = await createProfileRepo(db).get();
+        const [profile, settings] = await Promise.all([
+            createProfileRepo(db).get(),
+            createSettingsRepo(db).get(),
+        ]);
         if (!profile || !status.has_verifier) {
             markLocked();
             await router.replace("/first-run");
             return;
         }
 
-        const settings = await createSettingsRepo(db).get();
         defaultModelId.value = settings.defaultModelId;
         fallbackModelIds.value = settings.fallbackModelIds;
         learnHybridEnabled.value = settings.learnHybridEnabled;

@@ -21,10 +21,23 @@
                             :title="t('set.flashcardSettings')"
                             :aria-expanded="flashcardSettingsOpen"
                             aria-haspopup="menu"
-                            @click="flashcardSettingsOpen = !flashcardSettingsOpen"
+                            @click="
+                                flashcardSettingsOpen = !flashcardSettingsOpen
+                            "
                         >
-                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                            <svg
+                                aria-hidden="true"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                class="h-4 w-4"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
+                                />
                                 <circle cx="12" cy="12" r="3" />
                             </svg>
                         </button>
@@ -35,18 +48,51 @@
                             role="menu"
                             :aria-label="t('set.flashcardSettings')"
                         >
-                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="totalCount === 0" @click="shuffleFromFlashcardSettings">
-                                {{ t('set.shuffle') }}
+                            <button
+                                type="button"
+                                role="menuitem"
+                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
+                                :disabled="totalCount === 0"
+                                @click="shuffleFromFlashcardSettings"
+                            >
+                                {{ t("set.shuffle") }}
                             </button>
-                            <button type="button" role="menuitemcheckbox" :aria-checked="starredOnly" class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="starredStudyCount === 0 && !starredOnly" @click="toggleStarredOnlyFromFlashcardSettings">
-                                <span>{{ t('set.starredOnly') }}</span>
-                                <span class="w-4 text-center" aria-hidden="true">{{ starredOnly ? "✓" : "" }}</span>
+                            <button
+                                type="button"
+                                role="menuitemcheckbox"
+                                :aria-checked="starredOnly"
+                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
+                                :disabled="
+                                    starredStudyCount === 0 && !starredOnly
+                                "
+                                @click="toggleStarredOnlyFromFlashcardSettings"
+                            >
+                                <span>{{ t("set.starredOnly") }}</span>
+                                <span
+                                    class="w-4 text-center"
+                                    aria-hidden="true"
+                                    >{{ starredOnly ? "✓" : "" }}</span
+                                >
                             </button>
-                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="allStudyTermIds.length === 0" @click="restartFromFlashcardSettings">
-                                {{ t('common.restart') }}
+                            <button
+                                type="button"
+                                role="menuitem"
+                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
+                                :disabled="allStudyTermIds.length === 0"
+                                @click="restartFromFlashcardSettings"
+                            >
+                                {{ t("common.restart") }}
                             </button>
-                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
-                            <button type="button" role="menuitem" class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900" :disabled="flashcardFrontPreferenceBusy" @click="togglePreferredFlashcardFront">
+                            <div
+                                class="my-1 border-t border-slate-200 dark:border-slate-800"
+                            />
+                            <button
+                                type="button"
+                                role="menuitem"
+                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
+                                :disabled="flashcardFrontPreferenceBusy"
+                                @click="togglePreferredFlashcardFront"
+                            >
                                 {{ preferredFlashcardFrontOptionLabel }}
                             </button>
                         </div>
@@ -117,7 +163,7 @@
                 <button
                     ref="viewerButtonEl"
                     type="button"
-                    class="relative flex flex-col items-center justify-center w-[70vw] h-[50vh] rounded-lg px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                    class="relative flex flex-col items-center justify-center w-[75vw] h-[60vh] rounded-lg px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
                     :class="[
                         flashcardSurfaceClass,
                         {
@@ -181,64 +227,68 @@
 
                 <!-- Controls -->
                 <div
-                    class="mt-8 flex flex-wrap items-center justify-center gap-3"
+                    class="mt-6 flex flex-wrap items-center justify-between w-[75vw]"
                 >
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-amber-600 shadow-sm hover:border-amber-200 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
-                        :disabled="
-                            totalCount === 0 ||
-                            cursorIndex === 0 ||
-                            flashcardAnswerBusy
-                        "
-                        @click="goPrev"
-                    >
-                        ← {{ t("set.previous") }}
-                    </button>
+                    <div class="flex flex-wrap gap-3">
+                        <button
+                            type="button"
+                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-amber-600 shadow-sm hover:border-amber-200 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                            :disabled="
+                                totalCount === 0 ||
+                                cursorIndex === 0 ||
+                                flashcardAnswerBusy
+                            "
+                            @click="goPrev"
+                        >
+                            ← {{ t("set.previous") }}
+                        </button>
 
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="
-                            totalCount === 0 ||
-                            cursorIndex >= order.length - 1 ||
-                            flashcardAnswerBusy
-                        "
-                        @click="goNext"
-                    >
-                        {{ t("set.next") }} →
-                    </button>
+                        <button
+                            type="button"
+                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            :disabled="
+                                totalCount === 0 ||
+                                cursorIndex >= order.length - 1 ||
+                                flashcardAnswerBusy
+                            "
+                            @click="goNext"
+                        >
+                            {{ t("set.next") }} →
+                        </button>
+                    </div>
 
-                    <button
-                        type="button"
-                        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-amber-500 bg-white p-0 text-sm font-medium text-amber-500 shadow-sm hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-amber-400 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
-                        :disabled="!currentTerm || starBusy"
-                        :aria-pressed="isCurrentStarred"
-                        :aria-label="
-                            isCurrentStarred ? 'Unstar card' : 'Star card'
-                        "
-                        @click="toggleStar"
-                    >
-                        {{ isCurrentStarred ? "★" : "☆" }}
-                    </button>
+                    <div class="flex flex-wrap gap-3">
+                        <button
+                            type="button"
+                            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-amber-500 bg-white p-0 text-sm font-medium text-amber-500 shadow-sm hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-amber-400 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                            :disabled="!currentTerm || starBusy"
+                            :aria-pressed="isCurrentStarred"
+                            :aria-label="
+                                isCurrentStarred ? 'Unstar card' : 'Star card'
+                            "
+                            @click="toggleStar"
+                        >
+                            {{ isCurrentStarred ? "★" : "☆" }}
+                        </button>
 
-                    <button
-                        type="button"
-                        class="inline-flex h-10 items-center justify-center rounded-md border border-[#C14D4D] bg-white px-3 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
-                        :disabled="!currentTerm || flashcardAnswerBusy"
-                        @click="markIncorrect"
-                    >
-                        {{ t("set.missed") }}
-                    </button>
+                        <button
+                            type="button"
+                            class="inline-flex h-10 items-center justify-center rounded-md border border-[#C14D4D] bg-white px-3 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                            :disabled="!currentTerm || flashcardAnswerBusy"
+                            @click="markIncorrect"
+                        >
+                            {{ t("set.missed") }}
+                        </button>
 
-                    <button
-                        type="button"
-                        class="inline-flex h-10 items-center justify-center rounded-md border border-[#2D8210] bg-white px-3 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
-                        :disabled="!currentTerm || flashcardAnswerBusy"
-                        @click="markCorrect"
-                    >
-                        {{ t("set.gotIt") }}
-                    </button>
+                        <button
+                            type="button"
+                            class="inline-flex h-10 items-center justify-center rounded-md border border-[#2D8210] bg-white px-3 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                            :disabled="!currentTerm || flashcardAnswerBusy"
+                            @click="markCorrect"
+                        >
+                            {{ t("set.gotIt") }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -289,10 +339,13 @@ const assignedAssignmentId = computed(() =>
     parseAssignedAssignmentId(route.query.assignment),
 );
 const backToSetPath = computed(() => {
-    const classroomId = typeof route.query.class === "string" ? route.query.class : null;
+    const classroomId =
+        typeof route.query.class === "string" ? route.query.class : null;
     return assignedAssignmentId.value && classroomId && set.value
         ? `/student/classes/${classroomId}`
-        : set.value ? `/set/${set.value.id}` : "/";
+        : set.value
+          ? `/set/${set.value.id}`
+          : "/";
 });
 
 function beginClassroomFlashcards() {
@@ -388,9 +441,7 @@ function persistFlashcardProgress(termId: Uuid) {
         return;
     }
     void useTracerDb()
-        .then((db) =>
-            createFlashcardProgressRepo(db).save(setId, progress),
-        )
+        .then((db) => createFlashcardProgressRepo(db).save(setId, progress))
         .catch(() => {});
 }
 
@@ -507,7 +558,9 @@ const viewerHasText = computed(() => viewerText.value.trim().length > 0);
 const viewerImage = computed(() => {
     const t = currentTerm.value;
     if (!t) return null;
-    return showingDefinition.value ? (t.backImage ?? null) : (t.frontImage ?? null);
+    return showingDefinition.value
+        ? (t.backImage ?? null)
+        : (t.frontImage ?? null);
 });
 
 const flashcardSurfaceClass = computed(() => {
@@ -727,12 +780,13 @@ watch(language, async () => {
 });
 
 watch(
-    () => [
-        order.value[cursorIndex.value] ?? null,
-        allStudyTermIds.value
-            .filter((id) => answersByTermId.value[id] === "correct")
-            .join("\u0000"),
-    ] as const,
+    () =>
+        [
+            order.value[cursorIndex.value] ?? null,
+            allStudyTermIds.value
+                .filter((id) => answersByTermId.value[id] === "correct")
+                .join("\u0000"),
+        ] as const,
     ([termId]) => {
         if (!termId) return;
         persistFlashcardProgress(termId as Uuid);

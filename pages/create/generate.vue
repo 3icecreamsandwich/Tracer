@@ -75,7 +75,8 @@
             :disabled="operationBusy || ingestBusy || isWebPreview"
             @click="onLinkFolder"
           >
-            {{ linkBusy ? t('create.linkingFolder') : t('create.linkFolder') }}
+            <LoadingSpinner v-if="linkBusy" size="sm" :label="t('create.linkingFolder')" />
+            <template v-else>{{ t('create.linkFolder') }}</template>
           </button>
           <button
             type="button"
@@ -83,7 +84,8 @@
             :disabled="generateDisabled"
             @click="onGenerate"
           >
-            {{ generateButtonLabel }}
+            <LoadingSpinner v-if="busy || parseBusy" size="sm" :label="generateButtonLabel" />
+            <template v-else>{{ generateButtonLabel }}</template>
           </button>
         </div>
       </div>
@@ -144,7 +146,8 @@
                     :disabled="operationBusy || isWebPreview || ingestBusy"
                     @click="openPicker"
                   >
-                    {{ ingestBusy ? t('create.checking') : t('create.chooseFiles') }}
+                    <LoadingSpinner v-if="ingestBusy" size="sm" :label="t('create.checking')" />
+                    <template v-else>{{ t('create.chooseFiles') }}</template>
                   </button>
                   <button
                     v-if="pickedAny"

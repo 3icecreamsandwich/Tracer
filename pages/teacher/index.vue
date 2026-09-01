@@ -1,9 +1,7 @@
 <template>
   <main class="min-h-[calc(100vh-4rem)] bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
     <div class="mx-auto max-w-[1180px] px-8 py-10">
-      <div v-if="loading" class="rounded-xl border border-slate-200 bg-slate-50 p-6 text-sm dark:border-slate-800 dark:bg-slate-900">
-        {{ t('common.loading') }}
-      </div>
+      <LoadingSpinner v-if="loading" screen />
 
       <div v-else-if="loadError" class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
@@ -107,9 +105,9 @@
           <aside class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900" :aria-label="t('classroom.classActions')">
             <h2 class="text-lg font-semibold">{{ t('classroom.classActions') }}</h2>
             <div class="mt-4 grid gap-3">
-              <AppButton v-if="selectedClass" block variant="white" :to="`/teacher/classes/${selectedClass.id}/assign`">{{ t('classroom.assignSet') }} <span aria-hidden="true">→</span></AppButton>
-              <AppButton block variant="white" @click="openCode">{{ t('classroom.addStudents') }} <span aria-hidden="true">→</span></AppButton>
-              <AppButton v-if="selectedClass" block :to="`/teacher/classes/${selectedClass.id}`">{{ t('classroom.detailedView') }} <span aria-hidden="true">→</span></AppButton>
+              <AppButton v-if="selectedClass" block variant="white" :to="`/teacher/classes/${selectedClass.id}/assign`">{{ t('classroom.assignSet') }} <CreateChevron /></AppButton>
+              <AppButton block variant="white" @click="openCode">{{ t('classroom.addStudents') }} <CreateChevron /></AppButton>
+              <AppButton v-if="selectedClass" block :to="`/teacher/classes/${selectedClass.id}`">{{ t('classroom.detailedView') }} <CreateChevron /></AppButton>
             </div>
           </aside>
         </div>
@@ -123,7 +121,7 @@
             <li v-for="assignment in assignments" :key="assignment.id">
               <button
                 type="button"
-                class="flex min-h-[86px] w-full items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-wait disabled:opacity-70 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                class="group flex min-h-[86px] w-full items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-wait disabled:opacity-70 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-slate-700 dark:hover:bg-slate-900"
                 :disabled="openingAssignmentId !== null"
                 @click="openAssignedMaterial(assignment)"
               >
@@ -135,7 +133,8 @@
                     <span aria-hidden="true"> · </span>{{ formatActivityDate(assignment.createdAt) }}
                   </span>
                 </span>
-                <span class="shrink-0 text-lg" aria-hidden="true">{{ openingAssignmentId === assignment.id ? '…' : '→' }}</span>
+                <span v-if="openingAssignmentId === assignment.id" class="shrink-0 text-lg" aria-hidden="true">…</span>
+                <CreateChevron v-else />
               </button>
             </li>
           </ul>

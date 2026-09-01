@@ -78,16 +78,23 @@
                     "
                 >
                     <div
-                        class="max-w-[85%] rounded-lg border px-3 py-2 text-sm shadow-sm"
+                        class="max-w-[85%] rounded-lg px-3 py-2 text-sm"
                         :class="
-                            message.role === 'user'
-                                ? 'border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
-                                : 'border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50'
+                            message.role === 'assistant' && !message.content
+                                ? ''
+                                : message.role === 'user'
+                                ? 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
+                                : 'border border-slate-200 bg-slate-50 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50'
                         "
                     >
+                        <LoadingSpinner
+                            v-if="message.role === 'assistant' && !message.content"
+                            label="Thinking…"
+                            :show-label="false"
+                        />
                         <MarkdownRenderer
-                            v-if="message.role === 'assistant'"
-                            :markdown="message.content || 'Thinking…'"
+                            v-else-if="message.role === 'assistant'"
+                            :markdown="message.content"
                             variant="compact"
                         />
                         <p v-else class="whitespace-pre-wrap break-words">
@@ -187,6 +194,8 @@ const inputEl = ref<HTMLTextAreaElement | null>(null);
 const activeRequest = shallowRef<AbortController | null>(null);
 let messageSequence = 0;
 let cachedModel: { id: string; model: any } | null = null;
+let cachedModelPromise: { id: string; promise: Promise<any> } | null = null;
+let defaultModelRequest: Promise<any> | null = null;
 
 function nextMessageId() {
     messageSequence += 1;
@@ -211,7 +220,10 @@ function clearChat() {
 
 function togglePanel() {
     panelOpen.value = !panelOpen.value;
-    if (panelOpen.value) void nextTick(() => inputEl.value?.focus());
+    if (panelOpen.value) {
+        void getDefaultModel().catch(() => {});
+        void nextTick(() => inputEl.value?.focus());
+    }
 }
 
 function onDocumentPointerDown(event: PointerEvent) {
@@ -314,7 +326,7 @@ const {
     onReveal: () => void nextTick().then(scrollToLatestMessage),
 });
 
-async function getDefaultModel() {
+async function loadDefaultModel() {
     if (!hasTauriRuntime())
         throw new Error(
             "Choose a default AI model in Settings to use page chat.",
@@ -330,9 +342,28 @@ async function getDefaultModel() {
     const route = [settings.defaultModelId, ...settings.fallbackModelIds];
     const cacheId = route.join("\n");
     if (cachedModel?.id === cacheId) return cachedModel.model;
-    const model = await resolveAiModel(route);
+    const existing = cachedModelPromise;
+    const promise =
+        existing?.id === cacheId
+            ? existing.promise
+            : resolveAiModel(route).finally(() => {
+                  if (cachedModelPromise?.id === cacheId) {
+                      cachedModelPromise = null;
+                  }
+              });
+    if (existing?.id !== cacheId) cachedModelPromise = { id: cacheId, promise };
+    const model = await promise;
     cachedModel = { id: cacheId, model };
     return model;
+}
+
+function getDefaultModel() {
+    if (defaultModelRequest) return defaultModelRequest;
+    const request = loadDefaultModel().finally(() => {
+        if (defaultModelRequest === request) defaultModelRequest = null;
+    });
+    defaultModelRequest = request;
+    return request;
 }
 
 async function sendMessage() {

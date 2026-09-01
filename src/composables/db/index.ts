@@ -16,6 +16,7 @@ export type {
   SavedChatPayload,
   SetFolder,
   StudyGuide,
+  StudyGuideSummary,
   Term,
   Uuid
 } from './types'

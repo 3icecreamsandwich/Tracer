@@ -64,7 +64,7 @@
           {{ t('common.cancel') }}
         </AppButton>
         <AppButton type="submit" :busy="busy">
-          {{ busy ? t('common.loading') : t('classroom.createClass') }}
+          {{ t('classroom.createClass') }}
         </AppButton>
       </div>
     </form>

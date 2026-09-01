@@ -5,6 +5,7 @@
     :class="classes"
     @click="emit('click', $event)"
   >
+    <LoadingSpinner v-if="busy" size="sm" :show-label="false" />
     <slot />
   </NuxtLink>
   <button
@@ -14,6 +15,7 @@
     :disabled="disabled || busy"
     @click="emit('click', $event)"
   >
+    <LoadingSpinner v-if="busy" size="sm" :show-label="false" />
     <slot />
   </button>
 </template>

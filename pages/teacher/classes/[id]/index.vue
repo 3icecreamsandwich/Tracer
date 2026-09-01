@@ -2,9 +2,7 @@
   <main class="min-h-[calc(100vh-4rem)] bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
     <div class="mx-auto max-w-[1180px] px-8 py-10">
 
-      <div v-if="loading" class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-6 text-sm dark:border-slate-800 dark:bg-slate-900">
-        {{ t('common.loading') }}
-      </div>
+      <LoadingSpinner v-if="loading" screen />
       <div v-else-if="loadError" class="mt-6 rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
         <AppButton class="mt-4" variant="white" @click="loadDetail">{{ t('classroom.retry') }}</AppButton>

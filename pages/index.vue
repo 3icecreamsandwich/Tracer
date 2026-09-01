@@ -54,17 +54,10 @@
                 {{ t('demo.webPreviewNotice') }}
               </div>
 
-              <div
-                v-if="busy"
-                class="mt-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-              >
-                {{ t('common.loading') }}
-              </div>
+              <LoadingSpinner v-if="busy" class="mt-3" centered />
 
               <div v-else-if="activeLibraryKind === 'class'">
-                <p v-if="classroomBusy" class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-                  {{ t('common.loading') }}
-                </p>
+                <LoadingSpinner v-if="classroomBusy" centered />
                 <p v-else-if="classroomError" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300" role="alert">
                   {{ classroomError }}
                 </p>
@@ -82,7 +75,7 @@
                         <span class="block truncate font-semibold">{{ classroom.name }}</span>
                         <span class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">{{ classroomSummary(classroom) }}</span>
                       </span>
-                      <span aria-hidden="true">→</span>
+                      <CreateChevron />
                     </NuxtLink>
                     <NuxtLink
                       v-else
@@ -94,7 +87,7 @@
                         <span class="block truncate font-semibold">{{ classroom.name }}</span>
                         <span class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">{{ classroomSummary(classroom) }}</span>
                       </span>
-                      <span class="transition group-hover:translate-x-0.5" aria-hidden="true">→</span>
+                      <CreateChevron />
                     </NuxtLink>
                   </li>
                 </ul>
@@ -373,7 +366,7 @@
             <h2 id="home-dashboard" class="text-[22px] font-semibold">{{ t('classroom.dashboard') }}</h2>
             <p class="mt-1 text-[15px] text-slate-600 dark:text-slate-300">{{ t('classroom.dashboardDescription') }}</p>
             <AppButton class="mt-6" block size="lg" to="/teacher">
-              {{ t('classroom.dashboard') }} <span aria-hidden="true">→</span>
+              {{ t('classroom.dashboard') }} <CreateChevron />
             </AppButton>
           </section>
         </div>
@@ -728,8 +721,9 @@ async function loadHomeList() {
     const guidesRepo = createStudyGuidesRepo(db)
     const foldersRepo = createFoldersRepo(db)
 
-    const [sets, nextFolders, nextHomeOrder] = await Promise.all([
+    const [sets, guides, nextFolders, nextHomeOrder] = await Promise.all([
       setsRepo.list(),
+      guidesRepo.listSummaries(),
       foldersRepo.list(),
       foldersRepo.listHomeOrder()
     ])
@@ -740,9 +734,10 @@ async function loadHomeList() {
       setTitleById.set(s.id, s.title)
     }
 
+    const guideBySetId = new Map(guides.map((guide) => [guide.setId, guide]))
     for (const s of sets) {
       next.push(toSetListItem(s))
-      const guide = await guidesRepo.getBySetId(s.id)
+      const guide = guideBySetId.get(s.id)
       if (guide) {
         next.push({
           kind: 'study-guide',
@@ -1384,10 +1379,15 @@ onMounted(async () => {
   }
 
   try {
-    const status = await lockGetStatus()
-    const db = await useTracerDb()
+    const [status, db] = await Promise.all([
+      lockGetStatus(),
+      useTracerDb()
+    ])
 
-    const profile = await createProfileRepo(db).get()
+    const [profile, settings] = await Promise.all([
+      createProfileRepo(db).get(),
+      createSettingsRepo(db).get()
+    ])
     if (!profile || !status.has_verifier) {
       markLocked()
       await router.replace('/first-run')
@@ -1396,7 +1396,6 @@ onMounted(async () => {
 
     accountRole.value = getCachedAccountRole(profile.supabaseUserId)
 
-    const settings = await createSettingsRepo(db).get()
     if (settings.startupLockEnabled && status.requires_unlock) {
       if (unlockedThisSession.value) {
         await loadHomeList()

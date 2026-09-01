@@ -19,11 +19,16 @@
       aria-live="polite"
     >
       <div class="flex justify-start">
-        <div class="max-w-[85%] rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-          <span
+        <div
+          class="max-w-[85%] rounded-lg px-3 py-2"
+          :class="busy && !response
+            ? ''
+            : 'border border-slate-200 bg-slate-50 shadow-sm dark:border-slate-700 dark:bg-slate-900'"
+        >
+          <LoadingSpinner
             v-if="busy && !response"
-            class="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-700 dark:border-t-slate-200"
-            :aria-label="t('factCheck.loading')"
+            :label="t('factCheck.loading')"
+            :show-label="false"
           />
           <MarkdownRenderer v-else :markdown="renderedResponse" variant="compact" />
         </div>

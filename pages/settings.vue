@@ -56,11 +56,11 @@
           <div>
             <h2 class="text-sm font-medium">{{ t('settings.account') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ accountEmail || profile?.email }}</p>
-            <span
+            <LoadingSpinner
               v-if="accountConnectionPending"
-              class="mt-1 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-700 dark:border-t-slate-200"
-              role="status"
-              :aria-label="t('common.loading')"
+              class="mt-1"
+              size="sm"
+              :show-label="false"
             />
             <p v-else class="mt-1 text-xs" :class="accountOnline ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'">
               {{ accountSignedOut ? t('settings.accountSignedOut') : accountOnline ? t('settings.accountOnline') : t('settings.accountOffline') }}
@@ -216,11 +216,11 @@
                   {{ index === 0 ? 'Primary' : `Fallback ${index}` }}
                 </span>
               </div>
-              <span
+              <LoadingSpinner
                 v-if="modelConnectionPending(modelId)"
-                class="mt-1 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-700 dark:border-t-slate-200"
-                role="status"
-                :aria-label="t('common.loading')"
+                class="mt-1"
+                size="sm"
+                :show-label="false"
               />
               <p v-else class="mt-1 text-xs" :class="modelConnectionReady(modelId) ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'">
                 {{ modelConnectionReady(modelId) ? 'Ready' : 'Connection required' }}
@@ -766,7 +766,8 @@
               :disabled="githubAuthBusy"
               @click="onGithubAuthStart"
             >
-              {{ githubAuthBusy ? t('common.loading') : t('common.authenticate') }}
+              <LoadingSpinner v-if="githubAuthBusy" size="sm" />
+              <template v-else>{{ t('common.authenticate') }}</template>
             </button>
 
             <div
@@ -797,12 +798,10 @@
               </div>
             </div>
 
-            <div
+            <LoadingSpinner
               v-else-if="githubAuthStep === 'pkce_pending'"
-              class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-            >
-              {{ t('common.loading') }}
-            </div>
+              centered
+            />
           </div>
         </div>
       </div>

@@ -77,6 +77,8 @@ export type StudyGuide = {
   createdAt: IsoDateTimeString
 }
 
+export type StudyGuideSummary = Omit<StudyGuide, 'markdown'>
+
 export type LinkedFolderStatus = 'synced' | 'pending' | 'syncing' | 'error'
 
 export type LinkedFolderFileStatus = 'processed' | 'ignored' | 'failed'
