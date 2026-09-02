@@ -1,14 +1,11 @@
 import { computed, ref } from 'vue'
 
 import {
-  emptyProviderApiKeyPresence,
-  loadProviderApiKeyPresence,
-  type ProviderApiKeyId,
-  type ProviderApiKeyPresence,
-} from './ai/provider-settings'
-import {
+  aiProviderApiKeyPresence,
   aiOpenAiCompatGetConfig,
   type OpenAiCompatConfig,
+  type ProviderApiKeyId,
+  type ProviderApiKeyPresence,
 } from './ai/credentials'
 import {
   githubModelsLoadAuthState,
@@ -36,6 +33,16 @@ const githubModelsAvailableModelIds = ref<string[]>([])
 const githubConnectionPending = ref(true)
 const initialized = ref(false)
 
+function emptyProviderApiKeyPresence(): ProviderApiKeyPresence {
+  return {
+    openai: false,
+    anthropic: false,
+    gemini: false,
+    ollama_cloud: false,
+    openai_compat: false,
+  }
+}
+
 let initializationRequest: Promise<void> | null = null
 let networkRefreshRequest: Promise<void> | null = null
 let networkCheckedAt = 0
@@ -56,7 +63,7 @@ function applyGithubState(state: GithubModelsAuthState) {
 }
 
 async function refreshProviderPresence() {
-  providerApiKeyPresence.value = await loadProviderApiKeyPresence()
+  providerApiKeyPresence.value = await aiProviderApiKeyPresence()
 }
 
 async function refreshAccountConnection(initialProviderPresence?: Promise<void>) {
@@ -222,6 +229,8 @@ function onWindowFocus() {
 }
 
 export function resetConnectionStatusCache() {
+  initializationRequest = null
+  networkRefreshRequest = null
   accountConnectionStatus.value = 'pending'
   accountIdentity.value = null
   providerApiKeyPresence.value = emptyProviderApiKeyPresence()

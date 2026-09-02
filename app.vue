@@ -16,12 +16,31 @@ import {
   installConnectionStatusListeners,
   uninstallConnectionStatusListeners,
 } from '~/src/composables/connection-status'
-import {
-  startLinkedFolderSyncManager,
-  stopLinkedFolderSyncManager
-} from '~/src/composables/generate/linked-folders'
 
 const { unlockedThisSession } = useLockSession()
+let linkedFolderStartTimer: number | null = null
+let linkedFolderModule: Promise<typeof import('~/src/composables/generate/linked-folders')> | null = null
+
+function scheduleLinkedFolderSync() {
+  if (linkedFolderStartTimer !== null || linkedFolderModule) return
+  linkedFolderStartTimer = window.setTimeout(() => {
+    linkedFolderStartTimer = null
+    linkedFolderModule = import('~/src/composables/generate/linked-folders')
+    void linkedFolderModule.then(({ startLinkedFolderSyncManager }) => {
+      return startLinkedFolderSyncManager()
+    }).catch(() => {})
+  }, 5000)
+}
+
+function stopLinkedFolderSync() {
+  if (linkedFolderStartTimer !== null) {
+    window.clearTimeout(linkedFolderStartTimer)
+    linkedFolderStartTimer = null
+  }
+  if (linkedFolderModule) {
+    void linkedFolderModule.then(({ stopLinkedFolderSyncManager }) => stopLinkedFolderSyncManager())
+  }
+}
 
 onMounted(() => {
   installConnectionStatusListeners()
@@ -30,7 +49,7 @@ onMounted(() => {
   textScaleInit().catch(() => {})
   floatingChatInitFromDb().catch(() => {})
   if (hasTauriRuntime() && unlockedThisSession.value) {
-    startLinkedFolderSyncManager().catch(() => {})
+    scheduleLinkedFolderSync()
     initializeConnectionStatuses().catch(() => {})
   }
 })
@@ -38,14 +57,14 @@ onMounted(() => {
 watch(unlockedThisSession, (unlocked) => {
   if (!hasTauriRuntime()) return
   if (unlocked) {
-    startLinkedFolderSyncManager().catch(() => {})
+    scheduleLinkedFolderSync()
     initializeConnectionStatuses().catch(() => {})
   }
-  else stopLinkedFolderSyncManager()
+  else stopLinkedFolderSync()
 })
 
 onBeforeUnmount(() => {
-  stopLinkedFolderSyncManager()
+  stopLinkedFolderSync()
   uninstallConnectionStatusListeners()
 })
 </script>

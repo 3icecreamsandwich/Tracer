@@ -2,7 +2,6 @@ import { invoke } from '@tauri-apps/api/core'
 import type { Session, User } from '@supabase/supabase-js'
 
 import { hasTauriRuntime } from '../tauri'
-import { syncCloudProviderApiKeysToDevice } from '../ai/cloud-provider-keys'
 import { clearSupabaseMemorySession, getSupabaseClient } from './client'
 import { normalizeAuthError } from './errors'
 
@@ -22,7 +21,8 @@ let providerKeySyncRequest: Promise<void> | null = null
 
 function startProviderKeySync(): Promise<void> {
   if (providerKeySyncRequest) return providerKeySyncRequest
-  const request = syncCloudProviderApiKeysToDevice()
+  const request = import('../ai/cloud-provider-keys')
+    .then(({ syncCloudProviderApiKeysToDevice }) => syncCloudProviderApiKeysToDevice())
     .then(() => undefined)
     .catch(() => {
       console.error('[Tracer auth] Could not restore cloud provider API keys')

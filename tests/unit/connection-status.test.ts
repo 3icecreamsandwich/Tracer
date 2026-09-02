@@ -1,25 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  loadProviderApiKeyPresence: vi.fn(),
+  aiProviderApiKeyPresence: vi.fn(),
   aiOpenAiCompatGetConfig: vi.fn(),
   githubModelsLoadAuthState: vi.fn(),
   restoreAuthSession: vi.fn(),
   waitForProviderKeySync: vi.fn(),
 }))
 
-vi.mock('../../src/composables/ai/provider-settings', () => ({
-  emptyProviderApiKeyPresence: () => ({
-    openai: false,
-    anthropic: false,
-    gemini: false,
-    ollama_cloud: false,
-    openai_compat: false,
-  }),
-  loadProviderApiKeyPresence: mocks.loadProviderApiKeyPresence,
-}))
-
 vi.mock('../../src/composables/ai/credentials', () => ({
+  aiProviderApiKeyPresence: mocks.aiProviderApiKeyPresence,
   aiOpenAiCompatGetConfig: mocks.aiOpenAiCompatGetConfig,
 }))
 
@@ -51,8 +41,8 @@ const emptyPresence = {
 describe('session connection-status cache', () => {
   beforeEach(() => {
     resetConnectionStatusCache()
-    mocks.loadProviderApiKeyPresence.mockReset()
-    mocks.loadProviderApiKeyPresence.mockResolvedValue({ ...emptyPresence, openai: true })
+    mocks.aiProviderApiKeyPresence.mockReset()
+    mocks.aiProviderApiKeyPresence.mockResolvedValue({ ...emptyPresence, openai: true })
     mocks.aiOpenAiCompatGetConfig.mockReset()
     mocks.aiOpenAiCompatGetConfig.mockResolvedValue({
       baseURL: 'https://example.com/v1',
@@ -91,12 +81,12 @@ describe('session connection-status cache', () => {
 
   it('updates local credential presence directly without refetching the vault', async () => {
     await initializeConnectionStatuses()
-    const initialLoads = mocks.loadProviderApiKeyPresence.mock.calls.length
+    const initialLoads = mocks.aiProviderApiKeyPresence.mock.calls.length
 
     setProviderApiKeyPresence('anthropic', true)
 
     expect(useConnectionStatus().providerApiKeyPresence.value.anthropic).toBe(true)
-    expect(mocks.loadProviderApiKeyPresence).toHaveBeenCalledTimes(initialLoads)
+    expect(mocks.aiProviderApiKeyPresence).toHaveBeenCalledTimes(initialLoads)
   })
 
   it('force-refreshes network-backed state while keeping compatible config cached', async () => {

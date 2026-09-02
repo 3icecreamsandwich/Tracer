@@ -26,19 +26,12 @@ type DbSetListRow = {
   description: string | null
   icon_key: string | null
   icon_tone: string | null
-  terms_json: string
+  card_count: number
   created_at: string
   updated_at: string
 }
 
 function rowToSetListItem(row: DbSetListRow): FlashcardSetListItem {
-  let cardCount = 0
-  try {
-    const terms = JSON.parse(row.terms_json)
-    cardCount = Array.isArray(terms) ? terms.length : 0
-  } catch {
-    cardCount = 0
-  }
   return {
     id: row.id as Uuid,
     folderId: row.folder_id as Uuid | null,
@@ -46,7 +39,7 @@ function rowToSetListItem(row: DbSetListRow): FlashcardSetListItem {
     description: row.description ?? null,
     iconKey: row.icon_key ?? null,
     iconTone: row.icon_tone ?? null,
-    cardCount,
+    cardCount: row.card_count,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   }
@@ -70,7 +63,9 @@ export function createSetsRepo(db: DbClient) {
   return {
     async list(): Promise<FlashcardSetListItem[]> {
       const rows = await db.select<DbSetListRow>(
-        `SELECT id, folder_id, title, description, icon_key, icon_tone, terms_json, created_at, updated_at
+        `SELECT id, folder_id, title, description, icon_key, icon_tone,
+                CASE WHEN json_valid(terms_json) THEN json_array_length(terms_json) ELSE 0 END AS card_count,
+                created_at, updated_at
          FROM flashcard_sets
          WHERE hidden_from_library = 0
          ORDER BY updated_at DESC, created_at DESC;`

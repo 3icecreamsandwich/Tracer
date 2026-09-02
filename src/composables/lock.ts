@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { closeTracerDb } from './db'
+import { clearCachedHomeDashboard } from './home-dashboard-cache'
 import { hasTauriRuntime } from './tauri'
 import { redactSensitiveText } from './security/redact'
 
@@ -84,6 +85,7 @@ export async function lockResetTracer(): Promise<void> {
   try {
     await closeTracerDb().catch(() => {})
     await invoke('lock_reset_tracer')
+    clearCachedHomeDashboard()
   } catch (e) {
     throw new Error(redactSensitiveText(toMessage(e)))
   }

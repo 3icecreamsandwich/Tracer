@@ -1,4 +1,4 @@
-import { takeNextChatRevealUnit } from './chat'
+import { takeNextChatRevealUnit } from './chat-reveal-unit'
 
 export type ChatRevealMessage = {
   content: string

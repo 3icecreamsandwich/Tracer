@@ -92,7 +92,7 @@
                             label="Thinking…"
                             :show-label="false"
                         />
-                        <MarkdownRenderer
+                        <LazyMarkdownRenderer
                             v-else-if="message.role === 'assistant'"
                             :markdown="message.content"
                             variant="compact"
@@ -164,14 +164,7 @@
 
 <script setup lang="ts">
 import chatIconUrl from "~/assets/icons/study-modes/chat.png";
-import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
-import { resolveAiModel } from "~/src/composables/ai/registry";
-import {
-    buildPageAwareChatSystemPrompt,
-    streamGroundedChatText,
-    takeRecentChatMessages,
-    type ChatMessage,
-} from "~/src/composables/ai/chat";
+import type { ChatMessage } from "~/src/composables/ai/chat";
 import { createChatRevealQueue } from "~/src/composables/ai/chat-reveal";
 import { createSettingsRepo, useTracerDb } from "~/src/composables/db";
 import { useFloatingChatPreference } from "~/src/composables/floating-chat";
@@ -346,11 +339,13 @@ async function loadDefaultModel() {
     const promise =
         existing?.id === cacheId
             ? existing.promise
-            : resolveAiModel(route).finally(() => {
-                  if (cachedModelPromise?.id === cacheId) {
-                      cachedModelPromise = null;
-                  }
-              });
+            : import("~/src/composables/ai/registry")
+                  .then(({ resolveAiModel }) => resolveAiModel(route))
+                  .finally(() => {
+                      if (cachedModelPromise?.id === cacheId) {
+                          cachedModelPromise = null;
+                      }
+                  });
     if (existing?.id !== cacheId) cachedModelPromise = { id: cacheId, promise };
     const model = await promise;
     cachedModel = { id: cacheId, model };
@@ -395,19 +390,22 @@ async function sendMessage() {
     activeRequest.value = controller;
 
     try {
-        const model = await getDefaultModel();
-        const system = buildPageAwareChatSystemPrompt({
+        const [model, chat] = await Promise.all([
+            getDefaultModel(),
+            import("~/src/composables/ai/chat"),
+        ]);
+        const system = chat.buildPageAwareChatSystemPrompt({
             route: route.fullPath,
             title: pageTitle(),
             context: pageContextSnapshot(),
         });
-        const prior = takeRecentChatMessages(
+        const prior = chat.takeRecentChatMessages(
             messages.value.slice(0, -1).map((message) => ({
                 role: message.role,
                 content: message.fullContent ?? message.content,
             })),
         );
-        const result = streamGroundedChatText({
+        const result = chat.streamGroundedChatText({
             model,
             system,
             messages: prior,

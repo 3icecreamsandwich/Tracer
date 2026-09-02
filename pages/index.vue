@@ -398,7 +398,7 @@ import {
 } from '../src/composables/db'
 import { useLockSession } from '../src/composables/lock-session'
 import type {
-  FlashcardSetListItem,
+  DbClient,
   SetFolder,
   Uuid
 } from '../src/composables/db/types'
@@ -423,26 +423,20 @@ import {
   toggleSelectedSet,
   visibleSetRange
 } from '../src/composables/home/set-organization'
+import {
+  getCachedHomeDashboard,
+  setCachedHomeDashboard,
+  toHomeDashboardSetItem,
+  type HomeDashboardItem,
+  type HomeDashboardSnapshot,
+} from '../src/composables/home-dashboard-cache'
 
 const router = useRouter()
 const route = useRoute()
 const { language, t } = useAppLanguage()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 
-type HomeListItem = {
-  kind: 'set' | 'study-guide'
-  kindLabel: 'Set' | 'Study guide'
-  id: Uuid
-  setId?: Uuid
-  folderId: Uuid | null
-  title: string
-  subtitle: string | null
-  iconKey?: string | null
-  iconTone?: string | null
-  cardCount?: number
-  createdAt: string
-  updatedAt: string | null
-}
+type HomeListItem = HomeDashboardItem
 
 type HomeOrderEntry = {
   kind: 'folder' | 'set'
@@ -470,6 +464,7 @@ const libraryTabs: Array<{ value: LibraryKind; label: string }> = [
 ]
 const accountRole = ref<AccountRole | null>(null)
 const classrooms = ref<Classroom[]>([])
+const assignedHiddenSetIds = ref(new Set<string>())
 const classroomBusy = ref(false)
 const classroomError = ref<string | null>(null)
 const joinOpen = ref(false)
@@ -712,11 +707,7 @@ function sortIsoDesc(a: string, b: string) {
   return a > b ? -1 : 1
 }
 
-async function loadHomeList() {
-  busy.value = true
-  loadError.value = null
-  try {
-    const db = await useTracerDb()
+async function fetchHomeDashboard(db: DbClient): Promise<HomeDashboardSnapshot> {
     const setsRepo = createSetsRepo(db)
     const guidesRepo = createStudyGuidesRepo(db)
     const foldersRepo = createFoldersRepo(db)
@@ -736,7 +727,7 @@ async function loadHomeList() {
 
     const guideBySetId = new Map(guides.map((guide) => [guide.setId, guide]))
     for (const s of sets) {
-      next.push(toSetListItem(s))
+      next.push(toHomeDashboardSetItem(s))
       const guide = guideBySetId.get(s.id)
       if (guide) {
         next.push({
@@ -754,29 +745,44 @@ async function loadHomeList() {
     }
 
     next.sort((a, b) => sortIsoDesc(a.updatedAt ?? a.createdAt, b.updatedAt ?? b.createdAt))
-    items.value = next
-    folders.value = nextFolders
-    homeOrder.value = nextHomeOrder
-  } catch {
-    loadError.value = 'Failed to load sets and study guides.'
-  } finally {
-    busy.value = false
-  }
+    return { items: next, folders: nextFolders, homeOrder: nextHomeOrder }
 }
 
-function toSetListItem(s: FlashcardSetListItem): HomeListItem {
-  return {
-    kind: 'set',
-    kindLabel: 'Set',
-    id: s.id,
-    folderId: s.folderId,
-    title: s.title,
-    subtitle: s.description,
-    iconKey: s.iconKey,
-    iconTone: s.iconTone,
-    cardCount: s.cardCount,
-    createdAt: s.createdAt,
-    updatedAt: s.updatedAt
+function applyHomeDashboard(snapshot: HomeDashboardSnapshot) {
+  const hiddenIds = assignedHiddenSetIds.value
+  items.value = snapshot.items.filter((item) =>
+    item.kind === 'set'
+      ? !hiddenIds.has(item.id)
+      : !item.setId || !hiddenIds.has(item.setId)
+  )
+  folders.value = snapshot.folders
+  homeOrder.value = snapshot.homeOrder
+}
+
+function cacheCurrentHomeDashboard() {
+  setCachedHomeDashboard({
+    items: items.value,
+    folders: folders.value,
+    homeOrder: homeOrder.value,
+  })
+}
+
+async function loadHomeList(pendingSnapshot?: Promise<HomeDashboardSnapshot>) {
+  busy.value = true
+  loadError.value = null
+  const cached = getCachedHomeDashboard()
+  if (cached) {
+    applyHomeDashboard(cached)
+    busy.value = false
+  }
+  try {
+    const snapshot = await (pendingSnapshot ?? useTracerDb().then(fetchHomeDashboard))
+    applyHomeDashboard(snapshot)
+    cacheCurrentHomeDashboard()
+  } catch {
+    if (!cached) loadError.value = 'Failed to load sets and study guides.'
+  } finally {
+    busy.value = false
   }
 }
 
@@ -801,8 +807,9 @@ async function loadClassroomData() {
     ])
     accountRole.value = nextRole
     classrooms.value = nextClassrooms
+    assignedHiddenSetIds.value = new Set(assignedSetVersionIds)
     if (assignedSetVersionIds.length > 0) {
-      const hiddenIds = new Set(assignedSetVersionIds)
+      const hiddenIds = assignedHiddenSetIds.value
       const db = await useTracerDb()
       await createSetsRepo(db).hideManyFromLibrary(assignedSetVersionIds as Uuid[])
       items.value = items.value.filter((item) =>
@@ -810,6 +817,7 @@ async function loadClassroomData() {
           ? !hiddenIds.has(item.id)
           : !item.setId || !hiddenIds.has(item.setId)
       )
+      cacheCurrentHomeDashboard()
     }
   } catch (error) {
     if (error instanceof ClassroomError && ['signed_out', 'forbidden', 'not_configured'].includes(error.code)) {
@@ -820,6 +828,11 @@ async function loadClassroomData() {
   } finally {
     classroomBusy.value = false
   }
+}
+
+async function loadDashboard(pendingSnapshot: Promise<HomeDashboardSnapshot>) {
+  await loadHomeList(pendingSnapshot)
+  await loadClassroomData()
 }
 
 function closeJoin() {
@@ -1383,6 +1396,8 @@ onMounted(async () => {
       lockGetStatus(),
       useTracerDb()
     ])
+    const dashboardSnapshotPromise = fetchHomeDashboard(db)
+    void dashboardSnapshotPromise.catch(() => {})
 
     const [profile, settings] = await Promise.all([
       createProfileRepo(db).get(),
@@ -1398,8 +1413,7 @@ onMounted(async () => {
 
     if (settings.startupLockEnabled && status.requires_unlock) {
       if (unlockedThisSession.value) {
-        await loadHomeList()
-        await loadClassroomData()
+        await loadDashboard(dashboardSnapshotPromise)
         return
       }
       markLocked()
@@ -1409,13 +1423,11 @@ onMounted(async () => {
 
     if (status.can_auto_unlock) {
       markUnlocked()
-      await loadHomeList()
-      await loadClassroomData()
+      await loadDashboard(dashboardSnapshotPromise)
       return
     }
 
-    await loadHomeList()
-    await loadClassroomData()
+    await loadDashboard(dashboardSnapshotPromise)
   } catch {
     loadError.value = 'Failed to load sets and study guides.'
     busy.value = false
@@ -1423,6 +1435,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  if (!busy.value && !loadError.value) cacheCurrentHomeDashboard()
   document.removeEventListener('click', onDocumentClick)
   window.removeEventListener('pointermove', onWindowPointerMove)
   window.removeEventListener('pointerup', onWindowPointerUp)
