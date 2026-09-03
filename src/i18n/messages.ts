@@ -108,6 +108,9 @@ const en: Messages = {
   'set.studyGuide': 'Study guide',
   'set.studyGuideHint': 'Markdown',
   'set.terms': 'Terms',
+  'set.learning': 'Learning',
+  'set.mastered': 'Mastered',
+  'set.resumeIncorrect': 'Resume missed cards',
   'set.shuffle': 'Shuffle',
   'set.fullscreen': 'Fullscreen',
   'set.starredOnly': 'Starred only',
@@ -230,6 +233,7 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'settings.githubAuthenticate': 'Authenticate to use GitHub Models.', 'settings.clearApiKey': 'Clear API key?', 'settings.deviceCode': 'Device code', 'edit.deleteSet': 'Delete set?',
   },
   es: {
+    'set.learning': 'Aprendiendo', 'set.mastered': 'Dominadas', 'set.resumeIncorrect': 'Reanudar tarjetas falladas',
     'common.add': 'Añadir', 'common.results': 'Resultados', 'common.optional': 'opcional', 'common.status': 'Estado:', 'common.authenticated': 'Autenticado', 'common.notAuthenticated': 'Sin autenticar', 'common.invalid': 'Token no válido', 'common.locked': 'Bóveda bloqueada', 'common.retry': 'Reintentar', 'common.continue': 'Continuar', 'common.true': 'Verdadero', 'common.false': 'Falso',
     'common.clear': 'Limpiar', 'common.copy': 'Copiar', 'common.download': 'Descargar', 'common.selectAll': 'Seleccionar todo', 'common.confirm': 'Confirmar', 'common.authenticate': 'Autenticar', 'common.signOut': 'Cerrar sesión', 'set.noStarred': 'No hay tarjetas favoritas', 'set.comingSoon': 'Próximamente', 'set.notImplemented': 'Este modo aún no está implementado.', 'set.noCards': 'No hay tarjetas.', 'auth.firstRunDescription': 'Crea tu perfil y establece una contraseña para la aplicación.',
     'create.sourceSets': 'Conjuntos de origen', 'create.searchSetsPlaceholder': 'Buscar conjuntos…', 'create.searchAndSelect': 'Busca y selecciona uno o más conjuntos para combinar.', 'create.selected': 'Seleccionados', 'create.theme': 'Tema', 'create.aiOutput': 'Salida de IA', 'create.rawOutput': 'Salida sin procesar', 'create.sources': 'Fuentes', 'create.instructions': 'Instrucciones', 'create.pdfPages': 'Páginas PDF', 'create.images': 'Imágenes', 'create.files': 'Archivos',
@@ -237,6 +241,7 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'settings.githubAuthenticate': 'Autentícate para usar GitHub Models.', 'settings.clearApiKey': '¿Borrar la clave API?', 'settings.deviceCode': 'Código del dispositivo', 'edit.deleteSet': '¿Eliminar el conjunto?',
   },
   fr: {
+    'set.learning': 'En apprentissage', 'set.mastered': 'Maîtrisées', 'set.resumeIncorrect': 'Reprendre les cartes manquées',
     'common.add': 'Ajouter', 'common.results': 'Résultats', 'common.optional': 'facultatif', 'common.status': 'État :', 'common.authenticated': 'Authentifié', 'common.notAuthenticated': 'Non authentifié', 'common.invalid': 'Jeton invalide', 'common.locked': 'Coffre verrouillé', 'common.retry': 'Réessayer', 'common.continue': 'Continuer', 'common.true': 'Vrai', 'common.false': 'Faux',
     'common.clear': 'Effacer', 'common.copy': 'Copier', 'common.download': 'Télécharger', 'common.selectAll': 'Tout sélectionner', 'common.confirm': 'Confirmer', 'common.authenticate': 'S’authentifier', 'common.signOut': 'Se déconnecter', 'set.noStarred': 'Aucune carte favorite', 'set.comingSoon': 'Bientôt disponible', 'set.notImplemented': 'Ce mode n’est pas encore disponible.', 'set.noCards': 'Aucune carte.', 'auth.firstRunDescription': 'Créez votre profil et définissez un mot de passe.',
     'create.sourceSets': 'Ensembles sources', 'create.searchSetsPlaceholder': 'Rechercher des ensembles…', 'create.searchAndSelect': 'Recherchez et sélectionnez les ensembles à fusionner.', 'create.selected': 'Sélectionnés', 'create.theme': 'Thème', 'create.aiOutput': 'Sortie IA', 'create.rawOutput': 'Sortie brute', 'create.sources': 'Sources', 'create.instructions': 'Instructions', 'create.pdfPages': 'Pages PDF', 'create.images': 'Images', 'create.files': 'Fichiers',
@@ -244,6 +249,7 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'settings.githubAuthenticate': 'Authentifiez-vous pour utiliser GitHub Models.', 'settings.clearApiKey': 'Effacer la clé API ?', 'settings.deviceCode': 'Code appareil', 'edit.deleteSet': 'Supprimer l’ensemble ?',
   },
   'zh-CN': {
+    'set.learning': '学习中', 'set.mastered': '已掌握', 'set.resumeIncorrect': '继续复习错题',
     'common.add': '添加', 'common.results': '结果', 'common.optional': '可选', 'common.status': '状态：', 'common.authenticated': '已认证', 'common.notAuthenticated': '未认证', 'common.invalid': '令牌无效', 'common.locked': '保险库已锁定', 'common.retry': '重试', 'common.continue': '继续', 'common.true': '正确', 'common.false': '错误',
     'common.clear': '清除', 'common.copy': '复制', 'common.download': '下载', 'common.selectAll': '全选', 'common.confirm': '确认', 'common.authenticate': '认证', 'common.signOut': '退出登录', 'set.noStarred': '没有收藏的卡片', 'set.comingSoon': '即将推出', 'set.notImplemented': '此模式尚未实现。', 'set.noCards': '没有卡片。', 'auth.firstRunDescription': '创建个人资料并设置应用密码。',
     'create.sourceSets': '来源卡片集', 'create.searchSetsPlaceholder': '搜索卡片集…', 'create.searchAndSelect': '搜索并选择一个或多个要合并的卡片集。', 'create.selected': '已选择', 'create.theme': '主题', 'create.aiOutput': 'AI 输出', 'create.rawOutput': '原始输出', 'create.sources': '资料来源', 'create.instructions': '说明', 'create.pdfPages': 'PDF 页数', 'create.images': '图片', 'create.files': '文件',
@@ -251,6 +257,7 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'settings.githubAuthenticate': '认证后使用 GitHub Models。', 'settings.clearApiKey': '清除 API 密钥？', 'settings.deviceCode': '设备代码', 'edit.deleteSet': '删除卡片集？',
   },
   hi: {
+    'set.learning': 'सीख रहे हैं', 'set.mastered': 'महारत हासिल', 'set.resumeIncorrect': 'छूटे कार्ड फिर से देखें',
     'common.add': 'जोड़ें', 'common.results': 'परिणाम', 'common.optional': 'वैकल्पिक', 'common.status': 'स्थिति:', 'common.authenticated': 'प्रमाणित', 'common.notAuthenticated': 'प्रमाणित नहीं', 'common.invalid': 'टोकन अमान्य', 'common.locked': 'वॉल्ट लॉक है', 'common.retry': 'फिर प्रयास करें', 'common.continue': 'जारी रखें', 'common.true': 'सही', 'common.false': 'गलत',
     'common.clear': 'साफ़ करें', 'common.copy': 'कॉपी करें', 'common.download': 'डाउनलोड', 'common.selectAll': 'सभी चुनें', 'common.confirm': 'पुष्टि करें', 'common.authenticate': 'प्रमाणित करें', 'common.signOut': 'साइन आउट', 'set.noStarred': 'कोई पसंदीदा कार्ड नहीं', 'set.comingSoon': 'जल्द आ रहा है', 'set.notImplemented': 'यह मोड अभी उपलब्ध नहीं है।', 'set.noCards': 'कोई कार्ड नहीं।', 'auth.firstRunDescription': 'अपनी प्रोफ़ाइल बनाएँ और ऐप पासवर्ड सेट करें।',
     'create.sourceSets': 'स्रोत सेट', 'create.searchSetsPlaceholder': 'सेट खोजें…', 'create.searchAndSelect': 'मिलाने के लिए एक या अधिक सेट चुनें।', 'create.selected': 'चुने गए', 'create.theme': 'विषय', 'create.aiOutput': 'AI आउटपुट', 'create.rawOutput': 'मूल आउटपुट', 'create.sources': 'स्रोत', 'create.instructions': 'निर्देश', 'create.pdfPages': 'PDF पृष्ठ', 'create.images': 'चित्र', 'create.files': 'फ़ाइलें',
@@ -258,6 +265,7 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'settings.githubAuthenticate': 'GitHub Models के लिए प्रमाणित करें।', 'settings.clearApiKey': 'API कुंजी साफ़ करें?', 'settings.deviceCode': 'डिवाइस कोड', 'edit.deleteSet': 'सेट हटाएँ?',
   },
   ar: {
+    'set.learning': 'قيد التعلم', 'set.mastered': 'تم إتقانها', 'set.resumeIncorrect': 'متابعة البطاقات الخاطئة',
     'common.add': 'إضافة', 'common.results': 'النتائج', 'common.optional': 'اختياري', 'common.status': 'الحالة:', 'common.authenticated': 'تمت المصادقة', 'common.notAuthenticated': 'غير مصادق', 'common.invalid': 'الرمز غير صالح', 'common.locked': 'الخزنة مقفلة', 'common.retry': 'إعادة المحاولة', 'common.continue': 'متابعة', 'common.true': 'صحيح', 'common.false': 'خطأ',
     'common.clear': 'مسح', 'common.copy': 'نسخ', 'common.download': 'تنزيل', 'common.selectAll': 'تحديد الكل', 'common.confirm': 'تأكيد', 'common.authenticate': 'مصادقة', 'common.signOut': 'تسجيل الخروج', 'set.noStarred': 'لا توجد بطاقات مفضلة', 'set.comingSoon': 'قريبًا', 'set.notImplemented': 'هذا الوضع غير متاح بعد.', 'set.noCards': 'لا توجد بطاقات.', 'auth.firstRunDescription': 'أنشئ ملفك الشخصي وعيّن كلمة مرور للتطبيق.',
     'create.sourceSets': 'المجموعات المصدر', 'create.searchSetsPlaceholder': 'البحث في المجموعات…', 'create.searchAndSelect': 'ابحث وحدد مجموعة أو أكثر لدمجها.', 'create.selected': 'المحدد', 'create.theme': 'الموضوع', 'create.aiOutput': 'مخرجات الذكاء الاصطناعي', 'create.rawOutput': 'المخرجات الخام', 'create.sources': 'المصادر', 'create.instructions': 'التعليمات', 'create.pdfPages': 'صفحات PDF', 'create.images': 'الصور', 'create.files': 'الملفات',
@@ -265,6 +273,7 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'settings.githubAuthenticate': 'صادق لاستخدام GitHub Models.', 'settings.clearApiKey': 'مسح مفتاح API؟', 'settings.deviceCode': 'رمز الجهاز', 'edit.deleteSet': 'حذف المجموعة؟',
   },
   de: {
+    'set.learning': 'Lernen', 'set.mastered': 'Gemeistert', 'set.resumeIncorrect': 'Fehlerhafte Karten fortsetzen',
     'common.add': 'Hinzufügen', 'common.results': 'Ergebnisse', 'common.optional': 'optional', 'common.status': 'Status:', 'common.authenticated': 'Authentifiziert', 'common.notAuthenticated': 'Nicht authentifiziert', 'common.invalid': 'Token ungültig', 'common.locked': 'Tresor gesperrt', 'common.retry': 'Erneut versuchen', 'common.continue': 'Weiter', 'common.true': 'Wahr', 'common.false': 'Falsch',
     'common.clear': 'Leeren', 'common.copy': 'Kopieren', 'common.download': 'Herunterladen', 'common.selectAll': 'Alles auswählen', 'common.confirm': 'Bestätigen', 'common.authenticate': 'Authentifizieren', 'common.signOut': 'Abmelden', 'set.noStarred': 'Keine Favoriten', 'set.comingSoon': 'Demnächst', 'set.notImplemented': 'Dieser Modus ist noch nicht verfügbar.', 'set.noCards': 'Keine Karten.', 'auth.firstRunDescription': 'Erstelle dein Profil und lege ein App-Passwort fest.',
     'create.sourceSets': 'Quell-Sets', 'create.searchSetsPlaceholder': 'Sets durchsuchen…', 'create.searchAndSelect': 'Sets zum Zusammenführen suchen und auswählen.', 'create.selected': 'Ausgewählt', 'create.theme': 'Thema', 'create.aiOutput': 'KI-Ausgabe', 'create.rawOutput': 'Rohausgabe', 'create.sources': 'Quellen', 'create.instructions': 'Anweisungen', 'create.pdfPages': 'PDF-Seiten', 'create.images': 'Bilder', 'create.files': 'Dateien',
@@ -272,6 +281,7 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'settings.githubAuthenticate': 'Für GitHub Models authentifizieren.', 'settings.clearApiKey': 'API-Schlüssel löschen?', 'settings.deviceCode': 'Gerätecode', 'edit.deleteSet': 'Set löschen?',
   },
   ru: {
+    'set.learning': 'Изучаются', 'set.mastered': 'Освоены', 'set.resumeIncorrect': 'Продолжить пропущенные карточки',
     'common.add': 'Добавить', 'common.results': 'Результаты', 'common.optional': 'необязательно', 'common.status': 'Статус:', 'common.authenticated': 'Выполнен вход', 'common.notAuthenticated': 'Вход не выполнен', 'common.invalid': 'Токен недействителен', 'common.locked': 'Хранилище заблокировано', 'common.retry': 'Повторить', 'common.continue': 'Продолжить', 'common.true': 'Верно', 'common.false': 'Неверно',
     'common.clear': 'Очистить', 'common.copy': 'Копировать', 'common.download': 'Скачать', 'common.selectAll': 'Выбрать всё', 'common.confirm': 'Подтвердить', 'common.authenticate': 'Войти', 'common.signOut': 'Выйти', 'set.noStarred': 'Нет избранных карточек', 'set.comingSoon': 'Скоро', 'set.notImplemented': 'Этот режим ещё не реализован.', 'set.noCards': 'Нет карточек.', 'auth.firstRunDescription': 'Создайте профиль и задайте пароль приложения.',
     'create.sourceSets': 'Исходные наборы', 'create.searchSetsPlaceholder': 'Поиск наборов…', 'create.searchAndSelect': 'Найдите и выберите наборы для объединения.', 'create.selected': 'Выбрано', 'create.theme': 'Тема', 'create.aiOutput': 'Ответ ИИ', 'create.rawOutput': 'Исходный ответ', 'create.sources': 'Источники', 'create.instructions': 'Инструкции', 'create.pdfPages': 'Страницы PDF', 'create.images': 'Изображения', 'create.files': 'Файлы',
@@ -279,6 +289,7 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'settings.githubAuthenticate': 'Войдите для использования GitHub Models.', 'settings.clearApiKey': 'Удалить ключ API?', 'settings.deviceCode': 'Код устройства', 'edit.deleteSet': 'Удалить набор?',
   },
   ja: {
+    'set.learning': '学習中', 'set.mastered': '習得済み', 'set.resumeIncorrect': '間違えたカードを続ける',
     'common.add': '追加', 'common.results': '結果', 'common.optional': '任意', 'common.status': '状態：', 'common.authenticated': '認証済み', 'common.notAuthenticated': '未認証', 'common.invalid': 'トークンが無効', 'common.locked': '保管庫はロック中', 'common.retry': '再試行', 'common.continue': '続行', 'common.true': '正しい', 'common.false': '誤り',
     'common.clear': 'クリア', 'common.copy': 'コピー', 'common.download': 'ダウンロード', 'common.selectAll': 'すべて選択', 'common.confirm': '確認', 'common.authenticate': '認証', 'common.signOut': 'サインアウト', 'set.noStarred': 'お気に入りのカードはありません', 'set.comingSoon': '近日公開', 'set.notImplemented': 'このモードはまだ実装されていません。', 'set.noCards': 'カードがありません。', 'auth.firstRunDescription': 'プロフィールを作成し、アプリのパスワードを設定します。',
     'create.sourceSets': '元のセット', 'create.searchSetsPlaceholder': 'セットを検索…', 'create.searchAndSelect': '結合するセットを検索して選択します。', 'create.selected': '選択済み', 'create.theme': 'テーマ', 'create.aiOutput': 'AI 出力', 'create.rawOutput': '生の出力', 'create.sources': '資料', 'create.instructions': '指示', 'create.pdfPages': 'PDF ページ', 'create.images': '画像', 'create.files': 'ファイル',
@@ -286,6 +297,7 @@ const supplementalMessages: Record<AppLanguage, Messages> = {
     'settings.githubAuthenticate': 'GitHub Models を使用するには認証してください。', 'settings.clearApiKey': 'API キーを消去しますか？', 'settings.deviceCode': 'デバイスコード', 'edit.deleteSet': 'セットを削除しますか？',
   },
   ko: {
+    'set.learning': '학습 중', 'set.mastered': '마스터함', 'set.resumeIncorrect': '틀린 카드 계속하기',
     'common.add': '추가', 'common.results': '결과', 'common.optional': '선택 사항', 'common.status': '상태:', 'common.authenticated': '인증됨', 'common.notAuthenticated': '인증되지 않음', 'common.invalid': '토큰이 유효하지 않음', 'common.locked': '보관함 잠김', 'common.retry': '다시 시도', 'common.continue': '계속', 'common.true': '참', 'common.false': '거짓',
     'common.clear': '지우기', 'common.copy': '복사', 'common.download': '다운로드', 'common.selectAll': '모두 선택', 'common.confirm': '확인', 'common.authenticate': '인증', 'common.signOut': '로그아웃', 'set.noStarred': '즐겨찾기 카드가 없습니다', 'set.comingSoon': '출시 예정', 'set.notImplemented': '이 모드는 아직 구현되지 않았습니다.', 'set.noCards': '카드가 없습니다.', 'auth.firstRunDescription': '프로필을 만들고 앱 비밀번호를 설정하세요.',
     'create.sourceSets': '원본 세트', 'create.searchSetsPlaceholder': '세트 검색…', 'create.searchAndSelect': '결합할 세트를 검색하고 선택하세요.', 'create.selected': '선택됨', 'create.theme': '주제', 'create.aiOutput': 'AI 출력', 'create.rawOutput': '원본 출력', 'create.sources': '자료', 'create.instructions': '지침', 'create.pdfPages': 'PDF 페이지', 'create.images': '이미지', 'create.files': '파일',

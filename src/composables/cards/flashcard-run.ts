@@ -4,6 +4,16 @@ import { createRandomSeed, createSeededRandom, shuffleWith } from '../random'
 
 export type FlashcardAnswer = 'correct' | 'incorrect'
 
+export function flashcardPassProgress(
+  order: Uuid[],
+  answersByTermId: Record<Uuid, FlashcardAnswer>
+) {
+  return {
+    completed: order.filter((id) => answersByTermId[id] !== undefined).length,
+    total: order.length
+  }
+}
+
 type FlashcardRunState = {
   runCounter: Ref<number>
   cursorIndex: Ref<number>
@@ -11,7 +21,7 @@ type FlashcardRunState = {
   lastOrder: Ref<Uuid[]>
   answersByTermId: Ref<Record<Uuid, FlashcardAnswer>>
   answerAttemptsCount: Ref<number>
-  correctAnswerAttemptsCount?: Ref<number>
+  correctAttemptsCount: Ref<number>
   retryTermIds: Ref<Set<Uuid>>
   starredOnly: Ref<boolean>
   isFlipped: Ref<boolean>
@@ -28,7 +38,7 @@ type FlashcardRunOptions = {
   getCurrentTermId: () => Uuid | null
   getBaseSeed: () => number | null
   getStarredStudyCount: () => number
-  onAnswer: (answer: FlashcardAnswer) => void
+  onAnswer: (answer: FlashcardAnswer, termId: Uuid) => void
   onRestart?: () => void
   focusViewer: () => void
 }
@@ -54,7 +64,7 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     state.cursorIndex.value = 0
     state.answersByTermId.value = {}
     state.answerAttemptsCount.value = 0
-    if (state.correctAnswerAttemptsCount) state.correctAnswerAttemptsCount.value = 0
+    state.correctAttemptsCount.value = 0
     state.retryTermIds.value = new Set()
     state.isFlipped.value = false
   }
@@ -93,17 +103,19 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     const ids = options.getStudyTermIds()
     state.lastOrder.value = ids
     state.order.value = ids
-    const resumeIndex = runOptions?.resumeTermId
+    const savedCorrectTermIds = (runOptions?.resumeCorrectTermIds ?? [])
+      .filter((id) => ids.includes(id))
+    const savedRunWasComplete = ids.length > 0 && savedCorrectTermIds.length === ids.length
+    const resumeIndex = !savedRunWasComplete && runOptions?.resumeTermId
       ? ids.indexOf(runOptions.resumeTermId)
       : -1
     state.cursorIndex.value = resumeIndex >= 0 ? resumeIndex : 0
-    const correctTermIds = (runOptions?.resumeCorrectTermIds ?? [])
-      .filter((id) => ids.includes(id))
+    const correctTermIds = savedRunWasComplete ? [] : savedCorrectTermIds
     state.answersByTermId.value = Object.fromEntries(
       correctTermIds.map((id) => [id, 'correct' as const])
     )
     state.answerAttemptsCount.value = correctTermIds.length
-    if (state.correctAnswerAttemptsCount) state.correctAnswerAttemptsCount.value = correctTermIds.length
+    state.correctAttemptsCount.value = correctTermIds.length
     state.retryTermIds.value = new Set()
     state.isFlipped.value = false
   }
@@ -130,7 +142,7 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     for (let step = 0; step < ids.length; step += 1) {
       const index = (fromIndex + step) % ids.length
       const id = ids[index]
-      if (id && state.answersByTermId.value[id] !== 'correct') return index
+      if (id && state.answersByTermId.value[id] === undefined) return index
     }
     return null
   }
@@ -139,10 +151,8 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     const id = options.getCurrentTermId()
     if (!id) return
     state.answerAttemptsCount.value += 1
-    if (answer === 'correct' && state.correctAnswerAttemptsCount) {
-      state.correctAnswerAttemptsCount.value += 1
-    }
-    options.onAnswer(answer)
+    if (answer === 'correct') state.correctAttemptsCount.value += 1
+    options.onAnswer(answer, id)
     state.answersByTermId.value = {
       ...state.answersByTermId.value,
       [id]: answer
@@ -150,7 +160,6 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     const retries = new Set(state.retryTermIds.value)
     if (answer === 'incorrect') {
       retries.add(id)
-      state.order.value = [...state.order.value, id]
     } else {
       retries.delete(id)
     }
@@ -158,6 +167,18 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     state.isFlipped.value = false
     const next = findNextUnattempted(state.cursorIndex.value + 1)
     if (next !== null) state.cursorIndex.value = next
+  }
+
+  function resumeIncorrect() {
+    cancelAnswerFeedback()
+    const ids = state.order.value.filter((id) => state.retryTermIds.value.has(id))
+    state.order.value = ids
+    state.lastOrder.value = ids
+    state.cursorIndex.value = 0
+    state.answersByTermId.value = {}
+    state.retryTermIds.value = new Set()
+    state.isFlipped.value = false
+    options.focusViewer()
   }
 
   async function markAnswer(answer: FlashcardAnswer) {
@@ -184,6 +205,7 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     shuffleRun,
     startRun,
     restartRun,
+    resumeIncorrect,
     toggleStarredOnly,
     cancelFlashcardAnswerFeedback: cancelAnswerFeedback,
     markCorrect: () => void markAnswer('correct'),

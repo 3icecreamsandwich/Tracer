@@ -830,11 +830,6 @@ async function loadClassroomData() {
   }
 }
 
-async function loadDashboard(pendingSnapshot: Promise<HomeDashboardSnapshot>) {
-  await loadHomeList(pendingSnapshot)
-  await loadClassroomData()
-}
-
 function closeJoin() {
   if (joinBusy.value) return
   joinOpen.value = false
@@ -1399,21 +1394,24 @@ onMounted(async () => {
     const dashboardSnapshotPromise = fetchHomeDashboard(db)
     void dashboardSnapshotPromise.catch(() => {})
 
-    const [profile, settings] = await Promise.all([
-      createProfileRepo(db).get(),
-      createSettingsRepo(db).get()
-    ])
+    const profilePromise = createProfileRepo(db).get()
+    const settingsPromise = createSettingsRepo(db).get()
+    const profile = await profilePromise
     if (!profile || !status.has_verifier) {
       markLocked()
       await router.replace('/first-run')
       return
     }
 
+    const localDashboardLoad = loadHomeList(dashboardSnapshotPromise)
+    const settings = await settingsPromise
+
     accountRole.value = getCachedAccountRole(profile.supabaseUserId)
 
     if (settings.startupLockEnabled && status.requires_unlock) {
       if (unlockedThisSession.value) {
-        await loadDashboard(dashboardSnapshotPromise)
+        await localDashboardLoad
+        await loadClassroomData()
         return
       }
       markLocked()
@@ -1423,11 +1421,13 @@ onMounted(async () => {
 
     if (status.can_auto_unlock) {
       markUnlocked()
-      await loadDashboard(dashboardSnapshotPromise)
+      await localDashboardLoad
+      await loadClassroomData()
       return
     }
 
-    await loadDashboard(dashboardSnapshotPromise)
+    await localDashboardLoad
+    await loadClassroomData()
   } catch {
     loadError.value = 'Failed to load sets and study guides.'
     busy.value = false

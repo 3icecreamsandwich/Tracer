@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { themeInitFromDb } from '~/src/composables/theme'
+import { themeInitFromCache, themeInitFromDb } from '~/src/composables/theme'
 import { languageInit } from '~/src/composables/language'
 import { textScaleInit } from '~/src/composables/text-scale'
 import { floatingChatInitFromDb } from '~/src/composables/floating-chat'
@@ -18,21 +18,26 @@ import {
 } from '~/src/composables/connection-status'
 
 const { unlockedThisSession } = useLockSession()
+themeInitFromCache()
 let linkedFolderStartTimer: number | null = null
 let linkedFolderModule: Promise<typeof import('~/src/composables/generate/linked-folders')> | null = null
+let linkedFolderSyncGeneration = 0
 
 function scheduleLinkedFolderSync() {
   if (linkedFolderStartTimer !== null || linkedFolderModule) return
+  const generation = ++linkedFolderSyncGeneration
   linkedFolderStartTimer = window.setTimeout(() => {
     linkedFolderStartTimer = null
     linkedFolderModule = import('~/src/composables/generate/linked-folders')
     void linkedFolderModule.then(({ startLinkedFolderSyncManager }) => {
+      if (generation !== linkedFolderSyncGeneration || !unlockedThisSession.value) return
       return startLinkedFolderSyncManager()
     }).catch(() => {})
   }, 5000)
 }
 
 function stopLinkedFolderSync() {
+  linkedFolderSyncGeneration += 1
   if (linkedFolderStartTimer !== null) {
     window.clearTimeout(linkedFolderStartTimer)
     linkedFolderStartTimer = null
@@ -42,7 +47,12 @@ function stopLinkedFolderSync() {
   }
 }
 
+function onPageHide() {
+  stopLinkedFolderSync()
+}
+
 onMounted(() => {
+  window.addEventListener('pagehide', onPageHide)
   installConnectionStatusListeners()
   themeInitFromDb().catch(() => {})
   languageInit().catch(() => {})
@@ -64,6 +74,7 @@ watch(unlockedThisSession, (unlocked) => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('pagehide', onPageHide)
   stopLinkedFolderSync()
   uninstallConnectionStatusListeners()
 })
