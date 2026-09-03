@@ -347,6 +347,16 @@
                                             <button
                                                 type="button"
                                                 role="menuitemcheckbox"
+                                                :aria-checked="smartReviewEnabled"
+                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900"
+                                                @click="toggleSmartReview"
+                                            >
+                                                <span>Smart Review</span>
+                                                <span class="w-4 text-center" aria-hidden="true">{{ smartReviewEnabled ? "✓" : "" }}</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                role="menuitemcheckbox"
                                                 :aria-checked="starredOnly"
                                                 class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
                                                 :disabled="
@@ -404,6 +414,21 @@
                                 </div>
                             </div>
 
+                            <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                                <button
+                                    v-for="filter in reviewFilters"
+                                    :key="filter.value"
+                                    type="button"
+                                    class="rounded-full border px-3 py-1.5 transition-colors"
+                                    :class="reviewFilter === filter.value
+                                        ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+                                        : 'border-slate-200 text-slate-600 hover:border-amber-300 dark:border-slate-700 dark:text-slate-300'"
+                                    @click="setReviewFilter(filter.value)"
+                                >
+                                    {{ filter.label }} ({{ filter.count }})
+                                </button>
+                            </div>
+
                             <div v-if="isFinished" class="mt-4 select-none">
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
@@ -427,6 +452,13 @@
                                 </p>
 
                                 <div class="mt-4 flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 shadow-sm hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
+                                        @click="restartRun"
+                                    >
+                                        Restart
+                                    </button>
                                     <!-- <NuxtLink
                     :to="`/set/${set.id}/results?mode=flashcards&correct=${correctCount}&attempted=${attemptedCount}`"
                     class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -2135,6 +2167,15 @@ import {
 } from "~/src/composables/cards/web-flashcard-state";
 import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion";
 import { createFlashcardRun } from "~/src/composables/cards/flashcard-run";
+import {
+    getCardReviews,
+    isSmartReviewEnabled,
+    recordCardReview,
+    reviewBucket,
+    saveSmartReviewEnabled,
+    type CardReview,
+    type ReviewBucket,
+} from "~/src/composables/cards/spaced-repetition";
 
 const route = useRoute();
 const router = useRouter();
@@ -2313,6 +2354,9 @@ const flashcardSettingsMenuRoot = ref<HTMLElement | null>(null);
 const flashcardSettingsButtonEl = ref<HTMLButtonElement | null>(null);
 const flashcardsDefinitionFirst = ref(false);
 const flashcardFrontPreferenceBusy = ref(false);
+const smartReviewEnabled = ref(false);
+const reviewFilter = ref<"all" | ReviewBucket>("all");
+const cardReviews = ref<Record<Uuid, CardReview>>({});
 const savedFlashcardTermId = ref<Uuid | null>(null);
 const savedFlashcardCorrectTermIds = ref<Uuid[]>([]);
 const savedFlashcardProgressSignature = ref<string | null>(null);
@@ -2739,11 +2783,25 @@ const allStudyTermIds = computed(() => {
     return s.terms.map((t) => t.id as Uuid);
 });
 
+const reviewFilters = computed(() => [
+    { value: "all" as const, label: "All", count: allStudyTermIds.value.length },
+    { value: "due" as const, label: "Due", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "due").length },
+    { value: "learning" as const, label: "Learning", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "learning").length },
+    { value: "strong" as const, label: "Strong", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "strong").length },
+]);
+
 const studyTermIds = computed(() => {
     const s = set.value;
     if (!s) return [];
-    if (!starredOnly.value) return allStudyTermIds.value;
-    return allStudyTermIds.value.filter((id) => starredTermIds.value.has(id));
+    let ids = allStudyTermIds.value;
+    if (smartReviewEnabled.value && reviewFilter.value !== "all") {
+        ids = ids.filter((id) => reviewBucket(cardReviews.value[id]) === reviewFilter.value);
+    } else if (smartReviewEnabled.value) {
+        const rank: Record<ReviewBucket, number> = { due: 0, learning: 1, strong: 2 };
+        ids = [...ids].sort((a, b) => rank[reviewBucket(cardReviews.value[a])] - rank[reviewBucket(cardReviews.value[b])]);
+    }
+    if (!starredOnly.value) return ids;
+    return ids.filter((id) => starredTermIds.value.has(id));
 });
 
 const starredStudyCount = computed(
@@ -3663,8 +3721,17 @@ const {
     getCurrentTermId: () => (currentTerm.value?.id as Uuid | undefined) ?? null,
     getBaseSeed: () => baseSeed.value,
     getStarredStudyCount: () => starredStudyCount.value,
-    onAnswer: (answer) =>
-        recordInlineAssignedAnswer("flashcards", answer === "correct"),
+    onAnswer: (answer) => {
+        recordInlineAssignedAnswer("flashcards", answer === "correct");
+        const setId = set.value?.id as Uuid | undefined;
+        const termId = currentTerm.value?.id as Uuid | undefined;
+        if (setId && termId && smartReviewEnabled.value) {
+            cardReviews.value = {
+                ...cardReviews.value,
+                [termId]: recordCardReview(setId, termId, answer === "correct"),
+            };
+        }
+    },
     focusViewer: () => nextTick(() => viewerButtonEl.value?.focus()),
 });
 
@@ -3683,7 +3750,31 @@ function restartFromFlashcardSettings() {
     restartRun();
 }
 
+function toggleSmartReview() {
+    const setId = set.value?.id as Uuid | undefined;
+    if (!setId) return;
+    smartReviewEnabled.value = !smartReviewEnabled.value;
+    saveSmartReviewEnabled(setId, smartReviewEnabled.value);
+    flashcardSettingsOpen.value = false;
+    reviewFilter.value = "all";
+    startRun();
+}
+
+function setReviewFilter(filter: "all" | ReviewBucket) {
+    if (filter !== "all" && !smartReviewEnabled.value) {
+        const setId = set.value?.id as Uuid | undefined;
+        if (setId) {
+            smartReviewEnabled.value = true;
+            saveSmartReviewEnabled(setId, true);
+        }
+    }
+    reviewFilter.value = filter;
+    startRun();
+}
+
 async function loadStars(setId: Uuid) {
+    smartReviewEnabled.value = isSmartReviewEnabled(setId);
+    cardReviews.value = getCardReviews(setId);
     if (isWebPreview.value) {
         starredTermIds.value = new Set();
         return;
