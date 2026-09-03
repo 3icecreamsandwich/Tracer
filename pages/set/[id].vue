@@ -430,7 +430,7 @@
                                         : 'border-slate-200 text-slate-600 hover:border-amber-300 dark:border-slate-700 dark:text-slate-300'"
                                     @click="setReviewFilter(filter.value)"
                                 >
-                                    {{ filter.label }} ({{ filter.count }})
+                                    {{ filter.value === "due" && filter.count > 0 ? "Due now" : filter.label }} ({{ filter.count }})
                                 </button>
                                 <p
                                     v-if="dueCount === 0 && nextReviewText"

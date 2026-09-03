@@ -3,6 +3,7 @@ import type { Uuid } from '../db/types'
 export type ReviewBucket = 'learning' | 'strong' | 'due'
 
 export type CardReview = {
+  schedulerVersion: 3
   lastReviewAt: number
   nextReviewAt: number
   difficulty: number
@@ -26,14 +27,20 @@ function normalizeReview(value: unknown): CardReview | null {
   if (!value || typeof value !== 'object') return null
   const card = value as Partial<CardReview> & { dueAt?: number; streak?: number; misses?: number; lastReviewedAt?: number; interval?: number }
   const lastReviewAt = Number(card.lastReviewAt ?? card.lastReviewedAt ?? 0)
-  const nextReviewAt = Number(card.nextReviewAt ?? card.dueAt ?? Date.now())
+  const savedNextReviewAt = Number(card.nextReviewAt ?? card.dueAt ?? Date.now())
+  let repetitions = Math.max(0, Number(card.repetitions ?? card.streak ?? 0))
+  if (card.schedulerVersion !== 3 && repetitions >= 2) repetitions = 3
+  const nextReviewAt = card.schedulerVersion === 3
+    ? savedNextReviewAt
+    : lastReviewAt + (repetitions >= 3 ? DAY_MS : repetitions === 2 ? 45 * 60_000 : 15 * 60_000)
   if (!Number.isFinite(lastReviewAt) || !Number.isFinite(nextReviewAt)) return null
   return {
+    schedulerVersion: 3,
     lastReviewAt,
     nextReviewAt,
     difficulty: clamp(Number(card.difficulty ?? 5), 1, 10),
     stability: Math.max(0.01, Number(card.stability ?? Math.max(0.01, Number(card.interval ?? 0) / 86_400))),
-    repetitions: Math.max(0, Number(card.repetitions ?? card.streak ?? 0)),
+    repetitions,
     lapses: Math.max(0, Number(card.lapses ?? card.misses ?? 0)),
   }
 }
@@ -42,10 +49,12 @@ function readReviews(setId: Uuid, userId?: Uuid | null): Record<Uuid, CardReview
   try {
     const raw = JSON.parse(localStorage.getItem(reviewKey(setId, userId)) || '{}')
     if (!raw || typeof raw !== 'object') return {}
-    return Object.fromEntries(Object.entries(raw).flatMap(([id, value]) => {
+    const normalized = Object.fromEntries(Object.entries(raw).flatMap(([id, value]) => {
       const card = normalizeReview(value)
       return card ? [[id, card]] : []
     }))
+    localStorage.setItem(reviewKey(setId, userId), JSON.stringify(normalized))
+    return normalized
   } catch { return {} }
 }
 
@@ -74,7 +83,7 @@ export function getCardReviews(setId: Uuid, userId?: Uuid | null) {
 export function recordCardReview(setId: Uuid, termId: Uuid, correct: boolean, userId?: Uuid | null) {
   const reviews = readReviews(setId, userId)
   const now = Date.now()
-  const current = reviews[termId] || { lastReviewAt: 0, nextReviewAt: now, difficulty: 5, stability: 0.4, repetitions: 0, lapses: 0 }
+  const current = reviews[termId] || { schedulerVersion: 3 as const, lastReviewAt: 0, nextReviewAt: now, difficulty: 5, stability: 0.4, repetitions: 0, lapses: 0 }
   const elapsedDays = current.lastReviewAt ? Math.max(0, (now - current.lastReviewAt) / DAY_MS) : 0
   const retrievability = Math.pow(1 + elapsedDays / (9 * Math.max(0.01, current.stability)), -1)
   const difficulty = correct
@@ -91,7 +100,11 @@ export function recordCardReview(setId: Uuid, termId: Uuid, correct: boolean, us
     stability = 15 / 1_440
     intervalDays = 15 / 1_440
   } else if (current.repetitions === 1) {
-    // Graduate from Learning to Strong, initially due the next day.
+    // Second successful learning step.
+    stability = 45 / 1_440
+    intervalDays = 45 / 1_440
+  } else if (current.repetitions === 2) {
+    // Third success graduates the card to Strong, due the next day.
     stability = 1
     intervalDays = 1
   } else {
@@ -99,6 +112,7 @@ export function recordCardReview(setId: Uuid, termId: Uuid, correct: boolean, us
     intervalDays = clamp(stability * (Math.pow(TARGET_RETENTION, -1) - 1) * 9, 10 / 1_440, 36_500)
   }
   const next: CardReview = {
+    schedulerVersion: 3,
     lastReviewAt: now,
     nextReviewAt: now + intervalDays * DAY_MS,
     difficulty,
@@ -114,6 +128,6 @@ export function recordCardReview(setId: Uuid, termId: Uuid, correct: boolean, us
 export function reviewBucket(review: CardReview | undefined): ReviewBucket {
   if (!review) return 'learning'
   if (review.nextReviewAt <= Date.now()) return 'due'
-  if (review.repetitions < 2) return 'learning'
+  if (review.repetitions < 3) return 'learning'
   return 'strong'
 }

@@ -129,7 +129,7 @@
                         class="rounded-full border px-3 py-1 transition-colors"
                         :class="reviewFilter === filter.value ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200' : 'border-slate-200 text-slate-600 hover:border-amber-300 dark:border-slate-700 dark:text-slate-300'"
                         @click="setReviewFilter(filter.value)">
-                        {{ filter.label }} ({{ filter.count }})
+                        {{ filter.value === 'due' && filter.count > 0 ? 'Due now' : filter.label }} ({{ filter.count }})
                     </button>
                     <p
                         v-if="dueCount === 0 && nextReviewText"
