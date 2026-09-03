@@ -53,7 +53,11 @@ async function applyMigrations(dbPath: string) {
     path.resolve(process.cwd(), 'src-tauri', 'migrations', '008_set_icon_tone.sql'),
     'utf8'
   )
-  const res = await runSqlite(dbPath, `${migrationSql}\n${foldersMigrationSql}\n${iconsMigrationSql}\n${iconToneMigrationSql}`)
+  const assignedCopiesMigrationSql = await readFile(
+    path.resolve(process.cwd(), 'src-tauri', 'migrations', '018_hide_assigned_set_copies.sql'),
+    'utf8'
+  )
+  const res = await runSqlite(dbPath, `${migrationSql}\n${foldersMigrationSql}\n${iconsMigrationSql}\n${iconToneMigrationSql}\n${assignedCopiesMigrationSql}`)
   if (res.code !== 0) throw new Error(`sqlite3 migrations failed: ${res.stderr}`)
 }
 
@@ -143,17 +147,33 @@ describe('sets repo roundtrip (sqlite:tracer.db)', () => {
         }
       ])
 
+      await repo.hideFromLibrary(setId)
+      expect(await repo.list()).not.toContainEqual(expect.objectContaining({ id: setId }))
+      expect(await repo.get(setId)).toMatchObject({ id: setId, title: 'My Set' })
+
+      const secondSetId = '00000000-0000-4000-8000-000000000124'
+      await repo.create({ id: secondSetId, title: 'Assigned copy', terms: [] })
+      await repo.hideManyFromLibrary([secondSetId])
+      expect(await repo.list()).not.toContainEqual(expect.objectContaining({ id: secondSetId }))
+      expect(await repo.get(secondSetId)).toMatchObject({ id: secondSetId })
+
       await db.execute(
         `INSERT INTO starred_terms (set_id, term_id) VALUES (?, ?);`,
         [setId, '00000000-0000-4000-8000-000000000001']
       )
       await restoreAssignmentStudyGuide(db, setId, { markdown: '# Guide' })
       await restoreAssignmentStudyGuide(db, setId, { markdown: '# Updated guide' })
-      expect(await createStudyGuidesRepo(db).getBySetId(setId)).toMatchObject({
+      const studyGuidesRepo = createStudyGuidesRepo(db)
+      expect(await studyGuidesRepo.getBySetId(setId)).toMatchObject({
         id: setId,
         setId,
         markdown: '# Updated guide'
       })
+      const guideSummaries = await studyGuidesRepo.listSummaries()
+      expect(guideSummaries).toEqual([
+        expect.objectContaining({ id: setId, setId })
+      ])
+      expect(guideSummaries[0]).not.toHaveProperty('markdown')
 
       await repo.delete(setId)
 

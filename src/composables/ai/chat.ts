@@ -1,6 +1,8 @@
 import { streamText } from 'ai'
 import type { FlashcardSet } from '../db/types'
 
+export { takeNextChatRevealUnit } from './chat-reveal-unit'
+
 export type ChatRole = 'user' | 'assistant'
 
 export type ChatMessage = {
@@ -94,21 +96,6 @@ export function takeRecentChatMessages(
   const count = Math.max(0, Math.floor(Number.isFinite(limit) ? limit : 0))
   if (count <= 0) return []
   return normalized.slice(-count)
-}
-
-export function takeNextChatRevealUnit(pending: string, complete: boolean) {
-  if (!pending) return null
-  const match = /^\s*\S+\s+/.exec(pending)
-  if (!match && !complete) return null
-
-  const finalMatch = match ?? /^\s*\S+/.exec(pending) ?? /^\s+/.exec(pending)
-  if (!finalMatch) return null
-
-  const unit = finalMatch[0]
-  return {
-    unit,
-    pending: pending.slice(unit.length)
-  }
 }
 
 function tsvCell(s: string) {

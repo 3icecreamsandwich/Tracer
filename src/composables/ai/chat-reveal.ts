@@ -1,4 +1,4 @@
-import { takeNextChatRevealUnit } from './chat'
+import { takeNextChatRevealUnit } from './chat-reveal-unit'
 
 export type ChatRevealMessage = {
   content: string
@@ -22,7 +22,7 @@ export function createChatRevealQueue<T extends ChatRevealMessage>(
   options: ChatRevealQueueOptions<T>
 ) {
   const jobs = new Map<string, ChatRevealJob>()
-  const intervalMs = options.intervalMs ?? 34
+  const intervalMs = options.intervalMs ?? 18
 
   function stop(messageId: string, job: ChatRevealJob) {
     if (job.timer !== null) clearInterval(job.timer)

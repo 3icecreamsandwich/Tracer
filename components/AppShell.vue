@@ -10,7 +10,7 @@
       <slot />
     </main>
 
-    <FloatingPageChat v-if="!hideFloatingChat" />
+    <LazyFloatingPageChat v-if="!hideFloatingChat" />
   </div>
 </template>
 

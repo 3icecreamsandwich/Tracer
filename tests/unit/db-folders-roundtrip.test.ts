@@ -63,7 +63,7 @@ describe('folders repo roundtrip (sqlite:tracer.db)', () => {
     try {
       const dbPath = path.join(tmpDir, 'test.db')
       const migrations = await Promise.all(
-        ['001_core.sql', '004_folders.sql', '006_set_icons.sql', '007_folder_order.sql', '008_set_icon_tone.sql'].map((name) =>
+        ['001_core.sql', '004_folders.sql', '006_set_icons.sql', '007_folder_order.sql', '008_set_icon_tone.sql', '018_hide_assigned_set_copies.sql'].map((name) =>
           readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8')
         )
       )

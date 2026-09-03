@@ -261,12 +261,7 @@
                 {{ learnError }}
             </p>
 
-            <div
-                v-if="learnBusy"
-                class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-            >
-                Preparing questions…
-            </div>
+            <LoadingSpinner v-if="learnBusy" screen label="Preparing questions…" />
 
             <!-- Results -->
             <div
@@ -426,11 +421,8 @@
                                         Boolean(practiceWrittenFeedback)
                                     "
                                 >
-                                    {{
-                                        practiceAnswerBusy
-                                            ? "Checking…"
-                                            : "Save"
-                                    }}
+                                    <LoadingSpinner v-if="practiceAnswerBusy" size="sm" label="Checking…" />
+                                    <template v-else>Save</template>
                                 </button>
                             </div>
                         </form>

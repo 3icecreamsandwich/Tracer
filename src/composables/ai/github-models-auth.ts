@@ -14,11 +14,14 @@ import {
 } from './github-oauth'
 import {
   githubModelsInvalidateToken,
-  githubModelsLoadAuthState,
   githubModelsStoreToken,
-  type GithubModelsAuthState
 } from './github-state'
 import { redactSensitiveText } from '../security/redact'
+import {
+  refreshGithubConnectionStatus,
+  setGithubConnectionState,
+  useConnectionStatus,
+} from '../connection-status'
 
 export type GithubAuthStep =
   | 'idle'
@@ -48,8 +51,10 @@ export function useGithubModelsAuth(options: { isWebPreview: () => boolean }) {
   const githubAuthExpiresAt = ref<number | null>(null)
   const githubAuthNextPollIntervalSec = ref<number | null>(null)
   const githubAuthPollAbort = shallowRef<AbortController | null>(null)
-  const githubModelsAuthState = ref<GithubModelsAuthState>({ status: 'unauthenticated' })
-  const githubModelsAvailableModelIds = ref<string[]>([])
+  const {
+    githubModelsAuthState,
+    githubModelsAvailableModelIds,
+  } = useConnectionStatus()
 
   function resetPrompt() {
     githubAuthStep.value = 'idle'
@@ -72,10 +77,7 @@ export function useGithubModelsAuth(options: { isWebPreview: () => boolean }) {
   }
 
   async function githubRefreshAuthState() {
-    githubModelsAuthState.value = await githubModelsLoadAuthState()
-    githubModelsAvailableModelIds.value = githubModelsAuthState.value.status === 'authenticated'
-      ? githubModelsAuthState.value.models.map((model) => model.id)
-      : []
+    await refreshGithubConnectionStatus()
   }
 
   async function copyToClipboard(text: string | null) {
@@ -99,7 +101,7 @@ export function useGithubModelsAuth(options: { isWebPreview: () => boolean }) {
     githubAuthError.value = null
     try {
       await githubModelsInvalidateToken()
-      await githubRefreshAuthState()
+      setGithubConnectionState({ status: 'unauthenticated' })
     } catch (error) {
       githubAuthError.value = redactSensitiveText(errorMessage(error, 'Failed to sign out'))
     } finally {

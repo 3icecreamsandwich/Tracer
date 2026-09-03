@@ -21,7 +21,8 @@
           class="w-full rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           :disabled="busy"
         >
-          {{ busy ? t('common.loading') : t('auth.unlock') }}
+          <LoadingSpinner v-if="busy" size="sm" />
+          <template v-else>{{ t('auth.unlock') }}</template>
         </button>
       </form>
 

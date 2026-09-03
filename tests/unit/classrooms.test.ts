@@ -28,6 +28,10 @@ const setPageUrl = new URL('../../pages/set/[id].vue', import.meta.url)
 const detailedClassPageSource = readFileSync(fileURLToPath(detailedClassPageUrl), 'utf8')
 const manageClassPageSource = readFileSync(fileURLToPath(manageClassPageUrl), 'utf8')
 const dashboardPageSource = readFileSync(fileURLToPath(dashboardPageUrl), 'utf8')
+const homePageSource = readFileSync(
+  fileURLToPath(new URL('../../pages/index.vue', import.meta.url)),
+  'utf8',
+)
 const classroomComposableSource = readFileSync(
   fileURLToPath(new URL('../../src/composables/classrooms.ts', import.meta.url)),
   'utf8',
@@ -201,6 +205,7 @@ describe('teacher classroom routes', () => {
     expect(studentSource).toContain('classroomAssignmentMaterialPath(assignment.kind, localSetId)')
     expect(studentSource).toContain('v-if="assignment.kind === \'set\'"')
     expect(classroomComposableSource).toContain('restoreAssignmentStudyGuide(db, row.id, studyGuide)')
+    expect(classroomComposableSource).toContain('setsRepo.hideFromLibrary(row.id)')
   })
 
   it('records all four scored assigned modes while leaving Chat untracked', () => {
@@ -217,12 +222,33 @@ describe('teacher classroom routes', () => {
 
   it('loads teacher routes through the optimized concurrent classroom pipeline', () => {
     expect(dashboardPageSource).toContain('getClassroomOverview')
-    expect(dashboardPageSource).not.toContain('listClassroomAssignments')
+    expect(dashboardPageSource).toContain('listClassroomAssignments')
     expect(dashboardPageSource).not.toContain('listClassroomMembers')
     expect(detailedClassPageSource).not.toContain('getClassroom,')
     expect(manageClassPageSource).not.toContain('getClassroom,')
     expect(detailedClassPageSource).toMatch(/Promise\.all\([\s\S]*getAccountRole\(\)[\s\S]*listClassrooms\(\)[\s\S]*listClassroomMembers/)
     expect(manageClassPageSource).toMatch(/Promise\.all\([\s\S]*getAccountRole\(\)[\s\S]*listClassrooms\(\)[\s\S]*listClassroomMembers/)
+  })
+
+  it('shows cloud assignments on the teacher dashboard and opens their immutable material', () => {
+    expect(dashboardPageSource).toContain('assigned-materials-title')
+    expect(dashboardPageSource).toContain("t('classroom.assignedMaterials')")
+    expect(dashboardPageSource).toContain('v-for="assignment in assignments"')
+    expect(dashboardPageSource).toContain('prepareClassroomAssignmentForStudy(assignment)')
+    expect(dashboardPageSource).toContain('classroomAssignmentMaterialPath(assignment.kind, localSetId)')
+    expect(dashboardPageSource).not.toMatch(/openAssignedMaterial[\s\S]*query:\s*\{\s*assignment:/)
+    expect(dashboardPageSource.indexOf('assigned-materials-title'))
+      .toBeGreaterThan(dashboardPageSource.indexOf('activity-title'))
+    expect(dashboardPageSource.indexOf('assigned-materials-title'))
+      .toBeGreaterThan(dashboardPageSource.indexOf("t('classroom.classActions')"))
+  })
+
+  it('removes existing assignment snapshot copies from the home library by cloud version id', () => {
+    expect(classroomComposableSource).toContain('listClassroomAssignmentSetVersionIds')
+    expect(classroomComposableSource).toContain(".select('set_version_id')")
+    expect(homePageSource).toContain('listClassroomAssignmentSetVersionIds()')
+    expect(homePageSource).toContain('hideManyFromLibrary(assignedSetVersionIds as Uuid[])')
+    expect(homePageSource).toMatch(/await loadHomeList\(pendingSnapshot\)[\s\S]*await loadClassroomData\(\)/)
   })
 
   it('uses single-request nested reads for roster and assignment details', () => {

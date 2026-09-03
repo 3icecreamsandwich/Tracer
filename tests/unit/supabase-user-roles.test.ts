@@ -36,6 +36,12 @@ describe('Supabase signup roles', () => {
     expect(classroomSql).toMatch(/tracer_recipients_insert[\s\S]*private\.user_has_role\(student_id, 'student'\)/)
   })
 
+  it('allows authenticated class teachers to read assigned snapshots without exposing other classes', () => {
+    expect(classroomSql).toMatch(/can_read_assignment[\s\S]*a\.created_by = \(select auth\.uid\(\)\)[\s\S]*cm\.role = 'teacher'[\s\S]*cm\.status = 'active'/)
+    expect(classroomSql).toMatch(/tracer_assignments_select[\s\S]*private\.can_read_assignment\(id\)/)
+    expect(classroomSql).toMatch(/tracer_set_versions_select[\s\S]*private\.can_read_set_version\(id\)/)
+  })
+
   it('creates the cloud profile before its FK-bound role and saves the local profile last', () => {
     const cloudProfile = firstRunSource.indexOf('const prepared = await upsertAuthenticatedCloudProfile')
     const role = firstRunSource.indexOf('await initializeUserRole(pendingSignupRole.value)')

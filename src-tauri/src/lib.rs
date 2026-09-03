@@ -120,6 +120,12 @@ pub fn run() {
             sql: include_str!("../migrations/017_ai_model_fallbacks.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 18,
+            description: "hide_assigned_set_copies",
+            sql: include_str!("../migrations/018_hide_assigned_set_copies.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     let app = tauri::Builder::default()

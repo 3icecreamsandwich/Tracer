@@ -1,9 +1,7 @@
 <template>
   <main class="min-h-[calc(100vh-4rem)] bg-white pb-32 text-slate-950 dark:bg-slate-950 dark:text-white">
     <div class="mx-auto max-w-[1280px] px-8 py-10">
-      <div v-if="loading" class="rounded-xl border border-slate-200 bg-slate-50 p-6 text-sm dark:border-slate-800 dark:bg-slate-900">
-        {{ t('common.loading') }}
-      </div>
+      <LoadingSpinner v-if="loading" screen />
       <div v-else-if="loadError" class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
         <AppButton class="mt-4" variant="white" @click="loadPage">{{ t('classroom.retry') }}</AppButton>
@@ -86,7 +84,7 @@
               <NuxtLink v-for="mode in createModes" :key="mode.to" :to="mode.to" class="group flex min-h-[70px] items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900">
                 <img :src="mode.icon" alt="" class="h-12 w-12 shrink-0 rounded-xl object-cover" />
                 <span class="min-w-0 flex-1"><span class="block text-sm font-medium">{{ t(mode.label) }}</span><span class="mt-1 block text-xs">{{ t(mode.hint) }}</span></span>
-                <span aria-hidden="true">→</span>
+                <CreateChevron />
               </NuxtLink>
             </div>
           </section>
@@ -205,12 +203,15 @@ async function loadPage() {
     ])
     const setsRepo = createSetsRepo(db)
     const guidesRepo = createStudyGuidesRepo(db)
-    const sets = await setsRepo.list()
+    const [sets, guides] = await Promise.all([
+      setsRepo.list(),
+      guidesRepo.listSummaries(),
+    ])
     const nextItems: AssignmentPickerItem[] = []
-    const guides = await Promise.all(sets.map((set) => guidesRepo.getBySetId(set.id)))
-    for (const [index, set] of sets.entries()) {
+    const guideBySetId = new Map(guides.map((guide) => [guide.setId, guide]))
+    for (const set of sets) {
       nextItems.push(toSetItem(set))
-      const guide = guides[index]
+      const guide = guideBySetId.get(set.id)
       if (guide) {
         nextItems.push({
           kind: 'study-guide',

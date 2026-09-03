@@ -46,7 +46,8 @@
           :disabled="busy"
           @click="emit('confirm')"
         >
-          {{ busy ? t('common.loading') : t('settings.resetTracer') }}
+          <LoadingSpinner v-if="busy" size="sm" />
+          <template v-else>{{ t('settings.resetTracer') }}</template>
         </button>
       </div>
     </div>

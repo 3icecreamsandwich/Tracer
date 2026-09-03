@@ -6,7 +6,7 @@
     :class="{ 'ml-14': needsMacWindowControlsOffset }"
     @click="onBack"
   >
-    <span class="text-base">{{ language === 'ar' ? '→' : '←' }}</span>
+    <CreateChevron :direction="language === 'ar' ? 'right' : 'left'" />
     <span>{{ props.label ?? t('common.back') }}</span>
   </button>
 </template>

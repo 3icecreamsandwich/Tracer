@@ -13,6 +13,9 @@ const mocks = vi.hoisted(() => ({
     savedOpenAiCompatConfig: false
   })),
   aiSecretsDelete: vi.fn(async () => undefined),
+  saveProviderApiKeysToCloud: vi.fn(async () => true),
+  deleteProviderApiKeyFromCloud: vi.fn(async () => true),
+  ensureProviderDefaultModels: vi.fn(async () => [] as string[]),
 }))
 
 vi.mock('../../src/composables/ai/credentials', () => {
@@ -22,6 +25,15 @@ vi.mock('../../src/composables/ai/credentials', () => {
     aiSecretsDelete: mocks.aiSecretsDelete,
   }
 })
+
+vi.mock('../../src/composables/ai/cloud-provider-keys', () => ({
+  saveProviderApiKeysToCloud: mocks.saveProviderApiKeysToCloud,
+  deleteProviderApiKeyFromCloud: mocks.deleteProviderApiKeyFromCloud,
+}))
+
+vi.mock('../../src/composables/ai/provider-model-defaults', () => ({
+  ensureProviderDefaultModels: mocks.ensureProviderDefaultModels,
+}))
 
 describe('provider settings API key helpers', () => {
   beforeEach(() => {
@@ -40,6 +52,12 @@ describe('provider settings API key helpers', () => {
     })
     mocks.aiSecretsDelete.mockReset()
     mocks.aiSecretsDelete.mockResolvedValue(undefined)
+    mocks.saveProviderApiKeysToCloud.mockReset()
+    mocks.saveProviderApiKeysToCloud.mockResolvedValue(true)
+    mocks.deleteProviderApiKeyFromCloud.mockReset()
+    mocks.deleteProviderApiKeyFromCloud.mockResolvedValue(true)
+    mocks.ensureProviderDefaultModels.mockReset()
+    mocks.ensureProviderDefaultModels.mockResolvedValue([])
   })
 
   it('does not invoke key save for blank drafts', async () => {
@@ -82,6 +100,13 @@ describe('provider settings API key helpers', () => {
       },
       openAiCompatConfig: undefined
     })
+    expect(mocks.saveProviderApiKeysToCloud).toHaveBeenCalledWith({
+      openai: 'sk-openai',
+      gemini: 'AIza-test'
+    })
+    expect(mocks.ensureProviderDefaultModels).toHaveBeenCalledWith(['openai', 'gemini'], {
+      openAiCompatModelId: undefined,
+    })
   })
 
   it('passes OpenAI Compatible config through the batched save call', async () => {
@@ -104,6 +129,9 @@ describe('provider settings API key helpers', () => {
     expect(mocks.aiProviderSettingsSave).toHaveBeenCalledWith({
       apiKeys: {},
       openAiCompatConfig: { baseURL: 'https://example.com/v1', modelId: 'model-x' }
+    })
+    expect(mocks.ensureProviderDefaultModels).toHaveBeenCalledWith([], {
+      openAiCompatModelId: 'model-x',
     })
   })
 
@@ -137,6 +165,7 @@ describe('provider settings API key helpers', () => {
 
     expect(mocks.aiSecretsDelete).toHaveBeenCalledTimes(1)
     expect(mocks.aiSecretsDelete).toHaveBeenCalledWith('openai_compat_api_key')
+    expect(mocks.deleteProviderApiKeyFromCloud).toHaveBeenCalledWith('openai_compat')
     expect(mocks.aiProviderSettingsSave).not.toHaveBeenCalled()
   })
 })

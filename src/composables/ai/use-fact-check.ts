@@ -3,7 +3,7 @@ import type { AppLanguage } from '../db/types'
 import { hasTauriRuntime } from '../tauri'
 import { resolveAiModel } from './registry'
 import { aiErrorForMissingDefaultModel, normalizeAiError, type AiErrorUx } from './ux-errors'
-import { takeNextChatRevealUnit } from './chat'
+import { takeNextChatRevealUnit } from './chat-reveal-unit'
 import {
   buildFactCheckSystemPrompt,
   buildFactCheckUserPrompt,
@@ -13,7 +13,7 @@ import {
   type FactCheckDraft
 } from './fact-check'
 
-const revealIntervalMs = 34
+const revealIntervalMs = 18
 
 export function useFactCheck(args: {
   language: Readonly<Ref<AppLanguage>>

@@ -1,9 +1,7 @@
 <template>
   <main class="min-h-[calc(100vh-4rem)] bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
     <div class="mx-auto max-w-[1180px] px-8 py-10">
-      <div v-if="loading" class="rounded-xl border border-slate-200 bg-slate-50 p-6 text-sm dark:border-slate-800 dark:bg-slate-900">
-        {{ t('common.loading') }}
-      </div>
+      <LoadingSpinner v-if="loading" screen />
 
       <div v-else-if="loadError" class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
@@ -107,12 +105,41 @@
           <aside class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900" :aria-label="t('classroom.classActions')">
             <h2 class="text-lg font-semibold">{{ t('classroom.classActions') }}</h2>
             <div class="mt-4 grid gap-3">
-              <AppButton v-if="selectedClass" block variant="white" :to="`/teacher/classes/${selectedClass.id}/assign`">{{ t('classroom.assignSet') }} <span aria-hidden="true">→</span></AppButton>
-              <AppButton block variant="white" @click="openCode">{{ t('classroom.addStudents') }} <span aria-hidden="true">→</span></AppButton>
-              <AppButton v-if="selectedClass" block :to="`/teacher/classes/${selectedClass.id}`">{{ t('classroom.detailedView') }} <span aria-hidden="true">→</span></AppButton>
+              <AppButton v-if="selectedClass" block variant="white" :to="`/teacher/classes/${selectedClass.id}/assign`">{{ t('classroom.assignSet') }} <CreateChevron /></AppButton>
+              <AppButton block variant="white" @click="openCode">{{ t('classroom.addStudents') }} <CreateChevron /></AppButton>
+              <AppButton v-if="selectedClass" block :to="`/teacher/classes/${selectedClass.id}`">{{ t('classroom.detailedView') }} <CreateChevron /></AppButton>
             </div>
           </aside>
         </div>
+
+        <section class="mt-7 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="assigned-materials-title">
+          <h2 id="assigned-materials-title" class="text-xl font-semibold">{{ t('classroom.assignedMaterials') }}</h2>
+          <p v-if="assignments.length === 0" class="mt-5 rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            {{ t('classroom.noAssignedMaterials') }}
+          </p>
+          <ul v-else class="mt-5 grid gap-3 sm:grid-cols-2">
+            <li v-for="assignment in assignments" :key="assignment.id">
+              <button
+                type="button"
+                class="group flex min-h-[86px] w-full items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-wait disabled:opacity-70 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                :disabled="openingAssignmentId !== null"
+                @click="openAssignedMaterial(assignment)"
+              >
+                <img :src="setIconSrc(assignment.iconKey)" :style="setIconToneStyle(assignment.iconTone)" alt="" class="h-12 w-12 shrink-0 rounded-xl object-cover" />
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate font-semibold">{{ assignment.title }}</span>
+                  <span class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">
+                    {{ assignment.kind === 'study-guide' ? t('home.studyGuide') : t('classroom.cardCount', { count: assignment.cardCount }) }}
+                    <span aria-hidden="true"> · </span>{{ formatActivityDate(assignment.createdAt) }}
+                  </span>
+                </span>
+                <span v-if="openingAssignmentId === assignment.id" class="shrink-0 text-lg" aria-hidden="true">…</span>
+                <CreateChevron v-else />
+              </button>
+            </li>
+          </ul>
+          <p v-if="assignmentOpenError" class="mt-3 text-sm text-red-700 dark:text-red-300" role="alert">{{ assignmentOpenError }}</p>
+        </section>
       </template>
     </div>
 
@@ -135,19 +162,24 @@
 <script setup lang="ts">
 import {
   ClassroomError,
+  classroomAssignmentMaterialPath,
   classroomErrorKey,
   createClassroom,
   getAccountRole,
   getClassroomOverview,
+  listClassroomAssignments,
   listClassroomProgress,
   listClassrooms,
+  prepareClassroomAssignmentForStudy,
   summarizeClassProgress,
   type Classroom,
+  type ClassroomAssignment,
   type ClassroomErrorCode,
   type ClassroomProgressRow,
   type CreateClassroomInput,
 } from '~/src/composables/classrooms'
 import { useAppLanguage } from '~/src/composables/language'
+import { setIconSrc, setIconToneStyle } from '~/src/composables/set-icons'
 
 const router = useRouter()
 const { t } = useAppLanguage()
@@ -158,7 +190,10 @@ const classes = ref<Classroom[]>([])
 const selectedClassId = ref('')
 const memberCount = ref(0)
 const assignmentCount = ref(0)
+const assignments = ref<ClassroomAssignment[]>([])
 const progressRows = ref<ClassroomProgressRow[]>([])
+const openingAssignmentId = ref<string | null>(null)
+const assignmentOpenError = ref<string | null>(null)
 const createOpen = ref(false)
 const createBusy = ref(false)
 const createError = ref<string | null>(null)
@@ -178,22 +213,28 @@ watch(selectedClassId, async (classId) => {
   const requestId = ++overviewRequestId
   memberCount.value = 0
   assignmentCount.value = 0
+  assignments.value = []
   progressRows.value = []
+  assignmentOpenError.value = null
   if (!classId) return
   try {
-    const [overview, progress] = await Promise.all([
+    const [overview, progress, nextAssignments] = await Promise.all([
       getClassroomOverview(classId),
       listClassroomProgress(classId),
+      listClassroomAssignments(classId),
     ])
     if (requestId !== overviewRequestId) return
     memberCount.value = overview.memberCount
     assignmentCount.value = overview.assignmentCount
+    assignments.value = nextAssignments
     progressRows.value = progress
-  } catch {
+  } catch (error) {
     if (requestId !== overviewRequestId) return
     memberCount.value = 0
     assignmentCount.value = 0
+    assignments.value = []
     progressRows.value = []
+    assignmentOpenError.value = t(classroomErrorKey(error))
   }
 })
 
@@ -230,6 +271,20 @@ async function runDashboardLoad() {
     loadError.value = t(classroomErrorKey(error))
   } finally {
     loading.value = false
+  }
+}
+
+async function openAssignedMaterial(assignment: ClassroomAssignment) {
+  if (openingAssignmentId.value) return
+  openingAssignmentId.value = assignment.id
+  assignmentOpenError.value = null
+  try {
+    const localSetId = await prepareClassroomAssignmentForStudy(assignment)
+    await router.push(classroomAssignmentMaterialPath(assignment.kind, localSetId))
+  } catch (error) {
+    assignmentOpenError.value = t(classroomErrorKey(error))
+  } finally {
+    openingAssignmentId.value = null
   }
 }
 

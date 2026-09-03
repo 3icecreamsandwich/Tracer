@@ -55,12 +55,7 @@
         </header>
 
         <div class="mx-auto w-full max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
-            <div
-                v-if="busy"
-                class="rounded-xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-            >
-                Preparing your test…
-            </div>
+            <LoadingSpinner v-if="busy" screen label="Preparing your test…" />
 
             <div
                 v-else-if="loadError"
@@ -269,7 +264,8 @@
                         "
                         @click="submitTest()"
                     >
-                        {{ testGradingBusy ? "Grading…" : "Submit test" }}
+                        <LoadingSpinner v-if="testGradingBusy" size="sm" label="Grading…" />
+                        <template v-else>Submit test</template>
                     </button>
                     <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
                         {{
