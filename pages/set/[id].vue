@@ -951,6 +951,14 @@
                                 </p>
 
                                 <div class="mt-4 flex flex-wrap gap-2">
+                                    <button
+                                        v-if="set"
+                                        type="button"
+                                        class="inline-flex items-center rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 shadow-sm hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
+                                        @click="initializePracticeRun({ forceNew: true })"
+                                    >
+                                        Restart
+                                    </button>
                                     <NuxtLink
                                         v-if="set"
                                         replace
