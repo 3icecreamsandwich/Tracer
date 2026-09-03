@@ -335,14 +335,16 @@
                                         >
                                             <button
                                                 type="button"
-                                                role="menuitem"
-                                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
+                                                role="menuitemcheckbox"
+                                                :aria-checked="shuffleEnabled"
+                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
                                                 :disabled="totalCount === 0"
                                                 @click="
                                                     shuffleFromFlashcardSettings
                                                 "
                                             >
-                                                {{ t("set.shuffle") }}
+                                                <span>{{ t("set.shuffle") }}</span>
+                                                <span class="w-4 text-center" aria-hidden="true">{{ shuffleEnabled ? "✓" : "" }}</span>
                                             </button>
                                             <button
                                                 type="button"
@@ -414,7 +416,10 @@
                                 </div>
                             </div>
 
-                            <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                            <div
+                                v-if="smartReviewEnabled"
+                                class="mt-3 flex flex-wrap gap-2 text-xs"
+                            >
                                 <button
                                     v-for="filter in reviewFilters"
                                     :key="filter.value"
@@ -427,6 +432,12 @@
                                 >
                                     {{ filter.label }} ({{ filter.count }})
                                 </button>
+                                <p
+                                    v-if="dueCount === 0 && nextReviewText"
+                                    class="w-full pt-1 text-slate-500 dark:text-slate-400"
+                                >
+                                    Nothing due · Next {{ nextReviewText }}
+                                </p>
                             </div>
 
                             <div v-if="isFinished" class="mt-4 select-none">
@@ -455,7 +466,7 @@
                                     <button
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 shadow-sm hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
-                                        @click="restartRun"
+                                        @click="restartConfiguredRun"
                                     >
                                         Restart
                                     </button>
@@ -2169,9 +2180,11 @@ import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion"
 import { createFlashcardRun } from "~/src/composables/cards/flashcard-run";
 import {
     getCardReviews,
+    isFlashcardShuffleEnabled,
     isSmartReviewEnabled,
     recordCardReview,
     reviewBucket,
+    saveFlashcardShuffleEnabled,
     saveSmartReviewEnabled,
     type CardReview,
     type ReviewBucket,
@@ -2344,6 +2357,7 @@ const order = ref<Uuid[]>([]);
 const lastOrder = ref<Uuid[]>([]);
 const answersByTermId = ref<Record<Uuid, FlashcardsAnswer>>({});
 const answerAttemptsCount = ref(0);
+const correctAnswerAttemptsCount = ref(0);
 const retryTermIds = ref<Set<Uuid>>(new Set());
 
 const starredTermIds = ref<Set<Uuid>>(new Set());
@@ -2355,8 +2369,21 @@ const flashcardSettingsButtonEl = ref<HTMLButtonElement | null>(null);
 const flashcardsDefinitionFirst = ref(false);
 const flashcardFrontPreferenceBusy = ref(false);
 const smartReviewEnabled = ref(false);
+const shuffleEnabled = ref(false);
+const reviewOwnerId = ref<Uuid | null>(null);
 const reviewFilter = ref<"all" | ReviewBucket>("all");
 const cardReviews = ref<Record<Uuid, CardReview>>({});
+const reviewClock = ref(Date.now());
+let reviewClockTimer: ReturnType<typeof setInterval> | null = null;
+type ReviewRunSnapshot = {
+    order: Uuid[];
+    cursorIndex: number;
+    answers: Record<Uuid, FlashcardsAnswer>;
+    attempts: number;
+    correctAttempts: number;
+    retries: Uuid[];
+};
+const reviewRunSnapshots = ref<Partial<Record<"all" | ReviewBucket, ReviewRunSnapshot>>>({});
 const savedFlashcardTermId = ref<Uuid | null>(null);
 const savedFlashcardCorrectTermIds = ref<Uuid[]>([]);
 const savedFlashcardProgressSignature = ref<string | null>(null);
@@ -2747,6 +2774,7 @@ async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
     busy.value = false;
     isFlipped.value = false;
     flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
+    reviewOwnerId.value = "web-preview";
     await loadStars(set.value.id);
     const savedProgress = await loadSavedFlashcardProgress(set.value.id);
     savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
@@ -2783,12 +2811,15 @@ const allStudyTermIds = computed(() => {
     return s.terms.map((t) => t.id as Uuid);
 });
 
-const reviewFilters = computed(() => [
+const reviewFilters = computed(() => {
+    void reviewClock.value;
+    return [
     { value: "all" as const, label: "All", count: allStudyTermIds.value.length },
     { value: "due" as const, label: "Due", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "due").length },
     { value: "learning" as const, label: "Learning", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "learning").length },
     { value: "strong" as const, label: "Strong", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "strong").length },
-]);
+    ];
+});
 
 const studyTermIds = computed(() => {
     const s = set.value;
@@ -2814,7 +2845,37 @@ const isStarredOnlyEmpty = computed(
     () => starredOnly.value && starredStudyCount.value === 0,
 );
 
-const totalCount = computed(() => studyTermIds.value.length);
+// Freeze completion to the cards that were present when this run began. Live
+// Smart Review category changes must not make Results appear or disappear.
+const totalCount = computed(() => new Set(order.value).size);
+
+const dueCount = computed(() =>
+    (reviewClock.value, allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "due").length),
+);
+const nextReviewText = computed(() => {
+    const now = reviewClock.value;
+    const next = Object.values(cardReviews.value)
+        .map((review) => review.nextReviewAt)
+        .filter((time) => time > now)
+        .sort((a, b) => a - b)[0];
+    if (!next) return null;
+    const date = new Date(next);
+    const remaining = next - now;
+    if (remaining < 60 * 60 * 1000) {
+        return `in ${Math.max(1, Math.ceil(remaining / 60_000))} min`;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const day = new Date(date);
+    day.setHours(0, 0, 0, 0);
+    const dayOffset = Math.round((day.getTime() - today.getTime()) / 86_400_000);
+    if (dayOffset === 0) return `in ${Math.ceil(remaining / 3_600_000)} hr`;
+    if (dayOffset === 1) return "tomorrow";
+    return new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+    }).format(date);
+});
 
 const termById = computed(() => {
     const m = new Map<Uuid, FlashcardSet["terms"][number] & { id: Uuid }>();
@@ -2896,8 +2957,8 @@ const isCurrentRetry = computed(() => {
 const accuracyText = computed(() => {
     const attempted = attemptedCount.value;
     if (attempted <= 0) return "0%";
-    const pct = Math.round((correctCount.value / attempted) * 100);
-    return `${pct}% (${correctCount.value}/${attempted})`;
+    const pct = Math.round((correctAnswerAttemptsCount.value / attempted) * 100);
+    return `${pct}% (${correctAnswerAttemptsCount.value}/${attempted})`;
 });
 
 const exportTsv = computed(() => {
@@ -3708,6 +3769,7 @@ const {
         lastOrder,
         answersByTermId,
         answerAttemptsCount,
+        correctAnswerAttemptsCount,
         retryTermIds,
         starredOnly,
         isFlipped,
@@ -3728,7 +3790,7 @@ const {
         if (setId && termId && smartReviewEnabled.value) {
             cardReviews.value = {
                 ...cardReviews.value,
-                [termId]: recordCardReview(setId, termId, answer === "correct"),
+                [termId]: recordCardReview(setId, termId, answer === "correct", reviewOwnerId.value),
             };
         }
     },
@@ -3737,7 +3799,21 @@ const {
 
 function shuffleFromFlashcardSettings() {
     flashcardSettingsOpen.value = false;
-    shuffleRun();
+    const setId = set.value?.id as Uuid | undefined;
+    if (!setId) return;
+    shuffleEnabled.value = !shuffleEnabled.value;
+    saveFlashcardShuffleEnabled(setId, shuffleEnabled.value, reviewOwnerId.value);
+    if (shuffleEnabled.value) {
+        shuffleRun();
+        return;
+    }
+    const currentId = currentTerm.value?.id as Uuid | undefined;
+    const normalOrder = [...studyTermIds.value];
+    order.value = normalOrder;
+    lastOrder.value = normalOrder;
+    cursorIndex.value = currentId ? Math.max(0, normalOrder.indexOf(currentId)) : 0;
+    isFlipped.value = false;
+    nextTick(() => viewerButtonEl.value?.focus());
 }
 
 function toggleStarredOnlyFromFlashcardSettings() {
@@ -3747,34 +3823,68 @@ function toggleStarredOnlyFromFlashcardSettings() {
 
 function restartFromFlashcardSettings() {
     flashcardSettingsOpen.value = false;
+    restartConfiguredRun();
+}
+
+function startConfiguredRun() {
+    if (shuffleEnabled.value) shuffleRun();
+    else startRun();
+}
+
+function restartConfiguredRun() {
+    delete reviewRunSnapshots.value[reviewFilter.value];
     restartRun();
+    if (shuffleEnabled.value) shuffleRun();
 }
 
 function toggleSmartReview() {
     const setId = set.value?.id as Uuid | undefined;
     if (!setId) return;
     smartReviewEnabled.value = !smartReviewEnabled.value;
-    saveSmartReviewEnabled(setId, smartReviewEnabled.value);
+    saveSmartReviewEnabled(setId, smartReviewEnabled.value, reviewOwnerId.value);
     flashcardSettingsOpen.value = false;
+    reviewRunSnapshots.value = {};
     reviewFilter.value = "all";
-    startRun();
+    startConfiguredRun();
 }
 
 function setReviewFilter(filter: "all" | ReviewBucket) {
+    if (filter === reviewFilter.value) return;
+    reviewRunSnapshots.value[reviewFilter.value] = {
+        order: [...order.value],
+        cursorIndex: cursorIndex.value,
+        answers: { ...answersByTermId.value },
+        attempts: answerAttemptsCount.value,
+        correctAttempts: correctAnswerAttemptsCount.value,
+        retries: [...retryTermIds.value],
+    };
     if (filter !== "all" && !smartReviewEnabled.value) {
         const setId = set.value?.id as Uuid | undefined;
         if (setId) {
             smartReviewEnabled.value = true;
-            saveSmartReviewEnabled(setId, true);
+            saveSmartReviewEnabled(setId, true, reviewOwnerId.value);
         }
     }
     reviewFilter.value = filter;
-    startRun();
+    const saved = reviewRunSnapshots.value[filter];
+    if (!saved) {
+        startConfiguredRun();
+        return;
+    }
+    order.value = [...saved.order];
+    cursorIndex.value = saved.cursorIndex;
+    answersByTermId.value = { ...saved.answers };
+    answerAttemptsCount.value = saved.attempts;
+    correctAnswerAttemptsCount.value = saved.correctAttempts;
+    retryTermIds.value = new Set(saved.retries);
+    isFlipped.value = false;
+    nextTick(() => viewerButtonEl.value?.focus());
 }
 
 async function loadStars(setId: Uuid) {
-    smartReviewEnabled.value = isSmartReviewEnabled(setId);
-    cardReviews.value = getCardReviews(setId);
+    smartReviewEnabled.value = isSmartReviewEnabled(setId, reviewOwnerId.value);
+    shuffleEnabled.value = isFlashcardShuffleEnabled(setId, reviewOwnerId.value);
+    cardReviews.value = getCardReviews(setId, reviewOwnerId.value);
     if (isWebPreview.value) {
         starredTermIds.value = new Set();
         return;
@@ -4357,6 +4467,7 @@ async function openSetPage() {
             await router.replace("/first-run");
             return;
         }
+        reviewOwnerId.value = profile.id;
 
         defaultModelId.value = settings.defaultModelId;
         fallbackModelIds.value = settings.fallbackModelIds;
@@ -4464,6 +4575,7 @@ async function openSetPage() {
 }
 
 onMounted(async () => {
+    reviewClockTimer = setInterval(() => (reviewClock.value = Date.now()), 30_000);
     window.addEventListener("pagehide", onAssignedPageHide);
     await openSetPage();
     beginInlineAssignedMode(mode.value);
@@ -4572,6 +4684,7 @@ watch(
 );
 
 onBeforeUnmount(() => {
+    if (reviewClockTimer) clearInterval(reviewClockTimer);
     finishInlineAssignedMode();
     window.removeEventListener("pagehide", onAssignedPageHide);
     cancelFlashcardMotion();

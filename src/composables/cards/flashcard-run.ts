@@ -11,6 +11,7 @@ type FlashcardRunState = {
   lastOrder: Ref<Uuid[]>
   answersByTermId: Ref<Record<Uuid, FlashcardAnswer>>
   answerAttemptsCount: Ref<number>
+  correctAnswerAttemptsCount?: Ref<number>
   retryTermIds: Ref<Set<Uuid>>
   starredOnly: Ref<boolean>
   isFlipped: Ref<boolean>
@@ -53,6 +54,7 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     state.cursorIndex.value = 0
     state.answersByTermId.value = {}
     state.answerAttemptsCount.value = 0
+    if (state.correctAnswerAttemptsCount) state.correctAnswerAttemptsCount.value = 0
     state.retryTermIds.value = new Set()
     state.isFlipped.value = false
   }
@@ -101,6 +103,7 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
       correctTermIds.map((id) => [id, 'correct' as const])
     )
     state.answerAttemptsCount.value = correctTermIds.length
+    if (state.correctAnswerAttemptsCount) state.correctAnswerAttemptsCount.value = correctTermIds.length
     state.retryTermIds.value = new Set()
     state.isFlipped.value = false
   }
@@ -136,6 +139,9 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     const id = options.getCurrentTermId()
     if (!id) return
     state.answerAttemptsCount.value += 1
+    if (answer === 'correct' && state.correctAnswerAttemptsCount) {
+      state.correctAnswerAttemptsCount.value += 1
+    }
     options.onAnswer(answer)
     state.answersByTermId.value = {
       ...state.answersByTermId.value,
