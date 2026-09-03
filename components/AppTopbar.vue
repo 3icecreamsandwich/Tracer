@@ -118,7 +118,8 @@
                 <span
                     class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-950 text-[13px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
                 >
-                    {{ avatarText }}
+                    <LoadingSpinner v-if="!avatarText" size="sm" :show-label="false" />
+                    <template v-else>{{ avatarText }}</template>
                 </span>
                 <span class="hidden sm:block">{{ t("nav.settings") }}</span>
             </NuxtLink>
@@ -159,7 +160,7 @@ const searchOpen = ref(false);
 const searchBusy = ref(false);
 const searchError = ref<string | null>(null);
 const searchItems = ref<TopbarSearchItem[]>([]);
-const avatarText = ref("U");
+const avatarText = ref("");
 const windowControlsClass = ref("");
 let searchLoaded = false;
 

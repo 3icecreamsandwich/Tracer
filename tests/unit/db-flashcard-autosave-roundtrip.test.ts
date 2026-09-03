@@ -75,6 +75,7 @@ async function applyMigrations(dbPath: string) {
     '016_profile_supabase_user.sql',
     '017_ai_model_fallbacks.sql',
     '018_hide_assigned_set_copies.sql'
+    , '019_flashcard_mastery.sql'
   ]
   const migrations = await Promise.all(
     names.map((name) => readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8'))
@@ -107,19 +108,23 @@ describe('flashcard autosave persistence (sqlite:tracer.db)', () => {
       expect(await progressRepo.get('set-1')).toBeNull()
       await progressRepo.save('set-1', {
         currentTermId: 'term-1',
-        correctTermIds: ['term-0']
+        correctTermIds: ['term-0'],
+        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 0, mastered: true } }
       })
       expect(await progressRepo.get('set-1')).toEqual({
         currentTermId: 'term-1',
-        correctTermIds: ['term-0']
+        correctTermIds: ['term-0'],
+        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 0, mastered: true } }
       })
       await progressRepo.save('set-1', {
         currentTermId: 'term-2',
-        correctTermIds: ['term-0', 'term-1']
+        correctTermIds: ['term-0', 'term-1'],
+        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 1, mastered: true } }
       })
       expect(await progressRepo.get('set-1')).toEqual({
         currentTermId: 'term-2',
-        correctTermIds: ['term-0', 'term-1']
+        correctTermIds: ['term-0', 'term-1'],
+        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 1, mastered: true } }
       })
 
       expect((await settingsRepo.get()).flashcardsDefinitionFirst).toBe(false)

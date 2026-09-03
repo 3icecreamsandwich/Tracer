@@ -368,6 +368,19 @@
                                                     }}</span
                                                 >
                                             </button>
+                                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
+                                            <button
+                                                v-for="filter in (['learning', 'mastered', 'all'] as const)"
+                                                :key="filter"
+                                                type="button"
+                                                role="menuitemradio"
+                                                :aria-checked="flashcardStudyFilter === filter"
+                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900"
+                                                @click="selectFlashcardStudyFilter(filter)"
+                                            >
+                                                <span>{{ filter === 'all' ? t('set.filterAll') : t(`set.${filter}`) }}</span>
+                                                <span class="w-4 text-center" aria-hidden="true">{{ flashcardStudyFilter === filter ? '✓' : '' }}</span>
+                                            </button>
                                             <button
                                                 type="button"
                                                 role="menuitem"
@@ -427,6 +440,22 @@
                                 </p>
 
                                 <div class="mt-4 flex flex-wrap gap-2">
+                                    <button
+                                        v-if="hasIncorrectCards"
+                                        type="button"
+                                        class="inline-flex items-center rounded-md bg-orange-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+                                        @click="resumeIncorrect"
+                                    >
+                                        {{ t("set.resumeIncorrect") }}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                                        :disabled="allStudyTermIds.length === 0"
+                                        @click="restartAllFlashcards"
+                                    >
+                                        {{ t("common.restart") }}
+                                    </button>
                                     <!-- <NuxtLink
                     :to="`/set/${set.id}/results?mode=flashcards&correct=${correctCount}&attempted=${attemptedCount}`"
                     class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -462,6 +491,20 @@
                                 class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                             >
                                 {{ t("set.noStarred") }}
+                            </div>
+
+                            <div
+                                v-else-if="totalCount === 0"
+                                class="mt-4 rounded-md border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-100"
+                            >
+                                <p>{{ t("set.noCards") }}</p>
+                                <button
+                                    type="button"
+                                    class="mt-3 inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
+                                    @click="restartAllFlashcards"
+                                >
+                                    {{ t("common.restart") }}
+                                </button>
                             </div>
 
                             <div v-else>
@@ -1692,8 +1735,18 @@
                                     v-for="(term, idx) in filteredTerms"
                                     :key="term.id"
                                 >
+                                    <h3
+                                        v-if="idx === 0 || isTermMastered(filteredTerms[idx - 1]!.id as Uuid) !== isTermMastered(term.id as Uuid)"
+                                        class="mb-2 text-xs font-semibold uppercase tracking-wide"
+                                        :class="isTermMastered(term.id as Uuid) ? 'text-emerald-700 dark:text-emerald-300' : 'text-orange-700 dark:text-orange-300'"
+                                    >
+                                        {{ isTermMastered(term.id as Uuid) ? t("set.mastered") : t("set.learning") }}
+                                    </h3>
                                     <div
-                                        class="relative rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                                        class="relative rounded-md border p-4 shadow-sm"
+                                        :class="isTermMastered(term.id as Uuid)
+                                            ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/25'
+                                            : 'border-orange-200 bg-orange-50/70 dark:border-orange-900 dark:bg-orange-950/25'"
                                     >
                                         <button
                                             type="button"
@@ -2126,7 +2179,14 @@ import {
     type SavedFlashcardProgress,
 } from "~/src/composables/cards/web-flashcard-state";
 import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion";
-import { createFlashcardRun } from "~/src/composables/cards/flashcard-run";
+import { createFlashcardRun, flashcardPassProgress } from "~/src/composables/cards/flashcard-run";
+import {
+    DEFAULT_FLASHCARD_STUDY_FILTER,
+    updateFlashcardMastery,
+    sortTermsByFlashcardMastery,
+    type FlashcardMasteryByTermId,
+    type FlashcardStudyFilter,
+} from "~/src/composables/cards/flashcard-mastery";
 
 const route = useRoute();
 const router = useRouter();
@@ -2295,11 +2355,15 @@ const order = ref<Uuid[]>([]);
 const lastOrder = ref<Uuid[]>([]);
 const answersByTermId = ref<Record<Uuid, FlashcardsAnswer>>({});
 const answerAttemptsCount = ref(0);
+const correctAttemptsCount = ref(0);
 const retryTermIds = ref<Set<Uuid>>(new Set());
 
 const starredTermIds = ref<Set<Uuid>>(new Set());
 const starBusy = ref(false);
 const starredOnly = ref(false);
+const flashcardStudyFilter = ref<FlashcardStudyFilter>(
+    DEFAULT_FLASHCARD_STUDY_FILTER,
+);
 const flashcardSettingsOpen = ref(false);
 const flashcardSettingsMenuRoot = ref<HTMLElement | null>(null);
 const flashcardSettingsButtonEl = ref<HTMLButtonElement | null>(null);
@@ -2307,6 +2371,7 @@ const flashcardsDefinitionFirst = ref(false);
 const flashcardFrontPreferenceBusy = ref(false);
 const savedFlashcardTermId = ref<Uuid | null>(null);
 const savedFlashcardCorrectTermIds = ref<Uuid[]>([]);
+const masteryByTermId = ref<FlashcardMasteryByTermId>({});
 const savedFlashcardProgressSignature = ref<string | null>(null);
 
 const preferredFlashcardFrontOptionLabel = computed(() =>
@@ -2331,7 +2396,11 @@ function persistFlashcardProgress(termId: Uuid) {
     const correctTermIds = allStudyTermIds.value.filter(
         (id) => answersByTermId.value[id] === "correct",
     );
-    const progress = { currentTermId: termId, correctTermIds };
+    const progress = {
+        currentTermId: termId,
+        correctTermIds,
+        masteryByTermId: masteryByTermId.value,
+    };
     const signature = JSON.stringify(progress);
     if (savedFlashcardProgressSignature.value === signature) return;
     savedFlashcardTermId.value = termId;
@@ -2378,7 +2447,7 @@ function onDocumentFlashcardSettingsPointerDown(event: PointerEvent) {
     flashcardSettingsOpen.value = false;
 }
 
-type TermsFilter = "all" | "starred" | "unstarred";
+type TermsFilter = "all" | "starred" | "unstarred" | "learning" | "mastered";
 const termsFilter = ref<TermsFilter>("all");
 const termsFilterMenuOpen = ref(false);
 const termsFilterMenuRoot = ref<HTMLElement | null>(null);
@@ -2390,16 +2459,28 @@ const termsFilterOptions: Array<{
     { value: "all", labelKey: "set.filterAll" },
     { value: "starred", labelKey: "set.filterStarred" },
     { value: "unstarred", labelKey: "set.filterUnstarred" },
+    { value: "learning", labelKey: "set.learning" },
+    { value: "mastered", labelKey: "set.mastered" },
 ];
 
 const filteredTerms = computed(() => {
     const terms = set.value?.terms ?? [];
-    if (termsFilter.value === "all") return terms;
+    const sorted = sortTermsByFlashcardMastery(
+        terms.map((term) => ({ ...term, id: term.id as Uuid })),
+        masteryByTermId.value,
+    );
+    if (termsFilter.value === "all") return sorted;
+    if (termsFilter.value === "learning") return sorted.filter((term) => !isTermMastered(term.id as Uuid));
+    if (termsFilter.value === "mastered") return sorted.filter((term) => isTermMastered(term.id as Uuid));
     const showStarred = termsFilter.value === "starred";
-    return terms.filter(
+    return sorted.filter(
         (term) => starredTermIds.value.has(term.id as Uuid) === showStarred,
     );
 });
+
+function isTermMastered(termId: Uuid) {
+    return masteryByTermId.value[termId]?.mastered === true;
+}
 
 function selectTermsFilter(filter: TermsFilter) {
     termsFilter.value = filter;
@@ -2699,6 +2780,7 @@ async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
     const savedProgress = await loadSavedFlashcardProgress(set.value.id);
     savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
     savedFlashcardCorrectTermIds.value = savedProgress?.correctTermIds ?? [];
+    masteryByTermId.value = savedProgress?.masteryByTermId ?? {};
     savedFlashcardProgressSignature.value = savedProgress
         ? JSON.stringify(savedProgress)
         : null;
@@ -2732,10 +2814,15 @@ const allStudyTermIds = computed(() => {
 });
 
 const studyTermIds = computed(() => {
-    const s = set.value;
-    if (!s) return [];
-    if (!starredOnly.value) return allStudyTermIds.value;
-    return allStudyTermIds.value.filter((id) => starredTermIds.value.has(id));
+    let ids = allStudyTermIds.value.filter((id) =>
+        flashcardStudyFilter.value === "all"
+            ? true
+            : flashcardStudyFilter.value === "mastered"
+              ? isTermMastered(id)
+              : !isTermMastered(id),
+    );
+    if (starredOnly.value) ids = ids.filter((id) => starredTermIds.value.has(id));
+    return ids;
 });
 
 const starredStudyCount = computed(
@@ -2748,7 +2835,7 @@ const isStarredOnlyEmpty = computed(
     () => starredOnly.value && starredStudyCount.value === 0,
 );
 
-const totalCount = computed(() => studyTermIds.value.length);
+const totalCount = computed(() => order.value.length);
 
 const termById = computed(() => {
     const m = new Map<Uuid, FlashcardSet["terms"][number] & { id: Uuid }>();
@@ -2759,20 +2846,19 @@ const termById = computed(() => {
 });
 
 const attemptedCount = computed(() => answerAttemptsCount.value);
-const correctCount = computed(
-    () =>
-        Object.values(answersByTermId.value).filter((v) => v === "correct")
-            .length,
+const correctCount = computed(() => correctAttemptsCount.value);
+const isFinished = computed(() =>
+    order.value.length > 0 && order.value.every((id) => answersByTermId.value[id] !== undefined),
 );
-const isFinished = computed(() => {
-    const total = totalCount.value;
-    return total > 0 && correctCount.value >= total;
-});
+const hasIncorrectCards = computed(() => retryTermIds.value.size > 0);
+const currentPassProgress = computed(() =>
+    flashcardPassProgress(order.value, answersByTermId.value),
+);
 
 const ratioText = computed(() => {
     const total = totalCount.value;
     if (total === 0) return "0/0";
-    return `${Math.min(correctCount.value, total)}/${total}`;
+    return `${currentPassProgress.value.completed}/${total}`;
 });
 
 const currentTerm = computed(() => {
@@ -3630,6 +3716,7 @@ const {
     shuffleRun,
     startRun,
     restartRun,
+    resumeIncorrect,
     toggleStarredOnly,
     cancelFlashcardAnswerFeedback,
     markCorrect,
@@ -3642,6 +3729,7 @@ const {
         lastOrder,
         answersByTermId,
         answerAttemptsCount,
+        correctAttemptsCount,
         retryTermIds,
         starredOnly,
         isFlipped,
@@ -3655,8 +3743,13 @@ const {
     getCurrentTermId: () => (currentTerm.value?.id as Uuid | undefined) ?? null,
     getBaseSeed: () => baseSeed.value,
     getStarredStudyCount: () => starredStudyCount.value,
-    onAnswer: (answer) =>
-        recordInlineAssignedAnswer("flashcards", answer === "correct"),
+    onAnswer: (answer, termId) => {
+        masteryByTermId.value = {
+            ...masteryByTermId.value,
+            [termId]: updateFlashcardMastery(masteryByTermId.value[termId], answer),
+        };
+        recordInlineAssignedAnswer("flashcards", answer === "correct");
+    },
     focusViewer: () => nextTick(() => viewerButtonEl.value?.focus()),
 });
 
@@ -3672,6 +3765,18 @@ function toggleStarredOnlyFromFlashcardSettings() {
 
 function restartFromFlashcardSettings() {
     flashcardSettingsOpen.value = false;
+    restartAllFlashcards();
+}
+
+function selectFlashcardStudyFilter(filter: FlashcardStudyFilter) {
+    flashcardStudyFilter.value = filter;
+    flashcardSettingsOpen.value = false;
+    restartRun();
+}
+
+function restartAllFlashcards() {
+    flashcardStudyFilter.value = "all";
+    starredOnly.value = false;
     restartRun();
 }
 
@@ -4307,6 +4412,7 @@ async function openSetPage() {
             savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
             savedFlashcardCorrectTermIds.value =
                 savedProgress?.correctTermIds ?? [];
+            masteryByTermId.value = savedProgress?.masteryByTermId ?? {};
             savedFlashcardProgressSignature.value = savedProgress
                 ? JSON.stringify(savedProgress)
                 : null;
@@ -4433,6 +4539,7 @@ watch(
             allStudyTermIds.value
                 .filter((id) => answersByTermId.value[id] === "correct")
                 .join("\u0000"),
+            JSON.stringify(masteryByTermId.value),
         ] as const,
     ([termId]) => {
         if (!termId || mode.value !== "flashcards") return;

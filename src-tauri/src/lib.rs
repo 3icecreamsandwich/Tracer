@@ -126,6 +126,12 @@ pub fn run() {
             sql: include_str!("../migrations/018_hide_assigned_set_copies.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 19,
+            description: "add flashcard mastery progress",
+            sql: include_str!("../migrations/019_flashcard_mastery.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     let app = tauri::Builder::default()

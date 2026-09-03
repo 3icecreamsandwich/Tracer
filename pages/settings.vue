@@ -37,7 +37,8 @@
             {{ avatarText }}
           </div>
 
-          <div class="min-w-0">
+          <LoadingSpinner v-if="localSettingsPending" size="sm" />
+          <div v-else class="min-w-0">
             <p class="truncate text-sm font-medium text-slate-900 dark:text-slate-50">
               {{ profile?.name ?? t('common.user') }}
             </p>
@@ -124,7 +125,7 @@
           <button
             type="button"
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
+            :disabled="busy || localSettingsPending"
             @click="onToggleDarkMode"
           >
             {{ darkMode ? t('common.on') : t('common.off') }}
@@ -887,6 +888,7 @@ const {
 } = useConnectionStatus()
 
 const profile = ref<Profile | null>(null)
+const localSettingsPending = ref(true)
 const accountActionPending = ref(false)
 const accountConnectionPending = computed(() => cachedAccountConnectionPending.value || accountActionPending.value)
 const accountEmail = computed(() => accountIdentity.value?.email ?? '')
@@ -1512,6 +1514,7 @@ onMounted(() => {
       floatingChatEnabled.value = true
       textScale.value = Number(document.documentElement.dataset.textScale || 0)
       void initializeConnectionStatuses()
+      localSettingsPending.value = false
       return
     }
     try {
@@ -1561,6 +1564,8 @@ onMounted(() => {
     } catch {
       markLocked()
       await router.replace('/unlock')
+    } finally {
+      localSettingsPending.value = false
     }
   })()
 })

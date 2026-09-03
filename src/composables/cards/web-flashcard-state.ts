@@ -1,8 +1,10 @@
 import type { Uuid } from '../db/types'
+import { sanitizeFlashcardMastery, type FlashcardMasteryByTermId } from './flashcard-mastery'
 
 export type SavedFlashcardProgress = {
   currentTermId: Uuid
   correctTermIds: Uuid[]
+  masteryByTermId: FlashcardMasteryByTermId
 }
 
 const FLASHCARD_FRONT_KEY = 'tracer:flashcards-definition-first'
@@ -34,10 +36,11 @@ export function readWebFlashcardProgress(setId: Uuid): SavedFlashcardProgress | 
         currentTermId: parsed.currentTermId,
         correctTermIds: Array.isArray(parsed.correctTermIds)
           ? parsed.correctTermIds.filter((id): id is Uuid => typeof id === 'string')
-          : []
+          : [],
+        masteryByTermId: sanitizeFlashcardMastery(parsed.masteryByTermId)
       }
     } catch {
-      return { currentTermId: raw, correctTermIds: [] }
+      return { currentTermId: raw, correctTermIds: [], masteryByTermId: {} }
     }
   } catch {
     return null

@@ -100,10 +100,14 @@ describe('SQLite migrations (task 3)', () => {
         path.resolve(process.cwd(), 'src-tauri', 'migrations', '018_hide_assigned_set_copies.sql'),
         'utf8'
       )
+      const flashcardMasteryMigrationSql = await readFile(
+        path.resolve(process.cwd(), 'src-tauri', 'migrations', '019_flashcard_mastery.sql'),
+        'utf8'
+      )
 
       const migrateRes = await runSqlite(
         dbPath,
-        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}\n${flashcardAutosaveMigrationSql}\n${flashcardScoreAutosaveMigrationSql}\n${practiceAutosaveMigrationSql}\n${floatingChatMigrationSql}\n${supabaseProfileMigrationSql}\n${aiModelFallbacksMigrationSql}\n${assignedCopiesMigrationSql}`
+        `${migrationSql}\n${languageMigrationSql}\n${chatsMigrationSql}\n${foldersMigrationSql}\n${linkedFoldersMigrationSql}\n${setIconsMigrationSql}\n${folderOrderMigrationSql}\n${setIconToneMigrationSql}\n${textScaleMigrationSql}\n${homeLibraryOrderMigrationSql}\n${expandedTextScaleMigrationSql}\n${flashcardAutosaveMigrationSql}\n${flashcardScoreAutosaveMigrationSql}\n${practiceAutosaveMigrationSql}\n${floatingChatMigrationSql}\n${supabaseProfileMigrationSql}\n${aiModelFallbacksMigrationSql}\n${assignedCopiesMigrationSql}\n${flashcardMasteryMigrationSql}`
       )
       expect(migrateRes.code).toBe(0)
       expect(migrateRes.stderr).toBe('')
