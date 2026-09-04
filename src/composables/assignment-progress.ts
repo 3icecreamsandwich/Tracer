@@ -1,7 +1,4 @@
-import {
-  submitClassroomAttempt,
-  type ClassroomAttemptMode,
-} from './classrooms'
+import type { ClassroomAttemptMode } from './classrooms'
 
 const ACTIVE_PREFIX = 'tracer:classroom-attempt:'
 const PENDING_KEY = 'tracer:pending-classroom-attempts'
@@ -158,10 +155,15 @@ export async function completeAssignedAttempt(input: {
     if (readPending().some((item) => item.clientAttemptId === attempt.clientAttemptId)) {
       await flushPendingAssignedAttempts()
     }
-  } else await submitClassroomAttempt(attempt)
+  } else await submitPendingClassroomAttempt(attempt)
 }
 
 let flushRequest: Promise<void> | null = null
+
+async function submitPendingClassroomAttempt(attempt: PendingClassroomAttempt) {
+  const { submitClassroomAttempt } = await import('./classrooms')
+  await submitClassroomAttempt(attempt)
+}
 
 export async function flushPendingAssignedAttempts(): Promise<void> {
   if (flushRequest) return flushRequest
@@ -170,7 +172,7 @@ export async function flushPendingAssignedAttempts(): Promise<void> {
     const succeeded = new Set<string>()
     for (const attempt of pending) {
       try {
-        await submitClassroomAttempt({
+        await submitPendingClassroomAttempt({
           ...attempt,
           durationMs: Number.isFinite(attempt.durationMs)
             ? attempt.durationMs

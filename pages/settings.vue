@@ -299,6 +299,28 @@
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+        :aria-label="t('settings.smartReview')"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-sm font-medium">{{ t('settings.smartReview') }}</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              {{ t('settings.smartReviewDescription') }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy || localSettingsPending"
+            @click="onToggleSmartReview"
+          >
+            {{ smartReviewEnabled ? t('common.on') : t('common.off') }}
+          </button>
+        </div>
+      </section>
+
+      <section
+        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         aria-label="Page chat button"
       >
         <div class="flex items-start justify-between gap-4">
@@ -843,6 +865,7 @@ import {
 } from '../src/composables/language'
 import type { AppLanguage } from '../src/composables/db/types'
 import { applyTextScale, textScaleSet } from '../src/composables/text-scale'
+import { saveGlobalSmartReviewEnabled } from '../src/composables/cards/spaced-repetition'
 import {
   clearAuthSession,
   identityFromUser,
@@ -901,6 +924,7 @@ const darkMode = ref(false)
 const defaultModelId = ref<string | null>(null)
 const fallbackModelIds = ref<string[]>([])
 const learnHybridEnabled = ref(false)
+const smartReviewEnabled = ref(false)
 const textScale = ref(0)
 const languageMenuOpen = ref(false)
 const languageMenuRoot = ref<HTMLElement | null>(null)
@@ -1511,6 +1535,7 @@ onMounted(() => {
       defaultModelId.value = null
       fallbackModelIds.value = []
       learnHybridEnabled.value = false
+      smartReviewEnabled.value = false
       floatingChatEnabled.value = true
       textScale.value = Number(document.documentElement.dataset.textScale || 0)
       void initializeConnectionStatuses()
@@ -1536,6 +1561,8 @@ onMounted(() => {
       defaultModelId.value = settings.defaultModelId
       fallbackModelIds.value = settings.fallbackModelIds
       learnHybridEnabled.value = settings.learnHybridEnabled
+      smartReviewEnabled.value = settings.smartReviewEnabled
+      saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, p.id)
       floatingChatEnabled.value = settings.floatingChatEnabled
       textScale.value = settings.textScale
       applyTextScale(settings.textScale)
@@ -1621,6 +1648,27 @@ async function onToggleLearnHybrid() {
     learnHybridEnabled.value = updated.learnHybridEnabled
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to update Practice settings')
+  } finally {
+    busy.value = false
+  }
+}
+
+async function onToggleSmartReview() {
+  error.value = null
+  busy.value = true
+  try {
+    const next = !smartReviewEnabled.value
+    if (isWebPreview.value) {
+      smartReviewEnabled.value = next
+      saveGlobalSmartReviewEnabled(next, profile.value?.id)
+      return
+    }
+    const db = await useTracerDb()
+    const updated = await createSettingsRepo(db).set({ smartReviewEnabled: next })
+    smartReviewEnabled.value = updated.smartReviewEnabled
+    saveGlobalSmartReviewEnabled(updated.smartReviewEnabled, profile.value?.id)
+  } catch (e: unknown) {
+    error.value = toSafeErrorMessage(e, 'Failed to update Smart Review settings')
   } finally {
     busy.value = false
   }

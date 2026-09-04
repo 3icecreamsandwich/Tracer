@@ -493,8 +493,6 @@ import {
     type PracticeChoiceFeedback,
     type PracticeChoiceValue,
 } from "~/src/composables/learn/presentation";
-import { resolveAiModel } from "~/src/composables/ai/registry";
-import { generateText } from "ai";
 import {
     aiErrorForMissingDefaultModel,
     normalizeAiError,
@@ -835,6 +833,7 @@ async function getWrittenModel(modelId: string) {
     if (cachedWrittenModel.value?.id === cacheId) {
         return cachedWrittenModel.value.model;
     }
+    const { resolveAiModel } = await import("~/src/composables/ai/registry");
     const model = await resolveAiModel(route);
     cachedWrittenModel.value = { id: cacheId, model };
     return model;
@@ -1059,6 +1058,10 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
 
     learnBusy.value = true;
     try {
+        const [{ resolveAiModel }, { generateText }] = await Promise.all([
+            import("~/src/composables/ai/registry"),
+            import("ai"),
+        ]);
         const model = await resolveAiModel([defaultModelId.value, ...fallbackModelIds.value]);
         const prompt = buildLearnAugmentPrompt({
             title: s.title,

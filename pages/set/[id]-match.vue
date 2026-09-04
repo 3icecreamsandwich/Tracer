@@ -191,7 +191,6 @@ import {
     parseAssignedAssignmentId,
 } from "~/src/composables/assignment-progress";
 import {
-    listAssignedMatchLeaderboard,
     type AssignedMatchLeaderboardEntry,
 } from "~/src/composables/classrooms";
 import { createRandomSeed } from "~/src/composables/random";
@@ -251,6 +250,9 @@ async function loadMatchLeaderboard() {
     matchLeaderboardLoading.value = true;
     matchLeaderboardError.value = false;
     try {
+        const { listAssignedMatchLeaderboard } = await import(
+            "~/src/composables/classrooms"
+        );
         matchLeaderboard.value = await listAssignedMatchLeaderboard(assignmentId);
     } catch {
         matchLeaderboardError.value = true;

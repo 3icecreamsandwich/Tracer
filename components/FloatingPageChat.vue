@@ -405,7 +405,7 @@ async function sendMessage() {
                 content: message.fullContent ?? message.content,
             })),
         );
-        const result = chat.streamGroundedChatText({
+        const result = await chat.streamGroundedChatText({
             model,
             system,
             messages: prior,

@@ -135,12 +135,12 @@
 <script setup lang="ts">
 import {
     createSetsRepo,
-    createProfileRepo,
     createStudyGuidesRepo,
     useTracerDb,
     type FlashcardSetListItem,
     type Uuid,
 } from "~/src/composables/db";
+import { loadAppProfileOnce } from "~/src/composables/app-profile-cache";
 import { hasTauriRuntime } from "~/src/composables/tauri";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
@@ -342,8 +342,7 @@ async function loadAvatarText() {
     }
 
     try {
-        const db = await useTracerDb();
-        const profile = await createProfileRepo(db).get();
+        const profile = await loadAppProfileOnce();
         const first = profile?.name?.trim()?.[0];
         avatarText.value = first ? first.toUpperCase() : "U";
     } catch {

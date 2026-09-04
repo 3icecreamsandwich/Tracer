@@ -142,13 +142,13 @@
                         class="rounded-full border px-3 py-1 transition-colors"
                         :class="reviewFilter === filter.value ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200' : 'border-slate-200 text-slate-600 hover:border-amber-300 dark:border-slate-700 dark:text-slate-300'"
                         @click="setReviewFilter(filter.value)">
-                        {{ filter.value === 'due' && filter.count > 0 ? 'Due now' : filter.label }} ({{ filter.count }})
+                        {{ filter.value === 'due' && filter.count > 0 ? t('set.reviewReadyNow') : filter.label }} ({{ filter.count }})
                     </button>
                     <p
                         v-if="dueCount === 0 && nextReviewText"
                         class="w-full pt-1 text-slate-500 dark:text-slate-400"
                     >
-                        Nothing due · Next {{ nextReviewText }}
+                        {{ t('set.nothingReady') }} · {{ t('set.nextReview') }} {{ nextReviewText }}
                     </p>
                 </div>
             </div>
@@ -359,12 +359,13 @@
 definePageMeta({ hideNavbar: true });
 
 import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
+import { loadAppProfileOnce } from "~/src/composables/app-profile-cache";
+import { loadAppSettingsOnce } from "~/src/composables/app-settings-cache";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 import type { FlashcardSet, Uuid } from "~/src/composables/db/types";
 import {
     createFlashcardProgressRepo,
-    createProfileRepo,
     createSettingsRepo,
     createSetsRepo,
     createStarsRepo,
@@ -387,7 +388,7 @@ import {
 } from "~/src/composables/cards/web-flashcard-state";
 import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion";
 import { createFlashcardRun, flashcardPassProgress } from "~/src/composables/cards/flashcard-run";
-import { getCardReviews, isFlashcardShuffleEnabled, isSmartReviewEnabled, recordCardReview, reviewBucket, saveFlashcardShuffleEnabled, saveSmartReviewEnabled, type CardReview, type ReviewBucket } from "~/src/composables/cards/spaced-repetition";
+import { getCardReviews, getGlobalSmartReviewEnabled, isFlashcardShuffleEnabled, recordCardReview, resolveSmartReviewEnabled, reviewBucket, saveFlashcardShuffleEnabled, saveGlobalSmartReviewEnabled, saveSmartReviewEnabled, type CardReview, type ReviewBucket } from "~/src/composables/cards/spaced-repetition";
 import {
     DEFAULT_FLASHCARD_STUDY_FILTER,
     updateFlashcardMastery,
@@ -606,7 +607,7 @@ const reviewFilters = computed(() => {
     void reviewClock.value;
     return [
     { value: 'all' as const, label: 'All', count: allStudyTermIds.value.length },
-    { value: 'due' as const, label: 'Due', count: allStudyTermIds.value.filter(id => reviewBucket(cardReviews.value[id]) === 'due').length },
+    { value: 'due' as const, label: t('set.reviewReady'), count: allStudyTermIds.value.filter(id => reviewBucket(cardReviews.value[id]) === 'due').length },
     { value: 'learning' as const, label: 'Learning', count: allStudyTermIds.value.filter(id => reviewBucket(cardReviews.value[id]) === 'learning').length },
     { value: 'strong' as const, label: 'Strong', count: allStudyTermIds.value.filter(id => reviewBucket(cardReviews.value[id]) === 'strong').length },
     ];
@@ -735,19 +736,6 @@ const accuracyText = computed(() => {
     const pct = Math.round((correctAttemptsCount.value / attempted) * 100);
     return `${pct}% (${correctAttemptsCount.value}/${attempted})`;
 });
-
-async function loadSet(setId: Uuid) {
-    busy.value = true;
-    loadError.value = null;
-    try {
-        const db = await useTracerDb();
-        set.value = await createSetsRepo(db).get(setId);
-    } catch {
-        loadError.value = "Failed to load set.";
-    } finally {
-        busy.value = false;
-    }
-}
 
 const {
     shuffleRun,
@@ -913,7 +901,10 @@ const {
 });
 
 async function loadStars(setId: Uuid) {
-    smartReviewEnabled.value = isSmartReviewEnabled(setId, reviewOwnerId.value);
+    const storedGlobal = getGlobalSmartReviewEnabled(reviewOwnerId.value);
+    const globalEnabled = storedGlobal ?? (isWebPreview.value ? false : (await loadAppSettingsOnce()).smartReviewEnabled);
+    if (storedGlobal === null) saveGlobalSmartReviewEnabled(globalEnabled, reviewOwnerId.value);
+    smartReviewEnabled.value = resolveSmartReviewEnabled(setId, globalEnabled, reviewOwnerId.value);
     shuffleEnabled.value = isFlashcardShuffleEnabled(setId, reviewOwnerId.value);
     cardReviews.value = getCardReviews(setId, reviewOwnerId.value);
     if (isWebPreview.value) {
@@ -995,8 +986,7 @@ function onKeydown(e: KeyboardEvent) {
     }
 }
 
-async function restoreSavedFlashcardRun(setId: Uuid) {
-    const savedProgress = await loadSavedFlashcardProgress(setId);
+function applySavedFlashcardRun(savedProgress: SavedFlashcardProgress | null) {
     savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
     savedFlashcardCorrectTermIds.value = savedProgress?.correctTermIds ?? [];
     masteryByTermId.value = savedProgress?.masteryByTermId ?? {};
@@ -1008,6 +998,10 @@ async function restoreSavedFlashcardRun(setId: Uuid) {
         resumeTermId: savedProgress?.currentTermId,
         resumeCorrectTermIds: savedProgress?.correctTermIds,
     });
+}
+
+async function restoreSavedFlashcardRun(setId: Uuid) {
+    applySavedFlashcardRun(await loadSavedFlashcardProgress(setId));
 }
 
 watch(language, async () => {
@@ -1054,10 +1048,24 @@ onMounted(async () => {
             return;
         }
 
-        const status = await lockGetStatus();
-        const db = await useTracerDb();
+        const idParam = route.params.id;
+        if (typeof idParam !== "string" || !idParam.trim()) {
+            busy.value = false;
+            loadError.value = "Missing set id.";
+            return;
+        }
 
-        const profile = await createProfileRepo(db).get();
+        const setId = idParam as Uuid;
+        const db = await useTracerDb();
+        const [status, profile, settings, loadedSet, starredIds, savedProgress] =
+            await Promise.all([
+                lockGetStatus(),
+                loadAppProfileOnce(),
+                loadAppSettingsOnce(),
+                createSetsRepo(db).get(setId),
+                createStarsRepo(db).listTermIds(setId).catch(() => []),
+                createFlashcardProgressRepo(db).get(setId).catch(() => null),
+            ]);
         if (!profile || !status.has_verifier) {
             markLocked();
             await router.replace("/first-run");
@@ -1065,7 +1073,6 @@ onMounted(async () => {
         }
         reviewOwnerId.value = profile.id;
 
-        const settings = await createSettingsRepo(db).get();
         flashcardsDefinitionFirst.value = settings.flashcardsDefinitionFirst;
         if (settings.startupLockEnabled && status.requires_unlock) {
             if (!unlockedThisSession.value) {
@@ -1077,18 +1084,15 @@ onMounted(async () => {
             markUnlocked();
         }
 
-        const idParam = route.params.id;
-        if (typeof idParam !== "string" || !idParam.trim()) {
-            busy.value = false;
-            loadError.value = "Missing set id.";
-            return;
-        }
-
-        await loadSet(idParam as Uuid);
-
-        if (set.value) {
-            await loadStars(set.value.id);
-            await restoreSavedFlashcardRun(set.value.id);
+        set.value = loadedSet;
+        busy.value = false;
+        if (loadedSet) {
+            smartReviewEnabled.value = resolveSmartReviewEnabled(setId, settings.smartReviewEnabled, profile.id);
+            saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, profile.id);
+            shuffleEnabled.value = isFlashcardShuffleEnabled(setId, profile.id);
+            cardReviews.value = getCardReviews(setId, profile.id);
+            starredTermIds.value = new Set(starredIds);
+            applySavedFlashcardRun(savedProgress);
             beginClassroomFlashcards();
         }
         await nextTick();

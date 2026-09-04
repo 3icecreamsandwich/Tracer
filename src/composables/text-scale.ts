@@ -1,4 +1,5 @@
 import { createSettingsRepo, useTracerDb } from './db'
+import { loadAppSettingsOnce } from './app-settings-cache'
 import { hasTauriRuntime } from './tauri'
 
 export const textScaleLabels = ['Small', '', '', '', 'Large'] as const
@@ -34,8 +35,7 @@ export async function textScaleInit() {
   if (!hasTauriRuntime()) {
     return storedScale
   }
-  const db = await useTracerDb()
-  const settings = await createSettingsRepo(db).get()
+  const settings = await loadAppSettingsOnce()
   applyTextScale(settings.textScale)
   storeTextScale(settings.textScale)
   return settings.textScale

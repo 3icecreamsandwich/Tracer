@@ -1,5 +1,6 @@
 import { computed, readonly, ref } from 'vue'
 import { createSettingsRepo, useTracerDb, type AppLanguage } from './db'
+import { loadAppSettingsOnce } from './app-settings-cache'
 import { hasTauriRuntime } from './tauri'
 import { languageOptions, messages } from '../i18n/messages'
 
@@ -50,8 +51,7 @@ export async function languageInit() {
 
   if (!hasTauriRuntime()) return activeLanguage.value
 
-  const db = await useTracerDb()
-  const settings = await createSettingsRepo(db).get()
+  const settings = await loadAppSettingsOnce()
   applyAppLanguage(settings.language)
   window.localStorage.setItem(STORAGE_KEY, settings.language)
   return settings.language

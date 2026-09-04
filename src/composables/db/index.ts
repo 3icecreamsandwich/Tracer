@@ -1,4 +1,4 @@
-export { closeTracerDb, useTracerDb } from './init'
+export { closeTracerDb, reopenTracerDb, useTracerDb } from './init'
 export type {
   AppSettings,
   AppLanguage,

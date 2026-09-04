@@ -443,13 +443,13 @@
                                         : 'border-slate-200 text-slate-600 hover:border-amber-300 dark:border-slate-700 dark:text-slate-300'"
                                     @click="setReviewFilter(filter.value)"
                                 >
-                                    {{ filter.value === "due" && filter.count > 0 ? "Due now" : filter.label }} ({{ filter.count }})
+                                    {{ filter.value === "due" && filter.count > 0 ? t("set.reviewReadyNow") : filter.label }} ({{ filter.count }})
                                 </button>
                                 <p
                                     v-if="dueCount === 0 && nextReviewText"
                                     class="w-full pt-1 text-slate-500 dark:text-slate-400"
                                 >
-                                    Nothing due · Next {{ nextReviewText }}
+                                    {{ t("set.nothingReady") }} · {{ t("set.nextReview") }} {{ nextReviewText }}
                                 </p>
                             </div>
 
@@ -2129,13 +2129,14 @@ import practiceModeIcon from "~/assets/icons/study-modes/practice.png";
 import matchModeIcon from "~/assets/icons/study-modes/match.png";
 import chatModeIcon from "~/assets/icons/study-modes/chat.png";
 import { lockGetStatus } from "~/src/composables/lock";
+import { loadAppProfileOnce } from "~/src/composables/app-profile-cache";
+import { loadAppSettingsOnce } from "~/src/composables/app-settings-cache";
 import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
 import { useLockSession } from "~/src/composables/lock-session";
 import {
     createChatsRepo,
     createFlashcardProgressRepo,
     createLinkedFoldersRepo,
-    createProfileRepo,
     createSettingsRepo,
     createSetsRepo,
     createStarsRepo,
@@ -2149,7 +2150,6 @@ import type {
     SavedChatPayload,
     Uuid,
 } from "~/src/composables/db/types";
-import { resolveAiModel } from "~/src/composables/ai/registry";
 import { hasTauriRuntime } from "~/src/composables/tauri";
 import {
     loadPracticeProgress,
@@ -2175,7 +2175,6 @@ import {
     type ChatMessage,
 } from "~/src/composables/ai/chat";
 import { createChatRevealQueue } from "~/src/composables/ai/chat-reveal";
-import { generateText } from "ai";
 import {
     generateMatchTiles,
     type MatchTile,
@@ -2209,7 +2208,6 @@ import {
     parseAssignedAssignmentId,
 } from "~/src/composables/assignment-progress";
 import {
-    listAssignedMatchLeaderboard,
     type AssignedMatchLeaderboardEntry,
 } from "~/src/composables/classrooms";
 import {
@@ -2226,12 +2224,14 @@ import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion"
 import { createFlashcardRun, flashcardPassProgress } from "~/src/composables/cards/flashcard-run";
 import {
     getCardReviews,
+    getGlobalSmartReviewEnabled,
     isFlashcardShuffleEnabled,
-    isSmartReviewEnabled,
     recordCardReview,
     reviewBucket,
     saveFlashcardShuffleEnabled,
+    saveGlobalSmartReviewEnabled,
     saveSmartReviewEnabled,
+    resolveSmartReviewEnabled,
     type CardReview,
     type ReviewBucket,
 } from "~/src/composables/cards/spaced-repetition";
@@ -2312,6 +2312,9 @@ async function loadMatchLeaderboard() {
     matchLeaderboardLoading.value = true;
     matchLeaderboardError.value = false;
     try {
+        const { listAssignedMatchLeaderboard } = await import(
+            "~/src/composables/classrooms"
+        );
         matchLeaderboard.value =
             await listAssignedMatchLeaderboard(assignmentId);
     } catch {
@@ -2652,11 +2655,13 @@ async function getCachedChatModel(modelId: string) {
     const promise =
         existing?.id === cacheId
             ? existing.promise
-            : resolveAiModel(route).finally(() => {
+            : import("~/src/composables/ai/registry")
+                  .then(({ resolveAiModel }) => resolveAiModel(route))
+                  .finally(() => {
                   if (cachedChatModelPromise.value?.id === cacheId) {
                       cachedChatModelPromise.value = null;
                   }
-              });
+                  });
     if (existing?.id !== cacheId) {
         cachedChatModelPromise.value = { id: cacheId, promise };
     }
@@ -2856,14 +2861,18 @@ async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
     savedFlashcardProgressSignature.value = savedProgress
         ? JSON.stringify(savedProgress)
         : null;
-    startRun({
-        resetCounter: true,
-        resumeTermId: savedProgress?.currentTermId,
-        resumeCorrectTermIds: savedProgress?.correctTermIds,
-    });
-    await initializePracticeRun({ forceNew: options?.forceNewPractice });
+    if (mode.value === "flashcards") {
+        startRun({
+            resetCounter: true,
+            resumeTermId: savedProgress?.currentTermId,
+            resumeCorrectTermIds: savedProgress?.correctTermIds,
+        });
+    }
+    if (mode.value === "learn") {
+        await initializePracticeRun({ forceNew: options?.forceNewPractice });
+    }
     resetMatchStateForRun();
-    matchPrepareTiles(set.value);
+    if (mode.value === "match") matchPrepareTiles(set.value);
     await nextTick();
     if (mode.value === "chat") {
         chatTextareaEl.value?.focus();
@@ -2889,7 +2898,7 @@ const reviewFilters = computed(() => {
     void reviewClock.value;
     return [
     { value: "all" as const, label: "All", count: allStudyTermIds.value.length },
-    { value: "due" as const, label: "Due", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "due").length },
+    { value: "due" as const, label: t("set.reviewReady"), count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "due").length },
     { value: "learning" as const, label: "Learning", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "learning").length },
     { value: "strong" as const, label: "Strong", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "strong").length },
     ];
@@ -3684,6 +3693,8 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
 
     learnBusy.value = true;
     try {
+        const { generateText } = await import("ai");
+        const { resolveAiModel } = await import("~/src/composables/ai/registry");
         const model = await resolveAiModel([defaultModelId.value, ...fallbackModelIds.value]);
         const prompt = buildLearnAugmentPrompt({
             title: s.title,
@@ -3977,7 +3988,10 @@ function setReviewFilter(filter: "all" | ReviewBucket) {
 }
 
 async function loadStars(setId: Uuid) {
-    smartReviewEnabled.value = isSmartReviewEnabled(setId, reviewOwnerId.value);
+    const storedGlobal = getGlobalSmartReviewEnabled(reviewOwnerId.value);
+    const globalEnabled = storedGlobal ?? (isWebPreview.value ? false : (await loadAppSettingsOnce()).smartReviewEnabled);
+    if (storedGlobal === null) saveGlobalSmartReviewEnabled(globalEnabled, reviewOwnerId.value);
+    smartReviewEnabled.value = resolveSmartReviewEnabled(setId, globalEnabled, reviewOwnerId.value);
     shuffleEnabled.value = isFlashcardShuffleEnabled(setId, reviewOwnerId.value);
     cardReviews.value = getCardReviews(setId, reviewOwnerId.value);
     if (isWebPreview.value) {
@@ -4433,7 +4447,7 @@ async function sendChat() {
 
         const model = await (modelPromise ??
             getCachedChatModel(defaultModelId.value));
-        const result = streamGroundedChatText({
+        const result = await streamGroundedChatText({
             model,
             system,
             messages: prior,
@@ -4548,14 +4562,33 @@ async function openSetPage() {
             return;
         }
 
-        const [status, db] = await Promise.all([
-            lockGetStatus(),
-            useTracerDb(),
-        ]);
+        const idParam = route.params.id;
+        if (typeof idParam !== "string" || !idParam.trim()) {
+            busy.value = false;
+            loadError.value = "Missing set id.";
+            return;
+        }
 
-        const [profile, settings] = await Promise.all([
-            createProfileRepo(db).get(),
-            createSettingsRepo(db).get(),
+        const setId = idParam as Uuid;
+        const db = await useTracerDb();
+        const [
+            status,
+            profile,
+            settings,
+            loadedSet,
+            loadedLinkedFolder,
+            guide,
+            starredIds,
+            savedProgress,
+        ] = await Promise.all([
+            lockGetStatus(),
+            loadAppProfileOnce(),
+            loadAppSettingsOnce(),
+            createSetsRepo(db).get(setId),
+            createLinkedFoldersRepo(db).getBySetId(setId),
+            createStudyGuidesRepo(db).getBySetId(setId),
+            createStarsRepo(db).listTermIds(setId).catch(() => []),
+            createFlashcardProgressRepo(db).get(setId).catch(() => null),
         ]);
         if (!profile || !status.has_verifier) {
             markLocked();
@@ -4595,20 +4628,17 @@ async function openSetPage() {
         }
         if (mode.value === "chat") warmChatModel();
 
-        const idParam = route.params.id;
-        if (typeof idParam !== "string" || !idParam.trim()) {
-            busy.value = false;
-            loadError.value = "Missing set id.";
-            return;
-        }
+        set.value = loadedSet;
+        linkedFolder.value = loadedLinkedFolder;
+        studyGuideSetId.value = loadedSet && guide ? setId : null;
+        busy.value = false;
 
-        await loadSet(idParam as Uuid);
-
-        if (set.value) {
-            await loadStars(set.value.id);
-            const savedProgress = await loadSavedFlashcardProgress(
-                set.value.id,
-            );
+        if (loadedSet) {
+            smartReviewEnabled.value = resolveSmartReviewEnabled(setId, settings.smartReviewEnabled, profile.id);
+            saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, profile.id);
+            shuffleEnabled.value = isFlashcardShuffleEnabled(setId, profile.id);
+            cardReviews.value = getCardReviews(setId, profile.id);
+            starredTermIds.value = new Set(starredIds);
             savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
             savedFlashcardCorrectTermIds.value =
                 savedProgress?.correctTermIds ?? [];
@@ -4616,14 +4646,16 @@ async function openSetPage() {
             savedFlashcardProgressSignature.value = savedProgress
                 ? JSON.stringify(savedProgress)
                 : null;
-            startRun({
-                resetCounter: true,
-                resumeTermId: savedProgress?.currentTermId,
-                resumeCorrectTermIds: savedProgress?.correctTermIds,
-            });
-            await initializePracticeRun();
+            if (mode.value === "flashcards") {
+                startRun({
+                    resetCounter: true,
+                    resumeTermId: savedProgress?.currentTermId,
+                    resumeCorrectTermIds: savedProgress?.correctTermIds,
+                });
+            }
+            if (mode.value === "learn") await initializePracticeRun();
             resetMatchStateForRun();
-            matchPrepareTiles(set.value);
+            if (mode.value === "match") matchPrepareTiles(loadedSet);
         }
         await nextTick();
         if (mode.value === "chat") {
@@ -4709,7 +4741,13 @@ watch(
                 resumeCorrectTermIds: savedFlashcardCorrectTermIds.value,
             });
         }
-        if (next === "learn" && prev !== "learn") persistPracticeRun();
+        if (
+            next === "learn" &&
+            prev !== "learn" &&
+            !practiceProgressReady.value
+        ) {
+            await initializePracticeRun();
+        }
         if (prev === "learn" && next !== "learn") {
             clearPracticeTimer();
         }

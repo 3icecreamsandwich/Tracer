@@ -1,4 +1,3 @@
-import { streamText } from 'ai'
 import type { FlashcardSet } from '../db/types'
 
 export { takeNextChatRevealUnit } from './chat-reveal-unit'
@@ -146,12 +145,13 @@ export function buildGroundedChatSystemPrompt(set: FlashcardSet) {
     .join('\n')
 }
 
-export function streamGroundedChatText(args: {
+export async function streamGroundedChatText(args: {
   model: any
   system: string
   messages: ChatMessage[]
   abortSignal?: AbortSignal
 }) {
+  const { streamText } = await import('ai')
   return streamText({
     model: args.model,
     system: args.system,

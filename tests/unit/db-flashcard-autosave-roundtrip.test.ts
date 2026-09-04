@@ -76,6 +76,7 @@ async function applyMigrations(dbPath: string) {
     '017_ai_model_fallbacks.sql',
     '018_hide_assigned_set_copies.sql'
     , '019_flashcard_mastery.sql'
+    , '020_smart_review_setting.sql'
   ]
   const migrations = await Promise.all(
     names.map((name) => readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8'))
@@ -128,9 +129,12 @@ describe('flashcard autosave persistence (sqlite:tracer.db)', () => {
       })
 
       expect((await settingsRepo.get()).flashcardsDefinitionFirst).toBe(false)
+      expect((await settingsRepo.get()).smartReviewEnabled).toBe(false)
       expect((await settingsRepo.get()).floatingChatEnabled).toBe(true)
       await settingsRepo.set({ flashcardsDefinitionFirst: true })
       expect((await settingsRepo.get()).flashcardsDefinitionFirst).toBe(true)
+      await settingsRepo.set({ smartReviewEnabled: true })
+      expect((await settingsRepo.get()).smartReviewEnabled).toBe(true)
       await settingsRepo.set({ floatingChatEnabled: false })
       expect((await settingsRepo.get()).floatingChatEnabled).toBe(false)
       await settingsRepo.set({

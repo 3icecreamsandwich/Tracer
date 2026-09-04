@@ -62,6 +62,7 @@ export type AppSettings = {
   fallbackModelIds: string[]
   darkMode: boolean
   learnHybridEnabled: boolean
+  smartReviewEnabled: boolean
   flashcardsDefinitionFirst: boolean
   floatingChatEnabled: boolean
   language: AppLanguage

@@ -6,6 +6,7 @@ type DbSettingsRow = {
   fallback_model_ids: string
   dark_mode: number
   learn_hybrid_enabled: number
+  smart_review_enabled: number
   flashcards_definition_first: number
   floating_chat_enabled: number
   language: string
@@ -41,7 +42,7 @@ export function createSettingsRepo(db: DbClient) {
     async get(): Promise<AppSettings> {
       const rows = await db.select<DbSettingsRow>(
         `SELECT startup_lock_enabled, default_model_id, fallback_model_ids, dark_mode, learn_hybrid_enabled,
-                flashcards_definition_first, floating_chat_enabled, language, text_scale
+                smart_review_enabled, flashcards_definition_first, floating_chat_enabled, language, text_scale
          FROM app_settings WHERE id = 1 LIMIT 1;`
       )
       const row = rows[0]
@@ -52,6 +53,7 @@ export function createSettingsRepo(db: DbClient) {
           fallbackModelIds: [],
           darkMode: false,
           learnHybridEnabled: false,
+          smartReviewEnabled: false,
           flashcardsDefinitionFirst: false,
           floatingChatEnabled: true,
           language: 'en',
@@ -65,6 +67,7 @@ export function createSettingsRepo(db: DbClient) {
         fallbackModelIds: toModelIds(row.fallback_model_ids),
         darkMode: toBool(row.dark_mode),
         learnHybridEnabled: toBool(row.learn_hybrid_enabled),
+        smartReviewEnabled: toBool(row.smart_review_enabled),
         flashcardsDefinitionFirst: toBool(row.flashcards_definition_first),
         floatingChatEnabled: toBool(row.floating_chat_enabled),
         language: toLanguage(row.language),
@@ -82,6 +85,7 @@ export function createSettingsRepo(db: DbClient) {
           patch.fallbackModelIds === undefined ? current.fallbackModelIds : patch.fallbackModelIds,
         darkMode: patch.darkMode ?? current.darkMode,
         learnHybridEnabled: patch.learnHybridEnabled ?? current.learnHybridEnabled,
+        smartReviewEnabled: patch.smartReviewEnabled ?? current.smartReviewEnabled,
         flashcardsDefinitionFirst:
           patch.flashcardsDefinitionFirst ?? current.flashcardsDefinitionFirst,
         floatingChatEnabled: patch.floatingChatEnabled ?? current.floatingChatEnabled,
@@ -97,6 +101,7 @@ export function createSettingsRepo(db: DbClient) {
              dark_mode = ?,
              learn_hybrid_enabled = ?,
              flashcards_definition_first = ?,
+             smart_review_enabled = ?,
              floating_chat_enabled = ?,
              language = ?,
              text_scale = ?
@@ -108,6 +113,7 @@ export function createSettingsRepo(db: DbClient) {
           next.darkMode ? 1 : 0,
           next.learnHybridEnabled ? 1 : 0,
           next.flashcardsDefinitionFirst ? 1 : 0,
+          next.smartReviewEnabled ? 1 : 0,
           next.floatingChatEnabled ? 1 : 0,
           next.language,
           next.textScale

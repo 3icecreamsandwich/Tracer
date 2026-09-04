@@ -1,4 +1,5 @@
 import { createSettingsRepo, useTracerDb } from './db'
+import { loadAppSettingsOnce } from './app-settings-cache'
 
 const DARK_MODE_CACHE_KEY = 'tracer:dark-mode'
 
@@ -24,8 +25,7 @@ export function themeInitFromCache() {
 }
 
 export async function themeInitFromDb() {
-  const db = await useTracerDb()
-  const settings = await createSettingsRepo(db).get()
+  const settings = await loadAppSettingsOnce()
   applyDarkClass(settings.darkMode)
   cacheDarkMode(settings.darkMode)
   return settings.darkMode

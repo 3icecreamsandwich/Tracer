@@ -132,6 +132,12 @@ pub fn run() {
             sql: include_str!("../migrations/019_flashcard_mastery.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 20,
+            description: "add smart review setting",
+            sql: include_str!("../migrations/020_smart_review_setting.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     let app = tauri::Builder::default()

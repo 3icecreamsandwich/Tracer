@@ -1,5 +1,3 @@
-import { generateText } from 'ai'
-
 export type WrittenAnswerGrade = {
   isCorrect: boolean
   explanation: string
@@ -54,6 +52,7 @@ export async function gradeWrittenAnswer(args: {
   input: WrittenAnswerGradeInput
   abortSignal?: AbortSignal
 }) {
+  const { generateText } = await import('ai')
   const result = await generateText({
     model: args.model,
     prompt: buildWrittenAnswerGradingPrompt(args.input),

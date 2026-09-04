@@ -9,10 +9,6 @@ import {
   type LinkedFolder,
   type Uuid
 } from '../../db'
-import { resolveAiModel } from '../../ai/registry'
-import { extractGenerateSources } from '../source-extraction'
-import { appendStudyGuide, generateLinkedFolderContent, mergeGeneratedTerms } from './generate'
-import { scanLinkedFolder } from './scan'
 
 export const LINKED_FOLDER_STATUS_EVENT = 'tracer:linked-folder-status'
 
@@ -32,6 +28,21 @@ const unwatchBySet = new Map<Uuid, () => void>()
 const debounceBySet = new Map<Uuid, ReturnType<typeof setTimeout>>()
 const syncBySet = new Map<Uuid, Promise<LinkedFolder | null>>()
 let managerStarted = false
+
+async function loadLinkedFolderProcessing() {
+  const [extraction, generation, scanner] = await Promise.all([
+    import('../source-extraction'),
+    import('./generate'),
+    import('./scan')
+  ])
+  return {
+    extractGenerateSources: extraction.extractGenerateSources,
+    appendStudyGuide: generation.appendStudyGuide,
+    generateLinkedFolderContent: generation.generateLinkedFolderContent,
+    mergeGeneratedTerms: generation.mergeGeneratedTerms,
+    scanLinkedFolder: scanner.scanLinkedFolder
+  }
+}
 
 function errorMessage(error: unknown, fallback = 'Linked folder sync failed.') {
   if (error instanceof Error && error.message.trim()) return error.message.trim()
@@ -63,6 +74,7 @@ async function resolveDefaultModel() {
   const db = await useTracerDb()
   const settings = await createSettingsRepo(db).get()
   if (!settings.defaultModelId) throw new Error('Choose a Default AI Model to sync linked folders.')
+  const { resolveAiModel } = await import('../../ai/registry')
   const model = await resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
   if (!model) throw new Error('The Default AI Model could not be loaded.')
   return { db, model }
@@ -83,19 +95,20 @@ function fileRecords(
 }
 
 export async function createSetFromLinkedFolder(input: LinkFolderInput): Promise<LinkFolderResult> {
+  const processing = await loadLinkedFolderProcessing()
   const [{ db, model }, scan, folderName] = await Promise.all([
     resolveDefaultModel(),
-    scanLinkedFolder(input.path),
+    processing.scanLinkedFolder(input.path),
     basename(input.path)
   ])
 
-  const extraction = await extractGenerateSources(scan.sources)
+  const extraction = await processing.extractGenerateSources(scan.sources)
   if (extraction.extracted.length === 0) {
     const details = extraction.failed[0]?.reason ?? scan.ignored[0]?.reason
     throw new Error(details ? `No readable files were found. ${details}` : 'No readable files were found in this folder.')
   }
 
-  const generated = await generateLinkedFolderContent({
+  const generated = await processing.generateLinkedFolderContent({
     model,
     sources: extraction.extracted,
     instructions: input.instructions
@@ -163,6 +176,7 @@ export async function createSetFromLinkedFolder(input: LinkFolderInput): Promise
 }
 
 async function performLinkedFolderSync(setId: Uuid): Promise<LinkedFolder | null> {
+  const processing = await loadLinkedFolderProcessing()
   const db = await useTracerDb()
   const linkedFoldersRepo = createLinkedFoldersRepo(db)
   const linkedFolder = await linkedFoldersRepo.getBySetId(setId)
@@ -171,7 +185,7 @@ async function performLinkedFolderSync(setId: Uuid): Promise<LinkedFolder | null
   await updateStatus(setId, 'syncing')
   const knownPaths = await linkedFoldersRepo.listKnownPaths(setId)
   const knownHashes = await linkedFoldersRepo.listKnownHashes(setId)
-  const scan = await scanLinkedFolder(linkedFolder.path, knownPaths, knownHashes)
+  const scan = await processing.scanLinkedFolder(linkedFolder.path, knownPaths, knownHashes)
 
   await linkedFoldersRepo.recordFiles(
     setId,
@@ -194,7 +208,7 @@ async function performLinkedFolderSync(setId: Uuid): Promise<LinkedFolder | null
     })
   }
 
-  const extraction = await extractGenerateSources(scan.sources)
+  const extraction = await processing.extractGenerateSources(scan.sources)
   const extractedIds = new Set(extraction.extracted.map((source) => source.id))
   const extractedSources = scan.sources.filter((source) => extractedIds.has(source.id))
   const failedSources = scan.sources.filter((source) => !extractedIds.has(source.id))
@@ -212,7 +226,7 @@ async function performLinkedFolderSync(setId: Uuid): Promise<LinkedFolder | null
 
   try {
     const { model } = await resolveDefaultModel()
-    const generated = await generateLinkedFolderContent({
+    const generated = await processing.generateLinkedFolderContent({
       model,
       sources: extraction.extracted,
       incremental: true
@@ -229,12 +243,12 @@ async function performLinkedFolderSync(setId: Uuid): Promise<LinkedFolder | null
     await Promise.all([
       setsRepo.update({
         id: setId,
-        terms: mergeGeneratedTerms(set.terms, generated.terms)
+        terms: processing.mergeGeneratedTerms(set.terms, generated.terms)
       }),
       guide
         ? guidesRepo.update({
             id: guide.id,
-            markdown: appendStudyGuide(guide.markdown, generated.studyGuideMarkdown)
+            markdown: processing.appendStudyGuide(guide.markdown, generated.studyGuideMarkdown)
           })
         : guidesRepo.create({
             id: crypto.randomUUID() as Uuid,
@@ -341,7 +355,7 @@ export async function refreshLinkedFolderSyncManager() {
   )
 }
 
-export async function startLinkedFolderSyncManager() {
+export async function startLinkedFolderSyncManager(options: { syncOnStart?: boolean } = {}) {
   if (managerStarted) return
   managerStarted = true
   const db = await useTracerDb()
@@ -353,7 +367,9 @@ export async function startLinkedFolderSyncManager() {
       )
     )
   )
-  await Promise.all(linkedFolders.map((linkedFolder) => syncLinkedFolder(linkedFolder.setId).catch(() => null)))
+  if (options.syncOnStart !== false) {
+    await Promise.all(linkedFolders.map((linkedFolder) => syncLinkedFolder(linkedFolder.setId).catch(() => null)))
+  }
 }
 
 export function stopLinkedFolderSyncManager() {

@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { createSettingsRepo, useTracerDb } from './db'
+import { loadAppSettingsOnce } from './app-settings-cache'
 import { hasTauriRuntime } from './tauri'
 
 const floatingChatEnabled = ref(true)
@@ -12,8 +13,7 @@ export function useFloatingChatPreference() {
 export async function floatingChatInitFromDb() {
   try {
     if (hasTauriRuntime()) {
-      const db = await useTracerDb()
-      const settings = await createSettingsRepo(db).get()
+      const settings = await loadAppSettingsOnce()
       floatingChatEnabled.value = settings.floatingChatEnabled
     }
     return floatingChatEnabled.value

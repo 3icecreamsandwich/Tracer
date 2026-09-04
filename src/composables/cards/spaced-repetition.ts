@@ -16,6 +16,7 @@ const DAY_MS = 86_400_000
 const TARGET_RETENTION = 0.9
 const scope = (userId?: Uuid | null) => userId || 'local-user'
 const enabledKey = (setId: Uuid, userId?: Uuid | null) => `tracer:smart-review:${scope(userId)}:${setId}`
+const globalEnabledKey = (userId?: Uuid | null) => `tracer:smart-review-default:${scope(userId)}`
 const reviewKey = (setId: Uuid, userId?: Uuid | null) => `tracer:smart-review-cards:${scope(userId)}:${setId}`
 const shuffleKey = (setId: Uuid, userId?: Uuid | null) => `tracer:flashcard-shuffle:${scope(userId)}:${setId}`
 
@@ -59,11 +60,33 @@ function readReviews(setId: Uuid, userId?: Uuid | null): Record<Uuid, CardReview
 }
 
 export function isSmartReviewEnabled(setId: Uuid, userId?: Uuid | null) {
-  try { return localStorage.getItem(enabledKey(setId, userId)) === 'true' } catch { return false }
+  return getSmartReviewOverride(setId, userId) ?? false
 }
 
 export function saveSmartReviewEnabled(setId: Uuid, enabled: boolean, userId?: Uuid | null) {
   try { localStorage.setItem(enabledKey(setId, userId), String(enabled)) } catch {}
+}
+
+export function getSmartReviewOverride(setId: Uuid, userId?: Uuid | null): boolean | null {
+  try {
+    const value = localStorage.getItem(enabledKey(setId, userId))
+    return value === null ? null : value === 'true'
+  } catch { return null }
+}
+
+export function getGlobalSmartReviewEnabled(userId?: Uuid | null): boolean | null {
+  try {
+    const value = localStorage.getItem(globalEnabledKey(userId))
+    return value === null ? null : value === 'true'
+  } catch { return null }
+}
+
+export function saveGlobalSmartReviewEnabled(enabled: boolean, userId?: Uuid | null) {
+  try { localStorage.setItem(globalEnabledKey(userId), String(enabled)) } catch {}
+}
+
+export function resolveSmartReviewEnabled(setId: Uuid, globalEnabled: boolean, userId?: Uuid | null) {
+  return getSmartReviewOverride(setId, userId) ?? globalEnabled
 }
 
 export function isFlashcardShuffleEnabled(setId: Uuid, userId?: Uuid | null) {
