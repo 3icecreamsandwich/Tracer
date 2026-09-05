@@ -11,11 +11,7 @@ import {
   githubModelsLoadAuthState,
   type GithubModelsAuthState,
 } from './ai/github-state'
-import {
-  restoreAuthSession,
-  waitForProviderKeySync,
-  type AuthIdentity,
-} from './auth/session'
+import type { AuthIdentity } from './auth/session'
 
 const NETWORK_STATUS_MAX_AGE_MS = 5 * 60 * 1000
 export const CONNECTION_STATUS_SNAPSHOT_KEY = 'tracer:connection-status-snapshot'
@@ -121,6 +117,7 @@ async function refreshProviderPresence() {
 }
 
 async function refreshAccountConnection(initialProviderPresence?: Promise<void>) {
+  const { restoreAuthSession, waitForProviderKeySync } = await import('./auth/session')
   const account = await restoreAuthSession({ waitForProviderKeySync: false })
   accountIdentity.value = account?.identity ?? null
   accountConnectionStatus.value = account === null

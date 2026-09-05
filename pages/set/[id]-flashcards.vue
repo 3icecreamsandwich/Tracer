@@ -868,7 +868,9 @@ function setReviewFilter(filter: 'all' | ReviewBucket) {
     }
     reviewFilter.value = filter;
     const saved = reviewRunSnapshots.value[filter];
-    if (!saved) {
+    // Empty snapshots have no progress to restore; cards may have become ready
+    // since this filter was last opened. Preserve nonempty runs as-is.
+    if (!saved || saved.order.length === 0) {
         startConfiguredRun();
         return;
     }

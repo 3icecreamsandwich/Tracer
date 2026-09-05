@@ -85,6 +85,23 @@ export function saveGlobalSmartReviewEnabled(enabled: boolean, userId?: Uuid | n
   try { localStorage.setItem(globalEnabledKey(userId), String(enabled)) } catch {}
 }
 
+/**
+ * Apply an explicit global choice. Changing the global toggle supersedes every
+ * per-set choice; sets can create new overrides after this action.
+ */
+export function applyGlobalSmartReviewEnabled(enabled: boolean, userId?: Uuid | null) {
+  try {
+    const overridePrefix = `tracer:smart-review:${scope(userId)}:`
+    const overrideKeys: string[] = []
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index)
+      if (key?.startsWith(overridePrefix)) overrideKeys.push(key)
+    }
+    for (const key of overrideKeys) localStorage.removeItem(key)
+    localStorage.setItem(globalEnabledKey(userId), String(enabled))
+  } catch {}
+}
+
 export function resolveSmartReviewEnabled(setId: Uuid, globalEnabled: boolean, userId?: Uuid | null) {
   return getSmartReviewOverride(setId, userId) ?? globalEnabled
 }

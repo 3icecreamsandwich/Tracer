@@ -834,27 +834,22 @@
 
 <script setup lang="ts">
 import {
-  lockGetStatus,
   lockResetTracer,
   lockSetStartupLockEnabled
 } from '../src/composables/lock'
 import {
-  createProfileRepo,
   createSettingsRepo,
   type Profile,
   useTracerDb
 } from '../src/composables/db'
+import { loadSettingsPageData } from '../src/composables/settings-page-data'
 import { useLockSession } from '../src/composables/lock-session'
 import { themeSetDarkMode } from '../src/composables/theme'
 import {
   type OpenAiCompatConfig
 } from '../src/composables/ai/credentials'
-import {
-  clearProviderApiKey,
-  saveProviderApiKeyDrafts,
-  type ProviderApiKeyId
-} from '../src/composables/ai/provider-settings'
-import { aiRegistryCatalog } from '../src/composables/ai/registry'
+import type { ProviderApiKeyId } from '../src/composables/ai/provider-settings'
+import { aiRegistryCatalog } from '../src/composables/ai/registry/catalog'
 import { useGithubModelsAuth } from '../src/composables/ai/github-models-auth'
 import { hasTauriRuntime } from '../src/composables/tauri'
 import { redactSensitiveText } from '../src/composables/security/redact'
@@ -865,14 +860,12 @@ import {
 } from '../src/composables/language'
 import type { AppLanguage } from '../src/composables/db/types'
 import { applyTextScale, textScaleSet } from '../src/composables/text-scale'
-import { saveGlobalSmartReviewEnabled } from '../src/composables/cards/spaced-repetition'
 import {
-  clearAuthSession,
-  identityFromUser,
-  persistAuthSession,
-  prepareAuthenticatedProfile,
-  signInWithGoogle
-} from '../src/composables/auth'
+  applyGlobalSmartReviewEnabled,
+  getGlobalSmartReviewEnabled,
+  saveGlobalSmartReviewEnabled,
+} from '../src/composables/cards/spaced-repetition'
+import { clearAppSettingsRequest } from '../src/composables/app-settings-cache'
 import {
   initializeConnectionStatuses,
   refreshNetworkConnectionStatuses,
@@ -1456,6 +1449,7 @@ async function onSaveProviderSecret(id: ProviderApiKeyId) {
     const nextOpenAiCompatConfig = currentOpenAiCompatConfig()
     const shouldSaveOpenAiCompatConfig =
       id === 'openai_compat' && openAiCompatConfigChanged()
+    const { saveProviderApiKeyDrafts } = await import('../src/composables/ai/provider-settings')
     const result = await saveProviderApiKeyDrafts(providerApiKeyDraft(id), {
       openAiCompatConfig: shouldSaveOpenAiCompatConfig
         ? nextOpenAiCompatConfig
@@ -1497,6 +1491,7 @@ async function onConfirmProviderApiKeyClear() {
   error.value = null
   busy.value = true
   try {
+    const { clearProviderApiKey } = await import('../src/composables/ai/provider-settings')
     await clearProviderApiKey(target)
     clearProviderApiKeyDraft(target)
     markProviderApiKeyAbsent(target)
@@ -1535,7 +1530,7 @@ onMounted(() => {
       defaultModelId.value = null
       fallbackModelIds.value = []
       learnHybridEnabled.value = false
-      smartReviewEnabled.value = false
+      smartReviewEnabled.value = getGlobalSmartReviewEnabled(profile.value.id) ?? false
       floatingChatEnabled.value = true
       textScale.value = Number(document.documentElement.dataset.textScale || 0)
       void initializeConnectionStatuses()
@@ -1543,11 +1538,8 @@ onMounted(() => {
       return
     }
     try {
-      const status = await lockGetStatus()
+      const { status, db, profile: p, settings } = await loadSettingsPageData()
       vaultMode.value = status.vault_mode
-      const db = await useTracerDb()
-
-      const p = await createProfileRepo(db).get()
       if (!p || !status.has_verifier) {
         markLocked()
         await router.replace('/first-run')
@@ -1555,7 +1547,6 @@ onMounted(() => {
       }
       profile.value = p
 
-      const settings = await createSettingsRepo(db).get()
       startupLockEnabled.value = status.vault_mode === 'device_key' ? false : settings.startupLockEnabled
       darkMode.value = settings.darkMode
       defaultModelId.value = settings.defaultModelId
@@ -1660,13 +1651,14 @@ async function onToggleSmartReview() {
     const next = !smartReviewEnabled.value
     if (isWebPreview.value) {
       smartReviewEnabled.value = next
-      saveGlobalSmartReviewEnabled(next, profile.value?.id)
+      applyGlobalSmartReviewEnabled(next, profile.value?.id)
       return
     }
     const db = await useTracerDb()
     const updated = await createSettingsRepo(db).set({ smartReviewEnabled: next })
+    clearAppSettingsRequest()
     smartReviewEnabled.value = updated.smartReviewEnabled
-    saveGlobalSmartReviewEnabled(updated.smartReviewEnabled, profile.value?.id)
+    applyGlobalSmartReviewEnabled(updated.smartReviewEnabled, profile.value?.id)
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to update Smart Review settings')
   } finally {
@@ -1760,7 +1752,7 @@ async function onConfirmReset() {
   resetError.value = null
   busy.value = true
   try {
-    await clearAuthSession().catch(() => {})
+    await import('../src/composables/auth/session').then(({ clearAuthSession }) => clearAuthSession()).catch(() => {})
     await lockResetTracer()
     resetConnectionStatusCache()
     markLocked()
@@ -1777,6 +1769,7 @@ async function onReconnectAccount() {
   busy.value = true
   accountActionPending.value = true
   try {
+    const { signInWithGoogle, prepareAuthenticatedProfile, clearAuthSession, persistAuthSession, identityFromUser } = await import('../src/composables/auth')
     const session = await signInWithGoogle()
     if (profile.value?.supabaseUserId && session.user.id !== profile.value.supabaseUserId) {
       await clearAuthSession()
@@ -1804,6 +1797,7 @@ async function onAccountSignOut() {
   error.value = null
   busy.value = true
   try {
+    const { clearAuthSession } = await import('../src/composables/auth/session')
     await clearAuthSession()
     setAccountConnectionSignedOut()
   } catch (e: unknown) {

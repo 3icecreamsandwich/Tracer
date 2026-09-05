@@ -75,7 +75,7 @@ const en: Messages = {
   'home.sets': 'Sets',
   'home.subtitle': 'Your flashcard sets and study guides',
   'home.create': 'Create',
-  'set.reviewReady': 'Ready to review',
+  'set.reviewReady': 'Review now',
   'set.reviewReadyNow': 'Ready now',
   'set.nothingReady': 'Nothing ready',
   'set.nextReview': 'Next',

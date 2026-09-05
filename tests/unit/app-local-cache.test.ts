@@ -47,4 +47,18 @@ describe('document-local shell data caches', () => {
     expect(mocks.useTracerDb).toHaveBeenCalledTimes(1)
     expect(mocks.profileGet).toHaveBeenCalledTimes(1)
   })
+
+  it('reloads Smart Review for both flashcard views after Settings invalidates the cache', async () => {
+    const { loadAppSettingsOnce, clearAppSettingsRequest } = await import('../../src/composables/app-settings-cache')
+    mocks.settingsGet.mockResolvedValue({ smartReviewEnabled: false })
+    expect((await loadAppSettingsOnce()).smartReviewEnabled).toBe(false)
+
+    for (const enabled of [true, false]) {
+      mocks.settingsGet.mockResolvedValue({ smartReviewEnabled: enabled })
+      clearAppSettingsRequest()
+      const views = await Promise.all([loadAppSettingsOnce(), loadAppSettingsOnce()])
+      expect(views.map(settings => settings.smartReviewEnabled)).toEqual([enabled, enabled])
+    }
+    expect(mocks.settingsGet).toHaveBeenCalledTimes(3)
+  })
 })
