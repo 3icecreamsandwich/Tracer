@@ -117,7 +117,7 @@
 
         <div v-if="authorizationUrl && errorCode === 'browser_open_failed'" class="mt-4 rounded border border-slate-300 p-3 text-sm dark:border-slate-700">
           <p>{{ t('auth.copyBrowserLink') }}</p>
-          <button type="button" class="mt-2 font-medium text-blue-700 hover:underline dark:text-blue-300" @click="copyAuthorizationUrl">{{ t('common.copy') }}</button>
+          <button type="button" class="mt-2 font-medium text-blue-700 hover:underline dark:text-blue-300" @click="copyAuthorizationUrl"><AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }}</button>
         </div>
       </template>
 

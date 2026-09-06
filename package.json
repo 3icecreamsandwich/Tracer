@@ -24,6 +24,7 @@
     "@tauri-apps/plugin-http": "^2.5.9",
     "ai": "^6.0.224",
     "katex": "^0.17.0",
+    "lucide-vue-next": "1.0.0",
     "markdown-it": "^14.3.0",
     "nuxt": "^4.4.8",
     "ollama-ai-provider-v2": "3",

@@ -566,268 +566,207 @@
         @confirm="onConfirmReset"
       />
 
-      <div
-        v-if="isModelPickerOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center p-6"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Add AI model"
-        @keydown.esc="closeModelPicker"
+      <BaseModal
+        :open="Boolean(isModelPickerOpen)"
+        :title="&quot;Add AI model&quot;"
+        panel-class="max-w-2xl"
+        :close-label="t('common.close')"
+        @close="closeModelPicker"
       >
-        <button
-          type="button"
-          class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-          :aria-label="t('common.close')"
-          @click="closeModelPicker"
-        />
-
-        <div
-          class="relative w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-          @keydown="onModelPickerKeydown"
-        >
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0">
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">Add AI model</h2>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Choose a provider, then select a model.
-              </p>
-              <p class="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                ↑/↓ · Enter · Esc
-              </p>
-            </div>
-
-            <div class="shrink-0 flex gap-2">
-              <button
-                type="button"
-                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                @click="closeModelPicker"
-              >
-                {{ t('common.cancel') }}
-              </button>
-              <button
-                type="button"
-                class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                :disabled="modelPickerEnterDisabled"
-                @click="onModelPickerEnter"
-              >
-                {{ t('common.enter') }}
-              </button>
-            </div>
-          </div>
-
-          <div class="mt-4">
-            <label class="sr-only" for="model-picker-search">{{ t('nav.search') }}</label>
-            <input
-              id="model-picker-search"
-              ref="modelPickerSearchEl"
-              v-model="modelPickerQuery"
-              type="search"
-              autocomplete="off"
-              :placeholder="`${t('nav.search')} · ${modelPickerStep === 'providers' ? t('settings.providers') : t('settings.defaultModel')}`"
-              class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            />
-          </div>
-
-          <div class="mt-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <p class="text-xs font-medium text-slate-500 dark:text-slate-400">
-                <span v-if="modelPickerStep === 'providers'">{{ t('settings.providers') }}</span>
-                <span v-else>{{ t('settings.models') }} · {{ activeProviderLabel }}</span>
-              </p>
-
-              <button
-                v-if="modelPickerStep === 'models'"
-                type="button"
-                class="text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-50"
-                @click="backToProviders"
-              >
-                ← {{ t('settings.backToProviders') }}
-              </button>
-            </div>
-
-            <ul
-              class="mt-3 max-h-72 overflow-auto rounded-md border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
-              role="listbox"
-              :aria-label="modelPickerStep === 'providers' ? 'Providers' : 'Models'"
-            >
-              <li v-for="(item, idx) in modelPickerItems" :key="item.key">
-                <button
-                  type="button"
-                  class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50 focus-visible:outline-none dark:hover:bg-slate-900"
-                  :class="idx === modelPickerHighlightedIndex ? 'bg-slate-50 dark:bg-slate-900' : ''"
-                  @click="onModelPickerClick(item)"
-                  @mousemove="modelPickerHighlightedIndex = idx"
-                >
-                  <span class="min-w-0">
-                    <span class="block truncate font-medium text-slate-900 dark:text-slate-50">
-                      {{ item.label }}
-                    </span>
-                    <span
-                      v-if="item.hint"
-                      class="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400"
-                    >
-                      {{ item.hint }}
-                    </span>
-                  </span>
-
-                  <span class="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">
-                    {{ item.actionLabel }}
-                  </span>
-                </button>
-              </li>
-
-              <li
-                v-if="modelPickerItems.length === 0"
-                class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300"
-              >
-                {{ t('nav.noResults') }}
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div
-        v-if="providerApiKeyClearTarget"
-        class="fixed inset-0 z-50 flex items-center justify-center p-6"
-        role="dialog"
-        aria-modal="true"
-        :aria-label="t('settings.clearApiKey')"
-        @keydown.esc="closeProviderApiKeyClear"
-      >
-        <button
-          type="button"
-          class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-          :aria-label="t('common.close')"
-          @click="closeProviderApiKeyClear"
-        />
-
-        <div
-          class="relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-        >
+        <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('settings.clearApiKey') }}</h2>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {{ providerApiKeyClearLabel }} · {{ t('settings.apiKey') }}
+              Choose a provider, then select a model.
+            </p>
+            <p class="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+              ↑/↓ · Enter · Esc
             </p>
           </div>
-
-          <div class="mt-4 flex flex-wrap justify-end gap-2">
+          <div class="shrink-0 flex gap-2">
             <button
               type="button"
               class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              :disabled="busy"
-              @click="closeProviderApiKeyClear"
+              @click="closeModelPicker"
             >
               {{ t('common.cancel') }}
             </button>
             <button
               type="button"
-              class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
-              :disabled="busy"
-              @click="onConfirmProviderApiKeyClear"
+              class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              :disabled="modelPickerEnterDisabled"
+              @click="onModelPickerEnter"
             >
-              {{ t('common.clear') }} {{ t('settings.apiKey') }}
+              {{ t('common.enter') }}
             </button>
           </div>
         </div>
-      </div>
-
-       <div
-         v-if="isGithubAuthOpen"
-         class="fixed inset-0 z-50 flex items-center justify-center p-6"
-         role="dialog"
-         aria-modal="true"
-         :aria-label="t('common.authenticate')"
-         @keydown.esc="closeGithubAuth"
-       >
-        <button
-          type="button"
-          class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-          :aria-label="t('common.close')"
-          @click="closeGithubAuth"
-        />
-
-        <div
-          class="relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-        >
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">GitHub Models</h2>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('common.authenticate') }} · <span class="font-mono">models:read</span></p>
-            </div>
+        <div class="mt-4">
+          <label class="sr-only" for="model-picker-search">{{ t('nav.search') }}</label>
+          <input
+            id="model-picker-search"
+            ref="modelPickerSearchEl"
+            v-model="modelPickerQuery"
+            type="search"
+            autocomplete="off"
+            :placeholder="`${t('nav.search')} · ${modelPickerStep === 'providers' ? t('settings.providers') : t('settings.defaultModel')}`"
+            class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          />
+        </div>
+        <div class="mt-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">
+              <span v-if="modelPickerStep === 'providers'">{{ t('settings.providers') }}</span>
+              <span v-else>{{ t('settings.models') }} · {{ activeProviderLabel }}</span>
+            </p>
             <button
+              v-if="modelPickerStep === 'models'"
               type="button"
-              class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              @click="closeGithubAuth"
+              class="text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-50"
+              @click="backToProviders"
             >
-              {{ t('common.close') }}
+              ← {{ t('settings.backToProviders') }}
             </button>
           </div>
-
-          <p v-if="githubAuthError" class="mt-3 text-sm text-red-700 dark:text-red-300">{{ githubAuthError }}</p>
-
-          <div v-if="githubModelsAuthState.status === 'authenticated'" class="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100">
-            <p class="font-medium">{{ t('common.authenticated') }}</p>
-            <p class="mt-1 text-xs">{{ t('settings.defaultModel') }} · {{ githubModelsAvailableModelIds.length }}</p>
-            <div class="mt-3 flex gap-2">
+          <ul
+            class="mt-3 max-h-72 overflow-auto rounded-md border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
+            role="listbox"
+            :aria-label="modelPickerStep === 'providers' ? 'Providers' : 'Models'"
+          >
+            <li v-for="(item, idx) in modelPickerItems" :key="item.key">
               <button
                 type="button"
-                class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
-                :disabled="githubAuthBusy"
-                @click="onGithubAuthSignOut"
+                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50 focus-visible:outline-none dark:hover:bg-slate-900"
+                :class="idx === modelPickerHighlightedIndex ? 'bg-slate-50 dark:bg-slate-900' : ''"
+                @click="onModelPickerClick(item)"
+                @mousemove="modelPickerHighlightedIndex = idx"
               >
-                {{ t('common.signOut') }}
+                <span class="min-w-0">
+                  <span class="block truncate font-medium text-slate-900 dark:text-slate-50">
+                    {{ item.label }}
+                  </span>
+                  <span
+                    v-if="item.hint"
+                    class="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400"
+                  >
+                    {{ item.hint }}
+                  </span>
+                </span>
+                <span class="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  {{ item.actionLabel }}
+                </span>
               </button>
-            </div>
-          </div>
-
-          <div v-else class="mt-4 space-y-3">
-            <button
-              type="button"
-              class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              :disabled="githubAuthBusy"
-              @click="onGithubAuthStart"
+            </li>
+            <li
+              v-if="modelPickerItems.length === 0"
+              class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300"
             >
-              <LoadingSpinner v-if="githubAuthBusy" size="sm" />
-              <template v-else>{{ t('common.authenticate') }}</template>
-            </button>
-
-            <div
-              v-if="githubAuthStep === 'device_pending' && githubAuthVerificationUri && githubAuthUserCode"
-              class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-            >
-              <p class="font-medium">{{ t('settings.deviceCode') }}</p>
-              <p class="mt-2">
-                <span class="font-mono">{{ githubAuthVerificationUri }}</span>
-              </p>
-              <p class="mt-2 text-lg font-semibold tracking-widest">{{ githubAuthUserCode }}</p>
-
-              <div class="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                  @click="onGithubAuthCopyUrl"
-                >
-                  {{ t('common.copy') }} URL
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                  @click="onGithubAuthCopyCode"
-                >
-                  {{ t('common.copy') }} {{ t('settings.deviceCode') }}
-                </button>
-              </div>
-            </div>
-
-            <LoadingSpinner
-              v-else-if="githubAuthStep === 'pkce_pending'"
-              centered
-            />
-          </div>
+              {{ t('nav.noResults') }}
+            </li>
+          </ul>
         </div>
-      </div>
+      </BaseModal>
+
+      <BaseModal
+        :open="Boolean(providerApiKeyClearTarget)"
+        :title="(t('settings.clearApiKey'))"
+        panel-class="max-w-lg"
+        :close-label="t('common.close')"
+        @close="closeProviderApiKeyClear"
+      >
+        <div class="min-w-0">
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            {{ providerApiKeyClearLabel }} · {{ t('settings.apiKey') }}
+          </p>
+        </div>
+        <div class="mt-4 flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy"
+            @click="closeProviderApiKeyClear"
+          >
+            {{ t('common.cancel') }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy"
+            @click="onConfirmProviderApiKeyClear"
+          >
+            {{ t('common.clear') }} {{ t('settings.apiKey') }}
+          </button>
+        </div>
+      </BaseModal>
+
+       <BaseModal
+         :open="Boolean(isGithubAuthOpen)"
+         :title="&quot;GitHub Models&quot;"
+         panel-class="max-w-lg"
+         :close-label="t('common.close')"
+         @close="closeGithubAuth"
+       >
+         <div class="flex items-start justify-between gap-4">
+           <div>
+             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('common.authenticate') }} · <span class="font-mono">models:read</span></p>
+           </div>
+         </div>
+         <p v-if="githubAuthError" class="mt-3 text-sm text-red-700 dark:text-red-300">{{ githubAuthError }}</p>
+         <div v-if="githubModelsAuthState.status === 'authenticated'" class="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100">
+           <p class="font-medium">{{ t('common.authenticated') }}</p>
+           <p class="mt-1 text-xs">{{ t('settings.defaultModel') }} · {{ githubModelsAvailableModelIds.length }}</p>
+           <div class="mt-3 flex gap-2">
+             <button
+               type="button"
+               class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+               :disabled="githubAuthBusy"
+               @click="onGithubAuthSignOut"
+             >
+               {{ t('common.signOut') }}
+             </button>
+           </div>
+         </div>
+         <div v-else class="mt-4 space-y-3">
+           <button
+             type="button"
+             class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+             :disabled="githubAuthBusy"
+             @click="onGithubAuthStart"
+           >
+             <LoadingSpinner v-if="githubAuthBusy" size="sm" />
+             <template v-else>{{ t('common.authenticate') }}</template>
+           </button>
+           <div
+             v-if="githubAuthStep === 'device_pending' && githubAuthVerificationUri && githubAuthUserCode"
+             class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+           >
+             <p class="font-medium">{{ t('settings.deviceCode') }}</p>
+             <p class="mt-2">
+               <span class="font-mono">{{ githubAuthVerificationUri }}</span>
+             </p>
+             <p class="mt-2 text-lg font-semibold tracking-widest">{{ githubAuthUserCode }}</p>
+             <div class="mt-3 flex flex-wrap gap-2">
+               <button
+                 type="button"
+                 class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                 @click="onGithubAuthCopyUrl"
+               >
+                 <AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }} URL
+               </button>
+               <button
+                 type="button"
+                 class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                 @click="onGithubAuthCopyCode"
+               >
+                 <AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }} {{ t('settings.deviceCode') }}
+               </button>
+             </div>
+           </div>
+           <LoadingSpinner
+             v-else-if="githubAuthStep === 'pkce_pending'"
+             centered
+           />
+         </div>
+       </BaseModal>
     </div>
   </main>
 </template>

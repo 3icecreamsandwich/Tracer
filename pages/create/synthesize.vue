@@ -197,7 +197,7 @@
               :disabled="!rawOutput"
               @click="copyRaw"
             >
-              {{ t('common.copy') }}
+              <AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }}
             </button>
             <button
               type="button"

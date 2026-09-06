@@ -39,13 +39,20 @@
             type="button"
             class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             :disabled="busy || factCheckBusy || !setId"
-            @click="onUpdate"
+            @click="onUpdate()"
           >
             <LoadingSpinner v-if="busy" size="sm" />
             <template v-else>{{ t('common.update') }}</template>
           </button>
         </div>
       </div>
+
+      <section v-if="publication && !isWebPreview" class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-200 bg-orange-50/50 p-4 dark:border-orange-900 dark:bg-orange-950/20">
+        <p class="flex-1 text-sm text-slate-600 dark:text-slate-300">{{ t('public.editHint') }}</p>
+        <AppButton variant="white" :busy="busy" :disabled="factCheckBusy" @click="onUpdate(false, true)"><AppIcon name="publish" />{{ t('public.updateVersion') }}</AppButton>
+        <p v-if="publicationMessage" role="status" class="w-full text-sm">{{ publicationMessage }}</p>
+      </section>
+      <p v-if="publicationLookupFailed" role="status" class="mt-4 text-sm text-slate-500">{{ t('public.loadFailed') }} <button type="button" class="underline" @click="loadPublication">{{ t('common.retry') }}</button></p>
 
       <p v-if="loadError" class="mt-6 text-sm text-red-700 dark:text-red-300">
         {{ loadError }}
@@ -270,47 +277,35 @@
       </div>
     </div>
 
-    <div
-      v-if="deleteOpen"
-      class="fixed inset-0 z-50 flex items-center justify-center p-6"
-      role="dialog"
-      aria-modal="true"
-      :aria-label="t('common.delete')"
-      @keydown.esc="closeDelete"
+    <BaseModal
+      :open="Boolean(deleteOpen)"
+      :title="(t('edit.deleteSet'))"
+      panel-class="max-w-lg"
+      :close-label="t('common.close')"
+      @close="closeDelete"
     >
-      <button
-        type="button"
-        class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-        :aria-label="t('common.close')"
-        @click="closeDelete"
-      />
-
-      <div class="relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('edit.deleteSet') }}</h2>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-          This removes the set, starred terms, and linked study guide from the local database.
-        </p>
-
-        <div class="mt-4 flex flex-wrap justify-end gap-2">
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
-            @click="closeDelete"
-          >
-            {{ t('common.cancel') }}
-          </button>
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
-            @click="onDelete"
-          >
-            {{ t('common.delete') }}
-          </button>
-        </div>
+      <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        This removes the set, starred terms, and linked study guide from the local database.
+      </p>
+      <div class="mt-4 flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          :disabled="busy"
+          @click="closeDelete"
+        >
+          {{ t('common.cancel') }}
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
+          :disabled="busy"
+          @click="onDelete"
+        >
+          {{ t('common.delete') }}
+        </button>
       </div>
-    </div>
+    </BaseModal>
 
     <DuplicateCardsDialog
       :open="duplicateReviewOpen"
@@ -322,6 +317,8 @@
 </template>
 
 <script setup lang="ts">
+import { getPublicationSettings, updatePublishedSet, type PublicationSettings } from '~/src/composables/published-sets'
+
 import { lockGetStatus } from '~/src/composables/lock'
 import { useLockSession } from '~/src/composables/lock-session'
 import { createProfileRepo, createSettingsRepo, createSetsRepo, useTracerDb } from '~/src/composables/db'
@@ -359,6 +356,15 @@ const setId = computed<Uuid | null>(() => {
   return typeof raw === 'string' && raw.trim() ? (raw as Uuid) : null
 })
 
+const publication = ref<PublicationSettings | null>(null)
+const publicationMessage = ref('')
+const publicationLookupFailed = ref(false)
+async function loadPublication() {
+  if (!setId.value) return
+  publicationLookupFailed.value = false
+  try { publication.value = await getPublicationSettings(setId.value) }
+  catch { publicationLookupFailed.value = true }
+}
 const title = ref('')
 const description = ref('')
 const iconKey = ref<SetIconKey>('default')
@@ -652,34 +658,35 @@ watch(language, async () => {
   await initWebDemoSet()
 })
 
-async function onUpdate(skipDuplicateReview = false) {
+async function onUpdate(skipDuplicateReview = false, updatePublic = false) {
   formError.value = null
+  publicationMessage.value = ''
   const id = setId.value
-  if (!id || busy.value) return
+  if (!id || busy.value || (updatePublic && isWebPreview.value)) return
+  let localSaved = false
 
   try {
     const validated = validateInputs()
-    if (!skipDuplicateReview && requestDuplicateReview(() => void onUpdate(true))) return
+    if (!skipDuplicateReview && requestDuplicateReview(() => void onUpdate(true, updatePublic))) return
     busy.value = true
     const terms = normalizeTerms(validated.termInputs)
-    if (isWebPreview.value) {
-      notifySearchItemsChanged()
-      await router.replace(`/set/${id}`)
-      return
+    const snapshot = {
+      id, folderId: null, title: validated.title, description: validated.description,
+      iconKey: iconKey.value, iconTone: iconTone.value, terms,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     }
-
-    const db = await useTracerDb()
-    await createSetsRepo(db).update({
-      id,
-      title: validated.title,
-      description: validated.description,
-      iconKey: iconKey.value,
-      iconTone: iconTone.value,
-      terms
-    })
+    if (!isWebPreview.value) {
+      const db = await useTracerDb()
+      await createSetsRepo(db).update(snapshot)
+      localSaved = true
+    }
     notifySearchItemsChanged()
-    await router.replace(`/set/${id}`)
+    if (updatePublic) {
+      await updatePublishedSet(snapshot)
+      publicationMessage.value = t('public.updatedVersion')
+    } else await router.replace(`/set/${id}`)
   } catch (err) {
+    if (updatePublic && localSaved) publicationMessage.value = t('public.updateFailedLocalSaved')
     formError.value =
       err instanceof TermsValidationError
         ? err.message
@@ -717,6 +724,7 @@ onMounted(async () => {
   try {
     if (isWebPreview.value) {
       await initWebDemoSet()
+      void loadPublication()
       return
     }
 
@@ -744,6 +752,7 @@ onMounted(async () => {
     }
 
     await loadSet()
+    void loadPublication()
   } catch (err) {
     busy.value = false
     loadError.value = toErrorMessage(err, 'Failed to open edit page.')

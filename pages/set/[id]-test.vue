@@ -278,56 +278,36 @@
             </template>
         </div>
 
-        <div
-            v-if="quitTestOpen"
-            class="fixed inset-0 z-50 flex items-center justify-center p-6"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="quit-test-title"
-            aria-describedby="quit-test-description"
-            @keydown.esc="quitTestOpen = false"
+        <BaseModal
+          :open="Boolean(quitTestOpen)"
+          :title="&quot;Quit this test?&quot;"
+          panel-class="max-w-md"
+          :close-label="t('common.close')"
+          @close="quitTestOpen = false"
         >
-            <button
-                type="button"
-                class="absolute inset-0 bg-slate-950/35 backdrop-blur-sm"
-                aria-label="Cancel quitting the test"
-                @click="quitTestOpen = false"
-            />
-
-            <div
-                class="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-            >
-                <h2
-                    id="quit-test-title"
-                    class="text-lg font-semibold text-slate-950 dark:text-slate-50"
-                >
-                    Quit this test?
-                </h2>
-                <p
-                    id="quit-test-description"
-                    class="mt-2 text-sm text-slate-600 dark:text-slate-300"
-                >
-                    Your answers and current test progress will be lost.
-                </p>
-
-                <div class="mt-5 flex flex-wrap justify-end gap-2">
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
-                        @click="quitTestOpen = false"
-                    >
-                        {{ t("common.cancel") }}
-                    </button>
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-offset-slate-950"
-                        @click="confirmQuitTest"
-                    >
-                        Quit test
-                    </button>
-                </div>
-            </div>
-        </div>
+          <p
+              id="quit-test-description"
+              class="mt-2 text-sm text-slate-600 dark:text-slate-300"
+          >
+              Your answers and current test progress will be lost.
+          </p>
+          <div class="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                  type="button"
+                  class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                  @click="quitTestOpen = false"
+              >
+                  {{ t("common.cancel") }}
+              </button>
+              <button
+                  type="button"
+                  class="inline-flex items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-offset-slate-950"
+                  @click="confirmQuitTest"
+              >
+                  Quit test
+              </button>
+          </div>
+        </BaseModal>
     </main>
 </template>
 

@@ -26,7 +26,11 @@ export function getSupabaseConfig(): SupabaseClientConfig | null {
   if (!url || !publishableKey) return null
   try {
     const parsed = new URL(url)
-    if (parsed.protocol !== 'https:' && parsed.hostname !== '127.0.0.1' && parsed.hostname !== 'localhost') {
+    if (
+      parsed.protocol !== 'https:' &&
+      parsed.hostname !== '127.0.0.1' &&
+      parsed.hostname !== 'localhost'
+    ) {
       return null
     }
   } catch {
@@ -57,4 +61,21 @@ export function getSupabaseClient(): SupabaseClient {
 
 export function clearSupabaseMemorySession(): void {
   values.clear()
+}
+
+// Public catalog reads must never wait for account restoration or a token refresh.
+let publicClient: SupabaseClient | null = null
+export function getPublicSupabaseClient(): SupabaseClient {
+  if (publicClient) return publicClient
+  const config = getSupabaseConfig()
+  if (!config) throw new Error('supabase_not_configured')
+  publicClient = createClient(config.url, config.publishableKey, {
+    auth: {
+      storageKey: 'tracer-public-catalog',
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  })
+  return publicClient
 }

@@ -28,7 +28,7 @@
 
                     <div class="flex shrink-0 flex-wrap items-center gap-2">
                         <NuxtLink
-                            v-if="set"
+                            v-if="set && !isPublicSet"
                             :to="`/set/${set.id}/edit`"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
                         >
@@ -40,7 +40,7 @@
                             :disabled="busy || !set"
                             @click="openExport"
                         >
-                            {{ t("common.export") }}
+                            {{ t("public.share") }}
                         </button>
                     </div>
                 </div>
@@ -113,12 +113,10 @@
                 </div>
 
                 <div class="mt-5">
-                    <p
-                        v-if="loadError"
-                        class="text-sm text-red-700 dark:text-red-300"
-                    >
-                        {{ loadError }}
-                    </p>
+                    <div v-if="loadError" role="alert" class="space-y-3 text-sm text-red-700 dark:text-red-300">
+                        <p>{{ loadError }}</p>
+                        <AppButton v-if="isPublicSet" variant="white" @click="openSetPage">{{ t('common.retry') }}</AppButton>
+                    </div>
 
                     <LoadingSpinner v-else-if="busy" screen />
 
@@ -1862,267 +1860,137 @@
             </div>
         </div>
 
-        <div
-            v-if="chatHistoryOpen"
-            class="fixed inset-0 z-50 flex items-center justify-center p-6"
-            role="dialog"
-            aria-modal="true"
-            :aria-label="t('chat.history')"
-            @keydown.esc="closeChatHistory"
+        <BaseModal
+          :open="Boolean(chatHistoryOpen)"
+          :title="(t(&quot;chat.history&quot;))"
+          panel-class="max-w-xl"
+          :close-label="t('common.close')"
+          @close="closeChatHistory"
         >
-            <button
-                type="button"
-                class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-                :aria-label="t('common.close')"
-                @click="closeChatHistory"
-            />
+          <div class="flex items-start justify-between gap-4">
+              <div>
+                  <p
+                      class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                  >
+                      {{ set?.title }}
+                  </p>
+              </div>
+          </div>
+          <div class="mt-4 max-h-[26rem] overflow-y-auto">
+              <p
+                  v-if="chatHistoryError"
+                  class="text-sm text-red-700 dark:text-red-300"
+              >
+                  {{ chatHistoryError }}
+              </p>
+              <LoadingSpinner
+                  v-else-if="chatHistoryBusy"
+                  class="text-sm text-slate-600 dark:text-slate-300"
+              />
+              <p
+                  v-else-if="savedChats.length === 0"
+                  class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+              >
+                  {{ t("chat.noHistory") }}
+              </p>
+              <ul v-else class="space-y-2">
+                  <li
+                      v-for="savedChat in savedChats"
+                      :key="savedChat.id"
+                      class="group relative"
+                  >
+                      <button
+                          type="button"
+                          class="w-full rounded-md border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                          :disabled="chatHistoryBusy || chatDeleteBusy"
+                          @click="openSavedChat(savedChat.id)"
+                      >
+                          <span
+                              class="block truncate text-sm font-medium text-slate-900 dark:text-slate-50"
+                          >
+                              {{ savedChat.title }}
+                          </span>
+                          <span
+                              class="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400"
+                          >
+                              {{ set?.title }} ·
+                              {{
+                                  formatSavedChatDate(
+                                      savedChat.lastOpenedAt,
+                                  )
+                              }}
+                          </span>
+                      </button>
+                      <button
+                          type="button"
+                          class="absolute top-1/2 right-3 inline-flex -translate-y-1/2 items-center justify-center rounded-md p-2 text-slate-500 opacity-0 hover:bg-red-50 hover:text-red-700 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                          :aria-label="
+                              t('chat.deleteNamed', {
+                                  title: savedChat.title,
+                              })
+                          "
+                          :disabled="chatDeleteBusy"
+                          @click.stop="requestDeleteChat(savedChat)"
+                      >
+                          <svg
+                              aria-hidden="true"
+                              viewBox="0 0 24 24"
+                              class="h-4 w-4"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                          >
+                              <path d="M3 6h18" />
+                              <path d="M8 6V4h8v2" />
+                              <path d="M19 6l-1 14H6L5 6" />
+                              <path d="M10 11v5M14 11v5" />
+                          </svg>
+                      </button>
+                  </li>
+              </ul>
+          </div>
+        </BaseModal>
 
-            <div
-                class="relative w-full max-w-xl rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-            >
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h2
-                            class="text-lg font-semibold text-slate-900 dark:text-slate-50"
-                        >
-                            {{ t("chat.history") }}
-                        </h2>
-                        <p
-                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                        >
-                            {{ set?.title }}
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        @click="closeChatHistory"
-                    >
-                        {{ t("common.close") }}
-                    </button>
-                </div>
-
-                <div class="mt-4 max-h-[26rem] overflow-y-auto">
-                    <p
-                        v-if="chatHistoryError"
-                        class="text-sm text-red-700 dark:text-red-300"
-                    >
-                        {{ chatHistoryError }}
-                    </p>
-                    <LoadingSpinner
-                        v-else-if="chatHistoryBusy"
-                        class="text-sm text-slate-600 dark:text-slate-300"
-                    />
-                    <p
-                        v-else-if="savedChats.length === 0"
-                        class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-                    >
-                        {{ t("chat.noHistory") }}
-                    </p>
-                    <ul v-else class="space-y-2">
-                        <li
-                            v-for="savedChat in savedChats"
-                            :key="savedChat.id"
-                            class="group relative"
-                        >
-                            <button
-                                type="button"
-                                class="w-full rounded-md border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                :disabled="chatHistoryBusy || chatDeleteBusy"
-                                @click="openSavedChat(savedChat.id)"
-                            >
-                                <span
-                                    class="block truncate text-sm font-medium text-slate-900 dark:text-slate-50"
-                                >
-                                    {{ savedChat.title }}
-                                </span>
-                                <span
-                                    class="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400"
-                                >
-                                    {{ set?.title }} ·
-                                    {{
-                                        formatSavedChatDate(
-                                            savedChat.lastOpenedAt,
-                                        )
-                                    }}
-                                </span>
-                            </button>
-                            <button
-                                type="button"
-                                class="absolute top-1/2 right-3 inline-flex -translate-y-1/2 items-center justify-center rounded-md p-2 text-slate-500 opacity-0 hover:bg-red-50 hover:text-red-700 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
-                                :aria-label="
-                                    t('chat.deleteNamed', {
-                                        title: savedChat.title,
-                                    })
-                                "
-                                :disabled="chatDeleteBusy"
-                                @click.stop="requestDeleteChat(savedChat)"
-                            >
-                                <svg
-                                    aria-hidden="true"
-                                    viewBox="0 0 24 24"
-                                    class="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                >
-                                    <path d="M3 6h18" />
-                                    <path d="M8 6V4h8v2" />
-                                    <path d="M19 6l-1 14H6L5 6" />
-                                    <path d="M10 11v5M14 11v5" />
-                                </svg>
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div
-            v-if="chatDeleteTarget"
-            class="fixed inset-0 z-[60] flex items-center justify-center p-6"
-            role="dialog"
-            aria-modal="true"
-            :aria-label="t('chat.deleteTitle')"
-            @keydown.esc="cancelDeleteChat"
+        <BaseModal
+          :open="Boolean(chatDeleteTarget)"
+          :title="(t(&quot;chat.deleteTitle&quot;))"
+          panel-class="max-w-md"
+          :close-label="t('common.close')"
+          @close="cancelDeleteChat"
         >
-            <button
-                type="button"
-                class="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
-                :aria-label="t('common.cancel')"
-                @click="cancelDeleteChat"
-            />
-            <div
-                class="relative w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-            >
-                <h2
-                    class="text-lg font-semibold text-slate-900 dark:text-slate-50"
-                >
-                    {{ t("chat.deleteTitle") }}
-                </h2>
-                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                    {{
-                        t("chat.deleteDescription", {
-                            title: chatDeleteTarget.title,
-                        })
-                    }}
-                </p>
-                <div class="mt-5 flex justify-end gap-2">
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="chatDeleteBusy"
-                        @click="cancelDeleteChat"
-                    >
-                        {{ t("common.cancel") }}
-                    </button>
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="chatDeleteBusy"
-                        @click="confirmDeleteChat"
-                    >
-                        {{ t("common.delete") }}
-                    </button>
-                </div>
-            </div>
-        </div>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              {{
+                  t("chat.deleteDescription", {
+                      title: chatDeleteTarget.title,
+                  })
+              }}
+          </p>
+          <div class="mt-5 flex justify-end gap-2">
+              <button
+                  type="button"
+                  class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                  :disabled="chatDeleteBusy"
+                  @click="cancelDeleteChat"
+              >
+                  {{ t("common.cancel") }}
+              </button>
+              <button
+                  type="button"
+                  class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
+                  :disabled="chatDeleteBusy"
+                  @click="confirmDeleteChat"
+              >
+                  {{ t("common.delete") }}
+              </button>
+          </div>
+        </BaseModal>
 
-        <div
-            v-if="isExportOpen"
-            class="fixed inset-0 z-50 flex items-center justify-center p-6"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Export set"
-            @keydown.esc="closeExport"
-        >
-            <button
-                type="button"
-                class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-                :aria-label="t('common.close')"
-                @click="closeExport"
-            />
-
-            <div
-                class="relative w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-            >
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h2
-                            class="text-lg font-semibold text-slate-900 dark:text-slate-50"
-                        >
-                            {{ t("common.export") }}
-                        </h2>
-                        <p
-                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                        >
-                            TSV · {{ t("common.export") }}
-                        </p>
-                    </div>
-
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        @click="closeExport"
-                    >
-                        {{ t("common.close") }}
-                    </button>
-                </div>
-
-                <div class="mt-4">
-                    <label class="sr-only" for="export-tsv"
-                        >TSV {{ t("common.export") }}</label
-                    >
-                    <textarea
-                        id="export-tsv"
-                        ref="exportTextareaEl"
-                        readonly
-                        rows="10"
-                        class="w-full resize-y rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :value="exportTsv"
-                        @focus="selectAllExport"
-                    />
-                </div>
-
-                <p
-                    v-if="exportMessage"
-                    class="mt-3 text-sm text-slate-700 dark:text-slate-200"
-                >
-                    {{ exportMessage }}
-                </p>
-
-                <div class="mt-4 flex flex-wrap gap-2">
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="!exportTsv"
-                        @click="copyExport"
-                    >
-                        {{ t("common.copy") }}
-                    </button>
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="!exportTsv"
-                        @click="downloadExport"
-                    >
-                        {{ t("common.download") }}
-                    </button>
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="!exportTsv"
-                        @click="selectAllExport"
-                    >
-                        {{ t("common.selectAll") }}
-                    </button>
-                </div>
-            </div>
-        </div>
+        <ShareSetDialog :open="isExportOpen" :set="set" :public-set="isPublicSet" :allow-copying="publishedSet?.allow_copying ?? true" @close="closeExport" />
     </main>
 </template>
 
 <script setup lang="ts">
+import { getPublishedSet, publishedSetToStudySet, type PublishedSet } from '~/src/composables/published-sets';
 import flashcardsModeIcon from "~/assets/icons/study-modes/flashcards.png";
 import studyGuideModeIcon from "~/assets/icons/study-modes/study-guide.png";
 import practiceModeIcon from "~/assets/icons/study-modes/practice.png";
@@ -2243,6 +2111,9 @@ import {
     type FlashcardStudyFilter,
 } from "~/src/composables/cards/flashcard-mastery";
 
+const props = defineProps<{ publicSetId?: string }>();
+const isPublicSet = computed(() => Boolean(props.publicSetId));
+const publishedSet = ref<PublishedSet | null>(null);
 const route = useRoute();
 const router = useRouter();
 const { language, t, translateAppGeneratedText } = useAppLanguage();
@@ -2254,16 +2125,16 @@ const isNestedSetRoute = computed(() =>
             match.name === "set-id-edit" || match.name === "set-id-results",
     ),
 );
-const isWebPreview = computed(() => !hasTauriRuntime());
+const isWebPreview = computed(() => isPublicSet.value || !hasTauriRuntime());
 
 type SetMode = "flashcards" | "learn" | "match" | "chat";
 type TrackedSetMode = Exclude<SetMode, "chat">;
 
 const assignedAssignmentId = computed(() =>
-    parseAssignedAssignmentId(route.query.assignment),
+    isPublicSet.value ? null : parseAssignedAssignmentId(route.query.assignment),
 );
 const assignedClassId = computed(() =>
-    typeof route.query.class === "string" ? route.query.class : null,
+    !isPublicSet.value && typeof route.query.class === "string" ? route.query.class : null,
 );
 
 function assignedQuery(extra: Record<string, string> = {}) {
@@ -2276,10 +2147,11 @@ function assignedQuery(extra: Record<string, string> = {}) {
 }
 
 function setModePath(nextMode: SetMode) {
-    return `/set/${set.value?.id ?? route.params.id}${assignedQuery({ mode: nextMode })}`;
+    return `${isPublicSet.value ? '/public-sets' : '/set'}/${set.value?.id ?? route.params.id}${assignedQuery({ mode: nextMode })}`;
 }
 
 function fullscreenModePath(nextMode: TrackedSetMode) {
+    if (isPublicSet.value) return undefined;
     return `/set/${set.value?.id ?? route.params.id}-${nextMode}${assignedQuery()}`;
 }
 
@@ -2772,8 +2644,6 @@ const matchPairsTarget = computed(() => {
 });
 
 const isExportOpen = ref(false);
-const exportMessage = ref<string | null>(null);
-const exportTextareaEl = ref<HTMLTextAreaElement | null>(null);
 
 async function loadSet(setId: Uuid) {
     busy.value = true;
@@ -2846,9 +2716,18 @@ async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
         typeof route.params.id === "string" && route.params.id.trim()
             ? route.params.id
             : "demo";
-    set.value = createWebPreviewDemoSet(t, { id: demoId as Uuid });
+    if (isPublicSet.value) {
+        publishedSet.value = await getPublishedSet(props.publicSetId!);
+        set.value = publishedSetToStudySet(publishedSet.value);
+        if (hasTauriRuntime()) {
+            void loadAppSettingsOnce().then((settings) => {
+                defaultModelId.value = settings.defaultModelId;
+                fallbackModelIds.value = settings.fallbackModelIds;
+            }).catch(() => {});
+        }
+    } else set.value = createWebPreviewDemoSet(t, { id: demoId as Uuid });
     // Web preview fallback: allow E2E validation of study guide navigation.
-    studyGuideSetId.value = set.value.id;
+    studyGuideSetId.value = isPublicSet.value ? null : set.value.id;
     busy.value = false;
     isFlipped.value = false;
     flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
@@ -3047,11 +2926,6 @@ const accuracyText = computed(() => {
     return `${pct}% (${correctAttemptsCount.value}/${attempted})`;
 });
 
-const exportTsv = computed(() => {
-    const s = set.value;
-    if (!s) return "";
-    return s.terms.map((t) => `${t.front}\t${t.back}`).join("\n");
-});
 
 const {
     toggleFlip,
@@ -4429,7 +4303,7 @@ async function sendChat() {
         const system =
             chatSystemPrompt.value || buildGroundedChatSystemPrompt(s);
 
-        if (isWebPreview.value) {
+        if (isWebPreview.value && !isPublicSet.value) {
             for await (const chunk of streamWebPreviewMockChatAnswer({
                 set: s,
                 userMessage: text,
@@ -4483,67 +4357,8 @@ async function sendChat() {
     }
 }
 
-function openExport() {
-    exportMessage.value = null;
-    isExportOpen.value = true;
-    nextTick(() => {
-        exportTextareaEl.value?.focus();
-        selectAllExport();
-    });
-}
-
-function closeExport() {
-    isExportOpen.value = false;
-    exportMessage.value = null;
-    nextTick(() => {
-        viewerButtonEl.value?.focus();
-    });
-}
-
-function selectAllExport() {
-    const el = exportTextareaEl.value;
-    if (!el) return;
-    el.focus();
-    el.select();
-}
-
-async function copyExport() {
-    exportMessage.value = null;
-    const text = exportTsv.value;
-    if (!text) return;
-
-    try {
-        if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(text);
-            exportMessage.value = "Copied to clipboard.";
-            return;
-        }
-    } catch {}
-
-    selectAllExport();
-    exportMessage.value = "Select the text and copy it manually.";
-}
-
-function downloadExport() {
-    exportMessage.value = null;
-    const text = exportTsv.value;
-    if (!text) return;
-
-    const s = set.value;
-    const filename = s ? `${s.title}.txt` : "export.txt";
-
-    const blob = new Blob([text], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    exportMessage.value = "Downloaded.";
-}
+function openExport() { isExportOpen.value = true; }
+function closeExport() { isExportOpen.value = false; }
 
 async function openSetPage() {
     let lockGateEvaluated = false;
@@ -4681,6 +4496,11 @@ async function openSetPage() {
             onDocumentFlashcardSettingsPointerDown,
         );
     } catch {
+        if (isPublicSet.value) {
+            busy.value = false;
+            loadError.value = t('public.loadFailed');
+            return;
+        }
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
         if (tauriInvoke !== "function") {
@@ -4799,7 +4619,7 @@ watch(
 );
 
 watch(language, async () => {
-    if (!isWebPreview.value || isNestedSetRoute.value) return;
+    if (isPublicSet.value || !isWebPreview.value || isNestedSetRoute.value) return;
     await initWebDemoSet({ forceNewPractice: true });
 });
 

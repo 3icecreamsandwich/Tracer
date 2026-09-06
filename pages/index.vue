@@ -358,17 +358,8 @@
             </div>
           </section>
 
-          <section
-            v-if="accountRole === 'teacher'"
-            class="rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-            aria-labelledby="home-dashboard"
-          >
-            <h2 id="home-dashboard" class="text-[22px] font-semibold">{{ t('classroom.dashboard') }}</h2>
-            <p class="mt-1 text-[15px] text-slate-600 dark:text-slate-300">{{ t('classroom.dashboardDescription') }}</p>
-            <AppButton class="mt-6" block size="lg" to="/teacher">
-              {{ t('classroom.dashboard') }} <CreateChevron />
-            </AppButton>
-          </section>
+          <HomeDestinationLink to="/public-sets" icon="publish" :title="t('public.browse')" :description="t('public.browseHint')" @pointerenter="prefetchPublicCatalog" @focusin="prefetchPublicCatalog" />
+          <HomeDestinationLink v-if="accountRole === 'teacher'" to="/teacher" icon="dashboard" :title="t('classroom.dashboard')" :description="t('classroom.dashboardDescription')" />
         </div>
       </div>
     </div>
@@ -384,6 +375,7 @@
 </template>
 
 <script setup lang="ts">
+import { prefetchPublicCatalog } from '~/src/composables/published-sets'
 import basicIcon from '../assets/icons/create-basic.png'
 import synthesizeIcon from '../assets/icons/create-synthesize.png'
 import generateIcon from '../assets/icons/create-generate.png'

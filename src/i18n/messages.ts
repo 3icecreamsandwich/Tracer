@@ -1,3 +1,4 @@
+import { publicSetMessages } from './public-sets'
 import type { AppLanguage } from '../composables/db/types'
 
 export const languageOptions: Array<{
@@ -1648,5 +1649,7 @@ const matchLeaderboardMessages: Record<AppLanguage, Messages> = {
 for (const language of Object.keys(matchLeaderboardMessages) as AppLanguage[]) {
   Object.assign(messageTargets[language], matchLeaderboardMessages[language])
 }
+
+for (const [locale, target] of Object.entries(messageTargets)) Object.assign(target, publicSetMessages.en, publicSetMessages[locale] ?? {})
 
 export const messages: Record<AppLanguage, Messages> = messageTargets

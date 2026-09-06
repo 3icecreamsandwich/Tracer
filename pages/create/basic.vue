@@ -194,82 +194,59 @@
       </div>
     </div>
 
-    <div
-      v-if="isImportOpen"
-      class="fixed inset-0 z-50 flex items-center justify-center p-6"
-      role="dialog"
-      aria-modal="true"
-      :aria-label="`${t('common.import')} ${t('create.cards')}`"
-      @keydown.esc="closeImport"
+    <BaseModal
+      :open="Boolean(isImportOpen)"
+      :title="(t('common.import'))"
+      panel-class="max-w-2xl"
+      :close-label="t('common.close')"
+      @close="closeImport"
     >
-      <button
-        type="button"
-        class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-        :aria-label="t('common.close')"
-        @click="closeImport"
-      />
-
-      <div class="relative w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('common.import') }}</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              CSV · TSV · {{ t('create.cards') }}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            @click="closeImport"
-          >
-            {{ t('common.close') }}
-          </button>
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            CSV · TSV · {{ t('create.cards') }}
+          </p>
         </div>
-
-        <div class="mt-4">
-          <label class="sr-only" for="import-cards">{{ t('create.cards') }} · {{ t('common.import') }}</label>
-          <textarea
-            id="import-cards"
-            ref="importTextareaEl"
-            v-model="importText"
-            rows="10"
-            class="w-full resize-y rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-          />
-        </div>
-
-        <p v-if="importError" class="mt-3 text-sm text-red-700 dark:text-red-300">
-          {{ importError }}
-        </p>
-
-        <div class="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy || !importText.trim()"
-            @click="importFromText"
-          >
-            {{ t('common.import') }} {{ t('create.cards') }}
-          </button>
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
-            @click="openImportFilePicker"
-          >
-            {{ t('common.add') }} {{ t('create.files') }}
-          </button>
-        </div>
-
-        <input
-          ref="importFileInputEl"
-          class="sr-only"
-          type="file"
-          accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain"
-          @change="onImportFilePicked"
+      </div>
+      <div class="mt-4">
+        <label class="sr-only" for="import-cards">{{ t('create.cards') }} · {{ t('common.import') }}</label>
+        <textarea
+          id="import-cards"
+          ref="importTextareaEl"
+          v-model="importText"
+          rows="10"
+          class="w-full resize-y rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
         />
       </div>
-    </div>
+      <p v-if="importError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+        {{ importError }}
+      </p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          :disabled="busy || !importText.trim()"
+          @click="importFromText"
+        >
+          {{ t('common.import') }} {{ t('create.cards') }}
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          :disabled="busy"
+          @click="openImportFilePicker"
+        >
+          {{ t('common.add') }} {{ t('create.files') }}
+        </button>
+      </div>
+      <input
+        ref="importFileInputEl"
+        class="sr-only"
+        type="file"
+        accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain"
+        @change="onImportFilePicked"
+      />
+    </BaseModal>
 
     <DuplicateCardsDialog
       :open="duplicateReviewOpen"

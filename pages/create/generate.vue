@@ -1,64 +1,39 @@
 <template>
   <main>
     <AiErrorModal :open="aiErrorOpen" :error="aiError" from="/create/generate" @close="closeAiError" />
-    <div
-      v-if="parseFailureOpen"
-      class="fixed inset-0 z-50 flex items-center justify-center p-6"
-      role="dialog"
-      aria-modal="true"
-      :aria-label="`${t('create.files')} · ${t('common.invalid')}`"
-      @keydown.esc="abortParseFailures"
+    <BaseModal
+      :open="Boolean(parseFailureOpen)"
+      :title="(t('create.files')) + &quot;·&quot; + (t('common.invalid'))"
+      panel-class="max-w-lg"
+      :close-label="t('common.close')"
+      @close="abortParseFailures"
     >
-      <button
-        type="button"
-        class="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-        :aria-label="t('common.close')"
-        @click="abortParseFailures"
-      />
-
-      <div
-        class="relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-      >
-        <div>
-          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-50">
-            {{ t('create.files') }} · {{ t('common.invalid') }}
-          </h2>
-          <p v-if="parseFailureCanContinue" class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            Tracer can continue with the files that were parsed successfully, or abort without generating.
-          </p>
-          <p v-else class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            None of the selected files produced readable text. Generation was not started.
-          </p>
-        </div>
-
-        <ul class="mt-4 max-h-64 space-y-2 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
-          <li v-for="failure in parseFailures" :key="failure.id" class="grid gap-1">
-            <span class="font-medium text-slate-900 dark:text-slate-50">{{ failure.filename }}</span>
-            <span class="text-slate-600 dark:text-slate-300">{{ failure.reason }}</span>
-          </li>
-        </ul>
-
-        <div class="mt-4 flex flex-wrap justify-end gap-2">
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            @click="abortParseFailures"
-          >
-            {{ parseFailureCanContinue ? t('common.cancel') : t('common.close') }}
-          </button>
-
-          <button
-            v-if="parseFailureCanContinue"
-            type="button"
-            class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy || parseBusy"
-            @click="continueAfterParseFailures"
-          >
-            {{ t('common.continue') }}
-          </button>
-        </div>
+      <div>
+        <p v-if="parseFailureCanContinue" class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          Tracer can continue with the files that were parsed successfully, or abort without generating.
+        </p>
+        <p v-else class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          None of the selected files produced readable text. Generation was not started.
+        </p>
       </div>
-    </div>
+      <ul class="mt-4 max-h-64 space-y-2 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
+        <li v-for="failure in parseFailures" :key="failure.id" class="grid gap-1">
+          <span class="font-medium text-slate-900 dark:text-slate-50">{{ failure.filename }}</span>
+          <span class="text-slate-600 dark:text-slate-300">{{ failure.reason }}</span>
+        </li>
+      </ul>
+      <div class="mt-4 flex flex-wrap justify-end gap-2">
+        <button
+          v-if="parseFailureCanContinue"
+          type="button"
+          class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          :disabled="busy || parseBusy"
+          @click="continueAfterParseFailures"
+        >
+          {{ t('common.continue') }}
+        </button>
+      </div>
+    </BaseModal>
     <div class="mx-auto max-w-3xl p-8">
       <div class="sticky top-16 z-20 flex items-start justify-between gap-4 rounded-md bg-white/95 py-2 backdrop-blur dark:bg-slate-950/95">
         <div>
@@ -222,7 +197,7 @@
                 :disabled="!rawOutput"
                 @click="copyRaw"
               >
-                {{ t('common.copy') }}
+                <AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }}
               </button>
               <button
                 type="button"

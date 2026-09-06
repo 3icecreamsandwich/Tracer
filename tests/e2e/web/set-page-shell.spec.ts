@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('set page shell: viewer keyboard + export modal', async ({ page }) => {
+test('set page shell: viewer keyboard + share modal', async ({ page }) => {
   await page.goto('/set/demo')
 
   await expect(page.getByRole('heading', { name: 'Demo set' })).toBeVisible()
@@ -32,16 +32,16 @@ test('set page shell: viewer keyboard + export modal', async ({ page }) => {
   await expect(page.getByText('0/2')).toBeVisible()
   await expect(page.getByRole('button', { name: new RegExp(`Term\\s*${firstNum}`) })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Export' }).click()
-  await expect(page.getByRole('heading', { name: 'Export' })).toBeVisible()
+  await page.getByRole('button', { name: 'Share' }).click()
+  await expect(page.getByRole('heading', { name: 'Share' })).toBeVisible()
 
-  const exportBox = page.locator('#export-tsv')
+  const exportBox = page.locator('#share-terms')
   await expect(exportBox).toBeVisible()
   await expect(exportBox).toHaveValue('Term 1\tDefinition 1\nTerm 2\tDefinition 2')
 
   await page.getByRole('button', { name: 'Copy' }).click()
-  await expect(page.locator('body')).toContainText('Copied to clipboard')
+  await expect(page.locator('body')).toContainText('Copied.')
 
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('heading', { name: 'Export' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Share' })).toHaveCount(0)
 })
