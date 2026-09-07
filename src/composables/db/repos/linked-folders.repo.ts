@@ -19,6 +19,7 @@ type DbLinkedFolderRow = {
 }
 
 type DbLinkedFolderFileRow = {
+  modified_at_ms: number | null
   set_id: string
   relative_path: string
   size_bytes: number
@@ -43,6 +44,7 @@ function rowToLinkedFolder(row: DbLinkedFolderRow): LinkedFolder {
 
 function rowToLinkedFolderFile(row: DbLinkedFolderFileRow): LinkedFolderFile {
   return {
+    modifiedAtMs: row.modified_at_ms,
     setId: row.set_id as Uuid,
     relativePath: row.relative_path,
     sizeBytes: row.size_bytes,
@@ -128,7 +130,7 @@ export function createLinkedFoldersRepo(db: DbClient) {
 
     async listFiles(setId: Uuid): Promise<LinkedFolderFile[]> {
       const rows = await db.select<DbLinkedFolderFileRow>(
-        `SELECT set_id, relative_path, size_bytes, content_hash, status, error, discovered_at, processed_at
+        `SELECT set_id, relative_path, size_bytes, content_hash, status, error, discovered_at, processed_at, modified_at_ms
          FROM linked_folder_files
          WHERE set_id = ?
          ORDER BY discovered_at DESC, relative_path ASC;`,
@@ -141,30 +143,29 @@ export function createLinkedFoldersRepo(db: DbClient) {
       setId: Uuid,
       files: Array<{
         relativePath: string
+        modifiedAtMs?: number | null
         sizeBytes: number
         contentHash?: string | null
         status: LinkedFolderFileStatus
         error?: string | null
       }>
     ): Promise<void> {
-      for (const file of files) {
+      // Stay below SQLite's conservative 999-parameter limit and amortize IPC/disk writes.
+      for (let offset = 0; offset < files.length; offset += 100) {
+        const batch = files.slice(offset, offset + 100)
+        const values = batch.flatMap((file) => [
+          setId, file.relativePath, file.sizeBytes, file.contentHash ?? null,
+          file.status, file.error ?? null, file.modifiedAtMs ?? null, file.status
+        ])
         await db.execute(
-          `INSERT OR IGNORE INTO linked_folder_files (
-             set_id, relative_path, size_bytes, content_hash, status, error, discovered_at, processed_at
-           )
-           VALUES (
-             ?, ?, ?, ?, ?, ?, ${nowIsoSql()},
-             CASE WHEN ? = 'processed' THEN ${nowIsoSql()} ELSE NULL END
-           );`,
-          [
-            setId,
-            file.relativePath,
-            file.sizeBytes,
-            file.contentHash ?? null,
-            file.status,
-            file.error ?? null,
-            file.status
-          ]
+          `INSERT INTO linked_folder_files (
+             set_id, relative_path, size_bytes, content_hash, status, error, modified_at_ms, discovered_at, processed_at
+           ) VALUES ${batch.map(() => `(?, ?, ?, ?, ?, ?, ?, ${nowIsoSql()}, CASE WHEN ? = 'processed' THEN ${nowIsoSql()} ELSE NULL END)`).join(',')}
+           ON CONFLICT(set_id, relative_path) DO UPDATE SET
+             size_bytes = excluded.size_bytes, content_hash = excluded.content_hash,
+             status = excluded.status, error = excluded.error,
+             modified_at_ms = excluded.modified_at_ms, processed_at = excluded.processed_at;`,
+          values
         )
       }
     },

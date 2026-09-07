@@ -53,12 +53,12 @@ function sqliteClient(dbPath: string): DbClient {
 }
 
 describe('linked folders repo roundtrip (sqlite:tracer.db)', () => {
-  it('tracks paths and hashes once, updates status, and cascades with the set', async () => {
+  it('upserts changed paths and hashes, updates status, and cascades with the set', async () => {
     const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'tracer-linked-folders-'))
     try {
       const dbPath = path.join(tmpDir, 'test.db')
       const migrations = await Promise.all(
-        ['001_core.sql', '004_folders.sql', '005_linked_folders.sql'].map((name) =>
+        ['001_core.sql', '004_folders.sql', '005_linked_folders.sql', '021_linked_folder_file_metadata.sql'].map((name) =>
           readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8')
         )
       )
@@ -88,19 +88,32 @@ describe('linked folders repo roundtrip (sqlite:tracer.db)', () => {
           relativePath: 'chapter/one.txt',
           sizeBytes: 99,
           contentHash: 'changed',
+          modifiedAtMs: 1234,
           status: 'processed'
         }
       ])
 
       expect(await repo.listKnownPaths('set-1')).toEqual(new Set(['chapter/one.txt']))
-      expect(await repo.listKnownHashes('set-1')).toEqual(new Set(['hash-one']))
+      expect(await repo.listKnownHashes('set-1')).toEqual(new Set(['changed']))
       expect((await repo.listFiles('set-1'))[0]).toEqual(
         expect.objectContaining({
-          sizeBytes: 42,
-          contentHash: 'hash-one',
+          sizeBytes: 99,
+          contentHash: 'changed',
+          modifiedAtMs: 1234,
           status: 'processed'
         })
       )
+
+      const originalExecute = db.execute
+      let writes = 0
+      db.execute = async (...args) => { writes++; return originalExecute(...args) }
+      await repo.recordFiles('set-1', Array.from({ length: 250 }, (_, i) => ({
+        relativePath: `batch-${i}.txt`, sizeBytes: 1, contentHash: `batch-hash-${i}`,
+        status: 'processed' as const, modifiedAtMs: 1000 + i
+      })))
+      expect(writes).toBe(3)
+      expect(await repo.listFiles('set-1')).toHaveLength(251)
+      expect((await repo.listFiles('set-1')).find((file) => file.relativePath === 'batch-249.txt')?.modifiedAtMs).toBe(1249)
 
       expect((await repo.updateStatus('set-1', 'error', { error: 'offline' }))?.lastError)
         .toBe('offline')

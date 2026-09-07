@@ -110,7 +110,7 @@
                 <div>
                   <p class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.sources') }}</p>
                   <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                    {{ t('create.sourceLimits', { pages: MAX_GENERATE_PDF_PAGES, images: MAX_GENERATE_IMAGES }) }}
+                    {{ t('create.sourceLimits', { pages: sourceLimits.pdfPages, images: sourceLimits.images }) }}
                   </p>
                 </div>
 
@@ -150,13 +150,13 @@
                   class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
                   <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.pdfPages') }}</p>
-                  <p class="mt-1 font-medium">{{ totalPdfPages }}/{{ MAX_GENERATE_PDF_PAGES }}</p>
+                  <p class="mt-1 font-medium">{{ totalPdfPages }}/{{ sourceLimits.pdfPages }}</p>
                 </div>
                 <div
                   class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
                   <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.images') }}</p>
-                  <p class="mt-1 font-medium">{{ pickedImages.length }}/{{ MAX_GENERATE_IMAGES }}</p>
+                  <p class="mt-1 font-medium">{{ pickedImages.length }}/{{ sourceLimits.images }}</p>
                 </div>
                 <div
                   class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
@@ -245,27 +245,27 @@ import {
 import { useLockSession } from '~/src/composables/lock-session'
 import { resolveAiModel } from '~/src/composables/ai/registry'
 import { hasTauriRuntime } from '~/src/composables/tauri'
-import { parseTermsDelimited, normalizeTerms } from '~/src/composables/db/validators'
-import { generateText } from 'ai'
 import { normalizeAiError, aiErrorForMissingDefaultModel, type AiErrorUx } from '~/src/composables/ai/ux-errors'
-import { parseGenerateContractOutput } from '~/src/composables/ai/generate-contract'
 import { normalizeGenerateRequestError } from '~/src/composables/ai/generate-request'
 import {
   assertGenerateSourceLimits,
-  buildGenerateTextPrompt,
   createGenerateParseDecision,
   extractGenerateSources,
   getPdfPageCount,
-  MAX_GENERATE_IMAGES,
-  MAX_GENERATE_PDF_PAGES,
   type ExtractedGenerateSource,
   type FailedGenerateSource,
   type GenerateSourceFile
 } from '~/src/composables/generate/source-extraction'
-import { createSetFromLinkedFolder } from '~/src/composables/generate/linked-folders'
+import { createSetFromLinkedFolder } from '~/src/composables/generate/linked-folders/sync'
 import { useAppLanguage } from '~/src/composables/language'
 import { open } from '@tauri-apps/plugin-dialog'
 
+import { loadGeneratePlan, type GeneratePlan } from '~/src/composables/generate/subscription'
+import { GENERATE_PLAN_LIMITS } from '~/src/composables/generate/source-extraction/limits'
+import { generateLinkedFolderContent } from '~/src/composables/generate/linked-folders/generate'
+
+const plan = ref<GeneratePlan>('free')
+const sourceLimits = computed(() => GENERATE_PLAN_LIMITS[plan.value])
 const router = useRouter()
 const { t } = useAppLanguage()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
@@ -386,8 +386,8 @@ const generateButtonLabel = computed(() => {
 const generateDisabled = computed(() => {
   if (operationBusy.value || ingestBusy.value || isWebPreview.value) return true
   if (!pickedAny.value) return true
-  if (totalPdfPages.value > MAX_GENERATE_PDF_PAGES) return true
-  if (pickedImages.value.length > MAX_GENERATE_IMAGES) return true
+  if (totalPdfPages.value > sourceLimits.value.pdfPages) return true
+  if (pickedImages.value.length > sourceLimits.value.images) return true
   return false
 })
 
@@ -456,6 +456,7 @@ async function onPicked(e: Event) {
 
   ingestBusy.value = true
   try {
+    plan.value = await loadGeneratePlan()
     const pdfFiles = files.filter(isPdfFile)
     const imageFiles = files.filter((f) => !isPdfFile(f) && isImageFile(f))
 
@@ -475,7 +476,7 @@ async function onPicked(e: Event) {
     ]
 
     const total = nextPdfs.reduce((sum, p) => sum + p.pages, 0)
-    assertGenerateSourceLimits({ pdfPages: total, imageCount: nextImages.length })
+    assertGenerateSourceLimits({ pdfPages: total, imageCount: nextImages.length }, sourceLimits.value)
 
     pickedPdfs.value = nextPdfs
     pickedImages.value = nextImages
@@ -529,29 +530,14 @@ async function saveGeneratedOutput(
       return
     }
 
-    const prompt = buildGenerateTextPrompt({
-      instructions: instructions.value,
-      sources: sourceTexts
-    })
-
-    const res = await generateText({
+    const generated = await generateLinkedFolderContent({
       model,
-      prompt
+      instructions: instructions.value,
+      sources: sourceTexts,
+      onRawOutput: (raw) => { rawOutput.value = raw }
     })
-
-    rawOutput.value = res.text ?? ''
-    const text = (res.text ?? '').trim()
-
-    const parsed = parseGenerateContractOutput(text)
-    let termInputs = parseTermsDelimited(parsed.flashcardsTsv, {
-      delimiter: 'tab',
-      allowContinuationLines: true
-    })
-    termInputs = termInputs.map((t) => ({
-      front: t.front.split('\t').join(' ').trim(),
-      back: t.back.split('\t').join(' ').trim()
-    }))
-    const terms = normalizeTerms(termInputs)
+    rawOutput.value = generated.rawOutput
+    const terms = generated.terms
 
     const setId = crypto.randomUUID() as Uuid
     const setsRepo = createSetsRepo(db)
@@ -566,7 +552,7 @@ async function saveGeneratedOutput(
     await guidesRepo.create({
       id: crypto.randomUUID() as Uuid,
       setId,
-      markdown: parsed.studyGuideMarkdown
+      markdown: generated.studyGuideMarkdown
     })
 
     await router.replace(`/set/${setId}`)
@@ -592,13 +578,13 @@ function validateGenerateInput() {
     return false
   }
 
-  if (totalPdfPages.value > MAX_GENERATE_PDF_PAGES) {
-    formError.value = `PDF page limit exceeded. Max is ${MAX_GENERATE_PDF_PAGES} pages total; selected PDFs contain ${totalPdfPages.value} pages.`
+  if (totalPdfPages.value > sourceLimits.value.pdfPages) {
+    formError.value = `PDF page limit exceeded. Max is ${sourceLimits.value.pdfPages} pages total; selected PDFs contain ${totalPdfPages.value} pages.`
     return false
   }
 
-  if (pickedImages.value.length > MAX_GENERATE_IMAGES) {
-    formError.value = `Too many images selected. Max is ${MAX_GENERATE_IMAGES}; you selected ${pickedImages.value.length}.`
+  if (pickedImages.value.length > sourceLimits.value.images) {
+    formError.value = `Too many images selected. Max is ${sourceLimits.value.images}; you selected ${pickedImages.value.length}.`
     return false
   }
 
@@ -614,7 +600,12 @@ async function onGenerate() {
   clearParseFailureState()
 
   if (operationBusy.value) return
-  if (!validateGenerateInput()) return
+  parseBusy.value = true
+  plan.value = await loadGeneratePlan()
+  if (!validateGenerateInput()) {
+    parseBusy.value = false
+    return
+  }
 
   pendingGenerateModelContext.value = prepareGenerateModelContext().catch((err) =>
     err instanceof Error ? err : new Error(toErrorMessage(err, 'Failed to prepare AI model.'))
@@ -647,6 +638,10 @@ async function onGenerate() {
 
 async function continueAfterParseFailures() {
   if (!parseFailureCanContinue.value || operationBusy.value) return
+  parseBusy.value = true
+  plan.value = await loadGeneratePlan()
+  parseBusy.value = false
+  if (!validateGenerateInput()) return
   const sources = [...pendingExtractedSources.value]
   const modelContext = pendingGenerateModelContext.value ?? prepareGenerateModelContext()
   clearParseFailureState()
@@ -663,6 +658,7 @@ onMounted(async () => {
     if (isWebPreview.value) {
       return
     }
+    plan.value = await loadGeneratePlan()
     const status = await lockGetStatus()
     const db = await useTracerDb()
 

@@ -21,7 +21,7 @@ import {
 const { unlockedThisSession } = useLockSession()
 themeInitFromCache()
 let linkedFolderStartTimer: number | null = null
-let linkedFolderModule: Promise<typeof import('~/src/composables/generate/linked-folders')> | null = null
+let linkedFolderModule: Promise<typeof import('~/src/composables/generate/linked-folders/sync')> | null = null
 let linkedFolderSyncGeneration = 0
 const LINKED_FOLDER_SESSION_STARTED_KEY = 'tracer:linked-folder-manager-started'
 let connectionStartTimer: number | null = null
@@ -94,7 +94,7 @@ function scheduleLinkedFolderSync() {
   const generation = ++linkedFolderSyncGeneration
   linkedFolderStartTimer = window.setTimeout(() => {
     linkedFolderStartTimer = null
-    linkedFolderModule = import('~/src/composables/generate/linked-folders')
+    linkedFolderModule = import('~/src/composables/generate/linked-folders/sync')
     void linkedFolderModule.then(async ({ startLinkedFolderSyncManager }) => {
       if (generation !== linkedFolderSyncGeneration || !unlockedThisSession.value) return
       let syncOnStart = true

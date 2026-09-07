@@ -11,7 +11,7 @@ import {
   parseGenerateContractOutput
 } from '../../ai/generate-contract'
 import { buildGenerateTextPrompt, type ExtractedGenerateSource } from '../source-extraction'
-import { batchLinkedFolderSources } from './batches'
+import { batchGenerateSources } from './batches'
 
 export type LinkedFolderGeneratedContent = {
   studyGuideMarkdown: string
@@ -26,18 +26,26 @@ async function mapWithConcurrency<T, R>(
 ): Promise<R[]> {
   const output = new Array<R>(values.length)
   let nextIndex = 0
+  let failed = false
 
   async function worker() {
-    while (nextIndex < values.length) {
+    while (!failed && nextIndex < values.length) {
       const index = nextIndex
       nextIndex += 1
-      output[index] = await mapper(values[index]!, index)
+      try {
+        output[index] = await mapper(values[index]!, index)
+      } catch (error) {
+        failed = true
+        throw error
+      }
     }
   }
 
-  await Promise.all(
+  const settled = await Promise.allSettled(
     Array.from({ length: Math.min(Math.max(1, concurrency), values.length) }, () => worker())
   )
+  const failure = settled.find((result) => result.status === 'rejected')
+  if (failure?.status === 'rejected') throw failure.reason
   return output
 }
 
@@ -138,9 +146,11 @@ export async function generateLinkedFolderContent(input: {
   sources: ExtractedGenerateSource[]
   instructions?: string
   incremental?: boolean
+  onRawOutput?: (raw: string) => void
 }): Promise<LinkedFolderGeneratedContent> {
-  const batches = batchLinkedFolderSources(input.sources)
-  const outputs = await mapWithConcurrency(batches, 2, async (sources, index) => {
+  const batches = batchGenerateSources(input.sources)
+  const rawBatches = new Array<string>(batches.length)
+  const outputs = await mapWithConcurrency(batches, 3, async (sources, index) => {
     const prompt = buildGenerateTextPrompt({
       instructions: input.instructions,
       sources,
@@ -148,6 +158,8 @@ export async function generateLinkedFolderContent(input: {
     })
     const response = await generateText({ model: input.model, prompt })
     const raw = response.text ?? ''
+    rawBatches[index] = raw
+    input.onRawOutput?.(rawBatches.map((text, i) => text ? `Batch ${i + 1}\n\n${text}` : '').filter(Boolean).join('\n\n'))
     return parseOrRepairBatchOutput(input.model, raw)
   })
 

@@ -138,6 +138,12 @@ pub fn run() {
             sql: include_str!("../migrations/020_smart_review_setting.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 21,
+            description: "cache linked folder file metadata",
+            sql: include_str!("../migrations/021_linked_folder_file_metadata.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     let app = tauri::Builder::default()

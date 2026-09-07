@@ -1,42 +1,53 @@
-import defaultIcon from '~/assets/icons/set-default.png'
-import artsIcon from '~/assets/icons/set-arts.png'
-import biologyIcon from '~/assets/icons/set-biology.png'
-import codingIcon from '~/assets/icons/set-coding.png'
-import historyIcon from '~/assets/icons/set-history.png'
-import languageIcon from '~/assets/icons/set-language.png'
-import mathIcon from '~/assets/icons/set-math.png'
-import physicsIcon from '~/assets/icons/set-physics.png'
-import scienceIcon from '~/assets/icons/set-science.png'
+import Atom from '@lucide/vue/dist/esm/icons/atom.mjs'
+import CodeXml from '@lucide/vue/dist/esm/icons/code-xml.mjs'
+import Dna from '@lucide/vue/dist/esm/icons/dna.mjs'
+import FlaskConical from '@lucide/vue/dist/esm/icons/flask-conical.mjs'
+import Languages from '@lucide/vue/dist/esm/icons/languages.mjs'
+import Palette from '@lucide/vue/dist/esm/icons/palette.mjs'
+import PlayingCardsFan from '@lucide/vue/dist/esm/icons/playing-cards-fan.mjs'
+import Radical from '@lucide/vue/dist/esm/icons/radical.mjs'
+import RotateCcwClock from '@lucide/vue/dist/esm/icons/rotate-ccw-clock.mjs'
+import type { Component } from 'vue'
 
 export const setIconOptions = [
-  { key: 'default', src: defaultIcon },
-  { key: 'arts', src: artsIcon },
-  { key: 'biology', src: biologyIcon },
-  { key: 'coding', src: codingIcon },
-  { key: 'history', src: historyIcon },
-  { key: 'language', src: languageIcon },
-  { key: 'math', src: mathIcon },
-  { key: 'physics', src: physicsIcon },
-  { key: 'science', src: scienceIcon }
+  { key: 'default' },
+  { key: 'arts' },
+  { key: 'biology' },
+  { key: 'coding' },
+  { key: 'history' },
+  { key: 'language' },
+  { key: 'math' },
+  { key: 'physics' },
+  { key: 'science' }
 ] as const
 
 export type SetIconKey = (typeof setIconOptions)[number]['key']
 
 export const setIconToneOptions = [
-  { key: 'original', label: 'Original', swatch: 'linear-gradient(135deg, #f59e0b, #ef4444)', filter: 'none' },
-  { key: 'red', label: 'Red', swatch: '#c85a63', filter: 'sepia(1) saturate(4) hue-rotate(315deg)' },
-  { key: 'gold', label: 'Gold', swatch: '#d59a32', filter: 'sepia(1) saturate(3) hue-rotate(350deg)' },
-  { key: 'green', label: 'Green', swatch: '#57966b', filter: 'sepia(1) saturate(2.6) hue-rotate(70deg)' },
-  { key: 'blue', label: 'Blue', swatch: '#5685b8', filter: 'sepia(1) saturate(3) hue-rotate(155deg)' },
-  { key: 'purple', label: 'Purple', swatch: '#8a6bb1', filter: 'sepia(1) saturate(2.5) hue-rotate(215deg)' }
+  { key: 'original', label: 'Original', swatch: 'linear-gradient(135deg, #f59e0b, #ef4444)' },
+  { key: 'red', label: 'Red', swatch: '#c85a63' },
+  { key: 'gold', label: 'Gold', swatch: '#d59a32' },
+  { key: 'green', label: 'Green', swatch: '#57966b' },
+  { key: 'blue', label: 'Blue', swatch: '#5685b8' },
+  { key: 'purple', label: 'Purple', swatch: '#8a6bb1' }
 ] as const
 
 export type SetIconTone = (typeof setIconToneOptions)[number]['key']
 
-const iconsByKey = new Map<string, string>(setIconOptions.map((option) => [option.key, option.src]))
+const iconsByKey: Record<SetIconKey, Component> = {
+  default: PlayingCardsFan,
+  arts: Palette,
+  biology: Dna,
+  coding: CodeXml,
+  history: RotateCcwClock,
+  language: Languages,
+  math: Radical,
+  physics: Atom,
+  science: FlaskConical,
+}
 
-export function setIconSrc(key: string | null | undefined) {
-  return iconsByKey.get(key ?? 'default') ?? defaultIcon
+export function setIconComponent(key: string | null | undefined) {
+  return iconsByKey[normalizeSetIconKey(key)]
 }
 
 export function normalizeSetIconKey(key: string | null | undefined): SetIconKey {
@@ -49,5 +60,13 @@ export function normalizeSetIconTone(tone: string | null | undefined): SetIconTo
 
 export function setIconToneStyle(tone: string | null | undefined) {
   const normalized = normalizeSetIconTone(tone)
-  return { filter: setIconToneOptions.find((option) => option.key === normalized)?.filter ?? 'none' }
+  const toneColors: Record<SetIconTone, { color: string; backgroundColor: string }> = {
+    original: { color: '#ea580c', backgroundColor: '#ffedd5' },
+    red: { color: '#e11d48', backgroundColor: '#ffe4e6' },
+    gold: { color: '#ca8a04', backgroundColor: '#fef3c7' },
+    green: { color: '#16a34a', backgroundColor: '#dcfce7' },
+    blue: { color: '#2563eb', backgroundColor: '#dbeafe' },
+    purple: { color: '#7c3aed', backgroundColor: '#ede9fe' },
+  }
+  return toneColors[normalized]
 }

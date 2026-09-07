@@ -58,7 +58,7 @@
                   :aria-pressed="selectedKey === itemKey(item)"
                   @click="selectItem(item)"
                 >
-                  <img :src="setIconSrc(item.iconKey)" :style="setIconToneStyle(item.iconTone)" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                  <SetIcon :name="item.iconKey" :tone="item.iconTone" class="h-14 w-14" />
                   <span class="min-w-0 flex-1">
                     <span class="block truncate font-medium">{{ item.title }}</span>
                     <span class="mt-1 block truncate text-sm text-slate-600 dark:text-slate-300">
@@ -82,7 +82,7 @@
             <p class="mt-1 text-[15px]">{{ t('home.chooseMode') }}</p>
             <div class="mt-8 grid gap-3">
               <NuxtLink v-for="mode in createModes" :key="mode.to" :to="mode.to" class="group flex min-h-[70px] items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900">
-                <img :src="mode.icon" alt="" class="h-12 w-12 shrink-0 rounded-xl object-cover" />
+                <CreateModeIcon :name="mode.name" class="h-12 w-12" />
                 <span class="min-w-0 flex-1"><span class="block text-sm font-medium">{{ t(mode.label) }}</span><span class="mt-1 block text-xs">{{ t(mode.hint) }}</span></span>
                 <CreateChevron />
               </NuxtLink>
@@ -102,9 +102,6 @@
 </template>
 
 <script setup lang="ts">
-import basicIcon from '~/assets/icons/create-basic.png'
-import synthesizeIcon from '~/assets/icons/create-synthesize.png'
-import generateIcon from '~/assets/icons/create-generate.png'
 import {
   assignLocalItemToClass,
   classroomErrorKey,
@@ -116,7 +113,6 @@ import {
 import { createSetsRepo, createStudyGuidesRepo, useTracerDb } from '~/src/composables/db'
 import type { FlashcardSetListItem, Uuid } from '~/src/composables/db/types'
 import { useAppLanguage } from '~/src/composables/language'
-import { setIconSrc, setIconToneStyle } from '~/src/composables/set-icons'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 
 type AssignmentPickerItem = {
@@ -153,9 +149,9 @@ const libraryTabs = [
   { value: 'study-guide' as const, label: 'home.studyGuides' },
 ]
 const createModes = [
-  { to: '/create/basic', label: 'home.basic', hint: 'home.basicHint', icon: basicIcon },
-  { to: '/create/synthesize', label: 'home.synthesize', hint: 'home.synthesizeHint', icon: synthesizeIcon },
-  { to: '/create/generate', label: 'home.generate', hint: 'home.generateHint', icon: generateIcon },
+  { to: '/create/basic', label: 'home.basic', hint: 'home.basicHint', name: 'basic' as const },
+  { to: '/create/synthesize', label: 'home.synthesize', hint: 'home.synthesizeHint', name: 'synthesize' as const },
+  { to: '/create/generate', label: 'home.generate', hint: 'home.generateHint', name: 'generate' as const },
 ]
 
 onMounted(loadPage)

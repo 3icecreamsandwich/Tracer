@@ -25,13 +25,7 @@
       @pointerdown="onPointerDown"
     >
       <svg aria-hidden="true" viewBox="0 0 16 20" class="h-5 w-4 shrink-0 text-slate-400 transition group-hover:text-slate-600 dark:text-slate-600 dark:group-hover:text-slate-300" fill="currentColor"><circle cx="5" cy="4" r="1.3"/><circle cx="11" cy="4" r="1.3"/><circle cx="5" cy="10" r="1.3"/><circle cx="11" cy="10" r="1.3"/><circle cx="5" cy="16" r="1.3"/><circle cx="11" cy="16" r="1.3"/></svg>
-      <img
-        :src="setIconSrc(item.iconKey)"
-        :style="setIconToneStyle(item.iconTone)"
-        alt=""
-        class="shrink-0 rounded-xl object-cover"
-        :class="dense ? 'h-10 w-10' : 'h-14 w-14'"
-      />
+      <SetIcon :name="item.iconKey" :tone="item.iconTone" :class="dense ? 'h-10 w-10' : 'h-14 w-14'" />
 
       <div class="min-w-0 flex-1">
         <p class="truncate font-medium text-slate-950 dark:text-white" :class="dense ? 'text-sm' : 'text-base'">
@@ -55,7 +49,6 @@
 
 <script setup lang="ts">
 import type { Uuid } from '~/src/composables/db/types'
-import { setIconSrc, setIconToneStyle } from '~/src/composables/set-icons'
 
 type HomeLibraryItem = {
   kind: 'set' | 'study-guide'

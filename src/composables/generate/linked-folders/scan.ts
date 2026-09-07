@@ -1,5 +1,7 @@
 import { join } from '@tauri-apps/api/path'
 import { readDir, readFile, stat } from '@tauri-apps/plugin-fs'
+import { mapConcurrent } from '../concurrency'
+import type { LinkedFolderFile } from '../../db/types'
 import type { GenerateSourceFile, GenerateSourceKind } from '../source-extraction'
 
 export const LINKED_FOLDER_TEXT_MAX_BYTES = 2 * 1024 * 1024
@@ -7,6 +9,7 @@ export const LINKED_FOLDER_IMAGE_MAX_BYTES = 20 * 1024 * 1024
 export const LINKED_FOLDER_PDF_MAX_BYTES = 50 * 1024 * 1024
 
 export type LinkedFolderSource = GenerateSourceFile & {
+  modifiedAtMs: number | null
   absolutePath: string
   relativePath: string
   sizeBytes: number
@@ -14,6 +17,8 @@ export type LinkedFolderSource = GenerateSourceFile & {
 }
 
 export type IgnoredLinkedFolderFile = {
+  modifiedAtMs?: number | null
+  status?: LinkedFolderFile['status']
   relativePath: string
   sizeBytes: number
   contentHash?: string
@@ -70,79 +75,88 @@ async function sha256(bytes: Uint8Array) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
+export type LinkedFolderScanOptions = {
+  knownFiles?: ReadonlyMap<string, LinkedFolderFile>
+  // Native paths are used only to filter a safe directory walk (never followed directly).
+  changedPaths?: ReadonlySet<string>
+}
+
 export async function scanLinkedFolder(
   rootPath: string,
   knownPaths: ReadonlySet<string> = new Set(),
-  knownHashes: ReadonlySet<string> = new Set()
+  knownHashes: ReadonlySet<string> = new Set(),
+  options: LinkedFolderScanOptions = {}
 ): Promise<ScanLinkedFolderResult> {
   const sources: LinkedFolderSource[] = []
   const ignored: IgnoredLinkedFolderFile[] = []
   const seenHashes = new Set(knownHashes)
+  const candidates: Array<{ absolutePath: string; relativePath: string; name: string }> = []
+  const normalizePath = (path: string) => path.replaceAll('\\', '/').replace(/\/$/, '')
+  const changed = options.changedPaths ? [...options.changedPaths].map(normalizePath) : null
+  const relevant = (path: string) => !changed || changed.some((item) => {
+    const normalized = normalizePath(path)
+    return normalized === item || normalized.startsWith(item + '/') || item.startsWith(normalized + '/')
+  })
 
   async function visitDirectory(absoluteDirectory: string, relativeParts: string[]) {
-    const entries = await readDir(absoluteDirectory)
-    for (const entry of entries) {
-      if (entry.name.startsWith('.') || entry.isSymlink) continue
-
+    const entries = (await readDir(absoluteDirectory)).filter((entry) => !entry.name.startsWith('.') && !entry.isSymlink)
+    const paths = await mapConcurrent(entries, 4, async (entry) => ({ entry, path: await join(absoluteDirectory, entry.name) }))
+    for (const { entry, path: absolutePath } of paths) {
+      if (!relevant(absolutePath)) continue
       const relativePath = [...relativeParts, entry.name].join('/')
-      const absolutePath = await join(absoluteDirectory, entry.name)
-
       if (entry.isDirectory) {
         await visitDirectory(absolutePath, [...relativeParts, entry.name])
-        continue
+      } else if (entry.isFile && (options.knownFiles || !knownPaths.has(relativePath))) {
+        candidates.push({ absolutePath, relativePath, name: entry.name })
       }
-      if (!entry.isFile || knownPaths.has(relativePath)) continue
-
-      const info = await stat(absolutePath)
-      if (!info.isFile || info.isSymlink) continue
-
-      const classification = classifyFile(entry.name)
-      if (info.size > classification.maxBytes) {
-        ignored.push({
-          relativePath,
-          sizeBytes: info.size,
-          reason: maxSizeReason(classification.kind),
-          isError: true
-        })
-        continue
-      }
-
-      const bytes = await readFile(absolutePath)
-      const contentHash = await sha256(bytes)
-      if (seenHashes.has(contentHash)) {
-        ignored.push({
-          relativePath,
-          sizeBytes: info.size,
-          contentHash,
-          reason: 'This file content was already imported under another path.',
-          isError: false
-        })
-        continue
-      }
-      seenHashes.add(contentHash)
-      if (classification.kind === 'text' && !isStrictUtf8(bytes)) {
-        ignored.push({
-          relativePath,
-          sizeBytes: info.size,
-          contentHash,
-          reason: 'File is not valid UTF-8 text.',
-          isError: true
-        })
-        continue
-      }
-
-      sources.push({
-        id: relativePath,
-        absolutePath,
-        relativePath,
-        sizeBytes: info.size,
-        contentHash,
-        kind: classification.kind,
-        file: new File([bytes], relativePath, { type: classification.mimeType })
-      })
     }
   }
-
   await visitDirectory(rootPath, [])
+
+  // Process small windows so a large folder does not retain every raw read buffer.
+  for (let offset = 0; offset < candidates.length; offset += 4) {
+    const results = await mapConcurrent(candidates.slice(offset, offset + 4), 4, async (candidate) => {
+      const { absolutePath, relativePath, name } = candidate
+      const info = await stat(absolutePath)
+      if (!info.isFile || info.isSymlink) return null
+      const modifiedAtMs = info.mtime?.getTime() ?? null
+      const previous = options.knownFiles?.get(relativePath)
+      // A direct watcher event forces a content check even on coarse-timestamp filesystems.
+      if (!changed && previous && previous.status !== 'failed' && modifiedAtMs !== null &&
+          previous.modifiedAtMs === modifiedAtMs && previous.sizeBytes === info.size) return null
+      const classification = classifyFile(name)
+      const metadata = { relativePath, sizeBytes: info.size, modifiedAtMs }
+      if (info.size > classification.maxBytes) {
+        return { ignored: { ...metadata, reason: maxSizeReason(classification.kind), isError: true } }
+      }
+      const bytes = await readFile(absolutePath)
+      const contentHash = await sha256(bytes)
+      // Preserve successful status when a touch/rename/restart finds the same content.
+      if (previous?.contentHash === contentHash && previous.status !== 'failed') {
+        return { ignored: { ...metadata, contentHash, status: previous.status, reason: previous.error ?? '', isError: !!previous.error } }
+      }
+      if (classification.kind === 'text' && !isStrictUtf8(bytes)) {
+        return { ignored: { ...metadata, contentHash, reason: 'File is not valid UTF-8 text.', isError: true } }
+      }
+      return { source: {
+        ...metadata, id: relativePath, absolutePath, contentHash, kind: classification.kind,
+        file: new File([bytes], relativePath, { type: classification.mimeType })
+      } satisfies LinkedFolderSource }
+    })
+    // Deduplicate in traversal order, independent of read/hash completion order.
+    for (const result of results) {
+      if (!result) continue
+      if (result.ignored) { ignored.push(result.ignored); continue }
+      const source = result.source!
+      if (seenHashes.has(source.contentHash)) {
+        ignored.push({ relativePath: source.relativePath, sizeBytes: source.sizeBytes,
+          modifiedAtMs: source.modifiedAtMs, contentHash: source.contentHash,
+          reason: 'This file content was already imported under another path.', isError: false })
+      } else {
+        seenHashes.add(source.contentHash)
+        sources.push(source)
+      }
+    }
+  }
   return { sources, ignored }
 }

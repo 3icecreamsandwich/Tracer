@@ -6,6 +6,13 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss'],
   css: ['~/assets/css/tailwind.css', 'katex/dist/katex.min.css'],
 
+  experimental: {
+    defaults: {
+      // Warm the destination on intent, rather than loading every visible link.
+      nuxtLink: { prefetchOn: { visibility: false, interaction: true } }
+    }
+  },
+
   devServer: {
     host: '127.0.0.1',
     port: 3000

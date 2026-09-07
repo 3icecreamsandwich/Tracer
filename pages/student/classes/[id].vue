@@ -32,7 +32,7 @@
                   :disabled="openingAssignmentId === assignment.id"
                   @click="openAssignmentMaterial(assignment)"
                 >
-                  <img :src="setIconSrc(assignment.iconKey)" :style="setIconToneStyle(assignment.iconTone)" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                  <SetIcon :name="assignment.iconKey" :tone="assignment.iconTone" class="h-14 w-14" />
                   <span class="min-w-0 flex-1">
                     <span class="block truncate font-semibold">{{ assignment.title }}</span>
                     <span class="mt-1 block truncate text-sm text-slate-600 dark:text-slate-300">
@@ -79,7 +79,6 @@ import {
   type ClassroomAssignment,
 } from '~/src/composables/classrooms'
 import { useAppLanguage } from '~/src/composables/language'
-import { setIconSrc, setIconToneStyle } from '~/src/composables/set-icons'
 import { flushPendingAssignedAttempts } from '~/src/composables/assignment-progress'
 
 const route = useRoute()

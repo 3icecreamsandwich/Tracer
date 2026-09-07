@@ -27,15 +27,18 @@ type LinkFolderResult = {
 const unwatchBySet = new Map<Uuid, () => void>()
 const debounceBySet = new Map<Uuid, ReturnType<typeof setTimeout>>()
 const syncBySet = new Map<Uuid, Promise<LinkedFolder | null>>()
+const pendingChanges = new Map<Uuid, Set<string> | null>()
 let managerStarted = false
 
 async function loadLinkedFolderProcessing() {
-  const [extraction, generation, scanner] = await Promise.all([
+  const [extraction, generation, scanner, limits] = await Promise.all([
     import('../source-extraction'),
     import('./generate'),
-    import('./scan')
+    import('./scan'),
+    import('../file-limits')
   ])
   return {
+    assertGenerateFileLimits: limits.assertGenerateFileLimits,
     extractGenerateSources: extraction.extractGenerateSources,
     appendStudyGuide: generation.appendStudyGuide,
     generateLinkedFolderContent: generation.generateLinkedFolderContent,
@@ -81,12 +84,13 @@ async function resolveDefaultModel() {
 }
 
 function fileRecords(
-  sources: Array<{ relativePath: string; sizeBytes: number; contentHash?: string }>,
+  sources: Array<{ relativePath: string; sizeBytes: number; contentHash?: string; modifiedAtMs?: number | null }>,
   status: 'processed' | 'failed',
   error?: string | null
 ) {
   return sources.map((source) => ({
     relativePath: source.relativePath,
+    modifiedAtMs: source.modifiedAtMs,
     sizeBytes: source.sizeBytes,
     contentHash: source.contentHash ?? null,
     status,
@@ -95,14 +99,19 @@ function fileRecords(
 }
 
 export async function createSetFromLinkedFolder(input: LinkFolderInput): Promise<LinkFolderResult> {
-  const processing = await loadLinkedFolderProcessing()
-  const [{ db, model }, scan, folderName] = await Promise.all([
-    resolveDefaultModel(),
-    processing.scanLinkedFolder(input.path),
+  const modelRequest = resolveDefaultModel().catch((error: unknown) => ({ error }))
+  const { scanLinkedFolder } = await import('./scan')
+  const [processing, scan, folderName] = await Promise.all([
+    loadLinkedFolderProcessing(),
+    scanLinkedFolder(input.path),
     basename(input.path)
   ])
 
+  await processing.assertGenerateFileLimits(scan.sources)
   const extraction = await processing.extractGenerateSources(scan.sources)
+  const context = await modelRequest
+  if ('error' in context) throw context.error
+  const { db, model } = context
   if (extraction.extracted.length === 0) {
     const details = extraction.failed[0]?.reason ?? scan.ignored[0]?.reason
     throw new Error(details ? `No readable files were found. ${details}` : 'No readable files were found in this folder.')
@@ -145,10 +154,11 @@ export async function createSetFromLinkedFolder(input: LinkFolderInput): Promise
       ),
       ...scan.ignored.map((file) => ({
         relativePath: file.relativePath,
+        modifiedAtMs: file.modifiedAtMs,
         sizeBytes: file.sizeBytes,
         contentHash: file.contentHash ?? null,
-        status: 'ignored' as const,
-        error: file.reason
+        status: file.status ?? 'ignored' as const,
+        error: file.isError ? file.reason : null
       }))
     ])
 
@@ -162,7 +172,10 @@ export async function createSetFromLinkedFolder(input: LinkFolderInput): Promise
       }
     )
     dispatchStatus(linkedFolder, setId)
-    await refreshLinkedFolderSyncManager()
+    if (linkedFolder) await installWatch(linkedFolder)
+    // Catch files changed while the initial import was generating, before the watch existed.
+    pendingChanges.set(setId, null)
+    scheduleSync(setId)
 
     return {
       setId,
@@ -175,26 +188,32 @@ export async function createSetFromLinkedFolder(input: LinkFolderInput): Promise
   }
 }
 
-async function performLinkedFolderSync(setId: Uuid): Promise<LinkedFolder | null> {
-  const processing = await loadLinkedFolderProcessing()
+async function performLinkedFolderSync(setId: Uuid, changedPaths: Set<string> | null): Promise<LinkedFolder | null> {
   const db = await useTracerDb()
   const linkedFoldersRepo = createLinkedFoldersRepo(db)
   const linkedFolder = await linkedFoldersRepo.getBySetId(setId)
   if (!linkedFolder) return null
 
   await updateStatus(setId, 'syncing')
-  const knownPaths = await linkedFoldersRepo.listKnownPaths(setId)
-  const knownHashes = await linkedFoldersRepo.listKnownHashes(setId)
-  const scan = await processing.scanLinkedFolder(linkedFolder.path, knownPaths, knownHashes)
+  const [knownFiles, { scanLinkedFolder }] = await Promise.all([
+    linkedFoldersRepo.listFiles(setId), import('./scan')
+  ])
+  const knownHashes = new Set(knownFiles.filter((file) => file.status === 'processed' || (file.status === 'ignored' && !file.error))
+    .flatMap((file) => file.contentHash ? [file.contentHash] : []))
+  const scan = await scanLinkedFolder(linkedFolder.path, new Set(), knownHashes, {
+    knownFiles: new Map(knownFiles.map((file) => [file.relativePath, file])),
+    changedPaths: changedPaths ?? undefined
+  })
 
   await linkedFoldersRepo.recordFiles(
     setId,
     scan.ignored.map((file) => ({
       relativePath: file.relativePath,
+      modifiedAtMs: file.modifiedAtMs,
       sizeBytes: file.sizeBytes,
       contentHash: file.contentHash ?? null,
-      status: 'ignored',
-      error: file.reason
+      status: file.status ?? 'ignored',
+      error: file.isError ? file.reason : null
     }))
   )
 
@@ -208,6 +227,9 @@ async function performLinkedFolderSync(setId: Uuid): Promise<LinkedFolder | null
     })
   }
 
+  const modelRequest = resolveDefaultModel().catch((error: unknown) => ({ error }))
+  const processing = await loadLinkedFolderProcessing()
+  await processing.assertGenerateFileLimits(scan.sources)
   const extraction = await processing.extractGenerateSources(scan.sources)
   const extractedIds = new Set(extraction.extracted.map((source) => source.id))
   const extractedSources = scan.sources.filter((source) => extractedIds.has(source.id))
@@ -225,7 +247,9 @@ async function performLinkedFolderSync(setId: Uuid): Promise<LinkedFolder | null
   }
 
   try {
-    const { model } = await resolveDefaultModel()
+    const context = await modelRequest
+    if ('error' in context) throw context.error
+    const { model } = context
     const generated = await processing.generateLinkedFolderContent({
       model,
       sources: extraction.extracted,
@@ -291,36 +315,56 @@ async function performLinkedFolderSync(setId: Uuid): Promise<LinkedFolder | null
 export function syncLinkedFolder(setId: Uuid): Promise<LinkedFolder | null> {
   const current = syncBySet.get(setId)
   if (current) return current
-  const operation = performLinkedFolderSync(setId)
+  if (!pendingChanges.has(setId)) pendingChanges.set(setId, null)
+  const operation = (async () => {
+    let result: LinkedFolder | null = null
+    // Watch events received during extraction/generation are drained before completing.
+    while (pendingChanges.has(setId)) {
+      const paths = pendingChanges.get(setId) ?? null
+      pendingChanges.delete(setId)
+      result = await performLinkedFolderSync(setId, paths)
+    }
+    return result
+  })()
     .catch(async (error) => {
       await updateStatus(setId, 'error', {
-        error: errorMessage(error),
-        scanned: true
+        error: errorMessage(error), scanned: true
       }).catch(() => null)
       throw error
     })
-    .finally(() => syncBySet.delete(setId))
+    .finally(() => {
+      syncBySet.delete(setId)
+      if (pendingChanges.has(setId) && !debounceBySet.has(setId)) scheduleSync(setId)
+    })
   syncBySet.set(setId, operation)
   return operation
 }
 
-function scheduleSync(setId: Uuid) {
+function scheduleSync(setId: Uuid, event?: WatchEvent) {
+  if (event) {
+    const broad = event.type === 'any' || event.type === 'other' || event.paths.length === 0
+    if (broad) pendingChanges.set(setId, null)
+    else if (pendingChanges.get(setId) !== null) {
+      const paths = pendingChanges.get(setId) ?? new Set<string>()
+      event.paths.forEach((path) => paths.add(path))
+      pendingChanges.set(setId, paths)
+    }
+  }
   const current = debounceBySet.get(setId)
   if (current) clearTimeout(current)
-  void updateStatus(setId, 'pending')
-  debounceBySet.set(
-    setId,
-    setTimeout(() => {
-      debounceBySet.delete(setId)
-      void syncLinkedFolder(setId).catch(() => undefined)
-    }, 1500)
-  )
+  else if (!syncBySet.has(setId)) void updateStatus(setId, 'pending').catch(() => undefined)
+  debounceBySet.set(setId, setTimeout(() => {
+    debounceBySet.delete(setId)
+    if (pendingChanges.has(setId)) void syncLinkedFolder(setId).catch(() => undefined)
+  }, 350))
 }
 
 function shouldScanEvent(event: WatchEvent) {
   if (event.type === 'any' || event.type === 'other') return true
-  if ('create' in event.type) return true
-  return 'modify' in event.type && event.type.modify.kind === 'rename'
+  if ('create' in event.type || 'remove' in event.type) return true
+  if (!('modify' in event.type)) return false
+  return event.type.modify.kind !== 'metadata' ||
+    ['any', 'write-time'].includes(event.type.modify.mode)
 }
 
 async function installWatch(linkedFolder: LinkedFolder) {
@@ -328,9 +372,9 @@ async function installWatch(linkedFolder: LinkedFolder) {
   const unwatch = await watch(
     linkedFolder.path,
     (event) => {
-      if (shouldScanEvent(event)) scheduleSync(linkedFolder.setId)
+      if (shouldScanEvent(event)) scheduleSync(linkedFolder.setId, event)
     },
-    { recursive: true, delayMs: 1000 }
+    { recursive: true, delayMs: 150 }
   )
   unwatchBySet.set(linkedFolder.setId, unwatch)
 }
@@ -378,9 +422,11 @@ export function stopLinkedFolderSyncManager() {
   unwatchBySet.clear()
   for (const timeout of debounceBySet.values()) clearTimeout(timeout)
   debounceBySet.clear()
+  pendingChanges.clear()
 }
 
 export async function unlinkFolder(setId: Uuid) {
+  pendingChanges.delete(setId)
   const timeout = debounceBySet.get(setId)
   if (timeout) clearTimeout(timeout)
   debounceBySet.delete(setId)

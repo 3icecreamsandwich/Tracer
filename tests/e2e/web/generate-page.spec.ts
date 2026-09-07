@@ -14,4 +14,6 @@ test('generate: web preview shows gating banner and disables generate', async ({
   await expect(page.getByPlaceholder('Generated set…')).toBeVisible()
   await expect(page.getByPlaceholder(/Focus on key definitions/i)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Choose files' })).toBeVisible()
+  await expect(page.getByText('0/15', { exact: true })).toBeVisible()
+  await expect(page.getByText('0/10', { exact: true })).toBeVisible()
 })

@@ -4,13 +4,13 @@
     class="group flex min-h-[76px] items-center gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 text-slate-950 shadow-sm transition hover:border-orange-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:border-orange-700"
   >
     <span
-      class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+      class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl"
       :class="
         icon === 'publish'
-          ? 'bg-orange-50 text-orange-600 dark:bg-orange-950/50 dark:text-orange-400'
-          : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300'
+          ? 'bg-orange-200 text-orange-600 dark:bg-orange-800 dark:text-orange-200'
+          : 'bg-indigo-200 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-200'
       "
-      ><AppIcon :name="icon"
+      ><AppIcon :name="icon" :size="36"
     /></span>
     <span class="min-w-0 flex-1"
       ><span class="block text-[15px] font-semibold">{{ title }}</span

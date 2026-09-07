@@ -82,7 +82,7 @@
                       :to="`/student/classes/${classroom.id}`"
                       class="group flex min-h-[82px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-4 text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
                     >
-                      <img :src="basicIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                      <CreateModeIcon name="basic" class="h-14 w-14" />
                       <span class="min-w-0 flex-1">
                         <span class="block truncate font-semibold">{{ classroom.name }}</span>
                         <span class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">{{ classroomSummary(classroom) }}</span>
@@ -333,7 +333,7 @@
                 to="/create/basic"
                 class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               >
-                <img :src="basicIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                <CreateModeIcon name="basic" class="h-14 w-14" />
                 <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.basic') }}</p><p class="mt-1 text-[13px]">{{ t('home.basicHint') }}</p></div>
                 <CreateChevron />
               </NuxtLink>
@@ -342,7 +342,7 @@
                 to="/create/synthesize"
                 class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               >
-                <img :src="synthesizeIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                <CreateModeIcon name="synthesize" class="h-14 w-14" />
                 <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.synthesize') }}</p><p class="mt-1 text-[13px]">{{ t('home.synthesizeHint') }}</p></div>
                 <CreateChevron />
               </NuxtLink>
@@ -351,7 +351,7 @@
                 to="/create/generate"
                 class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               >
-                <img :src="generateIcon" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                <CreateModeIcon name="generate" class="h-14 w-14" />
                 <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.generate') }}</p><p class="mt-1 text-[13px]">{{ t('home.generateHint') }}</p></div>
                 <CreateChevron />
               </NuxtLink>
@@ -376,9 +376,6 @@
 
 <script setup lang="ts">
 import { prefetchPublicCatalog } from '~/src/composables/published-sets'
-import basicIcon from '../assets/icons/create-basic.png'
-import synthesizeIcon from '../assets/icons/create-synthesize.png'
-import generateIcon from '../assets/icons/create-generate.png'
 import { lockGetStatus } from '../src/composables/lock'
 import {
   createFoldersRepo,

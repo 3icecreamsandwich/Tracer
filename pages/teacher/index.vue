@@ -125,7 +125,7 @@
                 :disabled="openingAssignmentId !== null"
                 @click="openAssignedMaterial(assignment)"
               >
-                <img :src="setIconSrc(assignment.iconKey)" :style="setIconToneStyle(assignment.iconTone)" alt="" class="h-12 w-12 shrink-0 rounded-xl object-cover" />
+                <SetIcon :name="assignment.iconKey" :tone="assignment.iconTone" class="h-12 w-12" />
                 <span class="min-w-0 flex-1">
                   <span class="block truncate font-semibold">{{ assignment.title }}</span>
                   <span class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">
@@ -179,7 +179,6 @@ import {
   type CreateClassroomInput,
 } from '~/src/composables/classrooms'
 import { useAppLanguage } from '~/src/composables/language'
-import { setIconSrc, setIconToneStyle } from '~/src/composables/set-icons'
 
 const router = useRouter()
 const { t } = useAppLanguage()

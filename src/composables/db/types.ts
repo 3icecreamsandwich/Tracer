@@ -95,6 +95,7 @@ export type LinkedFolder = {
 }
 
 export type LinkedFolderFile = {
+  modifiedAtMs: number | null
   setId: Uuid
   relativePath: string
   sizeBytes: number

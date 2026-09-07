@@ -2069,7 +2069,7 @@ import {
     LINKED_FOLDER_STATUS_EVENT,
     syncLinkedFolder,
     unlinkFolder,
-} from "~/src/composables/generate/linked-folders";
+} from "~/src/composables/generate/linked-folders/sync";
 import {
     beginAssignedAttempt,
     completeAssignedAttempt,

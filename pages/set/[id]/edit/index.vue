@@ -101,7 +101,7 @@
               :aria-pressed="iconKey === option.key"
               @click="iconKey = option.key"
             >
-              <img :src="option.src" alt="" class="h-full w-full rounded-xl object-cover transition" :style="iconKey === option.key ? setIconToneStyle(iconTone) : undefined" />
+              <SetIcon :name="option.key" :tone="iconKey === option.key ? iconTone : 'original'" class="h-full w-full transition" />
             </button>
           </div>
         </fieldset>
@@ -122,7 +122,7 @@
               @click="iconTone = tone.key"
             />
             <div class="ml-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
-              <img :src="setIconSrc(iconKey)" alt="" class="h-10 w-10 rounded-lg object-cover transition" :style="setIconToneStyle(iconTone)" />
+              <SetIcon :name="iconKey" :tone="iconTone" class="h-10 w-10 transition" />
               <span class="text-sm font-medium text-slate-700 dark:text-slate-200">{{ setIconToneOptions.find((tone) => tone.key === iconTone)?.label }}</span>
             </div>
           </div>
@@ -332,7 +332,7 @@ import {
   type DuplicateCardIssue
 } from '~/src/composables/cards/duplicates'
 import { useFactCheck } from '~/src/composables/ai/use-fact-check'
-import { normalizeSetIconKey, normalizeSetIconTone, setIconOptions, setIconSrc, setIconToneOptions, setIconToneStyle, type SetIconKey, type SetIconTone } from '~/src/composables/set-icons'
+import { normalizeSetIconKey, normalizeSetIconTone, setIconOptions, setIconToneOptions, type SetIconKey, type SetIconTone } from '~/src/composables/set-icons'
 
 type DraftCardRow = {
   key: string

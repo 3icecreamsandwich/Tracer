@@ -42,26 +42,27 @@ async function extractPdfSource(
   let ocrTextUsed = false
   let ocrAttempted = false
 
-  for (const page of extracted.pages) {
+  const blocks = await mapWithConcurrency(extracted.pages, 2, async (page) => {
     const directText = normalizeExtractedText(page.text)
     if (isMeaningfulExtractedText(directText)) {
       directTextUsed = true
-      pageBlocks.push(`### Page ${page.pageNumber}\n${directText}`)
-      continue
+      return `### Page ${page.pageNumber}\n${directText}`
     }
 
-    if (!page.ocrInput) continue
+    if (!page.ocrInput) return null
     ocrAttempted = true
     try {
       const ocrText = normalizeExtractedText(await (await getOcr()).recognize(page.ocrInput))
       if (isMeaningfulExtractedText(ocrText)) {
         ocrTextUsed = true
-        pageBlocks.push(`### Page ${page.pageNumber} (OCR)\n${ocrText}`)
+        return `### Page ${page.pageNumber} (OCR)\n${ocrText}`
       }
     } catch {
       // A source can still succeed when at least one page yields readable text.
     }
-  }
+    return null
+  })
+  pageBlocks.push(...blocks.filter((block): block is string => block !== null))
 
   const text = normalizeExtractedText(pageBlocks.join('\n\n'))
   if (!isMeaningfulExtractedText(text)) {
@@ -137,12 +138,12 @@ export async function extractGenerateSources(
   adapters: SourceExtractionAdapters = {}
 ): Promise<ExtractGenerateSourcesResult> {
   const pdf = adapters.pdf ?? createDefaultPdfAdapter()
-  let ownedOcr: OcrAdapter | null = null
+  let ownedOcr: Promise<OcrAdapter> | null = null
   let ocrQueue = Promise.resolve()
 
   const getRawOcr = async () => {
     if (adapters.ocr) return adapters.ocr
-    if (!ownedOcr) ownedOcr = await createDefaultOcrAdapter()
+    if (!ownedOcr) ownedOcr = createDefaultOcrAdapter()
     return ownedOcr
   }
 
@@ -153,7 +154,7 @@ export async function extractGenerateSources(
       return job
     }
   }
-  const getOcr = async () => serializedOcr
+  const getOcr = async () => adapters.ocr ? serializedOcr : getRawOcr()
 
   try {
     const results = await mapWithConcurrency(files, 2, async (source) => {
@@ -181,7 +182,7 @@ export async function extractGenerateSources(
       failed: results.flatMap((result) => result.failed ? [result.failed] : [])
     }
   } finally {
-    const ocrToTerminate = ownedOcr as OcrAdapter | null
+    const ocrToTerminate = await (ownedOcr as Promise<OcrAdapter> | null)?.catch(() => null)
     if (ocrToTerminate?.terminate) {
       try {
         await ocrToTerminate.terminate()
