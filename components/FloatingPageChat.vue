@@ -3,7 +3,7 @@
         <section
             v-if="panelOpen"
             ref="panelEl"
-            class="fixed bottom-24 right-6 z-[70] flex h-[min(34rem,calc(100vh-8rem))] w-[min(26rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg shadow-slate-900/15 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/40"
+            class="tracer-chat-panel fixed bottom-24 right-6 z-[70] flex h-[min(34rem,calc(100vh-8rem))] w-[min(26rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg shadow-slate-900/15 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/40"
             role="dialog"
             aria-label="Chat with Tracer"
         >
@@ -147,7 +147,7 @@
         <button
             ref="triggerEl"
             type="button"
-            class="fixed bottom-6 right-6 z-[70] inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-300 bg-white shadow-lg shadow-slate-900/15 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+            class="tracer-chat-control fixed bottom-6 right-6 z-[70] inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-300 bg-white shadow-lg shadow-slate-900/15 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
             :aria-expanded="panelOpen"
             aria-label="Chat with Tracer"
             @click="togglePanel"
@@ -163,6 +163,7 @@
 </template>
 
 <script setup lang="ts">
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import chatIconUrl from "~/assets/icons/study-modes/chat.png";
 import type { ChatMessage } from "~/src/composables/ai/chat";
 import { createChatRevealQueue } from "~/src/composables/ai/chat-reveal";
@@ -320,7 +321,7 @@ const {
 });
 
 async function loadDefaultModel() {
-    if (!hasTauriRuntime())
+    if (isWebPreviewRuntime())
         throw new Error(
             "Choose a default AI model in Settings to use page chat.",
         );

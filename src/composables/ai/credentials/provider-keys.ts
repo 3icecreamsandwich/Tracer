@@ -1,10 +1,9 @@
 import { invoke } from '@tauri-apps/api/core'
-import { openAiCompatConfigSecretKey, providerApiKeyCredentialKinds, providerApiKeyIds } from './constants'
+import { providerApiKeyIds } from './constants'
 import { VaultSecretError, isRecord, toVaultSecretError } from './errors'
 import { normalizeOpenAiCompatConfig } from './openai-compat'
-import { hasTauriInternalsNow, inMemorySecrets } from './runtime'
+import { hasTauriInternalsNow } from './runtime'
 import type {
-  OpenAiCompatConfig,
   ProviderApiKeyDrafts,
   ProviderApiKeyId,
   ProviderApiKeyPresence,
@@ -44,18 +43,9 @@ function normalizeProviderSettingsSaveResult(raw: unknown): ProviderSettingsSave
   }
 }
 
-function saveOpenAiCompatConfig(config: OpenAiCompatConfig) {
-  inMemorySecrets.set(openAiCompatConfigSecretKey, JSON.stringify(config))
-}
-
 export async function aiProviderApiKeyPresence(): Promise<ProviderApiKeyPresence> {
   if (!hasTauriInternalsNow()) {
-    const out = emptyProviderApiKeyPresence()
-    for (const id of providerApiKeyIds) {
-      const value = inMemorySecrets.get(providerApiKeyCredentialKinds[id])
-      out[id] = typeof value === 'string' && value.trim().length > 0
-    }
-    return out
+    return import('./web').then(({ webProviderPresence }) => webProviderPresence())
   }
 
   try {
@@ -89,16 +79,7 @@ export async function aiProviderSettingsSave(
   }
 
   if (!hasTauriInternalsNow()) {
-    for (const id of savedApiKeyIds) {
-      inMemorySecrets.set(providerApiKeyCredentialKinds[id], apiKeys[id]!)
-    }
-    if (openAiCompatConfig) {
-      saveOpenAiCompatConfig(openAiCompatConfig)
-    }
-    return {
-      savedApiKeyIds,
-      savedOpenAiCompatConfig: !!openAiCompatConfig
-    }
+    return import('./web').then(({ webSaveProviderSettings }) => webSaveProviderSettings({ apiKeys, openAiCompatConfig }))
   }
 
   try {

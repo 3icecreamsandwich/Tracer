@@ -1,6 +1,6 @@
 <template>
   <main>
-    <div class="mx-auto max-w-3xl p-8">
+    <div class="tracer-page mx-auto max-w-3xl p-8">
       <div class="flex items-start justify-between gap-4 text-slate-950 dark:text-white">
         <div>
           <h1 class="text-2xl font-semibold">{{ t('studyGuide.title') }}</h1>
@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import { lockGetStatus } from '~/src/composables/lock'
 import { useLockSession } from '~/src/composables/lock-session'
 import { createProfileRepo, createSettingsRepo, createSetsRepo, createStudyGuidesRepo, useTracerDb } from '~/src/composables/db'
@@ -68,7 +69,7 @@ const { t } = useAppLanguage()
 
 const hasTauriInternals = hasTauriRuntime()
 
-const isWebPreview = computed(() => !hasTauriInternals)
+const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.setId === 'demo')
 
 const busy = ref(true)
 const loadError = ref<string | null>(null)

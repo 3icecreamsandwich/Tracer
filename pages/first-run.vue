@@ -1,6 +1,6 @@
 <template>
   <main class="min-h-screen bg-white text-neutral-950 dark:bg-slate-950 dark:text-slate-50">
-    <div class="mx-auto w-full max-w-[437px] px-8 pb-12 pt-11">
+    <div class="tracer-page mx-auto w-full max-w-[437px] px-8 pb-12 pt-11">
       <h1 class="inline-block bg-gradient-to-r from-red-600 via-orange-500 to-orange-400
                bg-clip-text text-[32px] font-bold leading-tight text-transparent">{{ t('auth.firstRunTitle') }}</h1>
 
@@ -100,9 +100,9 @@
             />
             <span>
               {{ t('auth.agreePrefix') }}
-              <span class="underline underline-offset-2">{{ t('auth.termsOfService') }}</span>
+              <a href="https://tracerquiz.com/tos/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">{{ t('auth.termsOfService') }}</a>
               {{ t('auth.and') }}
-              <span class="underline underline-offset-2">{{ t('auth.privacyPolicy') }}</span>
+              <a href="https://tracerquiz.com/privacy/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">{{ t('auth.privacyPolicy') }}</a>
             </span>
           </label>
           <button type="submit" class="auth-primary" :disabled="busy || !configured">
@@ -144,19 +144,19 @@
             <label class="block text-sm font-medium" for="profile-name">{{ t('auth.name') }}</label>
             <input id="profile-name" v-model="name" autocomplete="name" class="auth-input" />
           </div>
-          <div v-if="usesGoogleDeviceKey" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+          <div v-if="usesGoogleDeviceKey && hasTauriRuntime()" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
             <p class="font-medium">{{ t('auth.deviceKeyTitle') }}</p>
             <p class="mt-2">{{ t('auth.deviceKeyDescription') }}</p>
             <p class="mt-2">{{ t('auth.deviceKeyTradeoff') }}</p>
           </div>
-          <div v-else-if="usesEmailAccountPassword" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+          <div v-else-if="hasTauriRuntime() && usesEmailAccountPassword" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
             {{ t('auth.emailPasswordReuse') }}
           </div>
-          <div v-else>
+          <div v-else-if="hasTauriRuntime()">
             <label class="block text-sm font-medium" for="local-password">{{ t('auth.localPassword') }}</label>
             <input id="local-password" v-model="localPassword" type="password" autocomplete="new-password" class="auth-input" />
           </div>
-          <div v-if="!usesGoogleDeviceKey && !usesEmailAccountPassword">
+          <div v-if="hasTauriRuntime() && !usesGoogleDeviceKey && !usesEmailAccountPassword">
             <label class="block text-sm font-medium" for="local-confirm">{{ t('auth.confirmPassword') }}</label>
             <input id="local-confirm" v-model="localConfirm" type="password" autocomplete="new-password" class="auth-input" />
           </div>
@@ -169,14 +169,14 @@
             />
             <span>
               {{ t('auth.agreePrefix') }}
-              <span class="underline underline-offset-2">{{ t('auth.termsOfService') }}</span>
+              <a href="https://tracerquiz.com/tos/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">{{ t('auth.termsOfService') }}</a>
               {{ t('auth.and') }}
-              <span class="underline underline-offset-2">{{ t('auth.privacyPolicy') }}</span>
+              <a href="https://tracerquiz.com/privacy/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">{{ t('auth.privacyPolicy') }}</a>
             </span>
           </label>
           <button type="submit" class="auth-primary" :disabled="busy">
             <LoadingSpinner v-if="busy" size="sm" />
-            <template v-else>{{ usesGoogleDeviceKey ? t('auth.continueWithoutPassword') : t('auth.finishSetup') }}</template>
+            <template v-else>{{ !hasTauriRuntime() ? t('common.continue') : usesGoogleDeviceKey ? t('auth.continueWithoutPassword') : t('auth.finishSetup') }}</template>
           </button>
         </form>
       </template>
@@ -233,6 +233,8 @@ import { syncCloudProviderApiKeysToDevice } from '../src/composables/ai/cloud-pr
 import { useLockSession } from '../src/composables/lock-session'
 import { useAppLanguage } from '../src/composables/language'
 import { hasTauriRuntime } from '../src/composables/tauri'
+import { appUrl, browserStorageKey } from '../src/composables/platform/web'
+import { getSupabaseClient } from '../src/composables/auth/client'
 
 definePageMeta({ hideNavbar: true, hideFloatingChat: true })
 
@@ -315,6 +317,10 @@ function acceptSession(
 
 async function onGoogle() {
   clearError()
+  if (!hasTauriRuntime()) {
+    if (mode.value === 'signup') localStorage.setItem(browserStorageKey('signup-role'), accountRole.value)
+    else localStorage.removeItem(browserStorageKey('signup-role'))
+  }
   authorizationUrl.value = ''; busyProvider.value = 'google'
   try {
     acceptSession(
@@ -396,12 +402,14 @@ async function onLocalSetup() {
   if (pendingSignupRole.value && usesGoogleDeviceKey.value && !acceptedTerms.value) { error.value = t('auth.errorTerms'); return }
   if (!name.value.trim()) { error.value = t('auth.errorName'); return }
   const vaultPassword = usesEmailAccountPassword.value ? pendingEmailPassword.value : localPassword.value
-  if (!usesGoogleDeviceKey.value && vaultPassword.trim().length < 8) { error.value = t('auth.errorLocalPassword'); return }
-  if (!usesGoogleDeviceKey.value && !usesEmailAccountPassword.value && localPassword.value !== localConfirm.value) { error.value = t('auth.errorPasswordsMatch'); return }
+  if (hasTauriRuntime() && !usesGoogleDeviceKey.value && vaultPassword.trim().length < 8) { error.value = t('auth.errorLocalPassword'); return }
+  if (hasTauriRuntime() && !usesGoogleDeviceKey.value && !usesEmailAccountPassword.value && localPassword.value !== localConfirm.value) { error.value = t('auth.errorPasswordsMatch'); return }
   busyProvider.value = 'local'
   try {
     await assertLocalAccountOwnership(activeSession.value)
-    if (usesGoogleDeviceKey.value) {
+    if (!hasTauriRuntime()) {
+      await createSettingsRepo(await useTracerDb()).set({ startupLockEnabled: false })
+    } else if (usesGoogleDeviceKey.value) {
       await lockFirstRunSetDeviceKey()
       const db = await useTracerDb()
       await createSettingsRepo(db).set({ startupLockEnabled: false })
@@ -423,6 +431,11 @@ async function onLocalSetup() {
     }
     localPassword.value = ''; localConfirm.value = ''; pendingEmailPassword.value = ''
     markUnlocked()
+    if (!hasTauriRuntime()) {
+      localStorage.removeItem(browserStorageKey('signup-role'))
+      location.replace(appUrl())
+      return
+    }
     await router.replace('/')
   } catch (input) { localPassword.value = ''; localConfirm.value = ''; translatedError(input) }
   finally { busyProvider.value = null }
@@ -443,6 +456,12 @@ async function onConfirmReset() {
   resetError.value = null
   busyProvider.value = 'local'
   try {
+    if (!hasTauriRuntime()) {
+      await lockResetTracer()
+      await clearAuthSession().catch(() => {})
+      window.location.reload()
+      return
+    }
     await clearAuthSession().catch(() => {})
     await lockResetTracer()
     window.location.reload()
@@ -459,7 +478,16 @@ onBeforeUnmount(() => {
 })
 
 onMounted(async () => {
-  if (!hasTauriRuntime()) return
+  if (!hasTauriRuntime()) {
+    if (!configured) return
+    const { data } = await getSupabaseClient().auth.getSession()
+    if (!data.session) return
+    const existing = await createProfileRepo(await useTracerDb()).get()
+    if (existing) { await router.replace('/'); return }
+    const role = localStorage.getItem(browserStorageKey('signup-role'))
+    acceptSession(data.session, isGoogleUser(data.session.user) ? 'google' : 'email', '', role === 'student' || role === 'teacher' ? role : null)
+    return
+  }
   try {
     const [status, existing] = await Promise.all([
       lockGetStatus(),

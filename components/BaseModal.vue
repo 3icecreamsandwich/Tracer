@@ -3,7 +3,7 @@
     <div
       v-if="open"
       ref="dialogEl"
-      class="fixed inset-0 z-50 flex items-center justify-center p-5"
+      class="tracer-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5"
       :role="role ?? 'dialog'"
       aria-modal="true"
       :aria-labelledby="title ? titleId : undefined"
@@ -20,7 +20,7 @@
       />
       <section
         :class="panelClass ?? 'max-w-xl'"
-        class="relative max-h-[calc(100vh-2.5rem)] w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 text-slate-950 shadow-2xl shadow-slate-950/15 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:shadow-black/40"
+        class="relative max-h-[calc(100dvh-2.5rem)] w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 text-slate-950 shadow-2xl shadow-slate-950/15 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:shadow-black/40"
       >
         <div class="flex items-start justify-between gap-5">
           <div class="min-w-0 flex-1">

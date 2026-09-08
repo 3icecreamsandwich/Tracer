@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+vi.mock('../../src/composables/app-settings-cache', () => ({ loadAppSettingsOnce: async () => ({ language: 'en' }) }))
 
 import { applyAppLanguage, languageInit, useAppLanguage } from '../../src/composables/language'
 import { languageOptions, messages } from '../../src/i18n/messages'

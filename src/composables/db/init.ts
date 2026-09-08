@@ -1,5 +1,6 @@
 import Database from '@tauri-apps/plugin-sql'
 import type { DbClient } from './types'
+import { hasTauriRuntime } from '../tauri'
 
 const DB_URL = 'sqlite:tracer.db'
 
@@ -13,6 +14,7 @@ function getPreloadedTracerDb(): Promise<DbClient> {
 }
 
 export function useTracerDb(): Promise<DbClient> {
+  if (!hasTauriRuntime()) return import('./browser').then(({ openBrowserDb }) => openBrowserDb())
   if (!dbPromise) {
     dbPromise = getPreloadedTracerDb()
   }
@@ -24,11 +26,16 @@ export function useTracerDb(): Promise<DbClient> {
  * Normal startup and WebView refreshes must always use the preloaded pool.
  */
 export function reopenTracerDb(): Promise<DbClient> {
+  if (!hasTauriRuntime()) return useTracerDb()
   dbPromise = Database.load(DB_URL) as unknown as Promise<DbClient>
   return dbPromise
 }
 
 export async function closeTracerDb(): Promise<void> {
+  if (!hasTauriRuntime()) {
+    await (await useTracerDb()).close()
+    return
+  }
   const pending = dbPromise ?? getPreloadedTracerDb()
   dbPromise = null
   const db = await pending

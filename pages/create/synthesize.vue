@@ -1,11 +1,11 @@
 <template>
   <main>
     <AiErrorModal :open="aiErrorOpen" :error="aiError" from="/create/synthesize" @close="closeAiError" />
-    <div class="mx-auto max-w-3xl p-8">
+    <div class="tracer-page mx-auto max-w-3xl p-8">
       <div class="flex items-start justify-between gap-4">
         <div>
           <h1 class="text-2xl font-semibold">{{ t('create.synthesizeTitle') }}</h1>
-          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p class="hidden sm:block mt-2 text-sm text-slate-600 dark:text-slate-300">
             {{ t('create.synthesizeDescription') }}
           </p>
         </div>
@@ -232,6 +232,7 @@
 </template>
 
 <script setup lang="ts">
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import { lockGetStatus } from '~/src/composables/lock'
 import {
   createProfileRepo,
@@ -257,7 +258,7 @@ const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 
 const hasTauriInternals = hasTauriRuntime()
 
-const isWebPreview = computed(() => !hasTauriInternals)
+const isWebPreview = computed(() => isWebPreviewRuntime())
 
 const loading = ref(false)
 const loadError = ref<string | null>(null)

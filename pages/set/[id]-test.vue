@@ -54,7 +54,7 @@
             </div>
         </header>
 
-        <div class="mx-auto w-full max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
+        <div class="tracer-page mx-auto w-full max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
             <LoadingSpinner v-if="busy" screen label="Preparing your test…" />
 
             <div
@@ -312,6 +312,7 @@
 </template>
 
 <script setup lang="ts">
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 definePageMeta({ hideNavbar: true })
 
 import MarkdownRenderer from "~/components/MarkdownRenderer.vue"
@@ -390,7 +391,7 @@ const assignedPriorCorrect = ref(0)
 const assignedPriorAttempted = ref(0)
 let assignedSessionFinished = false
 
-const isWebPreview = computed(() => !hasTauriRuntime())
+const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.id === 'demo')
 const assignedAssignmentId = computed(() =>
     parseAssignedAssignmentId(route.query.assignment),
 )
@@ -748,7 +749,7 @@ function requestQuitTest(source: "navigation" | "app") {
 }
 
 async function activateTestExitGuards() {
-    if (isWebPreview.value) return
+    if (!hasTauriRuntime()) return
     unlistenTestAppQuit = await listen("tracer://test-quit-requested", () => {
         requestQuitTest("app")
     })
@@ -766,7 +767,7 @@ function deactivateTestExitGuards() {
     unlistenTestWindowClose = null
     unlistenTestAppQuit?.()
     unlistenTestAppQuit = null
-    if (!isWebPreview.value) {
+    if (hasTauriRuntime()) {
         void invoke("test_mode_set_active", { active: false }).catch(() => {})
     }
 }
@@ -775,7 +776,7 @@ async function confirmQuitTest() {
     quitTestOpen.value = false
     clearTimer()
     finishClassroomTest()
-    if (pendingTestExit.value === "app" && !isWebPreview.value) {
+    if (pendingTestExit.value === "app" && hasTauriRuntime()) {
         await invoke("test_mode_confirm_exit")
         return
     }

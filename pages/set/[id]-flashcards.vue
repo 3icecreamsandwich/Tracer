@@ -223,7 +223,7 @@
                 <button
                     ref="viewerButtonEl"
                     type="button"
-                    class="relative flex flex-col items-center justify-center w-[75vw] h-[60vh] rounded-lg px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                    class="relative flex flex-col items-center justify-center w-[calc(100%-2rem)] sm:w-[75vw] min-h-64 h-[55dvh] sm:h-[60vh] rounded-lg px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
                     :class="[
                         flashcardSurfaceClass,
                         {
@@ -287,7 +287,7 @@
 
                 <!-- Controls -->
                 <div
-                    class="mt-6 flex flex-wrap items-center justify-between w-[75vw]"
+                    class="mt-6 flex flex-wrap items-center justify-between gap-3 w-[calc(100%-2rem)] sm:w-[75vw]"
                 >
                     <div class="flex flex-wrap gap-3">
                         <button
@@ -356,6 +356,9 @@
 </template>
 
 <script setup lang="ts">
+import { studyStorageOwner } from '~/src/composables/platform/web'
+
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 definePageMeta({ hideNavbar: true });
 
 import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
@@ -402,7 +405,7 @@ const route = useRoute();
 const router = useRouter();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
-const isWebPreview = computed(() => !hasTauriRuntime());
+const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.id === 'demo');
 const assignedAssignmentId = computed(() =>
     parseAssignedAssignmentId(route.query.assignment),
 );
@@ -1073,7 +1076,7 @@ onMounted(async () => {
             await router.replace("/first-run");
             return;
         }
-        reviewOwnerId.value = profile.id;
+        reviewOwnerId.value = studyStorageOwner(profile) ?? profile.id;
 
         flashcardsDefinitionFirst.value = settings.flashcardsDefinitionFirst;
         if (settings.startupLockEnabled && status.requires_unlock) {
@@ -1089,10 +1092,10 @@ onMounted(async () => {
         set.value = loadedSet;
         busy.value = false;
         if (loadedSet) {
-            smartReviewEnabled.value = resolveSmartReviewEnabled(setId, settings.smartReviewEnabled, profile.id);
-            saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, profile.id);
-            shuffleEnabled.value = isFlashcardShuffleEnabled(setId, profile.id);
-            cardReviews.value = getCardReviews(setId, profile.id);
+            smartReviewEnabled.value = resolveSmartReviewEnabled(setId, settings.smartReviewEnabled, reviewOwnerId.value);
+            saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, reviewOwnerId.value);
+            shuffleEnabled.value = isFlashcardShuffleEnabled(setId, reviewOwnerId.value);
+            cardReviews.value = getCardReviews(setId, reviewOwnerId.value);
             starredTermIds.value = new Set(starredIds);
             applySavedFlashcardRun(savedProgress);
             beginClassroomFlashcards();

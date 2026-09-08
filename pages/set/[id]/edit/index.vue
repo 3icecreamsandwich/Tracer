@@ -8,8 +8,8 @@
       @close="closeFactCheckAiError"
       @retry="retryFactCheck"
     />
-    <div class="mx-auto max-w-3xl p-8">
-      <div class="flex items-start justify-between gap-4">
+    <div class="tracer-page mx-auto max-w-3xl p-8">
+      <div class="tracer-page-toolbar flex items-start justify-between gap-4">
         <div>
           <h1 class="text-2xl font-semibold">{{ t('common.edit') }} {{ t('home.setKind') }}</h1>
           <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
@@ -58,6 +58,7 @@
         {{ loadError }}
       </p>
 
+      <LoadingSpinner v-else-if="initialLoading" class="mt-6" />
       <div v-else class="mt-6 space-y-4">
         <p
           v-if="isWebPreview"
@@ -317,6 +318,7 @@
 </template>
 
 <script setup lang="ts">
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import { getPublicationSettings, updatePublishedSet, type PublicationSettings } from '~/src/composables/published-sets'
 
 import { lockGetStatus } from '~/src/composables/lock'
@@ -349,7 +351,7 @@ const route = useRoute()
 const router = useRouter()
 const { language, t } = useAppLanguage()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
-const isWebPreview = computed(() => !hasTauriRuntime())
+const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.id === 'demo')
 
 const setId = computed<Uuid | null>(() => {
   const raw = route.params.id
@@ -371,7 +373,8 @@ const iconKey = ref<SetIconKey>('default')
 const iconTone = ref<SetIconTone>('original')
 const cards = ref<DraftCardRow[]>([{ key: crypto.randomUUID(), front: '', back: '' }])
 const imageAccept = 'image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg'
-const busy = ref(false)
+const busy = ref(true)
+const initialLoading = ref(true)
 const defaultModelId = ref<string | null>(null)
 const fallbackModelIds = ref<string[]>([])
 const loadError = ref<string | null>(null)
@@ -632,6 +635,7 @@ async function loadSet() {
       return
     }
     setDraftFromSet(set)
+    initialLoading.value = false
     await nextTick()
     titleEl.value?.focus()
   } catch (err) {
@@ -649,6 +653,7 @@ async function initWebDemoSet() {
   }))
   loadError.value = null
   busy.value = false
+  initialLoading.value = false
   await nextTick()
   titleEl.value?.focus()
 }

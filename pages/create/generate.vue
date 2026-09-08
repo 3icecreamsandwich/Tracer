@@ -34,11 +34,11 @@
         </button>
       </div>
     </BaseModal>
-    <div class="mx-auto max-w-3xl p-8">
-      <div class="sticky top-16 z-20 flex items-start justify-between gap-4 rounded-md bg-white/95 py-2 backdrop-blur dark:bg-slate-950/95">
+    <div class="tracer-page mx-auto max-w-3xl p-8">
+      <div class="tracer-page-toolbar sticky top-16 z-20 flex items-start justify-between gap-4 rounded-md bg-white/95 py-2 backdrop-blur dark:bg-slate-950/95">
         <div>
           <h1 class="text-2xl font-semibold">{{ t('create.generateTitle') }}</h1>
-          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p class="hidden sm:block mt-2 text-sm text-slate-600 dark:text-slate-300">
             {{ t('create.generateDescription') }}
           </p>
         </div>
@@ -49,6 +49,7 @@
             class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
             :disabled="operationBusy || ingestBusy || isWebPreview"
             @click="onLinkFolder"
+            v-if="hasTauriInternals"
           >
             <LoadingSpinner v-if="linkBusy" size="sm" :label="t('create.linkingFolder')" />
             <template v-else>{{ t('create.linkFolder') }}</template>
@@ -233,6 +234,7 @@
 </template>
 
 <script setup lang="ts">
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import { lockGetStatus } from '~/src/composables/lock'
 import {
   createProfileRepo,
@@ -272,7 +274,7 @@ const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 
 const hasTauriInternals = hasTauriRuntime()
 
-const isWebPreview = computed(() => !hasTauriInternals)
+const isWebPreview = computed(() => isWebPreviewRuntime())
 
 const title = ref('')
 const instructions = ref('')

@@ -1,5 +1,5 @@
 <template>
-  <main class="mx-auto max-w-[1440px] px-6 py-10 sm:px-8">
+  <main class="tracer-page mx-auto max-w-[1440px] px-6 py-10 sm:px-8">
     <h1 class="text-center text-4xl font-bold tracking-tight">{{ t('public.catalog') }}</h1>
     <div class="mx-auto mt-6 max-w-4xl">
       <div class="flex gap-3">

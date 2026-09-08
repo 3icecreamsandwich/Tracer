@@ -1,6 +1,6 @@
 <template>
   <main>
-    <div class="mx-auto max-w-md p-8">
+    <div class="tracer-page mx-auto max-w-md p-8">
       <h1 class="text-2xl font-semibold">{{ t('auth.unlockTitle') }}</h1>
 
       <form class="mt-6 space-y-4" @submit.prevent="onUnlock">

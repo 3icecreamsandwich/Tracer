@@ -14,6 +14,7 @@ import {
   saveProviderApiKeysToCloud,
 } from './cloud-provider-keys'
 import { ensureProviderDefaultModels } from './provider-model-defaults'
+import { hasTauriRuntime } from '../tauri'
 
 export type {
   ProviderApiKeyDrafts,
@@ -68,11 +69,11 @@ export async function saveProviderApiKeyDrafts(
   await ensureProviderDefaultModels(result.savedApiKeyIds, {
     openAiCompatModelId: options?.openAiCompatConfig?.modelId,
   })
-  if (Object.keys(apiKeys).length > 0) await saveProviderApiKeysToCloud(apiKeys)
+  if (hasTauriRuntime() && Object.keys(apiKeys).length > 0) await saveProviderApiKeysToCloud(apiKeys)
   return result
 }
 
 export async function clearProviderApiKey(id: ProviderApiKeyId): Promise<void> {
-  await deleteProviderApiKeyFromCloud(id)
+  if (hasTauriRuntime()) await deleteProviderApiKeyFromCloud(id)
   await aiSecretsDelete(providerApiKeyKinds[id])
 }

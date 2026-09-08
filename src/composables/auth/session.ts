@@ -101,6 +101,13 @@ async function persistRestoredSession(session: Session): Promise<void> {
 }
 
 async function runRestoreAuthSession(): Promise<RestoredAuthSession | null> {
+  if (!hasTauriRuntime()) {
+    const { data, error } = await getSupabaseClient().auth.getSession()
+    if (error) throw error
+    if (!data.session) return null
+    startProviderKeySync()
+    return { identity: identityFromUser(data.session.user), online: navigator.onLine }
+  }
   const stored = await readStoredAuthSession()
   if (!stored) return null
   try {

@@ -10,8 +10,12 @@ import ScanText from '@lucide/vue/dist/esm/icons/scan-text.mjs'
 import LibraryBig from '@lucide/vue/dist/esm/icons/library-big.mjs'
 import ListFilter from '@lucide/vue/dist/esm/icons/list-filter.mjs'
 import LayoutGrid from '@lucide/vue/dist/esm/icons/layout-grid.mjs'
+import Pencil from '@lucide/vue/dist/esm/icons/pencil.mjs'
+import Share2 from '@lucide/vue/dist/esm/icons/share-2.mjs'
+import FolderPlus from '@lucide/vue/dist/esm/icons/folder-plus.mjs'
+import Settings from '@lucide/vue/dist/esm/icons/settings.mjs'
 withDefaults(defineProps<{
-  name: 'close' | 'copy' | 'download' | 'select' | 'publish' | 'filter' | 'dashboard'
+  name: 'close' | 'copy' | 'download' | 'select' | 'publish' | 'filter' | 'dashboard' | 'edit' | 'share' | 'add-folder' | 'settings'
   size?: number
   strokeWidth?: number
 }>(), {
@@ -26,5 +30,9 @@ const icons = {
   publish: LibraryBig,
   filter: ListFilter,
   dashboard: LayoutGrid,
+  edit: Pencil,
+  share: Share2,
+  'add-folder': FolderPlus,
+  settings: Settings,
 }
 </script>

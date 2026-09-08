@@ -1,6 +1,6 @@
 <template>
   <main class="min-h-[calc(100vh-4rem)] bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
-    <div class="mx-auto max-w-[1180px] px-8 py-10">
+    <div class="tracer-page mx-auto max-w-[1180px] px-8 py-10">
       <LoadingSpinner v-if="loading" screen />
 
       <div v-else-if="loadError" class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">

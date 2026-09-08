@@ -465,6 +465,7 @@
 </template>
 
 <script setup lang="ts">
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 definePageMeta({ hideNavbar: true });
 
 import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
@@ -518,7 +519,7 @@ const router = useRouter();
 const { language, t } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
-const isWebPreview = computed(() => !hasTauriRuntime());
+const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.id === 'demo');
 const assignedAssignmentId = computed(() =>
     parseAssignedAssignmentId(route.query.assignment),
 );

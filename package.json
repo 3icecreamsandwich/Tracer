@@ -11,7 +11,11 @@
     "test:unit": "vitest run && cd src-tauri && cargo test",
     "test:e2e:desktop": "node ./tests/e2e/desktop/run.mjs",
     "test:e2e:web": "node ./tests/e2e/web/run.mjs",
-    "test": "node ./tests/run.mjs"
+    "test": "node ./tests/run.mjs",
+    "dev:web": "nuxt dev --host 127.0.0.1 --port 3001",
+    "build:web": "nuxt build",
+    "start:web": "node .output/server/index.mjs",
+    "test:e2e:web-app": "playwright test --config playwright.web-app.config.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.116",
@@ -29,6 +33,7 @@
     "nuxt": "^4.5.2",
     "ollama-ai-provider-v2": "^3.6.0",
     "pdfjs-dist": "^6.3.289",
+    "sql.js": "1.14.2",
     "tesseract.js": "^7.0.0",
     "vue": "3.5.42"
   },
@@ -40,6 +45,7 @@
     "@tauri-apps/plugin-sql": "^2.4.1",
     "@tauri-apps/plugin-stronghold": "^2.3.2",
     "@types/markdown-it": "^14.2.0",
+    "@types/sql.js": "1.4.11",
     "@wdio/cli": "^9.31.6",
     "@wdio/local-runner": "^9.31.6",
     "@wdio/mocha-framework": "^9.31.6",

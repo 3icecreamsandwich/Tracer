@@ -1,6 +1,6 @@
+import { isWebPreviewRuntime } from '../platform/web'
 import { onScopeDispose, ref, shallowRef, type Ref } from 'vue'
 import type { AppLanguage } from '../db/types'
-import { hasTauriRuntime } from '../tauri'
 import { resolveAiModel } from './registry'
 import { aiErrorForMissingDefaultModel, normalizeAiError, type AiErrorUx } from './ux-errors'
 import { takeNextChatRevealUnit } from './chat-reveal-unit'
@@ -111,7 +111,7 @@ export function useFactCheck(args: {
         throw new Error('Failed to fetch')
       }
 
-      if (!hasTauriRuntime()) {
+      if (isWebPreviewRuntime()) {
         for await (const chunk of streamWebPreviewMockFactCheckAnswer({
           language: args.language.value,
           abortSignal: controller.signal

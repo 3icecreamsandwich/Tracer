@@ -1,6 +1,6 @@
 <template>
   <main>
-    <div class="mx-auto max-w-2xl p-8">
+    <div class="tracer-page mx-auto max-w-2xl p-8">
       <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">{{ t('common.results') }}</h1>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">

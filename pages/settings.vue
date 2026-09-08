@@ -1,6 +1,6 @@
 <template>
   <main>
-    <div class="mx-auto max-w-3xl p-8">
+    <div class="tracer-page mx-auto max-w-3xl p-8">
       <h1 class="text-2xl font-semibold">{{ t('settings.title') }}</h1>
 
       <div
@@ -486,6 +486,7 @@
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         :aria-label="t('settings.startupLock')"
+        v-if="hasTauriInternals"
       >
         <div class="flex items-center justify-between gap-4">
           <div>
@@ -772,6 +773,9 @@
 </template>
 
 <script setup lang="ts">
+import { studyStorageOwner } from '~/src/composables/platform/web'
+
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import {
   lockResetTracer,
   lockSetStartupLockEnabled
@@ -791,6 +795,7 @@ import type { ProviderApiKeyId } from '../src/composables/ai/provider-settings'
 import { aiRegistryCatalog } from '../src/composables/ai/registry/catalog'
 import { useGithubModelsAuth } from '../src/composables/ai/github-models-auth'
 import { hasTauriRuntime } from '../src/composables/tauri'
+import { appUrl } from '../src/composables/platform/web'
 import { redactSensitiveText } from '../src/composables/security/redact'
 import { languageOptions } from '../src/i18n/messages'
 import {
@@ -826,7 +831,7 @@ const { language, currentLanguageOption, t } = useAppLanguage()
 
 const hasTauriInternals = hasTauriRuntime()
 
-const isWebPreview = computed(() => !hasTauriInternals)
+const isWebPreview = computed(() => isWebPreviewRuntime())
 
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 const { floatingChatEnabled } = useFloatingChatPreference()
@@ -1469,7 +1474,7 @@ onMounted(() => {
       defaultModelId.value = null
       fallbackModelIds.value = []
       learnHybridEnabled.value = false
-      smartReviewEnabled.value = getGlobalSmartReviewEnabled(profile.value.id) ?? false
+      smartReviewEnabled.value = getGlobalSmartReviewEnabled(studyStorageOwner(profile.value)) ?? false
       floatingChatEnabled.value = true
       textScale.value = Number(document.documentElement.dataset.textScale || 0)
       void initializeConnectionStatuses()
@@ -1492,7 +1497,7 @@ onMounted(() => {
       fallbackModelIds.value = settings.fallbackModelIds
       learnHybridEnabled.value = settings.learnHybridEnabled
       smartReviewEnabled.value = settings.smartReviewEnabled
-      saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, p.id)
+      saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, studyStorageOwner(p))
       floatingChatEnabled.value = settings.floatingChatEnabled
       textScale.value = settings.textScale
       applyTextScale(settings.textScale)
@@ -1590,14 +1595,14 @@ async function onToggleSmartReview() {
     const next = !smartReviewEnabled.value
     if (isWebPreview.value) {
       smartReviewEnabled.value = next
-      applyGlobalSmartReviewEnabled(next, profile.value?.id)
+      applyGlobalSmartReviewEnabled(next, studyStorageOwner(profile.value))
       return
     }
     const db = await useTracerDb()
     const updated = await createSettingsRepo(db).set({ smartReviewEnabled: next })
     clearAppSettingsRequest()
     smartReviewEnabled.value = updated.smartReviewEnabled
-    applyGlobalSmartReviewEnabled(updated.smartReviewEnabled, profile.value?.id)
+    applyGlobalSmartReviewEnabled(updated.smartReviewEnabled, studyStorageOwner(profile.value))
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to update Smart Review settings')
   } finally {
@@ -1691,6 +1696,13 @@ async function onConfirmReset() {
   resetError.value = null
   busy.value = true
   try {
+    if (!hasTauriInternals) {
+      await lockResetTracer()
+      await import('../src/composables/auth/session').then(({ clearAuthSession }) => clearAuthSession())
+      resetConnectionStatusCache()
+      location.replace(appUrl('first-run'))
+      return
+    }
     await import('../src/composables/auth/session').then(({ clearAuthSession }) => clearAuthSession()).catch(() => {})
     await lockResetTracer()
     resetConnectionStatusCache()
@@ -1704,6 +1716,7 @@ async function onConfirmReset() {
 }
 
 async function onReconnectAccount() {
+  if (!hasTauriInternals) { location.assign(appUrl('first-run')); return }
   error.value = null
   busy.value = true
   accountActionPending.value = true
@@ -1739,6 +1752,10 @@ async function onAccountSignOut() {
     const { clearAuthSession } = await import('../src/composables/auth/session')
     await clearAuthSession()
     setAccountConnectionSignedOut()
+    if (!hasTauriInternals) {
+      resetConnectionStatusCache()
+      location.replace(appUrl('first-run'))
+    }
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, t('auth.errorUnknown'))
   } finally {

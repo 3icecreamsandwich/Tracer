@@ -1,5 +1,18 @@
 export default defineNuxtConfig({
   ssr: false,
+  buildDir: process.env.TRACER_BUILD_DIR || '.nuxt',
+  app: {
+    // app.tracerquiz.com uses '/'; set NUXT_APP_BASE_URL for a subdirectory.
+    baseURL: process.env.NUXT_APP_BASE_URL || '/',
+    head: { meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }] }
+  },
+  runtimeConfig: {
+    supabaseUrl: process.env.VITE_SUPABASE_URL || '',
+    supabasePublishableKey: process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '',
+    // Optional, administrator-controlled HTTPS origin for OpenAI-compatible APIs.
+    webAiCompatibleOrigin: process.env.NUXT_WEB_AI_COMPATIBLE_ORIGIN || '',
+  },
+  nitro: { compressPublicAssets: true },
   compatibilityDate: '2026-07-10',
   ignore: ['src-tauri/**'],
 
@@ -20,6 +33,7 @@ export default defineNuxtConfig({
 
   vite: {
     clearScreen: false,
+    define: { 'import.meta.env.VITE_TRACER_BASE_PATH': JSON.stringify(process.env.NUXT_APP_BASE_URL || '/') },
     resolve: {
       // Slot helpers and the renderer must share Vue's component-instance state.
       dedupe: ['vue', '@vue/runtime-core', '@vue/runtime-dom', '@vue/reactivity', '@vue/shared']

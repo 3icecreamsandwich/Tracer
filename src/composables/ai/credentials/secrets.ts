@@ -5,6 +5,7 @@ import { hasTauriInternalsNow, inMemorySecrets } from './runtime'
 
 export async function aiSecretsGet(kind: AiCredentialKind): Promise<string | null> {
   if (!hasTauriInternalsNow()) {
+    if (kind !== 'github_models_token') return import('./web').then(({ webProviderSecret }) => webProviderSecret(kind))
     return inMemorySecrets.get(kind) ?? null
   }
   try {
@@ -37,6 +38,7 @@ export async function aiSecretsSet(kind: AiCredentialKind, value: string): Promi
 
 export async function aiSecretsDelete(kind: AiCredentialKind): Promise<void> {
   if (!hasTauriInternalsNow()) {
+    if (kind !== 'github_models_token') await import('./web').then(({ webDeleteProviderSecret }) => webDeleteProviderSecret(kind))
     inMemorySecrets.delete(kind)
     return
   }

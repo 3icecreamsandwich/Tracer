@@ -9,7 +9,7 @@
             @close="closeAiError"
             @retry="retryAiRequest"
         />
-        <div class="mx-auto max-w-4xl p-6 sm:p-8">
+        <div class="tracer-page mx-auto max-w-4xl p-6 sm:p-8">
             <div
                 class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             >
@@ -20,7 +20,7 @@
                         </h1>
                         <p
                             v-if="set?.description"
-                            class="mt-2 text-sm text-slate-600 dark:text-slate-300"
+                            class="line-clamp-2 sm:line-clamp-none mt-2 text-sm text-slate-600 dark:text-slate-300"
                         >
                             {{ translateAppGeneratedText(set.description) }}
                         </p>
@@ -32,7 +32,8 @@
                             :to="`/set/${set.id}/edit`"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
                         >
-                            {{ t("common.edit") }}
+                            <AppIcon name="edit" class="sm:hidden" />
+                            <span class="sr-only sm:not-sr-only">{{ t("common.edit") }}</span>
                         </NuxtLink>
                         <button
                             type="button"
@@ -40,7 +41,8 @@
                             :disabled="busy || !set"
                             @click="openExport"
                         >
-                            {{ t("public.share") }}
+                            <AppIcon name="share" class="sm:hidden" />
+                            <span class="sr-only sm:not-sr-only">{{ t("public.share") }}</span>
                         </button>
                     </div>
                 </div>
@@ -1561,7 +1563,7 @@
 
                                 <div
                                     v-else
-                                    class="grid flex-1 auto-rows-fr grid-cols-4 gap-2"
+                                    class="grid flex-1 auto-rows-fr grid-cols-2 sm:grid-cols-4 gap-2"
                                 >
                                     <button
                                         v-for="tile in matchTiles"
@@ -1990,6 +1992,9 @@
 </template>
 
 <script setup lang="ts">
+import { studyStorageOwner } from '~/src/composables/platform/web'
+
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import { getPublishedSet, publishedSetToStudySet, type PublishedSet } from '~/src/composables/published-sets';
 import flashcardsModeIcon from "~/assets/icons/study-modes/flashcards.png";
 import studyGuideModeIcon from "~/assets/icons/study-modes/study-guide.png";
@@ -2125,7 +2130,7 @@ const isNestedSetRoute = computed(() =>
             match.name === "set-id-edit" || match.name === "set-id-results",
     ),
 );
-const isWebPreview = computed(() => isPublicSet.value || !hasTauriRuntime());
+const isWebPreview = computed(() => isPublicSet.value || isWebPreviewRuntime() || route.params.id === 'demo');
 
 type SetMode = "flashcards" | "learn" | "match" | "chat";
 type TrackedSetMode = Exclude<SetMode, "chat">;
@@ -4412,7 +4417,7 @@ async function openSetPage() {
             await router.replace("/first-run");
             return;
         }
-        reviewOwnerId.value = profile.id;
+        reviewOwnerId.value = studyStorageOwner(profile) ?? profile.id;
 
         defaultModelId.value = settings.defaultModelId;
         fallbackModelIds.value = settings.fallbackModelIds;
@@ -4451,10 +4456,10 @@ async function openSetPage() {
         busy.value = false;
 
         if (loadedSet) {
-            smartReviewEnabled.value = resolveSmartReviewEnabled(setId, settings.smartReviewEnabled, profile.id);
-            saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, profile.id);
-            shuffleEnabled.value = isFlashcardShuffleEnabled(setId, profile.id);
-            cardReviews.value = getCardReviews(setId, profile.id);
+            smartReviewEnabled.value = resolveSmartReviewEnabled(setId, settings.smartReviewEnabled, reviewOwnerId.value);
+            saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, reviewOwnerId.value);
+            shuffleEnabled.value = isFlashcardShuffleEnabled(setId, reviewOwnerId.value);
+            cardReviews.value = getCardReviews(setId, reviewOwnerId.value);
             starredTermIds.value = new Set(starredIds);
             savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
             savedFlashcardCorrectTermIds.value =

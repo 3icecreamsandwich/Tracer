@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+vi.mock('../../src/composables/tauri', () => ({ hasTauriRuntime: () => true }))
 
 const mocks = vi.hoisted(() => ({
   close: vi.fn(),

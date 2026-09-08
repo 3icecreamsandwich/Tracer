@@ -1,3 +1,4 @@
+import { hasTauriRuntime } from '../tauri'
 import { ref, shallowRef } from 'vue'
 import {
   githubDeviceCodeRequest,
@@ -233,7 +234,8 @@ export function useGithubModelsAuth(options: { isWebPreview: () => boolean }) {
       githubAuthStep.value = 'requesting'
       try {
         await tryDeviceFlow()
-      } catch {
+      } catch (error) {
+        if (!hasTauriRuntime()) throw error
         await tryPkceFlow()
       }
     } catch (error) {

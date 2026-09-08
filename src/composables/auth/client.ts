@@ -1,4 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { hasTauriRuntime } from '../tauri'
+import { browserStorageKey } from '../platform/web'
 
 type MemoryStorage = {
   getItem(key: string): string | null
@@ -52,8 +54,9 @@ export function getSupabaseClient(): SupabaseClient {
       flowType: 'pkce',
       detectSessionInUrl: false,
       persistSession: true,
-      autoRefreshToken: false,
-      storage: memoryStorage,
+      autoRefreshToken: !hasTauriRuntime(),
+      storage: hasTauriRuntime() ? memoryStorage : undefined,
+      storageKey: hasTauriRuntime() ? undefined : browserStorageKey('auth'),
     },
   })
   return client

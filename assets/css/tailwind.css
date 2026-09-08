@@ -3,6 +3,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Shared desktop/web layouts respond to available space, including small
+   desktop windows. Safe-area spacing also works in mobile standalone browsers. */
+@media (max-width: 639px) {
+  .tracer-page { padding-inline: 1rem !important; padding-top: 1.25rem !important; padding-bottom: calc(6rem + env(safe-area-inset-bottom)) !important; }
+  .tracer-page-toolbar { flex-wrap: wrap; top: 60px; gap: .75rem; }
+  .tracer-page-toolbar > div { min-width: 0; }
+  .tracer-page-toolbar > div:last-child { flex: 1 1 auto; }
+  .tracer-library { min-height: 18rem; padding: 1rem; }
+  .tracer-home-actions { order: -1; gap: .75rem; }
+  .tracer-home-actions > section { padding: 1rem; }
+  .tracer-create-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: .75rem; gap: .5rem; }
+  .tracer-create-grid > a { flex-direction: column; justify-content: center; gap: .5rem; padding: .75rem .25rem; text-align: center; }
+  .tracer-create-grid > a > svg:first-child { width: 2rem; height: 2rem; }
+  .tracer-create-grid > a > svg:last-child { display: none; }
+  .tracer-create-grid > a p { font-size: .8rem; overflow-wrap: anywhere; }
+  .tracer-back-control { bottom: calc(1rem + env(safe-area-inset-bottom)); left: 1rem; }
+  .tracer-chat-control { bottom: calc(1rem + env(safe-area-inset-bottom)); right: 1rem; }
+  .tracer-chat-panel { inset: auto .5rem calc(4.5rem + env(safe-area-inset-bottom)); width: auto; height: min(36rem, calc(100dvh - 6rem)); }
+  .tracer-modal { padding-block: max(.75rem, env(safe-area-inset-top)) max(.75rem, env(safe-area-inset-bottom)); }
+  /* Prevent iOS form zoom without shrinking the user's text-scale preference. */
+  html[data-text-scale] input:not([type='checkbox']):not([type='radio']),
+  html[data-text-scale] textarea, html[data-text-scale] select { font-size: max(16px, var(--tracer-text-base)); }
+}
+@media (pointer: coarse) {
+  button, [role='button'], a.tracer-button { touch-action: manipulation; }
+  button:not([tabindex='-1']), a.tracer-button { min-height: 44px; }
+}
+
 @layer components {
   .tracer-button {
     @apply inline-flex items-center justify-center gap-2 rounded-lg border font-semibold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-slate-950;

@@ -3,6 +3,8 @@ node_modules/
 
 # Nuxt / Nitro build outputs
 .nuxt/
+.nuxt-web-test/
+.nuxt-web-build/
 .output/
 dist/
 

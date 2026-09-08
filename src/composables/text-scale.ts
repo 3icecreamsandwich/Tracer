@@ -1,6 +1,6 @@
+import { isWebPreviewRuntime } from './platform/web'
 import { createSettingsRepo, useTracerDb } from './db'
 import { loadAppSettingsOnce } from './app-settings-cache'
-import { hasTauriRuntime } from './tauri'
 
 export const textScaleLabels = ['Small', '', '', '', 'Large'] as const
 const textScaleStorageKey = 'tracer:text-scale'
@@ -32,7 +32,7 @@ export async function textScaleInit() {
   const storedScale = readStoredTextScale()
   applyTextScale(storedScale)
 
-  if (!hasTauriRuntime()) {
+  if (isWebPreviewRuntime()) {
     return storedScale
   }
   const settings = await loadAppSettingsOnce()
@@ -45,7 +45,7 @@ export async function textScaleSet(value: unknown) {
   const scale = normalizeTextScale(value)
   applyTextScale(scale)
   storeTextScale(scale)
-  if (!hasTauriRuntime()) return scale
+  if (isWebPreviewRuntime()) return scale
   const db = await useTracerDb()
   const settings = await createSettingsRepo(db).set({ textScale: scale })
   return settings.textScale

@@ -1,7 +1,7 @@
+import { isWebPreviewRuntime } from './platform/web'
 import { computed, readonly, ref } from 'vue'
 import { createSettingsRepo, useTracerDb, type AppLanguage } from './db'
 import { loadAppSettingsOnce } from './app-settings-cache'
-import { hasTauriRuntime } from './tauri'
 import { languageOptions, messages } from '../i18n/messages'
 
 const STORAGE_KEY = 'tracer:language'
@@ -49,7 +49,7 @@ export async function languageInit() {
   const stored = window.localStorage.getItem(STORAGE_KEY)
   applyAppLanguage(isAppLanguage(stored) ? stored : activeLanguage.value)
 
-  if (!hasTauriRuntime()) return activeLanguage.value
+  if (isWebPreviewRuntime()) return activeLanguage.value
 
   const settings = await loadAppSettingsOnce()
   applyAppLanguage(settings.language)
@@ -60,7 +60,7 @@ export async function languageInit() {
 export async function languageSet(language: AppLanguage) {
   applyAppLanguage(language)
   if (typeof window !== 'undefined') window.localStorage.setItem(STORAGE_KEY, language)
-  if (!hasTauriRuntime()) return
+  if (isWebPreviewRuntime()) return
 
   const db = await useTracerDb()
   await createSettingsRepo(db).set({ language })

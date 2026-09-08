@@ -1,6 +1,6 @@
 <template>
   <main class="min-h-[calc(100vh-4rem)] bg-white pb-32 text-slate-950 dark:bg-slate-950 dark:text-white">
-    <div class="mx-auto max-w-[1280px] px-8 py-10">
+    <div class="tracer-page mx-auto max-w-[1280px] px-8 py-10">
       <LoadingSpinner v-if="loading" screen />
       <div v-else-if="loadError" class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
@@ -186,7 +186,6 @@ async function loadPage() {
   loading.value = true
   loadError.value = null
   try {
-    if (!hasTauriRuntime()) throw new Error(t('classroom.assignmentDesktopRequired'))
     const role = await getAccountRole()
     if (role !== 'teacher') {
       await router.replace('/')

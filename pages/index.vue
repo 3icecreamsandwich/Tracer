@@ -1,15 +1,15 @@
 <template>
   <main>
-    <div class="mx-auto max-w-[1280px] px-8 pb-24 pt-10">
+    <div class="tracer-page mx-auto max-w-[1280px] px-8 pb-24 pt-10">
       <div class="grid items-stretch gap-7 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         <section
-          class="flex min-h-[calc(100vh-13rem)] flex-col rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          class="tracer-library flex min-h-[calc(100vh-13rem)] flex-col rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           aria-labelledby="home-sets"
         >
           <div class="flex items-start justify-between gap-4">
             <div>
               <h1 id="home-sets" class="text-[22px] font-semibold">{{ t('home.sets') }}</h1>
-              <p class="mt-1 text-[15px] text-slate-950 dark:text-slate-100">
+              <p class="hidden sm:block mt-1 text-[15px] text-slate-950 dark:text-slate-100">
                 {{ t('home.subtitle') }}
               </p>
             </div>
@@ -17,10 +17,11 @@
               v-if="activeLibraryKind !== 'class'"
               type="button"
               class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
-              :disabled="busy || !hasTauriRuntime()"
+              :disabled="busy || isWebPreviewRuntime()"
               @click="addFolder"
             >
-              {{ t('home.addFolder') }}
+              <AppIcon name="add-folder" class="sm:hidden" />
+              <span class="sr-only sm:not-sr-only">{{ t('home.addFolder') }}</span>
             </button>
           </div>
 
@@ -46,7 +47,7 @@
 
             <div v-else>
               <div
-                v-if="!hasTauriRuntime()"
+                v-if="isWebPreviewRuntime()"
                 class="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
                 role="status"
                 aria-live="polite"
@@ -320,21 +321,21 @@
           </div>
         </Teleport>
 
-        <div class="grid content-start gap-7">
+        <div class="tracer-home-actions grid content-start gap-7">
           <section
             class="rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
             aria-labelledby="home-create"
           >
             <h2 id="home-create" class="text-[22px] font-semibold">{{ t('home.create') }}</h2>
-            <p class="mt-1 text-[15px] text-slate-950 dark:text-slate-100">{{ t('home.chooseMode') }}</p>
+            <p class="hidden sm:block mt-1 text-[15px] text-slate-950 dark:text-slate-100">{{ t('home.chooseMode') }}</p>
 
-            <div class="mt-8 grid w-full gap-3">
+            <div class="tracer-create-grid mt-8 grid w-full gap-3">
               <NuxtLink
                 to="/create/basic"
                 class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               >
                 <CreateModeIcon name="basic" class="h-14 w-14" />
-                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.basic') }}</p><p class="mt-1 text-[13px]">{{ t('home.basicHint') }}</p></div>
+                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.basic') }}</p><p class="hidden sm:block mt-1 text-[13px]">{{ t('home.basicHint') }}</p></div>
                 <CreateChevron />
               </NuxtLink>
 
@@ -343,7 +344,7 @@
                 class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               >
                 <CreateModeIcon name="synthesize" class="h-14 w-14" />
-                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.synthesize') }}</p><p class="mt-1 text-[13px]">{{ t('home.synthesizeHint') }}</p></div>
+                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.synthesize') }}</p><p class="hidden sm:block mt-1 text-[13px]">{{ t('home.synthesizeHint') }}</p></div>
                 <CreateChevron />
               </NuxtLink>
 
@@ -352,7 +353,7 @@
                 class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               >
                 <CreateModeIcon name="generate" class="h-14 w-14" />
-                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.generate') }}</p><p class="mt-1 text-[13px]">{{ t('home.generateHint') }}</p></div>
+                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.generate') }}</p><p class="hidden sm:block mt-1 text-[13px]">{{ t('home.generateHint') }}</p></div>
                 <CreateChevron />
               </NuxtLink>
             </div>
@@ -375,6 +376,7 @@
 </template>
 
 <script setup lang="ts">
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import { prefetchPublicCatalog } from '~/src/composables/published-sets'
 import { lockGetStatus } from '../src/composables/lock'
 import {
@@ -952,7 +954,7 @@ function cancelFolderRename(folder: SetFolder) {
 }
 
 async function addFolder() {
-  if (busy.value || !hasTauriRuntime()) return
+  if (busy.value || isWebPreviewRuntime()) return
   loadError.value = null
   try {
     const db = await useTracerDb()
@@ -1034,7 +1036,7 @@ function reorderedRootKeys(dragged: RootEntryKey[], target: RootDropTarget | nul
 
 async function persistHomeOrder(keys: RootEntryKey[]) {
   homeOrder.value = keys.map((entry, sortOrder) => ({ ...entry, sortOrder }))
-  if (!hasTauriRuntime()) return
+  if (isWebPreviewRuntime()) return
   const db = await useTracerDb()
   await createFoldersRepo(db).reorderHome(keys)
 }
@@ -1358,7 +1360,7 @@ function onWindowPointerCancel(event: PointerEvent) {
 }
 
 watch(language, () => {
-  if (!hasTauriRuntime()) initWebDemoItems()
+  if (isWebPreviewRuntime()) initWebDemoItems()
 })
 
 onMounted(async () => {
@@ -1368,7 +1370,7 @@ onMounted(async () => {
   window.addEventListener('pointercancel', onWindowPointerCancel)
   window.addEventListener('keydown', onWindowKeyDown)
 
-  if (!hasTauriRuntime()) {
+  if (isWebPreviewRuntime()) {
     busy.value = false
     loadError.value = null
     initWebDemoItems()

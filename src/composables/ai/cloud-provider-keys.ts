@@ -3,6 +3,7 @@ import { aiProviderSettingsSave, aiSecretsGet } from './credentials'
 import { providerApiKeyCredentialKinds, providerApiKeyIds } from './credentials/constants'
 import type { ProviderApiKeyDrafts, ProviderApiKeyId } from './credentials/types'
 import { ensureProviderDefaultModels } from './provider-model-defaults'
+import { hasTauriRuntime } from '../tauri'
 
 export type CloudProviderApiKeyRow = {
   provider_id: string
@@ -57,6 +58,17 @@ export function normalizeCloudProviderApiKeyRows(rows: CloudProviderApiKeyRow[])
 }
 
 export async function syncCloudProviderApiKeysToDevice(): Promise<ProviderApiKeyId[]> {
+  if (!hasTauriRuntime()) {
+    const presence = await import('./credentials/web').then(({ webProviderPresence }) => webProviderPresence(true))
+    const ids = providerApiKeyIds.filter(id => presence[id])
+    const namespace = await import('../db/browser').then(({ browserDatabaseName }) => browserDatabaseName())
+    const key = `${namespace}:restored-providers`
+    let previous: ProviderApiKeyId[] = []
+    try { previous = JSON.parse(localStorage.getItem(key) ?? '[]') } catch {}
+    await ensureProviderDefaultModels(ids.filter(id => !previous.includes(id)))
+    localStorage.setItem(key, JSON.stringify([...new Set([...previous, ...ids])]))
+    return ids
+  }
   const [cloudKeys, localKeyValues] = await Promise.all([
     loadProviderApiKeysFromCloud(),
     Promise.all(providerApiKeyIds.map(async (id) => ({

@@ -8,11 +8,11 @@
       @close="closeFactCheckAiError"
       @retry="retryFactCheck"
     />
-    <div class="mx-auto max-w-3xl p-8">
+    <div class="tracer-page mx-auto max-w-3xl p-8">
       <div class="flex items-start justify-between gap-4">
         <div>
           <h1 class="text-2xl font-semibold">{{ t('create.basicTitle') }}</h1>
-          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p class="hidden sm:block mt-2 text-sm text-slate-600 dark:text-slate-300">
             {{ t('create.basicDescription') }}
           </p>
         </div>

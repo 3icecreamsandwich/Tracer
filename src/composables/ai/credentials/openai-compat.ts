@@ -3,6 +3,7 @@ import { openAiCompatConfigSecretKey } from './constants'
 import { VaultSecretError, toVaultSecretError } from './errors'
 import { hasTauriInternalsNow, inMemorySecrets } from './runtime'
 import type { OpenAiCompatConfig } from './types'
+import { browserStorageKey } from '../../platform/web'
 
 export function normalizeOpenAiCompatConfig(config: OpenAiCompatConfig): OpenAiCompatConfig {
   return {
@@ -13,7 +14,7 @@ export function normalizeOpenAiCompatConfig(config: OpenAiCompatConfig): OpenAiC
 
 export async function aiOpenAiCompatGetConfig(): Promise<OpenAiCompatConfig | null> {
   if (!hasTauriInternalsNow()) {
-    const raw = inMemorySecrets.get(openAiCompatConfigSecretKey)
+    const raw = localStorage.getItem(browserStorageKey('compatible-api'))
     if (!raw) return null
     try {
       return JSON.parse(raw) as OpenAiCompatConfig
@@ -37,7 +38,7 @@ export async function aiOpenAiCompatGetConfig(): Promise<OpenAiCompatConfig | nu
 export async function aiOpenAiCompatSetConfig(config: OpenAiCompatConfig): Promise<void> {
   const payload = normalizeOpenAiCompatConfig(config)
   if (!hasTauriInternalsNow()) {
-    inMemorySecrets.set(openAiCompatConfigSecretKey, JSON.stringify(payload))
+    localStorage.setItem(browserStorageKey('compatible-api'), JSON.stringify(payload))
     return
   }
   try {

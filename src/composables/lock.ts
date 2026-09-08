@@ -36,7 +36,8 @@ function toAppLockError(err: unknown): AppLockError {
 
 export async function lockGetStatus(): Promise<AppLockStatus> {
   if (!hasTauriRuntime()) {
-    return { has_verifier: false, requires_unlock: false, can_auto_unlock: true, vault_mode: null }
+    // Browser sign-in protects account services; it has no native vault verifier.
+    return { has_verifier: true, requires_unlock: false, can_auto_unlock: true, vault_mode: null }
   }
   return invoke<AppLockStatus>('lock_get_status')
 }
@@ -81,7 +82,11 @@ export async function lockSetStartupLockEnabled(enabled: boolean, password?: str
 }
 
 export async function lockResetTracer(): Promise<void> {
-  if (!hasTauriRuntime()) return
+  if (!hasTauriRuntime()) {
+    await import('./db/browser').then(({ resetBrowserDb }) => resetBrowserDb())
+    clearCachedHomeDashboard()
+    return
+  }
   try {
     await closeTracerDb().catch(() => {})
     await invoke('lock_reset_tracer')

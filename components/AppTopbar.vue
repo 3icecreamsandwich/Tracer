@@ -5,7 +5,7 @@
         @pointerdown="onTopbarPointerDown"
     >
         <div
-            class="mx-auto flex h-[60px] w-[87.5%] max-w-[1400px] items-center gap-5 px-7"
+            class="mx-auto flex h-[60px] w-full sm:w-[87.5%] max-w-[1400px] items-center gap-2 sm:gap-5 px-3 sm:px-7"
         >
             <div
                 class="native-window-controls-spacer native-window-controls-spacer-left"
@@ -113,6 +113,7 @@
 
             <NuxtLink
                 to="/settings"
+                :aria-label="t('nav.settings')"
                 class="inline-flex h-10 shrink-0 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 text-[15px] font-medium text-slate-950 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
             >
                 <span
@@ -133,6 +134,7 @@
 </template>
 
 <script setup lang="ts">
+import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import {
     createSetsRepo,
     createStudyGuidesRepo,
@@ -231,7 +233,7 @@ async function loadSearchItems() {
     searchBusy.value = true;
     searchError.value = null;
     try {
-        if (!hasTauriRuntime()) {
+        if (isWebPreviewRuntime()) {
             searchItems.value = createWebPreviewSearchItems(t);
             searchLoaded = true;
             return;
@@ -336,7 +338,7 @@ function onTopbarPointerDown(event: PointerEvent) {
 }
 
 async function loadAvatarText() {
-    if (!hasTauriRuntime()) {
+    if (isWebPreviewRuntime()) {
         avatarText.value = "W";
         return;
     }

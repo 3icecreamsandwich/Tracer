@@ -6,10 +6,13 @@ import { createProfileRepo, useTracerDb } from '../db'
 import { redactSensitiveText } from '../security/redact'
 import { getSupabaseClient } from './client'
 import { TracerAuthError, normalizeAuthError } from './errors'
+import { hasTauriRuntime } from '../tauri'
+import { appUrl, browserStorageKey } from '../platform/web'
 import { callbackUrl, cancelOAuthCallback, finishOAuthCallback, startOAuthCallback, type OAuthCallbackListener } from './oauth-callback'
 
 export type AccountRole = 'student' | 'teacher'
 export type PendingEmailVerification = { listener: OAuthCallbackListener; email: string; role: AccountRole }
+const browserVerificationSubscriptions = new Map<PendingEmailVerification, () => void>()
 
 export function isGoogleUser(user: User): boolean {
   const provider = user.app_metadata?.provider
@@ -30,6 +33,14 @@ export function displayNameFromUser(user: User, submittedName = ''): string {
 export async function signInWithGoogle(
   onAuthorizationUrl?: (url: string) => void,
 ): Promise<Session> {
+  if (!hasTauriRuntime()) {
+    const { data, error } = await getSupabaseClient().auth.signInWithOAuth({
+      provider: 'google', options: { redirectTo: new URL(appUrl('auth/callback'), location.origin).href, skipBrowserRedirect: true },
+    })
+    if (error || !data.url) throw normalizeAuthError(error ?? new Error('Could not start Google sign-in.'))
+    window.location.assign(data.url)
+    return new Promise<Session>(() => {}) // The callback completes in the new document.
+  }
   const listener = await startOAuthCallback()
   try {
     const redirectTo = callbackUrl(listener.port)
@@ -64,6 +75,15 @@ export async function signUpWithEmail(input: {
   password: string
   role: AccountRole
 }): Promise<Session | PendingEmailVerification> {
+  if (!hasTauriRuntime()) {
+    localStorage.setItem(browserStorageKey('signup-role'), input.role)
+    const { data, error } = await getSupabaseClient().auth.signUp({
+      email: input.email.trim(), password: input.password,
+      options: { emailRedirectTo: new URL(appUrl('auth/callback'), location.origin).href, data: { full_name: input.name.trim() } },
+    })
+    if (error) throw normalizeAuthError(error)
+    return data.session ?? { listener: { id: 'browser', port: 0 }, email: input.email.trim(), role: input.role }
+  }
   const listener = await startOAuthCallback()
   const email = input.email.trim()
   try {
@@ -107,6 +127,18 @@ export async function initializeUserRole(role: AccountRole): Promise<AccountRole
 }
 
 export async function waitForEmailVerification(pending: PendingEmailVerification): Promise<Session> {
+  if (pending.listener.id === 'browser') {
+    return new Promise<Session>((resolve) => {
+      const { data } = getSupabaseClient().auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          data.subscription.unsubscribe()
+          browserVerificationSubscriptions.delete(pending)
+          resolve(session)
+        }
+      })
+      browserVerificationSubscriptions.set(pending, () => data.subscription.unsubscribe())
+    })
+  }
   try {
     const result = await finishOAuthCallback(pending.listener.id, 10 * 60_000)
     if (result.error || !result.code) throw new Error(result.errorDescription ?? result.error ?? 'Email verification failed')
@@ -119,6 +151,11 @@ export async function waitForEmailVerification(pending: PendingEmailVerification
 }
 
 export async function resendVerification(email: string, role: AccountRole): Promise<PendingEmailVerification> {
+  if (!hasTauriRuntime()) {
+    const { error } = await getSupabaseClient().auth.resend({ type: 'signup', email, options: { emailRedirectTo: new URL(appUrl('auth/callback'), location.origin).href } })
+    if (error) throw normalizeAuthError(error)
+    return { listener: { id: 'browser', port: 0 }, email, role }
+  }
   const listener = await startOAuthCallback()
   try {
     const { error } = await getSupabaseClient().auth.resend({
@@ -136,6 +173,11 @@ export async function resendVerification(email: string, role: AccountRole): Prom
 
 export async function cancelPendingEmailVerification(pending: PendingEmailVerification | null): Promise<void> {
   if (!pending) return
+  if (pending.listener.id === 'browser') {
+    browserVerificationSubscriptions.get(pending)?.()
+    browserVerificationSubscriptions.delete(pending)
+    return
+  }
   await cancelOAuthCallback(pending.listener.id).catch(() => {})
 }
 
