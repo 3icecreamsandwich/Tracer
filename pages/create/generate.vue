@@ -59,8 +59,8 @@
             :disabled="generateDisabled"
             @click="onGenerate"
           >
-            <LoadingSpinner v-if="busy || parseBusy" size="sm" :label="generateButtonLabel" />
-            <template v-else>{{ generateButtonLabel }}</template>
+            <LoadingSpinner v-if="busy || parseBusy" size="sm" :label="generateButtonLabel" :show-label="false" />
+            {{ generateButtonLabel }}
           </button>
         </div>
       </div>

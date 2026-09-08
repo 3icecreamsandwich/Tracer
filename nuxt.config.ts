@@ -20,6 +20,10 @@ export default defineNuxtConfig({
 
   vite: {
     clearScreen: false,
+    resolve: {
+      // Slot helpers and the renderer must share Vue's component-instance state.
+      dedupe: ['vue', '@vue/runtime-core', '@vue/runtime-dom', '@vue/reactivity', '@vue/shared']
+    },
     envPrefix: ['VITE_', 'TAURI_'],
     server: {
       strictPort: true,
