@@ -223,7 +223,7 @@ import {
   initializeUserRole,
   upsertAuthenticatedCloudProfile,
   waitForEmailVerification,
-  type AccountRole,
+  type SignupAccountRole as AccountRole,
   type AuthErrorCode,
   type PendingEmailVerification,
 } from '../src/composables/auth'

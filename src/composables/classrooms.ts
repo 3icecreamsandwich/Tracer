@@ -14,6 +14,7 @@ const classroomRequests = createAsyncRequestCache({ ttlMs: CLASSROOM_CACHE_TTL_M
 let onlineSessionRequest: Promise<Session> | null = null
 
 export type Classroom = {
+  canTeach?: boolean
   id: string
   name: string
   subject: string | null
@@ -359,7 +360,7 @@ export function parseCachedAccountRole(value: string | null, userId: string | nu
   try {
     const cached = JSON.parse(value) as { userId?: unknown; role?: unknown }
     if (cached.userId !== userId) return null
-    return cached.role === 'teacher' || cached.role === 'student' ? cached.role : null
+    return cached.role === 'super' || cached.role === 'teacher' || cached.role === 'student' ? cached.role : null
   } catch {
     return null
   }
@@ -389,7 +390,7 @@ export async function getAccountRole(): Promise<AccountRole | null> {
       .eq('user_id', session.user.id)
       .maybeSingle()
     if (error) throw errorFromPostgrest(error)
-    const role = data?.role === 'teacher' || data?.role === 'student' ? data.role : null
+    const role = data?.role === 'super' || data?.role === 'teacher' || data?.role === 'student' ? data.role : null
     cacheAccountRole(session.user.id, role)
     return role
   }, ROLE_CACHE_TTL_MS)
@@ -400,11 +401,16 @@ export async function listClassrooms(): Promise<Classroom[]> {
   return classroomRequests.get(userCacheKey(session.user.id, 'classes'), async () => {
     const { data, error } = await getSupabaseClient()
       .from('classes')
-      .select('id,name,subject,section,school_year,timezone,join_code,created_at')
+      .select('id,name,subject,section,school_year,timezone,join_code,created_at,created_by,class_memberships(user_id,role)')
       .is('archived_at', null)
       .order('created_at', { ascending: false })
     if (error) throw errorFromPostgrest(error)
-    return (data ?? []).map((row) => mapClassroomRow(row as ClassroomRow))
+    return (data ?? []).map((row) => ({
+      ...mapClassroomRow(row as ClassroomRow),
+      canTeach: row.created_by === session.user.id || row.class_memberships?.some(
+        (member) => member.user_id === session.user.id && member.role === 'teacher',
+      ) === true,
+    }))
   })
 }
 

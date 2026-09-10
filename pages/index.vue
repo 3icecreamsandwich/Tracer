@@ -68,7 +68,7 @@
                 <ul v-else class="space-y-3">
                   <li v-for="classroom in classrooms" :key="classroom.id">
                     <NuxtLink
-                      v-if="accountRole === 'teacher'"
+                      v-if="(accountRole === 'teacher' || (accountRole === 'super' && classroom.canTeach))"
                       :to="`/teacher/classes/${classroom.id}`"
                       class="group flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900"
                     >
@@ -302,7 +302,7 @@
             </div>
           </div>
 
-          <div v-if="activeLibraryKind === 'class' && accountRole === 'student'" class="mt-auto pt-7">
+          <div v-if="activeLibraryKind === 'class' && (accountRole === 'student' || accountRole === 'super')" class="mt-auto pt-7">
             <AppButton block size="lg" @click="joinOpen = true">
               {{ t('classroom.addClass') }}
             </AppButton>
@@ -360,7 +360,7 @@
           </section>
 
           <HomeDestinationLink to="/public-sets" icon="publish" :title="t('public.browse')" :description="t('public.browseHint')" @pointerenter="prefetchPublicCatalog" @focusin="prefetchPublicCatalog" />
-          <HomeDestinationLink v-if="accountRole === 'teacher'" to="/teacher" icon="dashboard" :title="t('classroom.dashboard')" :description="t('classroom.dashboardDescription')" />
+          <HomeDestinationLink v-if="(accountRole === 'teacher' || accountRole === 'super')" to="/teacher" icon="dashboard" :title="t('classroom.dashboard')" :description="t('classroom.dashboardDescription')" />
         </div>
       </div>
     </div>

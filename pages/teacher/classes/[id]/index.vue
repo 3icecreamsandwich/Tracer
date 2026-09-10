@@ -163,7 +163,7 @@ async function runDetailLoad(requestedClassId: string, requestId: number) {
       listClassroomProgress(requestedClassId),
     ])
     if (requestId !== detailRequestId) return
-    if (role !== 'teacher') {
+    if (role !== 'teacher' && role !== 'super') {
       await router.replace('/')
       return
     }

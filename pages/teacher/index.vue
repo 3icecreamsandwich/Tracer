@@ -257,11 +257,11 @@ async function runDashboardLoad() {
       getAccountRole(),
       listClassrooms(),
     ])
-    if (role !== 'teacher') {
+    if (role !== 'teacher' && role !== 'super') {
       await router.replace('/')
       return
     }
-    classes.value = nextClasses
+    classes.value = role === 'super' ? nextClasses.filter((item) => item.canTeach) : nextClasses
     if (!classes.value.some((item) => item.id === selectedClassId.value)) {
       selectedClassId.value = classes.value[0]?.id ?? ''
     }

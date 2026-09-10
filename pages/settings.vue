@@ -56,6 +56,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 class="text-sm font-medium">{{ t('settings.account') }}</h2>
+            <p v-if="superAccount" class="mt-1 text-sm font-medium">{{ t('settings.superAccount') }}</p>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ accountEmail || profile?.email }}</p>
             <LoadingSpinner
               v-if="accountConnectionPending"
@@ -773,6 +774,7 @@
 </template>
 
 <script setup lang="ts">
+import { getAccountRole } from '../src/composables/classrooms'
 import { studyStorageOwner } from '~/src/composables/platform/web'
 
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
@@ -851,6 +853,15 @@ const profile = ref<Profile | null>(null)
 const localSettingsPending = ref(true)
 const accountActionPending = ref(false)
 const accountConnectionPending = computed(() => cachedAccountConnectionPending.value || accountActionPending.value)
+const superAccount = ref(false)
+watch(() => [accountIdentity.value?.id, accountConnectionStatus.value], async (_, __, onCleanup) => {
+  let cancelled = false
+  onCleanup(() => { cancelled = true })
+  superAccount.value = false
+  if (accountConnectionStatus.value !== 'online') return
+  const role = await getAccountRole().catch(() => null)
+  if (!cancelled) superAccount.value = role === 'super'
+}, { immediate: true })
 const accountEmail = computed(() => accountIdentity.value?.email ?? '')
 const accountOnline = computed(() => accountConnectionStatus.value === 'online')
 const accountSignedOut = computed(() => accountConnectionStatus.value === 'signed_out')

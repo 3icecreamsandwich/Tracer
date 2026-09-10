@@ -37,6 +37,16 @@ describe('generation subscription limits', () => {
     expect(await loadGeneratePlan()).toBe('plus')
     expect(mocks.eq).toHaveBeenCalledWith('user_id', 'owner')
   })
+  it('gives Super Pro limits even without an active subscription', async () => {
+    mocks.row.mockResolvedValueOnce({ data: null }).mockResolvedValueOnce({ data: { role: 'super' } })
+    expect(await loadGeneratePlan()).toBe('pro')
+  })
+  it('does not use Super limits after an account switch', async () => {
+    mocks.row.mockResolvedValueOnce({ data: null }).mockResolvedValueOnce({ data: { role: 'super' } })
+    mocks.session.mockResolvedValueOnce({ data: { session: { user: { id: 'owner' } } } })
+      .mockResolvedValueOnce({ data: { session: { user: { id: 'other' } } } })
+    expect(await loadGeneratePlan()).toBe('free')
+  })
   it('falls back to free for lookup errors and account changes', async () => {
     mocks.row.mockResolvedValue({ error: new Error('offline') })
     expect(await loadGeneratePlan()).toBe('free')

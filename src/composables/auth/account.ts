@@ -10,8 +10,9 @@ import { hasTauriRuntime } from '../tauri'
 import { appUrl, browserStorageKey } from '../platform/web'
 import { callbackUrl, cancelOAuthCallback, finishOAuthCallback, startOAuthCallback, type OAuthCallbackListener } from './oauth-callback'
 
-export type AccountRole = 'student' | 'teacher'
-export type PendingEmailVerification = { listener: OAuthCallbackListener; email: string; role: AccountRole }
+export type SignupAccountRole = 'student' | 'teacher'
+export type AccountRole = SignupAccountRole | 'super'
+export type PendingEmailVerification = { listener: OAuthCallbackListener; email: string; role: SignupAccountRole }
 const browserVerificationSubscriptions = new Map<PendingEmailVerification, () => void>()
 
 export function isGoogleUser(user: User): boolean {
@@ -73,7 +74,7 @@ export async function signUpWithEmail(input: {
   name: string
   email: string
   password: string
-  role: AccountRole
+  role: SignupAccountRole
 }): Promise<Session | PendingEmailVerification> {
   if (!hasTauriRuntime()) {
     localStorage.setItem(browserStorageKey('signup-role'), input.role)
@@ -107,7 +108,7 @@ export async function signUpWithEmail(input: {
   }
 }
 
-export async function initializeUserRole(role: AccountRole): Promise<AccountRole> {
+export async function initializeUserRole(role: SignupAccountRole): Promise<AccountRole> {
   const { data, error } = await getSupabaseClient().rpc('initialize_user_role', {
     requested_role: role,
   })
@@ -120,7 +121,7 @@ export async function initializeUserRole(role: AccountRole): Promise<AccountRole
     })
     throw new TracerAuthError('role_failed', error.message)
   }
-  if (data !== 'student' && data !== 'teacher') {
+  if (data !== 'student' && data !== 'teacher' && data !== 'super') {
     throw new TracerAuthError('role_failed', 'Account role was not initialized')
   }
   return data
@@ -150,7 +151,7 @@ export async function waitForEmailVerification(pending: PendingEmailVerification
   }
 }
 
-export async function resendVerification(email: string, role: AccountRole): Promise<PendingEmailVerification> {
+export async function resendVerification(email: string, role: SignupAccountRole): Promise<PendingEmailVerification> {
   if (!hasTauriRuntime()) {
     const { error } = await getSupabaseClient().auth.resend({ type: 'signup', email, options: { emailRedirectTo: new URL(appUrl('auth/callback'), location.origin).href } })
     if (error) throw normalizeAuthError(error)

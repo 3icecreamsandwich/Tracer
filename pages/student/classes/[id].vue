@@ -111,7 +111,7 @@ async function loadClassPage() {
   loadError.value = null
   try {
     const role = await getAccountRole()
-    if (role !== 'student') {
+    if (role !== 'student' && role !== 'super') {
       await router.replace('/')
       return
     }

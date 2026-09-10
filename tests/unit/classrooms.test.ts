@@ -112,6 +112,7 @@ describe('classroom data mapping', () => {
   })
 
   it('restores only an account-scoped cached teacher or student role', () => {
+    expect(parseCachedAccountRole(JSON.stringify({ userId: 'user-1', role: 'super' }), 'user-1')).toBe('super')
     expect(parseCachedAccountRole(JSON.stringify({ userId: 'user-1', role: 'teacher' }), 'user-1')).toBe('teacher')
     expect(parseCachedAccountRole(JSON.stringify({ userId: 'user-1', role: 'student' }), 'user-2')).toBeNull()
     expect(parseCachedAccountRole(JSON.stringify({ userId: 'user-1', role: 'admin' }), 'user-1')).toBeNull()

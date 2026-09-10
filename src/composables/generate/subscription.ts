@@ -21,12 +21,14 @@ export async function loadGeneratePlan(): Promise<GeneratePlan> {
     const { data: session, error: sessionError } = await client.auth.getSession()
     if (sessionError || !session.session) return 'free'
     const userId = session.session.user.id
-    const { data, error } = await client.from('subscriptions')
-      .select('plan,status,current_period_end').eq('user_id', userId).maybeSingle()
-    if (error) return 'free'
+    const [subscription, role] = await Promise.all([
+      client.from('subscriptions').select('plan,status,current_period_end').eq('user_id', userId).maybeSingle(),
+      client.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+    ])
     const { data: current } = await client.auth.getSession()
     if (current.session?.user.id !== userId) return 'free'
-    return subscriptionGeneratePlan(data)
+    if (!role.error && role.data?.role === 'super') return 'pro'
+    return subscription.error ? 'free' : subscriptionGeneratePlan(subscription.data)
   } catch {
     return 'free'
   }

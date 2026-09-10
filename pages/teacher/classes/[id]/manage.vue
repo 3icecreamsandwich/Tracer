@@ -218,7 +218,7 @@ async function runManagementLoad(requestedClassId: string, requestId: number) {
       listClassroomAssignments(requestedClassId),
     ])
     if (requestId !== managementRequestId) return
-    if (role !== 'teacher') {
+    if (role !== 'teacher' && role !== 'super') {
       await router.replace('/')
       return
     }
