@@ -15,7 +15,13 @@
     "dev:web": "nuxt dev --host 127.0.0.1 --port 3001",
     "build:web": "nuxt build",
     "start:web": "node .output/server/index.mjs",
-    "test:e2e:web-app": "playwright test --config playwright.web-app.config.ts"
+    "test:e2e:web-app": "playwright test --config playwright.web-app.config.ts",
+    "preview:cloudflare": "wrangler dev --config .wrangler/tracer.json --port 3101",
+    "deploy:cloudflare:preview": "wrangler deploy --config .wrangler/tracer.json",
+    "deploy:cloudflare:production": "wrangler deploy --config .wrangler/tracer.json --env production",
+    "build:cloudflare": "node scripts/cloudflare/build.mjs",
+    "test:e2e:cloudflare": "TRACER_TEST_CLOUDFLARE=1 playwright test --config playwright.web-app.config.ts",
+    "types:cloudflare": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler types cloudflare/worker-configuration.d.ts --strict-vars false"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.116",
@@ -54,6 +60,7 @@
     "postcss": "^8.5.28",
     "tailwindcss": "^3.4.19",
     "vitest": "^3.2.7",
-    "webdriverio": "^9.31.6"
+    "webdriverio": "^9.31.6",
+    "wrangler": "4.131.0"
   }
 }

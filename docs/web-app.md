@@ -20,6 +20,10 @@ the browser. GitHub Models also requires `VITE_GITHUB_OAUTH_CLIENT_ID`.
 
 ## Hosting at app.tracerquiz.com
 
+The release target is Cloudflare Workers. Follow [the Cloudflare release guide](cloudflare-release.md)
+for preview, production, account setup, validation gates, and rollback. The Node
+deployment below remains an alternative for local or independent hosting.
+
 `app.tracerquiz.com` is a subdomain and uses the default `/` base path. Keep the
 landing page at `tracerquiz.com` in its current project and link to the app.
 

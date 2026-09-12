@@ -1,4 +1,5 @@
-import { createError, getHeader, type H3Event } from 'h3'
+import { BodyTooLarge, readBoundedBody } from '../../cloudflare/bounded-body'
+import { createError, getHeader, getRequestWebStream, type H3Event } from 'h3'
 
 /** Node hosting: cap bytes before parsing, including chunked requests. */
 export async function readWebJson(event: H3Event, limit: number): Promise<any> {
@@ -7,6 +8,15 @@ export async function readWebJson(event: H3Event, limit: number): Promise<any> {
   }
   const tooLarge = () => createError({ statusCode: 413, statusMessage: 'Request too large.' })
   if (Number(getHeader(event, 'content-length')) > limit) throw tooLarge()
+  if (event.context?.cloudflare || event.web?.request) {
+    try {
+      const bytes = await readBoundedBody(getRequestWebStream(event) ?? null, limit)
+      return JSON.parse(new TextDecoder().decode(bytes))
+    } catch (error) {
+      if (error instanceof BodyTooLarge) throw tooLarge()
+      throw createError({ statusCode: 400, statusMessage: 'Invalid JSON.' })
+    }
+  }
   const bytes = await new Promise<Buffer>((resolve, reject) => {
     const chunks: Buffer[] = []
     let length = 0

@@ -39,3 +39,9 @@ notes.md
 /tracer-screenshots
 /test-results
 /.omo
+
+.output-cloudflare/
+.nuxt-cloudflare/
+.wrangler/
+.dev.vars*
+.nuxt-desktop-check/

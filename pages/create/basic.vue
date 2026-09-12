@@ -595,6 +595,11 @@ async function onCreate(skipDuplicateReview = false) {
   }
 }
 
+function focusTitleIfUntouched() {
+  // Startup can finish after the user has already begun entering cards.
+  if (document.activeElement === document.body && !title.value) titleEl.value?.focus()
+}
+
 onMounted(async () => {
   // Preserve the startup lock gate pattern used by other pages.
   try {
@@ -618,7 +623,7 @@ onMounted(async () => {
         return
       }
       await nextTick()
-      titleEl.value?.focus()
+      focusTitleIfUntouched()
       return
     }
 
@@ -627,7 +632,7 @@ onMounted(async () => {
     }
 
     await nextTick()
-    titleEl.value?.focus()
+    focusTitleIfUntouched()
   } catch {
     markLocked()
     await router.replace('/unlock')

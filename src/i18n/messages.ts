@@ -1652,4 +1652,106 @@ for (const language of Object.keys(matchLeaderboardMessages) as AppLanguage[]) {
 
 for (const [locale, target] of Object.entries(messageTargets)) Object.assign(target, publicSetMessages.en, publicSetMessages[locale] ?? {})
 
+const smartReviewTranslations: Record<string, [string, string]> = {
+  "es": [
+    "Tarjetas · Repaso inteligente",
+    "Usa la repetición espaciada de forma predeterminada en todos los conjuntos de tarjetas. Cada conjunto puede cambiar este ajuste."
+  ],
+  "fr": [
+    "Cartes · Révision intelligente",
+    "Utilisez par défaut la répétition espacée pour tous les jeux de cartes. Chaque jeu peut modifier ce réglage."
+  ],
+  "zh-CN": [
+    "闪卡 · 智能复习",
+    "默认对所有闪卡集使用间隔复习。每个卡片集可以单独更改此设置。"
+  ],
+  "hi": [
+    "फ़्लैशकार्ड · स्मार्ट रिव्यू",
+    "सभी फ़्लैशकार्ड सेट के लिए डिफ़ॉल्ट रूप से अंतराल पर पुनरावृत्ति करें। हर सेट में यह सेटिंग अलग से बदली जा सकती है।"
+  ],
+  "ar": [
+    "البطاقات · المراجعة الذكية",
+    "استخدم التكرار المتباعد افتراضيًا لجميع مجموعات البطاقات. يمكن تغيير هذا الإعداد لكل مجموعة."
+  ],
+  "de": [
+    "Karteikarten · Intelligente Wiederholung",
+    "Verwende standardmäßig zeitlich verteilte Wiederholungen für alle Kartensets. Einzelne Sets können diese Einstellung ändern."
+  ],
+  "ru": [
+    "Карточки · Умное повторение",
+    "По умолчанию используйте интервальное повторение для всех наборов карточек. Для отдельных наборов настройку можно изменить."
+  ],
+  "ja": [
+    "フラッシュカード · スマート復習",
+    "すべてのカードセットで間隔反復を既定で使用します。セットごとに設定を変更できます。"
+  ],
+  "ko": [
+    "플래시카드 · 스마트 복습",
+    "모든 카드 세트에 간격 반복을 기본으로 사용합니다. 각 세트에서 이 설정을 변경할 수 있습니다."
+  ]
+}
+for (const [locale, [title, description]] of Object.entries(smartReviewTranslations)) {
+  Object.assign(messageTargets[locale as AppLanguage], { 'settings.smartReview': title, 'settings.smartReviewDescription': description })
+}
+
+const reviewReadyTranslations: Record<string, string[]> = {
+  "es": [
+    "Repasar ahora",
+    "Listo ahora",
+    "Nada listo",
+    "Siguiente"
+  ],
+  "fr": [
+    "Réviser maintenant",
+    "Prêt maintenant",
+    "Rien de prêt",
+    "Suivant"
+  ],
+  "zh-CN": [
+    "立即复习",
+    "现在可复习",
+    "暂无可复习内容",
+    "下一次"
+  ],
+  "hi": [
+    "अभी दोहराएँ",
+    "अभी तैयार",
+    "कुछ भी तैयार नहीं",
+    "अगला"
+  ],
+  "ar": [
+    "راجع الآن",
+    "جاهز الآن",
+    "لا شيء جاهز",
+    "التالي"
+  ],
+  "de": [
+    "Jetzt wiederholen",
+    "Jetzt bereit",
+    "Nichts bereit",
+    "Nächste"
+  ],
+  "ru": [
+    "Повторить сейчас",
+    "Готово сейчас",
+    "Пока ничего",
+    "Следующее"
+  ],
+  "ja": [
+    "今すぐ復習",
+    "復習できます",
+    "まだありません",
+    "次回"
+  ],
+  "ko": [
+    "지금 복습",
+    "지금 준비됨",
+    "준비된 항목 없음",
+    "다음"
+  ]
+}
+for (const [locale, labels] of Object.entries(reviewReadyTranslations)) {
+  for (const [index, key] of ['set.reviewReady', 'set.reviewReadyNow', 'set.nothingReady', 'set.nextReview'].entries()) messageTargets[locale as AppLanguage][key] = labels[index]!
+}
+
 export const messages: Record<AppLanguage, Messages> = messageTargets

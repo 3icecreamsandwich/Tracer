@@ -157,9 +157,11 @@ describe('classroom data mapping', () => {
 
 describe('shared app dialog', () => {
   it('captures Escape at the window so fullscreen handling cannot strand the dialog', () => {
-    expect(appDialogSource).toContain("window.addEventListener('keydown', onWindowKeydown, true)")
-    expect(appDialogSource).toMatch(/onWindowKeydown[\s\S]*event\.key !== 'Escape'[\s\S]*close\(\)/)
-    expect(appDialogSource).not.toContain('stopPropagation')
+    expect(appDialogSource).toContain('<BaseModal')
+    const modalSource = readFileSync(new URL('../../components/BaseModal.vue', import.meta.url), 'utf8')
+    expect(modalSource).toContain("window.addEventListener('keydown', onWindowKeydown, true)")
+    expect(modalSource).toMatch(/onWindowKeydown[\s\S]*event\.key !== 'Escape'[\s\S]*close\(\)/)
+    expect(modalSource).not.toContain('stopPropagation')
   })
 })
 

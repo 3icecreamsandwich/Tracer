@@ -1,10 +1,11 @@
+import { webRuntimeConfig } from '../../utils/web-config'
 import { readWebJson } from '../../utils/web-body'
 import { resolveWebAiTarget } from '../../../src/composables/platform/ai-target'
 import { authenticatedWebClient } from '../../utils/web-auth'
 
 export default defineEventHandler(async (event) => {
   const client = await authenticatedWebClient(event)
-  const config = useRuntimeConfig(event)
+  const config = webRuntimeConfig(event)
   const body = await readWebJson(event, 5 * 1024 * 1024)
   if (typeof body?.url !== 'string' || typeof body?.body !== 'string' || body.body.length > 4 * 1024 * 1024) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid AI request or source too large.' })
@@ -19,7 +20,7 @@ export default defineEventHandler(async (event) => {
   }
   if (target.oauth) {
     const params = new URLSearchParams(body.body)
-    if (!process.env.VITE_GITHUB_OAUTH_CLIENT_ID || params.get('client_id') !== process.env.VITE_GITHUB_OAUTH_CLIENT_ID) {
+    if (!config.githubOauthClientId || params.get('client_id') !== config.githubOauthClientId) {
       throw createError({ statusCode: 400, statusMessage: 'GitHub Models is not configured for this deployment.' })
     }
     if (target.url.pathname.endsWith('/code')) upstreamBody = new URLSearchParams({ client_id: params.get('client_id')!, scope: 'models:read' }).toString()
@@ -50,7 +51,7 @@ export default defineEventHandler(async (event) => {
       headers,
       body: body.method === 'GET' ? undefined : upstreamBody,
       redirect: 'error',
-      signal: AbortSignal.timeout(180_000),
+      signal: event.context.cloudflare?.request?.signal ? AbortSignal.any([event.context.cloudflare.request.signal, AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000),
     })
   } catch { throw createError({ statusCode: 502, statusMessage: 'The AI provider could not be reached. Try again.' }) }
   setResponseStatus(event, response.status)

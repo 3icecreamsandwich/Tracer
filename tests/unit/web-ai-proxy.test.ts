@@ -26,7 +26,7 @@ describe('authenticated web AI forwarding', () => {
     const upstream = new Response('data: hello\n\n', { headers: { 'content-type': 'text/event-stream' } })
     const fetch = vi.fn().mockResolvedValue(upstream)
     vi.stubGlobal('fetch', fetch)
-    expect(await handler({} as any)).toBe(upstream.body)
+    expect(await handler({ context: {} } as any)).toBe(upstream.body)
     const [url, options] = fetch.mock.calls[0]!
     expect(url.href).toBe(state.body.url)
     expect(options.headers.get('authorization')).toBe('Bearer server-secret')
@@ -36,12 +36,12 @@ describe('authenticated web AI forwarding', () => {
   })
   it('rejects arbitrary destinations before reading provider secrets', async () => {
     state.body.url = 'http://127.0.0.1/private'
-    await expect(handler({} as any)).rejects.toMatchObject({ statusCode: 400 })
+    await expect(handler({ context: {} } as any)).rejects.toMatchObject({ statusCode: 400 })
     expect(state.rpc).not.toHaveBeenCalled()
   })
   it('does not return upstream error bodies containing secrets', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('server-secret', { status: 401 })))
-    const result = await handler({} as any)
+    const result = await handler({ context: {} } as any)
     expect(JSON.stringify(result)).not.toContain('server-secret')
     expect(JSON.stringify(result)).toContain('401')
   })

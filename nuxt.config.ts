@@ -7,12 +7,16 @@ export default defineNuxtConfig({
     head: { meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }] }
   },
   runtimeConfig: {
+    githubOauthClientId: process.env.VITE_GITHUB_OAUTH_CLIENT_ID || '',
     supabaseUrl: process.env.VITE_SUPABASE_URL || '',
     supabasePublishableKey: process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '',
     // Optional, administrator-controlled HTTPS origin for OpenAI-compatible APIs.
     webAiCompatibleOrigin: process.env.NUXT_WEB_AI_COMPATIBLE_ORIGIN || '',
   },
-  nitro: { compressPublicAssets: true },
+  nitro: {
+    compressPublicAssets: true,
+    ...(process.env.TRACER_CLOUDFLARE === '1' ? { preset: 'cloudflare-module', output: { dir: '.output-cloudflare' }, cloudflare: { deployConfig: false } } : {}),
+  },
   compatibilityDate: '2026-07-10',
   ignore: ['src-tauri/**'],
 
