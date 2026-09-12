@@ -101,6 +101,7 @@
 import {
   ClassroomError,
   classroomErrorKey,
+  canManageClassrooms,
   getAccountRole,
   listClassroomMembers,
   listClassroomProgress,
@@ -163,7 +164,7 @@ async function runDetailLoad(requestedClassId: string, requestId: number) {
       listClassroomProgress(requestedClassId),
     ])
     if (requestId !== detailRequestId) return
-    if (role !== 'teacher' && role !== 'super') {
+    if (!canManageClassrooms(role)) {
       await router.replace('/')
       return
     }

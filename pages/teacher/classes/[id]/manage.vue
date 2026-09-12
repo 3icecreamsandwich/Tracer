@@ -157,6 +157,7 @@
 import {
   ClassroomError,
   classroomErrorKey,
+  canManageClassrooms,
   getAccountRole,
   listClassroomAssignments,
   listClassroomMembers,
@@ -218,7 +219,7 @@ async function runManagementLoad(requestedClassId: string, requestId: number) {
       listClassroomAssignments(requestedClassId),
     ])
     if (requestId !== managementRequestId) return
-    if (role !== 'teacher' && role !== 'super') {
+    if (!canManageClassrooms(role)) {
       await router.replace('/')
       return
     }

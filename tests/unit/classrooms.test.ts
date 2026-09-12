@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   ClassroomError,
+  canManageClassrooms,
   classroomAssignmentMaterialPath,
   classroomErrorKey,
   mapAssignmentSettings,
@@ -73,6 +74,10 @@ const hardenedMatchAttemptSql = readFileSync(
   fileURLToPath(new URL('../../supabase/migrations/20260824015007_harden_match_attempt_rpc.sql', import.meta.url)),
   'utf8',
 )
+const restrictStudentManagementSql = readFileSync(
+  fileURLToPath(new URL('../../supabase/migrations/20260912041942_restrict_student_class_management.sql', import.meta.url)),
+  'utf8',
+)
 const matchLeaderboardComponentSource = readFileSync(
   fileURLToPath(new URL('../../components/MatchLeaderboard.vue', import.meta.url)),
   'utf8',
@@ -83,6 +88,13 @@ const testModeSource = readFileSync(
 )
 
 describe('classroom data mapping', () => {
+  it('allows only teacher-capable roles to manage classrooms', () => {
+    expect(canManageClassrooms('teacher')).toBe(true)
+    expect(canManageClassrooms('super')).toBe(true)
+    expect(canManageClassrooms('student')).toBe(false)
+    expect(canManageClassrooms(null)).toBe(false)
+  })
+
   it('normalizes codes without accepting punctuation as part of the code', () => {
     expect(normalizeClassCode(' ab-cd 1234 ef ')).toBe('ABCD1234EF')
   })
@@ -354,6 +366,34 @@ describe('classroom Supabase migration', () => {
 })
 
 describe('classroom management migration', () => {
+  it('denies every class mutation path to student roles while preserving reads and joins', () => {
+    expect(restrictStudentManagementSql).toMatch(/can_manage_classrooms[\s\S]*role in \('teacher', 'admin', 'super'\)/)
+    for (const policy of [
+      'tracer_classes_insert',
+      'tracer_classes_update',
+      'tracer_classes_delete',
+      'tracer_memberships_insert',
+      'tracer_memberships_update',
+      'tracer_memberships_delete',
+      'tracer_assignments_insert',
+      'tracer_assignments_update',
+      'tracer_assignments_delete',
+    ]) {
+      expect(restrictStudentManagementSql).toMatch(new RegExp(`alter policy ${policy}[\\s\\S]*can_manage_classrooms`))
+    }
+    expect(restrictStudentManagementSql).not.toContain('tracer_classes_select')
+    expect(restrictStudentManagementSql).not.toContain('join_tracer_class')
+  })
+
+  it('checks the account role before any client-side classroom mutation', () => {
+    expect(classroomComposableSource).toMatch(/createClassroom[\s\S]*requireClassroomManager\(\)/)
+    expect(classroomComposableSource).toMatch(/updateClassroom[\s\S]*requireClassroomManager\(\)/)
+    expect(classroomComposableSource).toMatch(/assignLocalItemToClass[\s\S]*requireClassroomManager\(\)/)
+    expect(classroomComposableSource).toMatch(/removeClassroomStudent[\s\S]*requireClassroomManager\(\)/)
+    expect(classroomComposableSource).toMatch(/removeClassroomAssignment[\s\S]*requireClassroomManager\(\)/)
+    expect(classroomComposableSource).toMatch(/deleteClassroom[\s\S]*requireClassroomManager\(\)/)
+  })
+
   it('keeps destructive classroom operations RLS-enforced and authenticated-only', () => {
     expect(classroomManagementSql).toMatch(/remove_tracer_class_student[\s\S]*security invoker/)
     expect(classroomManagementSql).toMatch(/remove_tracer_class_assignment[\s\S]*security invoker/)

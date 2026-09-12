@@ -164,6 +164,7 @@ import {
   ClassroomError,
   classroomAssignmentMaterialPath,
   classroomErrorKey,
+  canManageClassrooms,
   createClassroom,
   getAccountRole,
   getClassroomOverview,
@@ -257,7 +258,7 @@ async function runDashboardLoad() {
       getAccountRole(),
       listClassrooms(),
     ])
-    if (role !== 'teacher' && role !== 'super') {
+    if (!canManageClassrooms(role)) {
       await router.replace('/')
       return
     }

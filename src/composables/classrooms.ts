@@ -396,6 +396,16 @@ export async function getAccountRole(): Promise<AccountRole | null> {
   }, ROLE_CACHE_TTL_MS)
 }
 
+export function canManageClassrooms(role: AccountRole | null): role is 'teacher' | 'super' {
+  return role === 'teacher' || role === 'super'
+}
+
+async function requireClassroomManager(): Promise<void> {
+  if (!canManageClassrooms(await getAccountRole())) {
+    throw new ClassroomError('forbidden', 'Teacher account required')
+  }
+}
+
 export async function listClassrooms(): Promise<Classroom[]> {
   const session = await requireOnlineSession()
   return classroomRequests.get(userCacheKey(session.user.id, 'classes'), async () => {
@@ -430,6 +440,7 @@ export async function getClassroom(classId: string): Promise<Classroom> {
 
 export async function createClassroom(input: CreateClassroomInput): Promise<Classroom> {
   const session = await requireOnlineSession()
+  await requireClassroomManager()
   const { data, error } = await getSupabaseClient().rpc('create_tracer_class', {
     requested_name: input.name.trim(),
     requested_subject: input.subject?.trim() || null,
@@ -446,6 +457,7 @@ export async function createClassroom(input: CreateClassroomInput): Promise<Clas
 
 export async function updateClassroom(classId: string, input: UpdateClassroomInput): Promise<Classroom> {
   const session = await requireOnlineSession()
+  await requireClassroomManager()
   const name = input.name.trim()
   if (!name) throw new ClassroomError('invalid_input', 'Class name is required')
   const { data, error } = await getSupabaseClient()
@@ -815,6 +827,7 @@ async function imageBlob(image: TermImage): Promise<Blob> {
 
 export async function assignLocalItemToClass(input: AssignClassroomItemInput): Promise<AssignClassroomItemResult> {
   const session = await requireOnlineSession()
+  await requireClassroomManager()
   if (input.kind === 'study-guide' && !input.studyGuide) {
     throw new ClassroomError('invalid_input', 'Study guide content is required')
   }
@@ -916,6 +929,7 @@ export async function assignLocalItemToClass(input: AssignClassroomItemInput): P
 
 export async function removeClassroomStudent(classId: string, studentId: string): Promise<void> {
   const session = await requireOnlineSession()
+  await requireClassroomManager()
   const { error } = await getSupabaseClient().rpc('remove_tracer_class_student', {
     requested_class_id: classId,
     requested_student_id: studentId,
@@ -926,6 +940,7 @@ export async function removeClassroomStudent(classId: string, studentId: string)
 
 export async function removeClassroomAssignment(assignmentId: string): Promise<void> {
   const session = await requireOnlineSession()
+  await requireClassroomManager()
   const { error } = await getSupabaseClient().rpc('remove_tracer_class_assignment', {
     requested_assignment_id: assignmentId,
   })
@@ -935,6 +950,7 @@ export async function removeClassroomAssignment(assignmentId: string): Promise<v
 
 export async function deleteClassroom(classId: string): Promise<void> {
   const session = await requireOnlineSession()
+  await requireClassroomManager()
   const { error } = await getSupabaseClient().rpc('delete_tracer_class', {
     requested_class_id: classId,
   })

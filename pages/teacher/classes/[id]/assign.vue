@@ -105,6 +105,7 @@
 import {
   assignLocalItemToClass,
   classroomErrorKey,
+  canManageClassrooms,
   getAccountRole,
   getClassroom,
   listClassroomAssignments,
@@ -187,7 +188,7 @@ async function loadPage() {
   loadError.value = null
   try {
     const role = await getAccountRole()
-    if (role !== 'teacher' && role !== 'super') {
+    if (!canManageClassrooms(role)) {
       await router.replace('/')
       return
     }

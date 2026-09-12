@@ -31,8 +31,8 @@ describe('Supabase signup roles', () => {
   })
 
   it('gates teacher classroom privileges on the global teacher role', () => {
-    expect(classroomSql).toContain("private.has_user_role('teacher')")
-    expect(classroomSql).toMatch(/tracer_classes_insert[\s\S]*private\.has_user_role\('teacher'\)/)
+    expect(classroomSql).toMatch(/can_manage_classrooms[\s\S]*role in \('teacher', 'admin', 'super'\)/)
+    expect(classroomSql).toMatch(/tracer_classes_insert[\s\S]*private\.can_manage_classrooms\(\)/)
     expect(classroomSql).toMatch(/tracer_recipients_insert[\s\S]*private\.user_has_role\(student_id, 'student'\)/)
   })
 

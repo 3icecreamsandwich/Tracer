@@ -80,6 +80,21 @@ as $function$
     and (select private.user_has_role((select auth.uid()), expected_role));
 $function$;
 
+create or replace function private.can_manage_classrooms()
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog
+as $function$
+  select exists (
+    select 1
+    from public.user_roles as ur
+    where ur.user_id = (select auth.uid())
+      and ur.role in ('teacher', 'admin', 'super')
+  );
+$function$;
+
 create or replace function private.is_class_member(target_class_id uuid)
 returns boolean
 language sql
@@ -104,7 +119,7 @@ stable
 security definer
 set search_path = pg_catalog
 as $function$
-  select (select private.has_user_role('teacher'))
+  select (select private.can_manage_classrooms())
     and exists (
       select 1
       from public.class_memberships as cm
@@ -122,7 +137,7 @@ stable
 security definer
 set search_path = pg_catalog
 as $function$
-  select (select private.has_user_role('teacher'))
+  select (select private.can_manage_classrooms())
     and exists (
       select 1
       from public.classes as c
@@ -204,7 +219,7 @@ stable
 security definer
 set search_path = pg_catalog
 as $function$
-  select (select private.has_user_role('teacher'))
+  select (select private.can_manage_classrooms())
     and exists (
       select 1
       from public.assignments as a
@@ -315,7 +330,7 @@ stable
 security definer
 set search_path = pg_catalog
 as $function$
-  select (select private.has_user_role('teacher'))
+  select (select private.can_manage_classrooms())
     and exists (
       select 1
       from public.attempts as att
@@ -337,6 +352,7 @@ $function$;
 
 revoke all on function private.user_has_role(uuid, text) from public;
 revoke all on function private.has_user_role(text) from public;
+revoke all on function private.can_manage_classrooms() from public;
 revoke all on function private.is_class_member(uuid) from public;
 revoke all on function private.is_class_teacher(uuid) from public;
 revoke all on function private.can_manage_class(uuid) from public;
@@ -349,6 +365,7 @@ revoke all on function private.owns_set_version(uuid) from public;
 revoke all on function private.can_grade_attempt(uuid) from public;
 grant execute on function private.user_has_role(uuid, text) to authenticated;
 grant execute on function private.has_user_role(text) to authenticated;
+grant execute on function private.can_manage_classrooms() to authenticated;
 grant execute on function private.is_class_member(uuid) to authenticated;
 grant execute on function private.is_class_teacher(uuid) to authenticated;
 grant execute on function private.can_manage_class(uuid) to authenticated;
@@ -457,7 +474,7 @@ create policy "tracer_classes_insert"
 on public.classes for insert to authenticated
 with check (
   created_by = (select auth.uid())
-  and (select private.has_user_role('teacher'))
+  and (select private.can_manage_classrooms())
 );
 create policy "tracer_classes_update"
 on public.classes for update to authenticated
@@ -467,7 +484,7 @@ create policy "tracer_classes_delete"
 on public.classes for delete to authenticated
 using (
   created_by = (select auth.uid())
-  and (select private.has_user_role('teacher'))
+  and (select private.can_manage_classrooms())
 );
 
 drop policy if exists "tracer_memberships_select" on public.class_memberships;
@@ -490,7 +507,7 @@ with check (
   or (
     user_id = (select auth.uid())
     and role = 'teacher'
-    and (select private.has_user_role('teacher'))
+    and (select private.can_manage_classrooms())
     and (select private.can_manage_class(class_id))
   )
 );
