@@ -63,6 +63,7 @@ export async function signUpWithEmail(input: {
   email: string
   password: string
   role: AccountRole
+  captchaToken?: string
 }): Promise<Session | PendingEmailVerification> {
   const listener = await startOAuthCallback()
   const email = input.email.trim()
@@ -73,6 +74,7 @@ export async function signUpWithEmail(input: {
       options: {
         emailRedirectTo: callbackUrl(listener.port),
         data: { full_name: input.name.trim() },
+        captchaToken: input.captchaToken,
       },
     })
     if (error) throw error
@@ -118,13 +120,13 @@ export async function waitForEmailVerification(pending: PendingEmailVerification
   }
 }
 
-export async function resendVerification(email: string, role: AccountRole): Promise<PendingEmailVerification> {
+export async function resendVerification(email: string, role: AccountRole, captchaToken?: string): Promise<PendingEmailVerification> {
   const listener = await startOAuthCallback()
   try {
     const { error } = await getSupabaseClient().auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: callbackUrl(listener.port) },
+      options: { emailRedirectTo: callbackUrl(listener.port), captchaToken },
     })
     if (error) throw error
     return { listener, email, role }
@@ -139,8 +141,12 @@ export async function cancelPendingEmailVerification(pending: PendingEmailVerifi
   await cancelOAuthCallback(pending.listener.id).catch(() => {})
 }
 
-export async function signInWithEmail(email: string, password: string): Promise<Session> {
-  const { data, error } = await getSupabaseClient().auth.signInWithPassword({ email: email.trim(), password })
+export async function signInWithEmail(email: string, password: string, captchaToken?: string): Promise<Session> {
+  const { data, error } = await getSupabaseClient().auth.signInWithPassword({
+    email: email.trim(),
+    password,
+    options: { captchaToken },
+  })
   if (error || !data.session) throw normalizeAuthError(error ?? new Error('No authentication session returned'))
   return data.session
 }

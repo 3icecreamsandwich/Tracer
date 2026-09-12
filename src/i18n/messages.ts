@@ -1652,4 +1652,21 @@ for (const language of Object.keys(matchLeaderboardMessages) as AppLanguage[]) {
 
 for (const [locale, target] of Object.entries(messageTargets)) Object.assign(target, publicSetMessages.en, publicSetMessages[locale] ?? {})
 
+const captchaMessages: Record<AppLanguage, Messages> = {
+  en: { 'auth.errorCaptcha': 'Complete the security check and try again.' },
+  es: { 'auth.errorCaptcha': 'Completa la verificación de seguridad e inténtalo de nuevo.' },
+  fr: { 'auth.errorCaptcha': 'Effectuez la vérification de sécurité et réessayez.' },
+  'zh-CN': { 'auth.errorCaptcha': '请完成安全验证后重试。' },
+  hi: { 'auth.errorCaptcha': 'सुरक्षा जाँच पूरी करके फिर से कोशिश करें।' },
+  ar: { 'auth.errorCaptcha': 'أكمل فحص الأمان ثم حاول مرة أخرى.' },
+  de: { 'auth.errorCaptcha': 'Schließe die Sicherheitsprüfung ab und versuche es erneut.' },
+  ru: { 'auth.errorCaptcha': 'Пройдите проверку безопасности и повторите попытку.' },
+  ja: { 'auth.errorCaptcha': 'セキュリティ確認を完了して、もう一度お試しください。' },
+  ko: { 'auth.errorCaptcha': '보안 확인을 완료한 후 다시 시도하세요.' },
+}
+
+for (const language of Object.keys(captchaMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], captchaMessages[language])
+}
+
 export const messages: Record<AppLanguage, Messages> = messageTargets

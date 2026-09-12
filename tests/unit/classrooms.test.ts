@@ -73,6 +73,10 @@ const hardenedMatchAttemptSql = readFileSync(
   fileURLToPath(new URL('../../supabase/migrations/20260824015007_harden_match_attempt_rpc.sql', import.meta.url)),
   'utf8',
 )
+const hardenedExposedClassroomRpcsSql = readFileSync(
+  fileURLToPath(new URL('../../supabase/migrations/20260912000000_harden_exposed_classroom_rpcs.sql', import.meta.url)),
+  'utf8',
+)
 const matchLeaderboardComponentSource = readFileSync(
   fileURLToPath(new URL('../../components/MatchLeaderboard.vue', import.meta.url)),
   'utf8',
@@ -329,6 +333,10 @@ describe('classroom Supabase migration', () => {
     expect(classroomSql).toMatch(/ur\.user_id = current_user_id[\s\S]*ur\.role = 'student'/)
     expect(classroomSql).toContain('on conflict on constraint class_memberships_pkey do nothing')
     expect(classroomSql).not.toContain('on conflict (class_id, user_id)')
+    expect(hardenedExposedClassroomRpcsSql).toMatch(/private\.join_tracer_class[\s\S]*security definer[\s\S]*set search_path = ''/)
+    expect(hardenedExposedClassroomRpcsSql).toMatch(/public\.join_tracer_class[\s\S]*security invoker[\s\S]*private\.join_tracer_class/)
+    expect(hardenedExposedClassroomRpcsSql).toContain('grant execute on function public.join_tracer_class(text) to authenticated')
+    expect(hardenedExposedClassroomRpcsSql).toMatch(/drop function if exists public\.submit_tracer_assignment_attempt\([\s\S]*numeric, numeric, integer/)
   })
 
   it('gives late-joining students access to every published assignment', () => {
