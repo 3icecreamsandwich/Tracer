@@ -8,7 +8,7 @@ Preview: https://tracer-app-preview.akatagunta.workers.dev
   this record. No application source changed between build and preview testing.
 - Worker upload: 918.88 KiB, 173.97 KiB gzip. Startup initialization: 21 ms
   (this is not per-request CPU usage).
-- 315 existing unit tests passed; 3 additional account/rate-binding tests passed.
+- All 318 unit tests passed across 72 files, including account/rate-binding tests.
 - 6 browser tests passed on local workerd and all 6 passed on the public preview.
   This covers persistence across reload/tabs, account isolation, phone layouts,
   unauthenticated API rejection, early request caps, deep links and asset MIME/cache

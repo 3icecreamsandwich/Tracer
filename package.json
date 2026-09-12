@@ -21,7 +21,7 @@
     "deploy:cloudflare:production": "wrangler deploy --config .wrangler/tracer.json --env production",
     "build:cloudflare": "node scripts/cloudflare/build.mjs",
     "test:e2e:cloudflare": "TRACER_TEST_CLOUDFLARE=1 playwright test --config playwright.web-app.config.ts",
-    "types:cloudflare": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler types cloudflare/worker-configuration.d.ts --strict-vars false"
+    "types:cloudflare": "node scripts/cloudflare/types.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.116",
