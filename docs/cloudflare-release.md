@@ -47,11 +47,13 @@ For an authorized local release, sign in with `bun x wrangler login`, then use
 ## Release gates
 
 Pull requests run unit tests, the Cloudflare build/dry-run, Chromium tests against
-workerd, and desktop static generation. GitHub Actions workflow **Tracer web
-checks and release** deploys only when manually dispatched from `main` in the
-release repository. Select `preview` first. Production releases are serialized.
-The workflow records the commit and Cloudflare Worker version in its summary and
-release-log artifact. Review the tested commit before selecting production.
+workerd, and desktop static generation. Every push to `main` in
+`3icecreamsandwich/tracer` runs the same checks and automatically deploys the
+tested commit to production after they pass. Production releases are serialized.
+The workflow can also be manually dispatched from `main` to deploy either preview
+or production. It records the commit and Cloudflare Worker version in its summary
+and release-log artifact. Use the preview target for authenticated release checks
+before merging changes that materially affect production behavior.
 
 Automated browser tests use fake account responses, with no real account writes
 or provider charges. Complete and record these checks on the deployed preview

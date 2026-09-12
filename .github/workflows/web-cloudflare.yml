@@ -1,5 +1,7 @@
 name: Tracer web checks and release
 on:
+  push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
     inputs:
@@ -39,12 +41,12 @@ jobs:
           name: browser-failure-output
           path: test-results/
   release:
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == '3icecreamsandwich/tracer'
+    if: github.ref == 'refs/heads/main' && github.repository == '3icecreamsandwich/tracer' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: check
     runs-on: ubuntu-latest
-    environment: ${{ inputs.target }}
+    environment: ${{ github.event_name == 'push' && 'production' || inputs.target }}
     concurrency:
-      group: tracer-web-${{ inputs.target }}
+      group: tracer-web-${{ github.event_name == 'push' && 'production' || inputs.target }}
       cancel-in-progress: false
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -52,7 +54,7 @@ jobs:
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
       VITE_GITHUB_OAUTH_CLIENT_ID: ${{ vars.VITE_GITHUB_OAUTH_CLIENT_ID }}
       NUXT_WEB_AI_COMPATIBLE_ORIGIN: ${{ vars.NUXT_WEB_AI_COMPATIBLE_ORIGIN }}
-      RELEASE_TARGET: ${{ inputs.target }}
+      RELEASE_TARGET: ${{ github.event_name == 'push' && 'production' || inputs.target }}
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
