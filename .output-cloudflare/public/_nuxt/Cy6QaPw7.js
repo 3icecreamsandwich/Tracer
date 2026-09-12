@@ -1,0 +1,1 @@
+async function e(e,t,n){let r=Array(e.length),i=0,a=!1,o=(await Promise.allSettled(Array.from({length:Math.min(t,e.length)},async()=>{for(;!a&&i<e.length;){let t=i++;try{r[t]=await n(e[t],t)}catch(e){throw a=!0,e}}}))).find(e=>e.status===`rejected`);if(o?.status===`rejected`)throw o.reason;return r}export{e as t};

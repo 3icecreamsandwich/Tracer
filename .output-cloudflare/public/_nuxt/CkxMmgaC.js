@@ -1,0 +1,1 @@
+import{l as e,n as t,o as n}from"./_I7zX1hp.js";import{t as r}from"./CTjMpgdN.js";import{t as i}from"./Cy6QaPw7.js";async function a(a){let o=n[await r()],s=a.filter(e=>e.kind===`image`).length;e({pdfPages:0,imageCount:s},o);let c=await i(a.filter(e=>e.kind===`pdf`),2,e=>t(e.file));e({pdfPages:c.reduce((e,t)=>e+t,0),imageCount:s},o)}export{a as assertGenerateFileLimits};

@@ -1,0 +1,2 @@
+const isFunction=e=>"function"==typeof e,isSymbol=e=>"symbol"==typeof e,e=/["'&<>]/;function escapeHtml(t){const a=""+t,c=e.exec(a);if(!c)return a;let s,n,o="",r=0;for(n=c.index;n<a.length;n++){switch(a.charCodeAt(n)){case 34:s="&quot;";break;case 38:s="&amp;";break;case 39:s="&#39;";break;case 60:s="&lt;";break;case 62:s="&gt;";break;default:continue}r!==n&&(o+=a.slice(r,n)),r=n+1,o+=s}return r!==n?o+a.slice(r,n):o}export{isSymbol as a,escapeHtml as e,isFunction as i};
+//# sourceMappingURL=shared.esm-bundler.mjs.map
