@@ -40,7 +40,7 @@ export async function signInWithGoogle(
     })
     if (error || !data.url) throw normalizeAuthError(error ?? new Error('Could not start Google sign-in.'))
     window.location.assign(data.url)
-    return new Promise<Session>(() => {}) // The callback completes in the new document.
+    return new Promise<Session>(() => { }) // The callback completes in the new document.
   }
   const listener = await startOAuthCallback()
   try {
@@ -65,7 +65,7 @@ export async function signInWithGoogle(
     if (exchangeError || !exchange.session) throw exchangeError ?? new Error('No authentication session returned')
     return exchange.session
   } catch (error) {
-    await cancelOAuthCallback(listener.id).catch(() => {})
+    await cancelOAuthCallback(listener.id).catch(() => { })
     throw normalizeAuthError(error)
   }
 }
@@ -104,12 +104,12 @@ export async function signUpWithEmail(input: {
     })
     if (error) throw error
     if (data.session) {
-      await cancelOAuthCallback(listener.id).catch(() => {})
+      await cancelOAuthCallback(listener.id).catch(() => { })
       return data.session
     }
     return { listener, email, role: input.role }
   } catch (error) {
-    await cancelOAuthCallback(listener.id).catch(() => {})
+    await cancelOAuthCallback(listener.id).catch(() => { })
     throw normalizeAuthError(error)
   }
 }
@@ -180,7 +180,7 @@ export async function resendVerification(email: string, role: SignupAccountRole,
     if (error) throw error
     return { listener, email, role }
   } catch (error) {
-    await cancelOAuthCallback(listener.id).catch(() => {})
+    await cancelOAuthCallback(listener.id).catch(() => { })
     throw normalizeAuthError(error)
   }
 }
@@ -192,7 +192,7 @@ export async function cancelPendingEmailVerification(pending: PendingEmailVerifi
     browserVerificationSubscriptions.delete(pending)
     return
   }
-  await cancelOAuthCallback(pending.listener.id).catch(() => {})
+  await cancelOAuthCallback(pending.listener.id).catch(() => { })
 }
 
 export async function signInWithEmail(email: string, password: string, captchaToken?: string): Promise<Session> {
@@ -280,7 +280,7 @@ export async function assertLocalAccountOwnership(session: Session): Promise<voi
     throw new TracerAuthError('local_data_failed', error instanceof Error ? error.message : 'Could not read local profile')
   }
   if (existing?.supabaseUserId && existing.supabaseUserId !== user.id) {
-    await getSupabaseClient().auth.signOut({ scope: 'local' }).catch(() => {})
+    await getSupabaseClient().auth.signOut({ scope: 'local' }).catch(() => { })
     throw new TracerAuthError('account_mismatch', 'This installation is linked to a different account')
   }
 }
