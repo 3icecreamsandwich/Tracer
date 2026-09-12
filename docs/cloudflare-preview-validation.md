@@ -13,6 +13,9 @@ Preview: https://tracer-app-preview.akatagunta.workers.dev
   This covers persistence across reload/tabs, account isolation, phone layouts,
   unauthenticated API rejection, early request caps, deep links and asset MIME/cache
   headers for browser DB, SQLite WASM, PDF and OCR workers.
+- An additional public-preview browser test confirms Google OAuth requests the
+  preview `/auth/callback` URL. The user's real sign-in returned to localhost;
+  hosted Supabase redirect configuration remains a launch blocker.
 - Desktop static generation passed after the Create-page focus race fix.
 - Landing repository builds all 19 pages with localized Open Tracer links;
   these changes are prepared locally and not deployed.

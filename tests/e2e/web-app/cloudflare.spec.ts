@@ -3,6 +3,17 @@ import { expect, test } from '@playwright/test'
 
 test.skip(process.env.TRACER_TEST_CLOUDFLARE !== '1', 'Cloudflare deployment checks')
 
+test('Google sign-in requests the current deployment callback', async ({ page }) => {
+  // Stop before Google so this checks routing without signing into a real account.
+  await page.route('**/auth/v1/authorize?**', route => route.fulfill({ body: 'OAuth destination captured' }))
+  await page.goto('first-run')
+  const origin = new URL(page.url()).origin
+  const authorization = page.waitForRequest('**/auth/v1/authorize?**')
+  await page.getByRole('button', { name: /Google/i }).click()
+  const url = new URL((await authorization).url())
+  expect(url.searchParams.get('redirect_to')).toBe(`${origin}/auth/callback`)
+})
+
 test('Worker caps bodies before authentication and never caches API errors', async ({ request }) => {
   for (const [path, size] of [['api/web/ai', 5 * 1024 * 1024 + 1], ['api/web/credentials', 64 * 1024 + 1]] as const) {
     const response = await request.post(path, { data: 'x'.repeat(size), headers: { 'Content-Type': 'application/json' } })
