@@ -31,7 +31,7 @@ describe('authenticated web AI forwarding', () => {
     expect(url.href).toBe(state.body.url)
     expect(options.headers.get('authorization')).toBe('Bearer server-secret')
     expect(options.headers.get('x-api-key')).toBeNull()
-    expect(options.redirect).toBe('error')
+    expect(options.redirect).toBe('manual')
     expect(options.body).toBe(state.body.body)
   })
   it('rejects arbitrary destinations before reading provider secrets', async () => {
@@ -44,5 +44,23 @@ describe('authenticated web AI forwarding', () => {
     const result = await handler({ context: {} } as any)
     expect(JSON.stringify(result)).not.toContain('server-secret')
     expect(JSON.stringify(result)).toContain('401')
+  })
+  it('rejects provider redirects without following their destination', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 307, headers: { location: 'https://attacker.example/' } })))
+    const result = await handler({ context: {} } as any)
+    expect(result).toEqual({ error: { message: 'The AI provider redirected unexpectedly. Try again later.' } })
+    expect(setResponseStatus).toHaveBeenLastCalledWith(expect.anything(), 502)
+  })
+  it('logs only a sanitized provider fetch failure', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network connection lost')))
+    await expect(handler({ context: {} } as any)).rejects.toMatchObject({ statusCode: 502 })
+    expect(log).toHaveBeenCalledWith(JSON.stringify({
+      event: 'web_ai_upstream_error',
+      provider: 'openai',
+      errorName: 'TypeError',
+      errorMessage: 'network connection lost',
+    }))
+    expect(log.mock.calls.flat().join(' ')).not.toContain('server-secret')
   })
 })

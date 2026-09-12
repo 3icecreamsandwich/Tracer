@@ -50,13 +50,29 @@ export default defineEventHandler(async (event) => {
       method: body.method,
       headers,
       body: body.method === 'GET' ? undefined : upstreamBody,
-      redirect: 'error',
+      // Workerd does not implement redirect: 'error'. Manual mode preserves the
+      // closed destination allowlist because redirects are returned, never followed.
+      redirect: 'manual',
       signal: event.context.cloudflare?.request?.signal ? AbortSignal.any([event.context.cloudflare.request.signal, AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000),
     })
-  } catch { throw createError({ statusCode: 502, statusMessage: 'The AI provider could not be reached. Try again.' }) }
+  } catch (cause) {
+    const error = cause instanceof Error ? cause : null
+    // The URL contains no credentials at this point. Keep prompts, keys, and headers out of logs.
+    console.error(JSON.stringify({
+      event: 'web_ai_upstream_error',
+      provider: target.provider,
+      errorName: error?.name ?? 'UnknownError',
+      errorMessage: error?.message.slice(0, 240) ?? 'Unknown upstream error',
+    }))
+    throw createError({ statusCode: 502, statusMessage: 'The AI provider could not be reached. Try again.' })
+  }
   setResponseStatus(event, response.status)
   setHeader(event, 'Content-Type', response.headers.get('content-type') ?? 'application/json')
   setHeader(event, 'X-Accel-Buffering', 'no')
+  if (response.status >= 300 && response.status < 400) {
+    setResponseStatus(event, 502)
+    return { error: { message: 'The AI provider redirected unexpectedly. Try again later.' } }
+  }
   // Do not echo upstream error bodies, which may include credentials or prompts.
   if (!response.ok) return { error: { message: `The AI provider returned ${response.status}. Check its key and quota in Settings.` } }
   return response.body ? sendStream(event, response.body) : ''
