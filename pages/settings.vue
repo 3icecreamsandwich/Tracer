@@ -56,6 +56,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 class="text-sm font-medium">{{ t('settings.account') }}</h2>
+            <p v-if="accountRole" class="mt-1 text-sm font-medium">{{ t('settings.accountType') }}: {{ accountRoleLabel }}</p>
             <p v-if="superAccount" class="mt-1 text-sm font-medium">{{ t('settings.superAccount') }}</p>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ accountEmail || profile?.email }}</p>
             <LoadingSpinner
@@ -542,22 +543,39 @@
         </div>
       </section>
 
-      <section class="mt-6 rounded-lg border border-red-200 bg-white p-5 shadow-sm dark:border-red-900 dark:bg-slate-950">
+      <section class="mt-6 rounded-lg border border-red-200 bg-white p-5 shadow-sm dark:border-red-900 dark:bg-slate-950" :aria-label="t('settings.dangerZone')">
         <h2 class="text-sm font-medium text-red-700 dark:text-red-300">{{ t('settings.dangerZone') }}</h2>
-        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          {{ t('settings.resetDescription') }}
-        </p>
-
         <p v-if="error" class="mt-3 text-sm text-red-700 dark:text-red-300">{{ error }}</p>
 
-        <button
-          type="button"
-          class="mt-4 inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-800 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950 dark:focus-visible:ring-red-600 dark:focus-visible:ring-offset-slate-950"
-          :disabled="busy"
-          @click="openResetConfirmation"
-        >
-          {{ t('settings.resetTracer') }}
-        </button>
+        <div class="mt-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <p class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ t('settings.resetTracer') }}</p>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.resetDescription') }}</p>
+          </div>
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-800 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950 dark:focus-visible:ring-red-600 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy"
+            @click="openResetConfirmation"
+          >
+            {{ t('settings.resetTracer') }}
+          </button>
+        </div>
+
+        <div class="mt-5 flex flex-col items-start justify-between gap-3 border-t border-red-100 pt-5 sm:flex-row sm:items-center dark:border-red-950">
+          <div>
+            <p class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ t('settings.deleteAccount') }}</p>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.deleteAccountDescription') }}</p>
+          </div>
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-600 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy || accountConnectionPending || !accountOnline || isWebPreview"
+            @click="openDeleteAccountConfirmation"
+          >
+            {{ t('settings.deleteAccount') }}
+          </button>
+        </div>
       </section>
 
       <ResetTracerDialog
@@ -566,6 +584,15 @@
         :error="resetError"
         @cancel="closeResetConfirmation"
         @confirm="onConfirmReset"
+      />
+
+      <DeleteAccountDialog
+        v-model:confirmation="deleteAccountConfirmation"
+        :open="showDeleteAccountConfirmation"
+        :busy="busy"
+        :error="deleteAccountError"
+        @cancel="closeDeleteAccountConfirmation"
+        @confirm="onConfirmDeleteAccount"
       />
 
       <BaseModal
@@ -775,6 +802,7 @@
 
 <script setup lang="ts">
 import { getAccountRole } from '../src/composables/classrooms'
+import type { AccountRole } from '../src/composables/auth/account'
 import { studyStorageOwner } from '~/src/composables/platform/web'
 
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
@@ -854,14 +882,25 @@ const localSettingsPending = ref(true)
 const accountActionPending = ref(false)
 const accountConnectionPending = computed(() => cachedAccountConnectionPending.value || accountActionPending.value)
 const superAccount = ref(false)
+const accountRole = ref<AccountRole | null>(null)
 watch(() => [accountIdentity.value?.id, accountConnectionStatus.value], async (_, __, onCleanup) => {
   let cancelled = false
   onCleanup(() => { cancelled = true })
   superAccount.value = false
+  accountRole.value = null
   if (accountConnectionStatus.value !== 'online') return
   const role = await getAccountRole().catch(() => null)
-  if (!cancelled) superAccount.value = role === 'super'
+  if (!cancelled) {
+    accountRole.value = role
+    superAccount.value = role === 'super'
+  }
 }, { immediate: true })
+const accountRoleLabel = computed(() => {
+  if (accountRole.value === 'student') return t('settings.accountRoleStudent')
+  if (accountRole.value === 'teacher') return t('settings.accountRoleTeacher')
+  if (accountRole.value === 'super') return t('settings.accountRoleSuper')
+  return ''
+})
 const accountEmail = computed(() => accountIdentity.value?.email ?? '')
 const accountOnline = computed(() => accountConnectionStatus.value === 'online')
 const accountSignedOut = computed(() => accountConnectionStatus.value === 'signed_out')
@@ -883,6 +922,9 @@ const busy = ref(false)
 const error = ref<string | null>(null)
 const resetError = ref<string | null>(null)
 const showResetConfirmation = ref(false)
+const deleteAccountError = ref<string | null>(null)
+const deleteAccountConfirmation = ref('')
+const showDeleteAccountConfirmation = ref(false)
 
 // BYOK fields are intentionally not persisted yet.
 // We avoid storing plaintext secrets in SQLite/localStorage.
@@ -1723,6 +1765,57 @@ async function onConfirmReset() {
     resetError.value = toSafeErrorMessage(e, 'Failed to reset')
   } finally {
     busy.value = false
+  }
+}
+
+function openDeleteAccountConfirmation() {
+  error.value = null
+  deleteAccountError.value = null
+  deleteAccountConfirmation.value = ''
+  showDeleteAccountConfirmation.value = true
+}
+
+function closeDeleteAccountConfirmation() {
+  if (busy.value) return
+  showDeleteAccountConfirmation.value = false
+  deleteAccountError.value = null
+  deleteAccountConfirmation.value = ''
+}
+
+async function onConfirmDeleteAccount() {
+  if (deleteAccountConfirmation.value !== 'DELETE') return
+  deleteAccountError.value = null
+  busy.value = true
+  accountActionPending.value = true
+  try {
+    const { deleteAuthenticatedAccount } = await import('../src/composables/auth/account')
+    const { clearAuthSession } = await import('../src/composables/auth/session')
+    await deleteAuthenticatedAccount(deleteAccountConfirmation.value)
+
+    let localCleanupError: unknown = null
+    try {
+      await lockResetTracer()
+    } catch (cleanupError) {
+      localCleanupError = cleanupError
+    }
+    await clearAuthSession({ remote: false })
+    resetConnectionStatusCache()
+    setAccountConnectionSignedOut()
+    if (localCleanupError) {
+      console.error('[Tracer account] Account deleted, but local cleanup failed')
+    }
+    if (!hasTauriInternals) {
+      location.replace(appUrl('first-run'))
+      return
+    }
+    markLocked()
+    showDeleteAccountConfirmation.value = false
+    await router.replace('/first-run')
+  } catch (e: unknown) {
+    deleteAccountError.value = toSafeErrorMessage(e, t('settings.deleteAccountError'))
+  } finally {
+    busy.value = false
+    accountActionPending.value = false
   }
 }
 

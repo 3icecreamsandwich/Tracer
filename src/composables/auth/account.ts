@@ -205,6 +205,16 @@ export async function signInWithEmail(email: string, password: string, captchaTo
   return data.session
 }
 
+export async function deleteAuthenticatedAccount(confirmation: string): Promise<void> {
+  const client = getSupabaseClient()
+  const { data: sessionData, error: sessionError } = await client.auth.getSession()
+  if (sessionError) throw normalizeAuthError(sessionError)
+  if (!sessionData.session) throw new TracerAuthError('unknown', 'Sign in before deleting your account')
+
+  const { error } = await client.rpc('delete_own_account', { confirmation })
+  if (error) throw error
+}
+
 export async function prepareAuthenticatedProfile(input: {
   session: Session
   submittedName?: string

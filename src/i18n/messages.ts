@@ -1201,6 +1201,23 @@ for (const language of Object.keys(roleSetupErrorMessages) as AppLanguage[]) {
   Object.assign(messageTargets[language], roleSetupErrorMessages[language])
 }
 
+const settingsAccountRoleMessages: Record<AppLanguage, Messages> = {
+  en: { 'settings.accountType': 'Account type', 'settings.accountRoleStudent': 'Student', 'settings.accountRoleTeacher': 'Teacher', 'settings.accountRoleSuper': 'Super' },
+  es: { 'settings.accountType': 'Tipo de cuenta', 'settings.accountRoleStudent': 'Estudiante', 'settings.accountRoleTeacher': 'Docente', 'settings.accountRoleSuper': 'Super' },
+  fr: { 'settings.accountType': 'Type de compte', 'settings.accountRoleStudent': 'Élève', 'settings.accountRoleTeacher': 'Enseignant', 'settings.accountRoleSuper': 'Super' },
+  'zh-CN': { 'settings.accountType': '帐户类型', 'settings.accountRoleStudent': '学生', 'settings.accountRoleTeacher': '教师', 'settings.accountRoleSuper': '超级' },
+  hi: { 'settings.accountType': 'खाता प्रकार', 'settings.accountRoleStudent': 'विद्यार्थी', 'settings.accountRoleTeacher': 'शिक्षक', 'settings.accountRoleSuper': 'सुपर' },
+  ar: { 'settings.accountType': 'نوع الحساب', 'settings.accountRoleStudent': 'طالب', 'settings.accountRoleTeacher': 'معلم', 'settings.accountRoleSuper': 'سوبر' },
+  de: { 'settings.accountType': 'Kontotyp', 'settings.accountRoleStudent': 'Lernende:r', 'settings.accountRoleTeacher': 'Lehrkraft', 'settings.accountRoleSuper': 'Super' },
+  ru: { 'settings.accountType': 'Тип аккаунта', 'settings.accountRoleStudent': 'Ученик', 'settings.accountRoleTeacher': 'Учитель', 'settings.accountRoleSuper': 'Супер' },
+  ja: { 'settings.accountType': 'アカウントの種類', 'settings.accountRoleStudent': '生徒', 'settings.accountRoleTeacher': '教師', 'settings.accountRoleSuper': 'スーパー' },
+  ko: { 'settings.accountType': '계정 유형', 'settings.accountRoleStudent': '학생', 'settings.accountRoleTeacher': '교사', 'settings.accountRoleSuper': '슈퍼' },
+}
+
+for (const language of Object.keys(settingsAccountRoleMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], settingsAccountRoleMessages[language])
+}
+
 const homeLibraryMessages: Record<AppLanguage, Messages> = {
   en: { 'home.libraryType': 'Library type', 'home.flashcards': 'Flashcards', 'home.studyGuides': 'Study guides', 'home.classes': 'Classes', 'home.noClasses': 'No classes yet.' },
   es: { 'home.libraryType': 'Tipo de biblioteca', 'home.flashcards': 'Tarjetas', 'home.studyGuides': 'Guías de estudio', 'home.classes': 'Clases', 'home.noClasses': 'Aún no hay clases.' },
@@ -1753,6 +1770,74 @@ const reviewReadyTranslations: Record<string, string[]> = {
 for (const [locale, labels] of Object.entries(reviewReadyTranslations)) {
   for (const [index, key] of ['set.reviewReady', 'set.reviewReadyNow', 'set.nothingReady', 'set.nextReview'].entries()) messageTargets[locale as AppLanguage][key] = labels[index]!
 }
+
+const accountDeletionMessages: Record<AppLanguage, Messages> = {
+  en: {
+    'settings.deleteAccount': 'Delete account',
+    'settings.deleteAccountDescription': 'Permanently delete your account and local Tracer data. Published sets stay available with the author shown as <unknown>.',
+    'settings.deleteAccountConfirm': 'Type DELETE to confirm.',
+    'settings.deleteAccountError': 'Failed to delete account',
+  },
+  es: {
+    'settings.deleteAccount': 'Eliminar cuenta',
+    'settings.deleteAccountDescription': 'Elimina permanentemente tu cuenta y los datos locales de Tracer. Los conjuntos publicados seguirán disponibles con el autor <unknown>.',
+    'settings.deleteAccountConfirm': 'Escribe DELETE para confirmar.',
+    'settings.deleteAccountError': 'No se pudo eliminar la cuenta',
+  },
+  fr: {
+    'settings.deleteAccount': 'Supprimer le compte',
+    'settings.deleteAccountDescription': 'Supprime définitivement votre compte et les données Tracer locales. Les ensembles publiés restent disponibles avec l’auteur <unknown>.',
+    'settings.deleteAccountConfirm': 'Saisissez DELETE pour confirmer.',
+    'settings.deleteAccountError': 'Impossible de supprimer le compte',
+  },
+  'zh-CN': {
+    'settings.deleteAccount': '删除账户',
+    'settings.deleteAccountDescription': '永久删除你的账户和本地 Tracer 数据。已发布的卡片集会保留，作者显示为 <unknown>。',
+    'settings.deleteAccountConfirm': '输入 DELETE 以确认。',
+    'settings.deleteAccountError': '无法删除账户',
+  },
+  hi: {
+    'settings.deleteAccount': 'खाता हटाएँ',
+    'settings.deleteAccountDescription': 'अपना खाता और स्थानीय Tracer डेटा स्थायी रूप से हटाएँ। प्रकाशित सेट बने रहेंगे और लेखक <unknown> दिखेगा।',
+    'settings.deleteAccountConfirm': 'पुष्टि करने के लिए DELETE लिखें।',
+    'settings.deleteAccountError': 'खाता हटाया नहीं जा सका',
+  },
+  ar: {
+    'settings.deleteAccount': 'حذف الحساب',
+    'settings.deleteAccountDescription': 'احذف حسابك وبيانات Tracer المحلية نهائيًا. تبقى المجموعات المنشورة متاحة ويظهر المؤلف باسم <unknown>.',
+    'settings.deleteAccountConfirm': 'اكتب DELETE للتأكيد.',
+    'settings.deleteAccountError': 'تعذر حذف الحساب',
+  },
+  de: {
+    'settings.deleteAccount': 'Konto löschen',
+    'settings.deleteAccountDescription': 'Löscht dein Konto und lokale Tracer-Daten dauerhaft. Veröffentlichte Sets bleiben mit <unknown> als Autor verfügbar.',
+    'settings.deleteAccountConfirm': 'Gib zur Bestätigung DELETE ein.',
+    'settings.deleteAccountError': 'Konto konnte nicht gelöscht werden',
+  },
+  ru: {
+    'settings.deleteAccount': 'Удалить аккаунт',
+    'settings.deleteAccountDescription': 'Навсегда удаляет аккаунт и локальные данные Tracer. Опубликованные наборы останутся доступны с автором <unknown>.',
+    'settings.deleteAccountConfirm': 'Введите DELETE для подтверждения.',
+    'settings.deleteAccountError': 'Не удалось удалить аккаунт',
+  },
+  ja: {
+    'settings.deleteAccount': 'アカウントを削除',
+    'settings.deleteAccountDescription': 'アカウントとローカルの Tracer データを完全に削除します。公開済みセットは残り、作成者は <unknown> と表示されます。',
+    'settings.deleteAccountConfirm': '確認のため DELETE と入力してください。',
+    'settings.deleteAccountError': 'アカウントを削除できませんでした',
+  },
+  ko: {
+    'settings.deleteAccount': '계정 삭제',
+    'settings.deleteAccountDescription': '계정과 로컬 Tracer 데이터를 영구 삭제합니다. 공개된 세트는 유지되며 작성자는 <unknown>으로 표시됩니다.',
+    'settings.deleteAccountConfirm': '확인하려면 DELETE를 입력하세요.',
+    'settings.deleteAccountError': '계정을 삭제하지 못했습니다',
+  },
+}
+
+for (const language of Object.keys(accountDeletionMessages) as AppLanguage[]) {
+  Object.assign(messageTargets[language], accountDeletionMessages[language])
+}
+
 
 const captchaMessages: Record<AppLanguage, Messages> = {
   en: { 'auth.errorCaptcha': 'Complete the security check and try again.' },

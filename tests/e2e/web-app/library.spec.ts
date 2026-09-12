@@ -98,6 +98,28 @@ test('web endpoints reject unauthenticated requests', async ({ request }) => {
   }
 })
 
+test('account deletion requires typed confirmation and calls the self-delete RPC', async ({ context, page }) => {
+  await signInFixture(context, page)
+  await page.evaluate(() => sessionStorage.removeItem('tracer:connection-status-snapshot'))
+  await page.goto('settings')
+  await expect(page.getByText('Connected', { exact: true })).toBeVisible()
+
+  const dangerZone = page.getByLabel('Danger zone')
+  await dangerZone.getByRole('button', { name: 'Delete account', exact: true }).click()
+  const dialog = page.getByRole('alertdialog', { name: 'Delete account' })
+  const deleteButton = dialog.getByRole('button', { name: 'Delete account', exact: true })
+  await expect(deleteButton).toBeDisabled()
+
+  await dialog.getByLabel('Type DELETE to confirm.').fill('DELETE')
+  const deletionRequest = page.waitForRequest(request =>
+    request.method() === 'POST' && request.url().includes('/rest/v1/rpc/delete_own_account'),
+  )
+  await deleteButton.click()
+
+  expect((await deletionRequest).postDataJSON()).toEqual({ confirmation: 'DELETE' })
+  await expect(page.getByRole('heading', { name: 'Setup Tracer' })).toBeVisible()
+})
+
 
 test('switching accounts does not expose another browser library', async ({ context, page }) => {
   await signInFixture(context, page)
