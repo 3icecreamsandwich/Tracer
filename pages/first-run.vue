@@ -105,7 +105,17 @@
               <a href="https://tracerquiz.com/privacy/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">{{ t('auth.privacyPolicy') }}</a>
             </span>
           </label>
-          <button type="submit" class="auth-primary" :disabled="busy || !configured">
+          <TurnstileWidget
+            v-if="turnstileEnabled"
+            :key="`account-${mode}`"
+            ref="turnstileWidget"
+            :site-key="turnstileSiteKey"
+            :action="mode === 'signup' ? 'email_signup' : 'email_signin'"
+            @verified="onCaptchaVerified"
+            @expired="onCaptchaExpired"
+            @error="onCaptchaError"
+          />
+          <button type="submit" class="auth-primary" :disabled="busy || !configured || (turnstileEnabled && !captchaToken)">
             <LoadingSpinner v-if="busyProvider === 'email'" size="sm" />
             <template v-else>{{ mode === 'signup' ? t('auth.letsGo') : t('auth.signInEmail') }}</template>
           </button>
@@ -126,7 +136,17 @@
         <div class="mt-6 rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
           {{ t('auth.waitingVerification') }}
         </div>
-        <button type="button" class="auth-primary mt-5" :disabled="busy || resendCooldown > 0" @click="onResend">
+        <TurnstileWidget
+          v-if="turnstileEnabled"
+          ref="turnstileWidget"
+          class="mt-4"
+          :site-key="turnstileSiteKey"
+          action="email_resend"
+          @verified="onCaptchaVerified"
+          @expired="onCaptchaExpired"
+          @error="onCaptchaError"
+        />
+        <button type="button" class="auth-primary mt-5" :disabled="busy || resendCooldown > 0 || (turnstileEnabled && !captchaToken)" @click="onResend">
           {{ resendCooldown > 0 ? t('auth.resendIn', { seconds: resendCooldown }) : t('auth.resend') }}
         </button>
         <button type="button" class="mt-4 w-full text-sm text-blue-700 hover:underline dark:text-blue-300" @click="returnToSignIn">{{ t('auth.returnToSignIn') }}</button>
@@ -274,6 +294,12 @@ const authorizationUrl = ref('')
 const showResetConfirmation = ref(false)
 const resetError = ref<string | null>(null)
 const resendCooldown = ref(0)
+// Turnstile site keys are public identifiers. The environment variable allows
+// rotation without a code change while the fallback protects packaged builds.
+const turnstileSiteKey = String(import.meta.env.VITE_TURNSTILE_SITE_KEY ?? '0x4AAAAAAExofJewhFJG_KvZ').trim()
+const turnstileEnabled = turnstileSiteKey.length > 0
+const captchaToken = ref('')
+const turnstileWidget = ref<{ reset: () => void } | null>(null)
 let cooldownTimer: ReturnType<typeof setInterval> | null = null
 
 function translatedError(input: unknown) {
@@ -292,8 +318,12 @@ function translatedError(input: unknown) {
 }
 
 function clearError() { error.value = null; errorCode.value = null }
-function toggleMode() { mode.value = mode.value === 'signup' ? 'signin' : 'signup'; accountPassword.value = ''; showAccountPassword.value = false; pendingEmailPassword.value = ''; acceptedTerms.value = false; clearError() }
-function returnToSignIn() { void cancelPendingEmailVerification(pendingVerification.value); pendingVerification.value = null; pendingEmailPassword.value = ''; stage.value = 'account'; mode.value = 'signin'; accountPassword.value = ''; showAccountPassword.value = false; clearError() }
+function clearCaptcha() { captchaToken.value = ''; turnstileWidget.value?.reset() }
+function onCaptchaVerified(token: string) { captchaToken.value = token; clearError() }
+function onCaptchaExpired() { captchaToken.value = '' }
+function onCaptchaError() { captchaToken.value = ''; error.value = t('auth.errorCaptcha') }
+function toggleMode() { mode.value = mode.value === 'signup' ? 'signin' : 'signup'; accountPassword.value = ''; showAccountPassword.value = false; pendingEmailPassword.value = ''; acceptedTerms.value = false; clearCaptcha(); clearError() }
+function returnToSignIn() { void cancelPendingEmailVerification(pendingVerification.value); pendingVerification.value = null; pendingEmailPassword.value = ''; stage.value = 'account'; mode.value = 'signin'; accountPassword.value = ''; showAccountPassword.value = false; clearCaptcha(); clearError() }
 
 function acceptSession(
   session: Session,
@@ -339,11 +369,14 @@ async function onEmail() {
   if (mode.value === 'signup' && !name.value.trim()) { error.value = t('auth.errorName'); return }
   if (!email.value.trim() || accountPassword.value.length < 8) { error.value = t('auth.errorEmailPassword'); return }
   if (mode.value === 'signup' && !acceptedTerms.value) { error.value = t('auth.errorTerms'); return }
+  if (turnstileEnabled && !captchaToken.value) { error.value = t('auth.errorCaptcha'); return }
   busyProvider.value = 'email'
   const submittedPassword = accountPassword.value
+  const submittedCaptcha = captchaToken.value || undefined
+  const captchaWidget = turnstileWidget.value
   try {
     if (mode.value === 'signin') {
-      acceptSession(await signInWithEmail(email.value, submittedPassword), 'email', name.value, null, submittedPassword)
+      acceptSession(await signInWithEmail(email.value, submittedPassword, submittedCaptcha), 'email', name.value, null, submittedPassword)
       return
     }
     const result = await signUpWithEmail({
@@ -351,6 +384,7 @@ async function onEmail() {
       email: email.value,
       password: submittedPassword,
       role: accountRole.value,
+      captchaToken: submittedCaptcha,
     })
     if ('access_token' in result) { acceptSession(result, 'email', name.value, accountRole.value, submittedPassword); return }
     pendingVerification.value = result
@@ -360,7 +394,7 @@ async function onEmail() {
     startCooldown()
     void watchForVerification(result)
   } catch (input) { accountPassword.value = ''; showAccountPassword.value = false; translatedError(input) }
-  finally { busyProvider.value = null }
+  finally { captchaToken.value = ''; captchaWidget?.reset(); busyProvider.value = null }
 }
 
 async function watchForVerification(pending: PendingEmailVerification) {
@@ -381,15 +415,18 @@ function startCooldown() {
 }
 
 async function onResend() {
+  if (turnstileEnabled && !captchaToken.value) { error.value = t('auth.errorCaptcha'); return }
   clearError(); busyProvider.value = 'resend'
+  const submittedCaptcha = captchaToken.value || undefined
+  const captchaWidget = turnstileWidget.value
   try {
     await cancelPendingEmailVerification(pendingVerification.value)
-    const pending = await resendVerification(email.value, pendingVerification.value?.role ?? accountRole.value)
+    const pending = await resendVerification(email.value, pendingVerification.value?.role ?? accountRole.value, submittedCaptcha)
     pendingVerification.value = pending
     startCooldown()
     void watchForVerification(pending)
   } catch (input) { translatedError(input) }
-  finally { busyProvider.value = null }
+  finally { captchaToken.value = ''; captchaWidget?.reset(); busyProvider.value = null }
 }
 
 async function copyAuthorizationUrl() {

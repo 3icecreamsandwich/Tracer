@@ -48,6 +48,26 @@ fn random_id_hex(bytes: usize) -> String {
     out
 }
 
+fn validated_external_auth_url(raw: &str) -> Result<tauri::Url, security::AppLockError> {
+    let url = tauri::Url::parse(raw.trim()).map_err(|_| {
+        security::AppLockError::new("invalid_url", "The authentication URL is invalid")
+    })?;
+    let host = url.host_str().unwrap_or_default().to_ascii_lowercase();
+    let is_loopback = host == "localhost" || host == "127.0.0.1" || host == "::1";
+    let allowed_host = host == "github.com"
+        || host == "accounts.google.com"
+        || host.ends_with(".supabase.co")
+        || is_loopback;
+    let allowed_scheme = url.scheme() == "https" || (is_loopback && url.scheme() == "http");
+    if !allowed_host || !allowed_scheme || url.username() != "" || url.password().is_some() {
+        return Err(security::AppLockError::new(
+            "invalid_url",
+            "Only trusted authentication links can be opened",
+        ));
+    }
+    Ok(url)
+}
+
 fn parse_query_param(query: &str, key: &str) -> Option<String> {
     for pair in query.split('&') {
         let mut it = pair.splitn(2, '=');
@@ -141,6 +161,16 @@ mod tests {
         assert!(parse_callback_path("/wrong?code=abc").is_none());
         assert!(parse_callback_path("/callback?state=only-state").is_none());
     }
+
+    #[test]
+    fn external_auth_urls_are_restricted_to_trusted_https_hosts() {
+        assert!(validated_external_auth_url("https://github.com/login/device").is_ok());
+        assert!(validated_external_auth_url("https://example.supabase.co/auth/v1/authorize").is_ok());
+        assert!(validated_external_auth_url("http://127.0.0.1:54321/auth/v1/authorize").is_ok());
+        assert!(validated_external_auth_url("file:///C:/Windows/System32/calc.exe").is_err());
+        assert!(validated_external_auth_url("https://github.com.evil.example/login").is_err());
+        assert!(validated_external_auth_url("javascript:alert(1)").is_err());
+    }
 }
 
 #[tauri::command]
@@ -148,14 +178,9 @@ pub(crate) async fn open_external(
     app: tauri::AppHandle,
     url: String,
 ) -> Result<(), security::AppLockError> {
-    if url.trim().is_empty() {
-        return Err(security::AppLockError::new(
-            "invalid_url",
-            "URL is required",
-        ));
-    }
+    let url = validated_external_auth_url(&url)?;
     app.opener()
-        .open_url(url, None::<&str>)
+        .open_url(url.as_str(), None::<&str>)
         .map_err(|e| security::AppLockError::new("opener", e.to_string()))
 }
 

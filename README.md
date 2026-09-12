@@ -6,18 +6,23 @@
 ## Supabase authentication
 
 Copy `.env.example` to `.env` and set `VITE_SUPABASE_URL` and
-`VITE_SUPABASE_PUBLISHABLE_KEY` from the Supabase project Connect dialog.
+`VITE_SUPABASE_PUBLISHABLE_KEY` from the Supabase project Connect dialog. Set
+The packaged app includes Tracer's public Cloudflare Turnstile site key to protect
+email sign-up, sign-in, and verification-email resend requests. Set
+`VITE_TURNSTILE_SITE_KEY` only when rotating or overriding that public key.
 Only use a publishable key in the desktop client; never add a secret/service-role
-key or Google OAuth client secret to this repository.
+key, Turnstile secret, or Google OAuth client secret to this repository. Store the
+Turnstile secret only in Supabase Auth's CAPTCHA protection settings.
 
 Google and email confirmation redirects must allow Tracer's loopback callback:
 `http://127.0.0.1:*/callback`.
 
 For GitHub Actions distribution builds, create repository variables named
 `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` under **Settings →
-Secrets and variables → Actions → Variables**. The platform build workflows pass
-these values to Vite, which embeds them in the packaged desktop client. Builds fail
-before packaging if either variable is missing.
+Secrets and variables → Actions → Variables**. `VITE_TURNSTILE_SITE_KEY` is an
+optional override for key rotation. The platform build workflows pass these values
+to Vite, which embeds them in the packaged desktop client. Builds fail before
+packaging if either Supabase variable is missing.
 
 ## What is Tracer?
 **Tracer** is a free flashcard app to help you study. It strives to provide many of the features of proprietary flashcard software such as Quizlet or Knowt, while being easier to use than Anki.

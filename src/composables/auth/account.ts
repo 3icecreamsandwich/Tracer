@@ -75,12 +75,17 @@ export async function signUpWithEmail(input: {
   email: string
   password: string
   role: SignupAccountRole
+  captchaToken?: string
 }): Promise<Session | PendingEmailVerification> {
   if (!hasTauriRuntime()) {
     localStorage.setItem(browserStorageKey('signup-role'), input.role)
     const { data, error } = await getSupabaseClient().auth.signUp({
       email: input.email.trim(), password: input.password,
-      options: { emailRedirectTo: new URL(appUrl('auth/callback'), location.origin).href, data: { full_name: input.name.trim() } },
+      options: {
+        emailRedirectTo: new URL(appUrl('auth/callback'), location.origin).href,
+        data: { full_name: input.name.trim() },
+        captchaToken: input.captchaToken,
+      },
     })
     if (error) throw normalizeAuthError(error)
     return data.session ?? { listener: { id: 'browser', port: 0 }, email: input.email.trim(), role: input.role }
@@ -94,6 +99,7 @@ export async function signUpWithEmail(input: {
       options: {
         emailRedirectTo: callbackUrl(listener.port),
         data: { full_name: input.name.trim() },
+        captchaToken: input.captchaToken,
       },
     })
     if (error) throw error
@@ -151,9 +157,16 @@ export async function waitForEmailVerification(pending: PendingEmailVerification
   }
 }
 
-export async function resendVerification(email: string, role: SignupAccountRole): Promise<PendingEmailVerification> {
+export async function resendVerification(email: string, role: SignupAccountRole, captchaToken?: string): Promise<PendingEmailVerification> {
   if (!hasTauriRuntime()) {
-    const { error } = await getSupabaseClient().auth.resend({ type: 'signup', email, options: { emailRedirectTo: new URL(appUrl('auth/callback'), location.origin).href } })
+    const { error } = await getSupabaseClient().auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: new URL(appUrl('auth/callback'), location.origin).href,
+        captchaToken,
+      },
+    })
     if (error) throw normalizeAuthError(error)
     return { listener: { id: 'browser', port: 0 }, email, role }
   }
@@ -162,7 +175,7 @@ export async function resendVerification(email: string, role: SignupAccountRole)
     const { error } = await getSupabaseClient().auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: callbackUrl(listener.port) },
+      options: { emailRedirectTo: callbackUrl(listener.port), captchaToken },
     })
     if (error) throw error
     return { listener, email, role }
@@ -182,8 +195,12 @@ export async function cancelPendingEmailVerification(pending: PendingEmailVerifi
   await cancelOAuthCallback(pending.listener.id).catch(() => {})
 }
 
-export async function signInWithEmail(email: string, password: string): Promise<Session> {
-  const { data, error } = await getSupabaseClient().auth.signInWithPassword({ email: email.trim(), password })
+export async function signInWithEmail(email: string, password: string, captchaToken?: string): Promise<Session> {
+  const { data, error } = await getSupabaseClient().auth.signInWithPassword({
+    email: email.trim(),
+    password,
+    options: { captchaToken },
+  })
   if (error || !data.session) throw normalizeAuthError(error ?? new Error('No authentication session returned'))
   return data.session
 }
