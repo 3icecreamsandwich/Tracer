@@ -70,7 +70,7 @@ test('real browser library persists edits and progress across reloads and tabs',
   await expect(second.getByText('1/2', { exact: true })).toBeVisible()
 })
 
-test('phone layout supports creation, study modes and settings without horizontal overflow', async ({ context, page }) => {
+test('phone layout supports creation, study modes and settings without horizontal overflow', async ({ context, page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await signInFixture(context, page)
   const url = await createSet(page)
@@ -85,7 +85,10 @@ test('phone layout supports creation, study modes and settings without horizonta
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), { message: `No horizontal overflow on ${path} at ${width}px` }).toBe(true)
     }
   }
-  await page.screenshot({ path: '/private/tmp/tracer-web-mobile-settings.png', fullPage: true })
+  await testInfo.attach('mobile settings', {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: 'image/png',
+  })
 })
 
 test('web endpoints reject unauthenticated requests', async ({ request }) => {
