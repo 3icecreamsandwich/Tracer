@@ -33,8 +33,9 @@ Browser fixtures do not prove these flows. The designated account is authorized
 for new disposable content only; no preexisting account content was modified.
 
 Open prerequisites: GitHub environment secrets/variables and release access;
-GitHub Models OAuth client ID (currently absent). No production Worker/domain or landing
-release has been published. No paid upgrade was enabled.
+GitHub Models OAuth client ID (currently absent). Production deployment results
+are recorded in `docs/cloudflare-production-validation.md`. The landing release
+has not been published. No paid upgrade was enabled.
 
 Cloudflare platform references: [limits](https://developers.cloudflare.com/workers/platform/limits/)
 and [pricing](https://developers.cloudflare.com/workers/platform/pricing/).
