@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { generateLearnQuestions } from '../../src/composables/learn/generator'
+import {
+  generateLearnQuestions,
+  generateLearnQuestionsWithFallback
+} from '../../src/composables/learn/generator'
 import type { Term } from '../../src/composables/db/types'
 
 function makeTerms(count: number): Term[] {
@@ -62,5 +65,18 @@ describe('generateLearnQuestions', () => {
 
     expect(q).toHaveLength(12)
     expect(new Set(q.map((item) => item.termId)).size).toBe(q.length)
+  })
+
+  it('falls back to the standard deterministic mix when a selected type cannot be generated', () => {
+    const terms = makeTerms(2)
+    const q = generateLearnQuestionsWithFallback(terms, {
+      seed: 17,
+      maxQuestions: 2,
+      questionTypes: ['multiple_choice'],
+      shuffle: false
+    })
+
+    expect(q).toHaveLength(2)
+    expect(q.every((item) => item.kind !== 'multiple_choice')).toBe(true)
   })
 })

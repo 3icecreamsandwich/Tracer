@@ -3,7 +3,7 @@
     <div class="tracer-page mx-auto max-w-[1280px] px-8 pb-24 pt-10">
       <div class="grid items-stretch gap-7 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         <section
-          class="tracer-library flex min-h-[calc(100vh-13rem)] flex-col rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          class="tracer-library flex min-w-0 min-h-[calc(100vh-13rem)] flex-col rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           aria-labelledby="home-sets"
         >
           <div class="flex items-start justify-between gap-4">
@@ -132,7 +132,7 @@
                       tabindex="0"
                       data-root-entry-hit="true"
                       :data-folder-drop-id="folder.id"
-                      class="flex min-h-12 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      class="flex min-h-12 w-full min-w-0 items-center gap-1 overflow-hidden rounded-md border border-slate-200 px-2 py-2 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:gap-3 sm:px-3 dark:border-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                       :class="folderRowClass(folder.id)"
                       @click.stop="selectFolder(folder.id, $event)"
                       @dblclick="handleFolderDoubleClick(folder.id)"
@@ -142,7 +142,7 @@
                       <button
                         type="button"
                         :draggable="false"
-                        class="touch-none select-none cursor-grab rounded p-1 text-slate-950 hover:bg-slate-100 active:cursor-grabbing dark:text-white dark:hover:bg-slate-800"
+                        class="hidden touch-none select-none cursor-grab rounded p-1 text-slate-950 hover:bg-slate-100 active:cursor-grabbing sm:block dark:text-white dark:hover:bg-slate-800"
                         aria-label="Drag folder"
                         @click.stop
                         @dblclick.stop
@@ -153,7 +153,7 @@
                       <svg
                         aria-hidden="true"
                         viewBox="0 0 24 24"
-                        class="h-6 w-7 shrink-0 text-slate-500 dark:text-slate-400"
+                        class="h-5 w-6 shrink-0 text-slate-500 sm:h-6 sm:w-7 dark:text-slate-400"
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.8"

@@ -337,7 +337,7 @@ import {
 } from "~/src/composables/ai/written-answer-grader"
 import { useAppLanguage } from "~/src/composables/language"
 import {
-    generateLearnQuestions,
+    generateLearnQuestionsWithFallback,
     type LearnQuestion,
     type LearnQuestionKind,
 } from "~/src/composables/learn/generator"
@@ -589,7 +589,7 @@ function buildTest() {
     const currentSet = set.value
     if (!currentSet) return
     const questionLimit = Math.max(1, currentSet.terms.length)
-    testQuestions.value = generateLearnQuestions(currentSet.terms, {
+    testQuestions.value = generateLearnQuestionsWithFallback(currentSet.terms, {
         seed: baseSeed.value + runCounter.value,
         maxQuestions: Math.min(requestedQuestionCount.value, questionLimit),
         questionTypes: selectedQuestionTypes.value,

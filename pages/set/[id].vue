@@ -1563,7 +1563,7 @@
 
                                 <div
                                     v-else
-                                    class="grid flex-1 auto-rows-fr grid-cols-2 sm:grid-cols-4 gap-2"
+                                    class="grid auto-rows-[4.5rem] grid-cols-2 content-start gap-2 sm:flex-1 sm:auto-rows-fr sm:grid-cols-4"
                                 >
                                     <button
                                         v-for="tile in matchTiles"

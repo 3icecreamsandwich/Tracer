@@ -37,6 +37,19 @@ export type LearnGeneratorOptions = {
   shuffle?: boolean
 }
 
+export function generateLearnQuestionsWithFallback(
+  terms: Term[],
+  options: LearnGeneratorOptions
+): LearnQuestion[] {
+  const configured = generateLearnQuestions(terms, options)
+  if (configured.length > 0) return configured
+
+  return generateLearnQuestions(terms, {
+    ...options,
+    questionTypes: ['true_false', 'multiple_choice', 'written']
+  })
+}
+
 function clampMaxQuestions(v: number | undefined) {
   if (v === undefined) return 40
   const n = Math.floor(v)

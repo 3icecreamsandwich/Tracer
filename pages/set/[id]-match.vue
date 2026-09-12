@@ -128,7 +128,7 @@
                         :key="tile.id"
                         type="button"
                         data-match-tile="true"
-                        class="h-24 sm:h-28 w-full rounded-md border p-2 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950 transition-colors"
+                        class="h-20 w-full rounded-md border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:h-28 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :class="matchTileClass(tile)"
                         :disabled="matchTileDisabled(tile) || matchBusy"
                         @click.stop="onMatchTileClick(tile)"
