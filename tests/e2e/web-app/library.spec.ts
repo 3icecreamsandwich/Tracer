@@ -75,6 +75,34 @@ test('phone layout supports creation, study modes and settings without horizonta
   await signInFixture(context, page)
   const url = await createSet(page)
   const setPath = new URL(url).pathname.slice(basePath.length)
+
+  await page.setViewportSize({ width: 320, height: 844 })
+  await page.goto(setPath)
+  const studyModeTiles = page.locator('.study-mode-tile')
+  await expect(studyModeTiles).toHaveCount(4)
+  await expect(studyModeTiles.first().getByText('Flashcards', { exact: true })).toBeHidden()
+  await expect(studyModeTiles.nth(2).locator('svg')).toHaveCount(0)
+  await expect(page.getByText('Space to flip · ←/→ to browse · Mark correct/incorrect to progress')).toBeHidden()
+  await expect(page.getByRole('link', { name: 'Fullscreen', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Prev', exact: true }).getByText('Prev', { exact: true })).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Next', exact: true }).getByText('Next', { exact: true })).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Missed it', exact: true }).getByText('×', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Got it', exact: true }).getByText('✓', { exact: true })).toBeVisible()
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+
+  await page.goto(`${setPath}?mode=match&seed=1`)
+  await page.getByRole('button', { name: 'Start', exact: true }).click()
+  await expect.poll(async () => Math.round((await page.locator('[data-match-tile="true"]').first().boundingBox())?.height ?? 0)).toBe(64)
+
+  await page.goto(`${setPath}-test?types=multiple_choice&count=2&seed=1`)
+  await expect(page.getByText('No questions could be generated for this test.')).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'Test questions' }).locator('article')).toHaveCount(2)
+
+  await page.goto(basePath)
+  await page.getByRole('button', { name: 'Add Folder', exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'Folder name', exact: true })).toBeVisible()
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+
   for (const path of [setPath, `${setPath}/edit`, `${setPath}-flashcards`, `${setPath}-learn`, `${setPath}-match`, `${setPath}-test`, 'create/generate', 'create/synthesize', 'settings']) {
     await page.goto(path)
     await expect(page.locator('body')).not.toContainText('Internal Server Error')

@@ -134,7 +134,7 @@
                 >
                     {{ t("set.flashcards") }}
                 </h1>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                <p class="mt-1 hidden text-sm text-slate-600 sm:block dark:text-slate-300">
                     {{ t("set.flashcardInstructions") }}
                 </p>
                 <div v-if="smartReviewEnabled" class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
@@ -299,8 +299,11 @@
                                 flashcardAnswerBusy
                             "
                             @click="goPrev"
+                            :aria-label="t('set.previous')"
+                            :title="t('set.previous')"
                         >
-                            ← {{ t("set.previous") }}
+                            <span aria-hidden="true">←</span>
+                            <span class="hidden sm:ml-1 sm:inline">{{ t("set.previous") }}</span>
                         </button>
 
                         <button
@@ -312,8 +315,11 @@
                                 flashcardAnswerBusy
                             "
                             @click="goNext"
+                            :aria-label="t('set.next')"
+                            :title="t('set.next')"
                         >
-                            {{ t("set.next") }} →
+                            <span class="hidden sm:mr-1 sm:inline">{{ t("set.next") }}</span>
+                            <span aria-hidden="true">→</span>
                         </button>
                     </div>
 
@@ -336,8 +342,11 @@
                             class="inline-flex h-10 items-center justify-center rounded-md border border-[#C14D4D] bg-white px-3 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                             :disabled="!currentTerm || flashcardAnswerBusy"
                             @click="markIncorrect"
+                            :aria-label="t('set.missed')"
+                            :title="t('set.missed')"
                         >
-                            {{ t("set.missed") }}
+                            <span class="text-xl leading-none sm:hidden" aria-hidden="true">×</span>
+                            <span class="hidden sm:inline">{{ t("set.missed") }}</span>
                         </button>
 
                         <button
@@ -345,8 +354,11 @@
                             class="inline-flex h-10 items-center justify-center rounded-md border border-[#2D8210] bg-white px-3 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                             :disabled="!currentTerm || flashcardAnswerBusy"
                             @click="markCorrect"
+                            :aria-label="t('set.gotIt')"
+                            :title="t('set.gotIt')"
                         >
-                            {{ t("set.gotIt") }}
+                            <span class="text-xl leading-none sm:hidden" aria-hidden="true">✓</span>
+                            <span class="hidden sm:inline">{{ t("set.gotIt") }}</span>
                         </button>
                     </div>
                 </div>

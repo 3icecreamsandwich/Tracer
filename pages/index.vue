@@ -17,6 +17,7 @@
               v-if="activeLibraryKind !== 'class'"
               type="button"
               class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+              :aria-label="t('home.addFolder')"
               :disabled="busy || isWebPreviewRuntime()"
               @click="addFolder"
             >

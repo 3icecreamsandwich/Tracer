@@ -91,8 +91,13 @@ export function generateLearnQuestions(terms: Term[], options: LearnGeneratorOpt
   const requestedTypeList = Array.from(requestedTypes)
 
   const normalizedTerms = terms
-    .map((t) => ({ ...t, front: normalizeCell(t.front), back: normalizeCell(t.back) }))
-    .filter((t) => t.id && t.front && t.back)
+    .map((t, index) => ({
+      ...t,
+      id: normalizeCell(t?.id) || `term-${index + 1}`,
+      front: normalizeCell(t?.front),
+      back: normalizeCell(t?.back)
+    }))
+    .filter((t) => t.front && t.back)
 
   if (normalizedTerms.length === 0) return []
 

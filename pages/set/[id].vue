@@ -259,9 +259,7 @@
                             aria-label="Flashcards"
                             class="study-panel flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
-                            <div
-                                class="flex flex-wrap items-center justify-between gap-3"
-                            >
+                            <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
@@ -269,12 +267,12 @@
                                         {{ t("set.flashcards") }}
                                     </p>
                                     <p
-                                        class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
+                                        class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
                                     >
                                         {{ t("set.flashcardInstructions") }}
                                     </p>
                                 </div>
-                                <div class="flex flex-wrap items-center gap-2">
+                                <div class="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start">
                                     <p
                                         v-if="practiceTimed && !learnIsFinished"
                                         class="rounded-md bg-orange-50 px-2.5 py-2 text-sm font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300"
@@ -289,7 +287,7 @@
                                     </p>
                                     <div
                                         ref="flashcardSettingsMenuRoot"
-                                        class="relative"
+                                        class="relative inline-flex items-center gap-2"
                                     >
                                         <button
                                             ref="flashcardSettingsButtonEl"
@@ -425,6 +423,15 @@
                                                 }}
                                             </button>
                                         </div>
+                                        <NuxtLink
+                                            v-if="set"
+                                            :to="fullscreenModePath('flashcards')"
+                                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                                            :aria-label="t('set.fullscreen')"
+                                            :title="t('set.fullscreen')"
+                                        >
+                                            ⛶
+                                        </NuxtLink>
                                     </div>
                                 </div>
                             </div>
@@ -607,11 +614,9 @@
                                     </div>
                                 </button>
 
-                                <div
-                                    class="mt-4 flex flex-wrap items-center justify-between gap-3"
-                                >
+                                <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                                     <div
-                                        class="flex flex-wrap items-center gap-2"
+                                        class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center"
                                     >
                                         <button
                                             type="button"
@@ -622,8 +627,11 @@
                                                 flashcardAnswerBusy
                                             "
                                             @click="goPrev"
+                                            :aria-label="t('set.previous')"
+                                            :title="t('set.previous')"
                                         >
-                                            ← {{ t("set.previous") }}
+                                            <span aria-hidden="true">←</span>
+                                            <span class="hidden sm:ml-1 sm:inline">{{ t("set.previous") }}</span>
                                         </button>
 
                                         <button
@@ -636,13 +644,16 @@
                                                 flashcardAnswerBusy
                                             "
                                             @click="goNext"
+                                            :aria-label="t('set.next')"
+                                            :title="t('set.next')"
                                         >
-                                            {{ t("set.next") }} →
+                                            <span class="hidden sm:mr-1 sm:inline">{{ t("set.next") }}</span>
+                                            <span aria-hidden="true">→</span>
                                         </button>
                                     </div>
 
                                     <div
-                                        class="flex flex-wrap items-center gap-2"
+                                        class="grid grid-cols-[2.5rem_1fr_1fr] gap-2 sm:flex sm:flex-wrap sm:items-center"
                                     >
                                         <button
                                             type="button"
@@ -668,8 +679,11 @@
                                                 flashcardAnswerBusy
                                             "
                                             @click="markIncorrect"
+                                            :aria-label="t('set.missed')"
+                                            :title="t('set.missed')"
                                         >
-                                            {{ t("set.missed") }}
+                                            <span class="text-xl leading-none sm:hidden" aria-hidden="true">×</span>
+                                            <span class="hidden sm:inline">{{ t("set.missed") }}</span>
                                         </button>
                                         <button
                                             type="button"
@@ -679,8 +693,11 @@
                                                 flashcardAnswerBusy
                                             "
                                             @click="markCorrect"
+                                            :aria-label="t('set.gotIt')"
+                                            :title="t('set.gotIt')"
                                         >
-                                            {{ t("set.gotIt") }}
+                                            <span class="text-xl leading-none sm:hidden" aria-hidden="true">✓</span>
+                                            <span class="hidden sm:inline">{{ t("set.gotIt") }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -702,7 +719,7 @@
                                         {{ t("set.learn") }}
                                     </p>
                                     <p
-                                        class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
+                                        class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
                                     >
                                         {{ t("set.learnInstructions") }}
                                     </p>
@@ -738,6 +755,15 @@
                                             <circle cx="12" cy="12" r="3" />
                                         </svg>
                                     </button>
+                                    <NuxtLink
+                                        v-if="set"
+                                        :to="fullscreenModePath('learn')"
+                                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                                        :aria-label="t('set.fullscreen')"
+                                        :title="t('set.fullscreen')"
+                                    >
+                                        ⛶
+                                    </NuxtLink>
                                 </div>
                             </div>
 
@@ -1286,7 +1312,7 @@
                                         {{ t("set.chat") }}
                                     </p>
                                     <p
-                                        class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
+                                        class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
                                     >
                                         {{ t("set.chatHint") }}
                                     </p>
@@ -1445,11 +1471,20 @@
                                         {{ t("set.match") }}
                                     </p>
                                     <p
-                                        class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
+                                        class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
                                     >
                                         {{ t("set.matchInstructions") }}
                                     </p>
                                 </div>
+                                <NuxtLink
+                                    v-if="set"
+                                    :to="fullscreenModePath('match')"
+                                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                                    :aria-label="t('set.fullscreen')"
+                                    :title="t('set.fullscreen')"
+                                >
+                                    ⛶
+                                </NuxtLink>
                             </div>
 
                             <p
@@ -1563,14 +1598,14 @@
 
                                 <div
                                     v-else
-                                    class="grid auto-rows-[4.5rem] grid-cols-2 content-start gap-2 sm:flex-1 sm:auto-rows-fr sm:grid-cols-4"
+                                    class="grid auto-rows-[4rem] grid-cols-2 content-start gap-2 sm:flex-1 sm:auto-rows-fr sm:grid-cols-4"
                                 >
                                     <button
                                         v-for="tile in matchTiles"
                                         :key="tile.id"
                                         type="button"
                                         data-match-tile="true"
-                                        class="relative min-h-20 w-full rounded-md border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="relative min-h-16 w-full rounded-md border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:min-h-20 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :class="matchTileClass(tile)"
                                         :disabled="
                                             matchTileDisabled(tile) || matchBusy
@@ -1623,7 +1658,7 @@
 
                         <section :aria-label="t('set.studyModes')">
                             <div
-                                class="study-mode-bar flex flex-nowrap gap-3 overflow-x-auto pb-1"
+                                class="study-mode-bar flex flex-nowrap gap-2 pb-1 sm:gap-3 sm:overflow-x-auto"
                             >
                                 <StudyModeTile
                                     :to="setModePath('flashcards')"
@@ -1651,7 +1686,6 @@
                                     :title="t('set.chat')"
                                     :hint="t('set.chatHint')"
                                     :active="mode === 'chat'"
-                                    show-caret
                                     replace
                                 />
                                 <StudyModeTile
@@ -4684,6 +4718,14 @@ onBeforeUnmount(() => {
     min-height: clamp(324px, 52.2vh, 576px);
     max-height: min(70.2vh, 684px);
     overflow: auto;
+}
+
+@media (max-width: 639px) {
+    .study-panel {
+        min-height: 0;
+        max-height: none;
+        overflow: visible;
+    }
 }
 
 @keyframes flip {

@@ -63,7 +63,7 @@
                 >
                     {{ t("set.learn") }}
                 </h1>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                <p class="mt-1 hidden text-sm text-slate-600 sm:block dark:text-slate-300">
                     {{ t("set.learnInstructions") }}
                 </p>
             </div>

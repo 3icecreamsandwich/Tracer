@@ -326,7 +326,6 @@ import {
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content"
 import { resolveAiModel } from "~/src/composables/ai/registry"
 import {
-    aiErrorForMissingDefaultModel,
     normalizeAiError,
     type AiErrorUx,
 } from "~/src/composables/ai/ux-errors"
@@ -664,12 +663,13 @@ async function submitTest(force = false) {
 
         let model: any = null
         if (answeredWrittenQuestions.length > 0 && !isWebPreview.value) {
-            if (!defaultModelId.value) {
-                aiError.value = aiErrorForMissingDefaultModel()
-                aiErrorOpen.value = true
-                return
+            if (defaultModelId.value) {
+                try {
+                    model = await getWrittenModel(defaultModelId.value)
+                } catch {
+                    model = null
+                }
             }
-            model = await getWrittenModel(defaultModelId.value)
         }
 
         const gradeEntries = await Promise.all(
@@ -690,13 +690,20 @@ async function submitTest(force = false) {
                     referenceAnswer: question.answer,
                     studentAnswer,
                 }
-                const grade = isWebPreview.value
-                    ? gradeWebPreviewWrittenAnswer(input)
-                    : await gradeWrittenAnswer({
-                          model,
-                          input,
-                          abortSignal: controller.signal,
-                      })
+                let grade: WrittenAnswerGrade
+                if (isWebPreview.value || !model) {
+                    grade = gradeWebPreviewWrittenAnswer(input)
+                } else {
+                    try {
+                        grade = await gradeWrittenAnswer({
+                            model,
+                            input,
+                            abortSignal: controller.signal,
+                        })
+                    } catch {
+                        grade = gradeWebPreviewWrittenAnswer(input)
+                    }
+                }
                 return [question.id, grade] as const
             }),
         )

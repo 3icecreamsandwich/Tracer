@@ -79,4 +79,22 @@ describe('generateLearnQuestions', () => {
     expect(q).toHaveLength(2)
     expect(q.every((item) => item.kind !== 'multiple_choice')).toBe(true)
   })
+
+  it('generates normal questions for legacy terms without ids', () => {
+    const terms = makeTerms(4).map(({ id: _id, ...term }) => term) as Term[]
+    const q = generateLearnQuestionsWithFallback(terms, {
+      seed: 23,
+      maxQuestions: 4,
+      questionTypes: ['multiple_choice'],
+      shuffle: false
+    })
+
+    expect(q).toHaveLength(4)
+    expect(q.map((item) => item.termId)).toEqual([
+      'term-1',
+      'term-2',
+      'term-3',
+      'term-4'
+    ])
+  })
 })

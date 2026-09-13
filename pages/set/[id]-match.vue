@@ -23,7 +23,7 @@
                 >
                     {{ t("set.match") }}
                 </h1>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                <p class="mt-1 hidden text-sm text-slate-600 sm:block dark:text-slate-300">
                     {{ t("set.matchInstructions") }}
                 </p>
             </div>
@@ -128,7 +128,7 @@
                         :key="tile.id"
                         type="button"
                         data-match-tile="true"
-                        class="h-20 w-full rounded-md border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:h-28 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="h-16 w-full rounded-md border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:h-28 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :class="matchTileClass(tile)"
                         :disabled="matchTileDisabled(tile) || matchBusy"
                         @click.stop="onMatchTileClick(tile)"
