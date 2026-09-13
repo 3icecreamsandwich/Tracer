@@ -14,10 +14,12 @@
 
             <NuxtLink
                 to="/"
+                :aria-label="t('nav.home')"
                 class="inline-flex shrink-0 items-center mx-2 gap-3 rounded-lg text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-white"
             >
+                <Home aria-hidden="true" class="h-7 w-7 sm:hidden" />
                 <span
-                    class="text-[22px] font-semibold tracking-tight text-slate-950 dark:text-white"
+                    class="hidden text-[22px] font-semibold tracking-tight text-slate-950 sm:inline dark:text-white"
                 >
                     Tracer
                 </span>
@@ -152,6 +154,7 @@ import {
     type TopbarSearchItem,
 } from "~/src/composables/search/topbar-search";
 import { useAppLanguage } from "~/src/composables/language";
+import Home from "@lucide/vue/dist/esm/icons/house.mjs";
 
 const { language, t, translateAppGeneratedText } = useAppLanguage();
 

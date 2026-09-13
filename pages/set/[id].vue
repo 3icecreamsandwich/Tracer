@@ -9,13 +9,13 @@
             @close="closeAiError"
             @retry="retryAiRequest"
         />
-        <div class="tracer-page mx-auto max-w-4xl p-6 sm:p-8">
+        <div class="tracer-page mx-auto max-w-4xl p-3 sm:p-8">
             <div
-                class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-950"
             >
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
-                        <h1 class="truncate text-2xl font-semibold">
+                        <h1 class="truncate text-3xl font-semibold sm:text-2xl">
                             {{ set?.title ?? t("home.setKind") }}
                         </h1>
                         <p
@@ -257,9 +257,115 @@
                         <section
                             v-if="mode === 'flashcards'"
                             aria-label="Flashcards"
-                            class="study-panel flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="mobile-study-panel flex min-h-[calc(100dvh-14.5rem)] flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:hidden dark:border-slate-800 dark:bg-slate-950"
                         >
-                            <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="flex items-start justify-between gap-3 px-1">
+                                <div>
+                                    <p class="text-base font-semibold text-slate-950 dark:text-white">
+                                        {{ t("set.flashcards") }}
+                                    </p>
+                                    <p class="mt-1 text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        {{ ratioText }}
+                                    </p>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <details class="group relative">
+                                        <summary
+                                            class="inline-flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                                            :aria-label="t('set.flashcardSettings')"
+                                            :title="t('set.flashcardSettings')"
+                                        >
+                                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-6 w-6">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                                                <circle cx="12" cy="12" r="3" />
+                                            </svg>
+                                        </summary>
+                                        <div class="absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30" role="menu">
+                                            <button type="button" role="menuitemcheckbox" :aria-checked="shuffleEnabled" class="mobile-settings-item" :disabled="totalCount === 0" @click="shuffleFromFlashcardSettings">
+                                                <span>{{ t("set.shuffle") }}</span><span aria-hidden="true">{{ shuffleEnabled ? "✓" : "" }}</span>
+                                            </button>
+                                            <button type="button" role="menuitemcheckbox" :aria-checked="smartReviewEnabled" class="mobile-settings-item" @click="toggleSmartReview">
+                                                <span>Smart Review</span><span aria-hidden="true">{{ smartReviewEnabled ? "✓" : "" }}</span>
+                                            </button>
+                                            <button type="button" role="menuitemcheckbox" :aria-checked="starredOnly" class="mobile-settings-item" :disabled="starredStudyCount === 0 && !starredOnly" @click="toggleStarredOnlyFromFlashcardSettings">
+                                                <span>{{ t("set.starredOnly") }}</span><span aria-hidden="true">{{ starredOnly ? "✓" : "" }}</span>
+                                            </button>
+                                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
+                                            <button v-for="filter in (['learning', 'mastered', 'all'] as const)" :key="filter" type="button" role="menuitemradio" :aria-checked="flashcardStudyFilter === filter" class="mobile-settings-item" @click="selectFlashcardStudyFilter(filter)">
+                                                <span>{{ filter === 'all' ? t('set.filterAll') : t(`set.${filter}`) }}</span><span aria-hidden="true">{{ flashcardStudyFilter === filter ? '✓' : '' }}</span>
+                                            </button>
+                                            <button type="button" role="menuitem" class="mobile-settings-item" :disabled="allStudyTermIds.length === 0" @click="restartFromFlashcardSettings">{{ t("common.restart") }}</button>
+                                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
+                                            <button type="button" role="menuitem" class="mobile-settings-item" :disabled="flashcardFrontPreferenceBusy" @click="togglePreferredFlashcardFront">{{ preferredFlashcardFrontOptionLabel }}</button>
+                                        </div>
+                                    </details>
+
+                                    <button
+                                        v-if="set && fullscreenModePath('flashcards')"
+                                        type="button"
+                                        class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                                        :aria-label="t('set.fullscreen')"
+                                        :title="t('set.fullscreen')"
+                                        @click="openFullscreenMode('flashcards')"
+                                    >
+                                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6">
+                                            <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div v-if="smartReviewEnabled" class="mt-3 flex flex-wrap gap-1.5 text-[11px]">
+                                <button v-for="filter in reviewFilters" :key="filter.value" type="button" class="rounded-full border px-2 py-1" :class="reviewFilter === filter.value ? 'border-amber-500 bg-amber-50 text-amber-800' : 'border-slate-200 text-slate-600'" @click="setReviewFilter(filter.value)">
+                                    {{ filter.value === "due" && filter.count > 0 ? t("set.reviewReadyNow") : filter.label }} ({{ filter.count }})
+                                </button>
+                            </div>
+
+                            <div v-if="isFinished" class="flex flex-1 flex-col items-center justify-center px-4 text-center">
+                                <h2 class="text-xl font-semibold text-slate-950 dark:text-white">{{ t("common.results") }}</h2>
+                                <p class="mt-3 text-slate-700 dark:text-slate-200">{{ t("set.accuracy") }} <span class="font-semibold">{{ accuracyText }}</span></p>
+                                <div class="mt-5 flex flex-wrap justify-center gap-2">
+                                    <button v-if="hasIncorrectCards" type="button" class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white" @click="resumeIncorrect">{{ t("set.resumeIncorrect") }}</button>
+                                    <button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-slate-950" @click="restartAllFlashcards">{{ t("common.restart") }}</button>
+                                </div>
+                            </div>
+                            <div v-else-if="totalCount === 0" class="flex flex-1 items-center justify-center px-4 text-center text-sm text-slate-600 dark:text-slate-300">{{ t("set.noCards") }}</div>
+                            <template v-else>
+                                <button
+                                    ref="mobileViewerButtonEl"
+                                    type="button"
+                                    class="mobile-flashcard-card relative mt-5 flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl px-5 py-10 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+                                    :class="[flashcardSurfaceClass, { 'animate-flip': isFlipping, 'animate-slide-left': isNavigating === 'next', 'animate-slide-right': isNavigating === 'prev' }]"
+                                    :disabled="flashcardAnswerBusy"
+                                    @click="toggleFlip"
+                                >
+                                    <span v-if="isCurrentRetry" class="absolute right-4 top-4 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">{{ t("set.tryAgain") }}</span>
+                                    <p class="absolute left-5 top-5 text-sm font-medium text-slate-500 dark:text-slate-400">{{ showingDefinition ? t("create.definition") : t("create.term") }}</p>
+                                    <div class="flashcard-content-row flex w-full items-center justify-center overflow-y-auto text-center text-[clamp(1.75rem,8vw,2.5rem)] font-medium text-slate-900 dark:text-slate-50" :class="{ 'flashcard-content-row--paired': viewerImage && viewerHasText }">
+                                        <img v-if="viewerImage" class="flashcard-side-image shrink-0 border border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-950/70" :src="viewerImage.dataUrl" :alt="viewerImage.filename" />
+                                        <div v-if="viewerHasText" class="flashcard-side-text" :class="{ 'flashcard-side-text--paired': viewerImage }"><MarkdownRenderer :markdown="viewerText" variant="flashcard" /></div>
+                                    </div>
+                                </button>
+
+                                <div class="mt-3 grid grid-cols-5 gap-2">
+                                    <button type="button" class="mobile-flashcard-action text-slate-700 dark:text-slate-200" :disabled="cursorIndex === 0 || flashcardAnswerBusy" :aria-label="t('set.previous')" @click="goPrev"><span aria-hidden="true">←</span></button>
+                                    <button type="button" class="mobile-flashcard-action text-slate-700 dark:text-slate-200" :disabled="cursorIndex >= order.length - 1 || flashcardAnswerBusy" :aria-label="t('set.next')" @click="goNext"><span aria-hidden="true">→</span></button>
+                                    <button type="button" class="mobile-flashcard-action border-amber-400 text-amber-500" :disabled="!currentTerm || starBusy" :aria-pressed="isCurrentStarred" :aria-label="isCurrentStarred ? 'Unstar card' : 'Star card'" @click="toggleStar"><StarGlyph :active="isCurrentStarred" /></button>
+                                    <button type="button" class="mobile-flashcard-action border-red-400 text-red-500" :disabled="!currentTerm || flashcardAnswerBusy" :aria-label="t('set.missed')" @click="markIncorrect"><span aria-hidden="true">×</span></button>
+                                    <button type="button" class="mobile-flashcard-action border-green-500 text-green-600" :disabled="!currentTerm || flashcardAnswerBusy" :aria-label="t('set.gotIt')" @click="markCorrect"><span aria-hidden="true">✓</span></button>
+                                </div>
+                            </template>
+                        </section>
+
+                        <section
+                            v-if="mode === 'flashcards'"
+                            aria-label="Flashcards"
+                            class="study-panel hidden flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:flex dark:border-slate-800 dark:bg-slate-950"
+                        >
+                            <div
+                                class="flex flex-wrap items-center justify-between gap-3"
+                            >
                                 <div>
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
@@ -267,12 +373,12 @@
                                         {{ t("set.flashcards") }}
                                     </p>
                                     <p
-                                        class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
+                                        class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
                                     >
                                         {{ t("set.flashcardInstructions") }}
                                     </p>
                                 </div>
-                                <div class="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start">
+                                <div class="flex flex-wrap items-center gap-2">
                                     <p
                                         v-if="practiceTimed && !learnIsFinished"
                                         class="rounded-md bg-orange-50 px-2.5 py-2 text-sm font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300"
@@ -287,7 +393,7 @@
                                     </p>
                                     <div
                                         ref="flashcardSettingsMenuRoot"
-                                        class="relative inline-flex items-center gap-2"
+                                        class="relative"
                                     >
                                         <button
                                             ref="flashcardSettingsButtonEl"
@@ -423,15 +529,6 @@
                                                 }}
                                             </button>
                                         </div>
-                                        <NuxtLink
-                                            v-if="set"
-                                            :to="fullscreenModePath('flashcards')"
-                                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                                            :aria-label="t('set.fullscreen')"
-                                            :title="t('set.fullscreen')"
-                                        >
-                                            ⛶
-                                        </NuxtLink>
                                     </div>
                                 </div>
                             </div>
@@ -614,9 +711,11 @@
                                     </div>
                                 </button>
 
-                                <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                                <div
+                                    class="mt-4 flex flex-wrap items-center justify-between gap-3"
+                                >
                                     <div
-                                        class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center"
+                                        class="flex flex-wrap items-center gap-2"
                                     >
                                         <button
                                             type="button"
@@ -627,11 +726,8 @@
                                                 flashcardAnswerBusy
                                             "
                                             @click="goPrev"
-                                            :aria-label="t('set.previous')"
-                                            :title="t('set.previous')"
                                         >
-                                            <span aria-hidden="true">←</span>
-                                            <span class="hidden sm:ml-1 sm:inline">{{ t("set.previous") }}</span>
+                                            ← {{ t("set.previous") }}
                                         </button>
 
                                         <button
@@ -644,16 +740,13 @@
                                                 flashcardAnswerBusy
                                             "
                                             @click="goNext"
-                                            :aria-label="t('set.next')"
-                                            :title="t('set.next')"
                                         >
-                                            <span class="hidden sm:mr-1 sm:inline">{{ t("set.next") }}</span>
-                                            <span aria-hidden="true">→</span>
+                                            {{ t("set.next") }} →
                                         </button>
                                     </div>
 
                                     <div
-                                        class="grid grid-cols-[2.5rem_1fr_1fr] gap-2 sm:flex sm:flex-wrap sm:items-center"
+                                        class="flex flex-wrap items-center gap-2"
                                     >
                                         <button
                                             type="button"
@@ -679,11 +772,8 @@
                                                 flashcardAnswerBusy
                                             "
                                             @click="markIncorrect"
-                                            :aria-label="t('set.missed')"
-                                            :title="t('set.missed')"
                                         >
-                                            <span class="text-xl leading-none sm:hidden" aria-hidden="true">×</span>
-                                            <span class="hidden sm:inline">{{ t("set.missed") }}</span>
+                                            {{ t("set.missed") }}
                                         </button>
                                         <button
                                             type="button"
@@ -693,11 +783,8 @@
                                                 flashcardAnswerBusy
                                             "
                                             @click="markCorrect"
-                                            :aria-label="t('set.gotIt')"
-                                            :title="t('set.gotIt')"
                                         >
-                                            <span class="text-xl leading-none sm:hidden" aria-hidden="true">✓</span>
-                                            <span class="hidden sm:inline">{{ t("set.gotIt") }}</span>
+                                            {{ t("set.gotIt") }}
                                         </button>
                                     </div>
                                 </div>
@@ -1656,9 +1743,9 @@
                             </div>
                         </section>
 
-                        <section :aria-label="t('set.studyModes')">
+                        <section class="hidden sm:block" :aria-label="t('set.studyModes')">
                             <div
-                                class="study-mode-bar flex flex-nowrap gap-2 pb-1 sm:gap-3 sm:overflow-x-auto"
+                                class="study-mode-bar flex flex-nowrap gap-3 overflow-x-auto pb-1"
                             >
                                 <StudyModeTile
                                     :to="setModePath('flashcards')"
@@ -1707,6 +1794,25 @@
                                 />
                             </div>
                         </section>
+
+                        <nav
+                            class="grid gap-2 sm:hidden"
+                            :class="mobileStudyModes.length === 5 ? 'grid-cols-5' : 'grid-cols-4'"
+                            :aria-label="t('set.studyModes')"
+                        >
+                            <NuxtLink
+                                v-for="item in mobileStudyModes"
+                                :key="item.key"
+                                :to="item.to"
+                                :replace="item.replace"
+                                class="inline-flex h-14 min-w-0 items-center justify-center rounded-xl border bg-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:bg-slate-950"
+                                :class="item.active ? 'border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-900' : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900'"
+                                :aria-label="item.title"
+                                :title="item.title"
+                            >
+                                <img :src="item.icon" alt="" class="max-h-7 max-w-8 object-contain" aria-hidden="true" />
+                            </NuxtLink>
+                        </nav>
 
                         <section
                             aria-label="Terms"
@@ -2194,12 +2300,31 @@ function fullscreenModePath(nextMode: TrackedSetMode) {
     return `/set/${set.value?.id ?? route.params.id}-${nextMode}${assignedQuery()}`;
 }
 
+async function openFullscreenMode(nextMode: TrackedSetMode) {
+    const target = fullscreenModePath(nextMode);
+    if (!target) return;
+    await router.push(target);
+}
+
 const mode = computed<SetMode>(() => {
     const m =
         typeof route.query.mode === "string" ? route.query.mode : "flashcards";
     if (m === "flashcards" || m === "learn" || m === "match" || m === "chat")
         return m;
     return "flashcards";
+});
+
+const mobileStudyModes = computed(() => {
+    const items = [
+        { key: "flashcards", to: setModePath("flashcards"), icon: flashcardsModeIcon, title: t("set.flashcards"), active: mode.value === "flashcards", replace: true },
+        { key: "learn", to: setModePath("learn"), icon: practiceModeIcon, title: t("set.learn"), active: mode.value === "learn", replace: true },
+        { key: "chat", to: setModePath("chat"), icon: chatModeIcon, title: t("set.chat"), active: mode.value === "chat", replace: true },
+        { key: "match", to: setModePath("match"), icon: matchModeIcon, title: t("set.match"), active: mode.value === "match", replace: true },
+    ];
+    if (studyGuideSetId.value) {
+        items.push({ key: "study-guide", to: `/study-guide/${studyGuideSetId.value}`, icon: studyGuideModeIcon, title: t("set.studyGuide"), active: false, replace: false });
+    }
+    return items;
 });
 
 const busy = ref(true);
@@ -2323,6 +2448,7 @@ const cursorIndex = ref(0);
 const order = ref<Uuid[]>([]);
 const lastOrder = ref<Uuid[]>([]);
 const answersByTermId = ref<Record<Uuid, FlashcardsAnswer>>({});
+const completedTermIds = ref<Set<Uuid>>(new Set());
 const answerAttemptsCount = ref(0);
 const correctAttemptsCount = ref(0);
 const retryTermIds = ref<Set<Uuid>>(new Set());
@@ -2349,6 +2475,7 @@ type ReviewRunSnapshot = {
     order: Uuid[];
     cursorIndex: number;
     answers: Record<Uuid, FlashcardsAnswer>;
+    completed: Uuid[];
     attempts: number;
     correctAttempts: number;
     retries: Uuid[];
@@ -2488,6 +2615,12 @@ const baseSeed = computed(() => {
 });
 
 const viewerButtonEl = ref<HTMLButtonElement | null>(null);
+const mobileViewerButtonEl = ref<HTMLButtonElement | null>(null);
+
+function focusFlashcardViewer() {
+    const mobile = window.matchMedia("(max-width: 639px)").matches;
+    (mobile ? mobileViewerButtonEl.value : viewerButtonEl.value)?.focus();
+}
 
 type UiChatMessage = ChatMessage & { id: string; fullContent?: string };
 
@@ -2795,7 +2928,7 @@ async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
     if (mode.value === "chat") {
         chatTextareaEl.value?.focus();
     } else {
-        viewerButtonEl.value?.focus();
+        focusFlashcardViewer();
     }
     window.addEventListener("keydown", onKeydown);
     document.addEventListener("pointerdown", onDocumentMatchPointerDown);
@@ -2893,11 +3026,11 @@ const termById = computed(() => {
 const attemptedCount = computed(() => answerAttemptsCount.value);
 const correctCount = computed(() => correctAttemptsCount.value);
 const isFinished = computed(() =>
-    order.value.length > 0 && order.value.every((id) => answersByTermId.value[id] !== undefined),
+    order.value.length > 0 && order.value.every((id) => completedTermIds.value.has(id)),
 );
 const hasIncorrectCards = computed(() => retryTermIds.value.size > 0);
 const currentPassProgress = computed(() =>
-    flashcardPassProgress(order.value, answersByTermId.value),
+    flashcardPassProgress(order.value, answersByTermId.value, completedTermIds.value),
 );
 
 const ratioText = computed(() => {
@@ -2981,6 +3114,10 @@ const {
     getFlipping: () => isFlipping.value,
     setFlipping: (flipping) => (isFlipping.value = flipping),
     setNavigating: (direction) => (isNavigating.value = direction),
+    onNavigate: () => {
+        const id = order.value[cursorIndex.value];
+        if (id) completedTermIds.value = new Set(completedTermIds.value).add(id);
+    },
     isBusy: () => flashcardAnswerBusy.value,
 });
 
@@ -3770,6 +3907,7 @@ const {
         order,
         lastOrder,
         answersByTermId,
+        completedTermIds,
         answerAttemptsCount,
         correctAttemptsCount,
         retryTermIds,
@@ -3799,7 +3937,7 @@ const {
             };
         }
     },
-    focusViewer: () => nextTick(() => viewerButtonEl.value?.focus()),
+    focusViewer: () => nextTick(focusFlashcardViewer),
 });
 
 function shuffleFromFlashcardSettings() {
@@ -3818,7 +3956,7 @@ function shuffleFromFlashcardSettings() {
     lastOrder.value = normalOrder;
     cursorIndex.value = currentId ? Math.max(0, normalOrder.indexOf(currentId)) : 0;
     isFlipped.value = false;
-    nextTick(() => viewerButtonEl.value?.focus());
+    nextTick(focusFlashcardViewer);
 }
 
 function toggleStarredOnlyFromFlashcardSettings() {
@@ -3873,6 +4011,7 @@ function setReviewFilter(filter: "all" | ReviewBucket) {
         order: [...order.value],
         cursorIndex: cursorIndex.value,
         answers: { ...answersByTermId.value },
+        completed: [...completedTermIds.value],
         attempts: answerAttemptsCount.value,
         correctAttempts: correctAttemptsCount.value,
         retries: [...retryTermIds.value],
@@ -3895,11 +4034,12 @@ function setReviewFilter(filter: "all" | ReviewBucket) {
     order.value = [...saved.order];
     cursorIndex.value = saved.cursorIndex;
     answersByTermId.value = { ...saved.answers };
+    completedTermIds.value = new Set(saved.completed ?? Object.keys(saved.answers));
     answerAttemptsCount.value = saved.attempts;
     correctAttemptsCount.value = saved.correctAttempts;
     retryTermIds.value = new Set(saved.retries);
     isFlipped.value = false;
-    nextTick(() => viewerButtonEl.value?.focus());
+    nextTick(focusFlashcardViewer);
 }
 
 async function loadStars(setId: Uuid) {
@@ -4517,7 +4657,7 @@ async function openSetPage() {
         if (mode.value === "chat") {
             chatTextareaEl.value?.focus();
         } else {
-            viewerButtonEl.value?.focus();
+            focusFlashcardViewer();
         }
 
         window.addEventListener("keydown", onKeydown);
@@ -4626,7 +4766,7 @@ watch(
             chatTextareaEl.value?.focus();
             scrollChatToBottom();
         } else {
-            viewerButtonEl.value?.focus();
+            focusFlashcardViewer();
         }
     },
     { flush: "post" },
@@ -4718,6 +4858,60 @@ onBeforeUnmount(() => {
     min-height: clamp(324px, 52.2vh, 576px);
     max-height: min(70.2vh, 684px);
     overflow: auto;
+}
+
+.mobile-settings-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    text-align: start;
+    font-size: 0.875rem;
+    color: rgb(15 23 42);
+}
+
+.mobile-settings-item:hover {
+    background: rgb(248 250 252);
+}
+
+.mobile-settings-item:disabled {
+    opacity: 0.5;
+}
+
+.mobile-flashcard-action {
+    display: inline-flex;
+    height: 3rem;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    border-width: 1px;
+    border-radius: 0.75rem;
+    background: white;
+    font-size: 1.5rem;
+    line-height: 1;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+}
+
+.mobile-flashcard-action:disabled {
+    opacity: 0.4;
+}
+
+.mobile-flashcard-card {
+    min-height: clamp(22rem, 57dvh, 38rem);
+}
+
+.dark .mobile-settings-item {
+    color: rgb(248 250 252);
+}
+
+.dark .mobile-settings-item:hover {
+    background: rgb(15 23 42);
+}
+
+.dark .mobile-flashcard-action {
+    background: rgb(2 6 23);
 }
 
 @media (max-width: 639px) {

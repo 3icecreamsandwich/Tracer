@@ -37,6 +37,7 @@ describe('flashcard motion', () => {
     vi.useFakeTimers()
     let cursor = 0
     let navigating: 'prev' | 'next' | null = null
+    const navigated = vi.fn()
     const motion = createFlashcardMotion({
       getFlipCardCount: () => 2,
       getNavigationCardCount: () => 2,
@@ -47,11 +48,13 @@ describe('flashcard motion', () => {
       getFlipping: () => false,
       setFlipping: () => {},
       setNavigating: (value) => { navigating = value },
+      onNavigate: navigated,
       isBusy: () => false
     })
 
     motion.goNext()
     expect(navigating).toBe('next')
+    expect(navigated).toHaveBeenCalledWith('next')
     vi.advanceTimersByTime(FLASHCARD_NAVIGATION_DURATION_MS)
     expect(cursor).toBe(1)
     expect(navigating).toBeNull()
@@ -59,5 +62,6 @@ describe('flashcard motion', () => {
     motion.goNext()
     vi.advanceTimersByTime(FLASHCARD_NAVIGATION_DURATION_MS)
     expect(cursor).toBe(1)
+    expect(navigated).toHaveBeenCalledTimes(1)
   })
 })

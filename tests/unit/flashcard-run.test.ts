@@ -9,6 +9,7 @@ function createRun(onAnswer = (_answer: FlashcardAnswer) => {}) {
     order: ref(['a', 'b']),
     lastOrder: ref<string[]>([]),
     answersByTermId: ref<Record<string, FlashcardAnswer>>({}),
+    completedTermIds: ref(new Set<string>()),
     answerAttemptsCount: ref(0),
     correctAttemptsCount: ref(0),
     retryTermIds: ref(new Set<string>()),
@@ -37,6 +38,7 @@ describe('flashcard run', () => {
     const order = ['a', 'b', 'c']
     expect(flashcardPassProgress(order, { a: 'correct' })).toEqual({ completed: 1, total: 3 })
     expect(flashcardPassProgress(order, { a: 'correct', b: 'correct' })).toEqual({ completed: 2, total: 3 })
+    expect(flashcardPassProgress(order, { a: 'correct' }, new Set(['b']))).toEqual({ completed: 2, total: 3 })
   })
 
   it('restores saved correct cards and the saved cursor', () => {
@@ -44,6 +46,7 @@ describe('flashcard run', () => {
     run.startRun({ resumeTermId: 'b', resumeCorrectTermIds: ['a'] })
     expect(state.cursorIndex.value).toBe(1)
     expect(state.answersByTermId.value).toEqual({ a: 'correct' })
+    expect(state.completedTermIds.value).toEqual(new Set(['a']))
     expect(state.answerAttemptsCount.value).toBe(1)
   })
 

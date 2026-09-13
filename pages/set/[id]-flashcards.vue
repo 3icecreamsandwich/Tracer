@@ -134,7 +134,7 @@
                 >
                     {{ t("set.flashcards") }}
                 </h1>
-                <p class="mt-1 hidden text-sm text-slate-600 sm:block dark:text-slate-300">
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
                     {{ t("set.flashcardInstructions") }}
                 </p>
                 <div v-if="smartReviewEnabled" class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
@@ -287,7 +287,7 @@
 
                 <!-- Controls -->
                 <div
-                    class="mt-6 flex flex-wrap items-center justify-between gap-3 w-[calc(100%-2rem)] sm:w-[75vw]"
+                    class="mt-6 hidden w-[75vw] flex-wrap items-center justify-between gap-3 sm:flex"
                 >
                     <div class="flex flex-wrap gap-3">
                         <button
@@ -299,11 +299,8 @@
                                 flashcardAnswerBusy
                             "
                             @click="goPrev"
-                            :aria-label="t('set.previous')"
-                            :title="t('set.previous')"
                         >
-                            <span aria-hidden="true">←</span>
-                            <span class="hidden sm:ml-1 sm:inline">{{ t("set.previous") }}</span>
+                            ← {{ t("set.previous") }}
                         </button>
 
                         <button
@@ -315,11 +312,8 @@
                                 flashcardAnswerBusy
                             "
                             @click="goNext"
-                            :aria-label="t('set.next')"
-                            :title="t('set.next')"
                         >
-                            <span class="hidden sm:mr-1 sm:inline">{{ t("set.next") }}</span>
-                            <span aria-hidden="true">→</span>
+                            {{ t("set.next") }} →
                         </button>
                     </div>
 
@@ -342,11 +336,8 @@
                             class="inline-flex h-10 items-center justify-center rounded-md border border-[#C14D4D] bg-white px-3 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                             :disabled="!currentTerm || flashcardAnswerBusy"
                             @click="markIncorrect"
-                            :aria-label="t('set.missed')"
-                            :title="t('set.missed')"
                         >
-                            <span class="text-xl leading-none sm:hidden" aria-hidden="true">×</span>
-                            <span class="hidden sm:inline">{{ t("set.missed") }}</span>
+                            {{ t("set.missed") }}
                         </button>
 
                         <button
@@ -354,13 +345,63 @@
                             class="inline-flex h-10 items-center justify-center rounded-md border border-[#2D8210] bg-white px-3 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                             :disabled="!currentTerm || flashcardAnswerBusy"
                             @click="markCorrect"
-                            :aria-label="t('set.gotIt')"
-                            :title="t('set.gotIt')"
                         >
-                            <span class="text-xl leading-none sm:hidden" aria-hidden="true">✓</span>
-                            <span class="hidden sm:inline">{{ t("set.gotIt") }}</span>
+                            {{ t("set.gotIt") }}
                         </button>
                     </div>
+                </div>
+
+                <div class="mt-4 grid w-[calc(100%-2rem)] grid-cols-5 gap-2 sm:hidden">
+                    <button
+                        type="button"
+                        class="mobile-fullscreen-action text-slate-700 dark:text-slate-200"
+                        :disabled="totalCount === 0 || cursorIndex === 0 || flashcardAnswerBusy"
+                        :aria-label="t('set.previous')"
+                        :title="t('set.previous')"
+                        @click="goPrev"
+                    >
+                        <span aria-hidden="true">←</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="mobile-fullscreen-action text-slate-700 dark:text-slate-200"
+                        :disabled="totalCount === 0 || cursorIndex >= order.length - 1 || flashcardAnswerBusy"
+                        :aria-label="t('set.next')"
+                        :title="t('set.next')"
+                        @click="goNext"
+                    >
+                        <span aria-hidden="true">→</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="mobile-fullscreen-action border-amber-400 text-amber-500"
+                        :disabled="!currentTerm || starBusy"
+                        :aria-pressed="isCurrentStarred"
+                        :aria-label="isCurrentStarred ? 'Unstar card' : 'Star card'"
+                        @click="toggleStar"
+                    >
+                        <span aria-hidden="true">{{ isCurrentStarred ? "★" : "☆" }}</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="mobile-fullscreen-action border-red-400 text-red-500"
+                        :disabled="!currentTerm || flashcardAnswerBusy"
+                        :aria-label="t('set.missed')"
+                        :title="t('set.missed')"
+                        @click="markIncorrect"
+                    >
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="mobile-fullscreen-action border-green-500 text-green-600"
+                        :disabled="!currentTerm || flashcardAnswerBusy"
+                        :aria-label="t('set.gotIt')"
+                        :title="t('set.gotIt')"
+                        @click="markCorrect"
+                    >
+                        <span aria-hidden="true">✓</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -476,6 +517,7 @@ const cursorIndex = ref(0);
 const order = ref<Uuid[]>([]);
 const lastOrder = ref<Uuid[]>([]);
 const answersByTermId = ref<Record<Uuid, "correct" | "incorrect">>({});
+const completedTermIds = ref<Set<Uuid>>(new Set());
 const answerAttemptsCount = ref(0);
 const correctAttemptsCount = ref(0);
 const retryTermIds = ref<Set<Uuid>>(new Set());
@@ -502,6 +544,7 @@ type ReviewRunSnapshot = {
     order: Uuid[];
     cursorIndex: number;
     answers: Record<Uuid, 'correct' | 'incorrect'>;
+    completed: Uuid[];
     attempts: number;
     correctAttempts: number;
     retries: Uuid[];
@@ -680,11 +723,11 @@ const termById = computed(() => {
 const attemptedCount = computed(() => answerAttemptsCount.value);
 const correctCount = computed(() => correctAttemptsCount.value);
 const isFinished = computed(() =>
-    order.value.length > 0 && order.value.every((id) => answersByTermId.value[id] !== undefined),
+    order.value.length > 0 && order.value.every((id) => completedTermIds.value.has(id)),
 );
 const hasIncorrectCards = computed(() => retryTermIds.value.size > 0);
 const currentPassProgress = computed(() =>
-    flashcardPassProgress(order.value, answersByTermId.value),
+    flashcardPassProgress(order.value, answersByTermId.value, completedTermIds.value),
 );
 
 const ratioText = computed(() => {
@@ -768,6 +811,7 @@ const {
         order,
         lastOrder,
         answersByTermId,
+        completedTermIds,
         answerAttemptsCount,
         correctAttemptsCount,
         retryTermIds,
@@ -870,6 +914,7 @@ function setReviewFilter(filter: 'all' | ReviewBucket) {
         order: [...order.value],
         cursorIndex: cursorIndex.value,
         answers: { ...answersByTermId.value },
+        completed: [...completedTermIds.value],
         attempts: answerAttemptsCount.value,
         correctAttempts: correctAttemptsCount.value,
         retries: [...retryTermIds.value],
@@ -892,6 +937,7 @@ function setReviewFilter(filter: 'all' | ReviewBucket) {
     order.value = [...saved.order];
     cursorIndex.value = saved.cursorIndex;
     answersByTermId.value = { ...saved.answers };
+    completedTermIds.value = new Set(saved.completed ?? Object.keys(saved.answers));
     answerAttemptsCount.value = saved.attempts;
     correctAttemptsCount.value = saved.correctAttempts;
     retryTermIds.value = new Set(saved.retries);
@@ -914,6 +960,10 @@ const {
     getFlipping: () => isFlipping.value,
     setFlipping: (flipping) => (isFlipping.value = flipping),
     setNavigating: (direction) => (isNavigating.value = direction),
+    onNavigate: () => {
+        const id = order.value[cursorIndex.value];
+        if (id) completedTermIds.value = new Set(completedTermIds.value).add(id);
+    },
     isBusy: () => flashcardAnswerBusy.value,
 });
 
@@ -1163,6 +1213,28 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.mobile-fullscreen-action {
+    display: inline-flex;
+    height: 3rem;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    border-width: 1px;
+    border-radius: 0.75rem;
+    background: white;
+    font-size: 1.5rem;
+    line-height: 1;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+}
+
+.mobile-fullscreen-action:disabled {
+    opacity: 0.4;
+}
+
+.dark .mobile-fullscreen-action {
+    background: rgb(2 6 23);
+}
+
 @keyframes flip {
     0% {
         transform: scaleY(1);
