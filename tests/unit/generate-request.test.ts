@@ -11,6 +11,13 @@ import {
 } from '../../src/composables/generate/source-extraction'
 
 describe('generate request helpers', () => {
+  it('unwraps the provider error from an AI SDK retry error', () => {
+    const providerError = Object.assign(new Error('The AI provider returned 429. Check its key and quota in Settings.'), { status: 429 })
+    const retryError = Object.assign(new Error('Failed after 3 attempts. Last error:'), { lastError: providerError })
+
+    expect(normalizeGenerateRequestError(retryError)).toBe(providerError)
+  })
+
   it('builds a text-only prompt from extracted sources', () => {
     const sources: ExtractedGenerateSource[] = [
       {

@@ -17,8 +17,27 @@ function errorMessage(err: unknown): string {
   return ''
 }
 
+function nestedAiError(err: unknown): unknown {
+  let current = err
+  const visited = new Set<unknown>()
+  for (let depth = 0; depth < 4 && typeof current === 'object' && current !== null; depth += 1) {
+    if (visited.has(current)) break
+    visited.add(current)
+    const value = current as { lastError?: unknown; cause?: unknown }
+    const next = value.lastError ?? value.cause
+    if (!next) break
+    const currentMessage = errorMessage(current).trim()
+    const nextMessage = errorMessage(next).trim()
+    if (nextMessage && (!currentMessage || currentMessage.includes('Last error:'))) current = next
+    else break
+  }
+  return current
+}
+
 export function normalizeGenerateRequestError(err: unknown): unknown {
   if (err instanceof GenerateTextRequestFormatError) return err
+
+  err = nestedAiError(err)
 
   const message = errorMessage(err).toLowerCase()
   if (
