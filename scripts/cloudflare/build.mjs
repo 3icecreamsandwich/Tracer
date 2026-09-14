@@ -13,7 +13,7 @@ for (const directory of ['.nuxt-cloudflare', '.output-cloudflare']) {
 const result = spawnSync('bun', ['--bun', 'node_modules/nuxt/bin/nuxt.mjs', 'build'], { stdio: 'inherit', env })
 if (result.status !== 0) process.exit(result.status ?? 1)
 const config = JSON.parse(readFileSync('wrangler.jsonc', 'utf8'))
-const vars = { NUXT_SUPABASE_URL: env.VITE_SUPABASE_URL, NUXT_SUPABASE_PUBLISHABLE_KEY: env.VITE_SUPABASE_PUBLISHABLE_KEY, NUXT_GITHUB_OAUTH_CLIENT_ID: env.VITE_GITHUB_OAUTH_CLIENT_ID || '', NUXT_WEB_AI_COMPATIBLE_ORIGIN: env.NUXT_WEB_AI_COMPATIBLE_ORIGIN || '' }
+const vars = { TRACER_BUILD_SHA: env.GITHUB_SHA || 'local', NUXT_SUPABASE_URL: env.VITE_SUPABASE_URL, NUXT_SUPABASE_PUBLISHABLE_KEY: env.VITE_SUPABASE_PUBLISHABLE_KEY, NUXT_GITHUB_OAUTH_CLIENT_ID: env.VITE_GITHUB_OAUTH_CLIENT_ID || '', NUXT_WEB_AI_COMPATIBLE_ORIGIN: env.NUXT_WEB_AI_COMPATIBLE_ORIGIN || '' }
 config.main = resolve(config.main)
 config.assets.directory = resolve(config.assets.directory)
 Object.assign(config.vars, vars)

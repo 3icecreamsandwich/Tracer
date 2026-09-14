@@ -5,6 +5,7 @@ interface __BaseEnv_Env {
 	WEB_RATE_LIMITER: RateLimit;
 	ASSETS: Fetcher;
 	TRACER_MAINTENANCE: string;
+	TRACER_BUILD_SHA: string;
 	NUXT_APP_BASE_URL: string;
 	NUXT_GITHUB_OAUTH_CLIENT_ID: string;
 	NUXT_WEB_AI_COMPATIBLE_ORIGIN: string;
@@ -19,6 +20,7 @@ declare namespace Cloudflare {
 		WEB_RATE_LIMITER: RateLimit;
 		ASSETS: Fetcher;
 		TRACER_MAINTENANCE: string;
+		TRACER_BUILD_SHA: string;
 		NUXT_APP_BASE_URL: string;
 		NUXT_GITHUB_OAUTH_CLIENT_ID: string;
 		NUXT_WEB_AI_COMPATIBLE_ORIGIN: string;
@@ -32,7 +34,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "TRACER_MAINTENANCE" | "NUXT_APP_BASE_URL" | "NUXT_GITHUB_OAUTH_CLIENT_ID" | "NUXT_WEB_AI_COMPATIBLE_ORIGIN" | "NUXT_SUPABASE_URL" | "NUXT_SUPABASE_PUBLISHABLE_KEY">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "TRACER_MAINTENANCE" | "TRACER_BUILD_SHA" | "NUXT_APP_BASE_URL" | "NUXT_GITHUB_OAUTH_CLIENT_ID" | "NUXT_WEB_AI_COMPATIBLE_ORIGIN" | "NUXT_SUPABASE_URL" | "NUXT_SUPABASE_PUBLISHABLE_KEY">> {}
 }
 
 // Begin runtime types

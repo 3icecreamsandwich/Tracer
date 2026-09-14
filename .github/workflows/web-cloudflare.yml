@@ -29,7 +29,12 @@ jobs:
         with:
           node-version: '22'
       - run: bun install --frozen-lockfile
-      - run: bun x vitest run
+      - name: Unit tests
+        shell: bash
+        run: |
+          mkdir -p test-results/unit
+          set -o pipefail
+          bun x vitest run 2>&1 | tee test-results/unit/vitest.log
       - run: bun run build:cloudflare
       - run: bun x wrangler deploy --config .wrangler/tracer.json --dry-run
       - run: bun x playwright install --with-deps chromium

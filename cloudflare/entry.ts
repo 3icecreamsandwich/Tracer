@@ -24,6 +24,7 @@ export default {
     response = new Response(response.body, response)
     response.headers.set('X-Robots-Tag', 'noindex, nofollow')
     response.headers.set('X-Content-Type-Options', 'nosniff')
+    response.headers.set('X-Tracer-Commit', env.TRACER_BUILD_SHA || 'unknown')
     if (api) response.headers.set('Cache-Control', 'private, no-store')
     else if (url.pathname.startsWith('/_nuxt/') && response.ok) response.headers.set('Cache-Control', 'public, max-age=31536000, immutable')
     else response.headers.set('Cache-Control', 'no-cache')

@@ -25,6 +25,7 @@
   },
   "vars": {
     "TRACER_MAINTENANCE": "0",
+    "TRACER_BUILD_SHA": "local",
     "NUXT_APP_BASE_URL": "/",
     "NUXT_GITHUB_OAUTH_CLIENT_ID": "",
     "NUXT_WEB_AI_COMPATIBLE_ORIGIN": "",
@@ -47,6 +48,7 @@
       "workers_dev": false,
       "vars": {
         "TRACER_MAINTENANCE": "0",
+        "TRACER_BUILD_SHA": "local",
         "NUXT_APP_BASE_URL": "/",
         "NUXT_GITHUB_OAUTH_CLIENT_ID": "",
         "NUXT_WEB_AI_COMPATIBLE_ORIGIN": "",
