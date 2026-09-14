@@ -37,6 +37,14 @@
           </button>
           <button
             type="button"
+            class="inline-flex items-center rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50 dark:focus-visible:ring-offset-slate-950"
+            :disabled="busy || factCheckBusy"
+            @click="openQuizletImport"
+          >
+            Quizlet export
+          </button>
+          <button
+            type="button"
             class="inline-flex items-center rounded-md border border-slate-950 bg-slate-950 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-950"
             :disabled="busy || factCheckBusy"
             @click="onCreate"
@@ -196,7 +204,7 @@
 
     <BaseModal
       :open="Boolean(isImportOpen)"
-      :title="(t('common.import'))"
+      :title="importMode === 'quizlet' ? 'Import a Quizlet export' : t('common.import')"
       panel-class="max-w-2xl"
       :close-label="t('common.close')"
       @close="closeImport"
@@ -204,7 +212,10 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            CSV · TSV · {{ t('create.cards') }}
+            <template v-if="importMode === 'quizlet'">
+              In Quizlet, export a set you own, then paste the copied text here. This imports text cards only—no Quizlet sign-in or link scraping.
+            </template>
+            <template v-else>CSV · TSV · {{ t('create.cards') }}</template>
           </p>
         </div>
       </div>
@@ -215,12 +226,21 @@
           ref="importTextareaEl"
           v-model="importText"
           rows="10"
+          :placeholder="importMode === 'quizlet' ? 'term\tdefinition\nterm\tdefinition' : ''"
           class="w-full resize-y rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
         />
       </div>
       <p v-if="importError" class="mt-3 text-sm text-red-700 dark:text-red-300">
         {{ importError }}
       </p>
+      <div v-else-if="importPreview" class="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
+        <p class="font-medium text-slate-900 dark:text-white">{{ importPreview.rows.length }} card{{ importPreview.rows.length === 1 ? '' : 's' }} ready to import</p>
+        <ul class="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
+          <li v-for="row in importPreview.rows.slice(0, 3)" :key="`${row.front}\u0000${row.back}`" class="truncate">
+            <span class="font-medium">{{ row.front }}</span><span aria-hidden="true"> — </span>{{ row.back }}
+          </li>
+        </ul>
+      </div>
       <div class="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
@@ -228,7 +248,7 @@
           :disabled="busy || !importText.trim()"
           @click="importFromText"
         >
-          {{ t('common.import') }} {{ t('create.cards') }}
+          {{ importMode === 'quizlet' ? 'Import Quizlet cards' : `${t('common.import')} ${t('create.cards')}` }}
         </button>
         <button
           type="button"
@@ -297,6 +317,7 @@ const formError = ref<string | null>(null)
 const isImportOpen = ref(false)
 const importText = ref('')
 const importError = ref<string | null>(null)
+const importMode = ref<'standard' | 'quizlet'>('standard')
 const duplicateReviewOpen = ref(false)
 const duplicateIssues = ref<DuplicateCardIssue[]>([])
 let duplicateReviewContinuation: (() => void) | null = null
@@ -485,6 +506,14 @@ async function onImagePicked(e: Event, cardKey: string, side: CardImageSide) {
 
 function openImport() {
   importError.value = null
+  importMode.value = 'standard'
+  isImportOpen.value = true
+  nextTick(() => importTextareaEl.value?.focus())
+}
+
+function openQuizletImport() {
+  importError.value = null
+  importMode.value = 'quizlet'
   isImportOpen.value = true
   nextTick(() => importTextareaEl.value?.focus())
 }
@@ -492,7 +521,18 @@ function openImport() {
 function closeImport() {
   isImportOpen.value = false
   importError.value = null
+  importMode.value = 'standard'
 }
+
+const importPreview = computed(() => {
+  const raw = importText.value.trim()
+  if (!raw) return null
+  try {
+    return { rows: parseTermsDelimited(raw, { delimiter: 'auto' }) }
+  } catch {
+    return null
+  }
+})
 
 function openImportFilePicker() {
   importError.value = null
