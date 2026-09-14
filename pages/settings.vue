@@ -176,9 +176,6 @@
         <div class="flex items-start justify-between gap-4">
           <div>
             <h2 class="text-sm font-medium">{{ t('settings.language') }}</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {{ t('settings.languageDescription') }}
-            </p>
           </div>
 
           <div ref="languageMenuRoot" class="relative shrink-0">
@@ -314,9 +311,7 @@
         <div class="flex items-start justify-between gap-4">
           <div>
             <h2 class="text-sm font-medium">{{ t('settings.learnHybrid') }}</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {{ t('settings.learnHybridDescription') }}
-            </p>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Adds AI-Generated question in the mix.</p>
             <p v-if="!defaultModelId" class="mt-2 text-sm text-slate-600 dark:text-slate-300">
               {{ t('settings.chooseModelFirst') }}
             </p>
@@ -362,9 +357,7 @@
         <div class="flex items-start justify-between gap-4">
           <div>
             <h2 class="text-sm font-medium">Page chat button</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Show the floating, page-aware Chat button throughout Tracer.
-            </p>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Shows the chat button on the bottom right.</p>
           </div>
 
           <button
@@ -577,8 +570,7 @@
         </div>
       </section>
 
-      <section class="mt-6 rounded-lg border border-red-200 bg-white p-5 shadow-sm dark:border-red-900 dark:bg-slate-950" :aria-label="t('settings.dangerZone')">
-        <h2 class="text-sm font-medium text-red-700 dark:text-red-300">{{ t('settings.dangerZone') }}</h2>
+      <section class="mt-6 rounded-lg border border-red-200 bg-white p-5 shadow-sm dark:border-red-900 dark:bg-slate-950" aria-label="Reset and account controls">
         <p v-if="error" class="mt-3 text-sm text-red-700 dark:text-red-300">{{ error }}</p>
 
         <div class="mt-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
