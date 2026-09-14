@@ -18,6 +18,16 @@ describe('generate request helpers', () => {
     expect(normalizeGenerateRequestError(retryError)).toBe(providerError)
   })
 
+  it('recovers a provider status from an AI SDK retry response body', () => {
+    const retryError = Object.assign(new Error('Failed after 3 attempts. Last error:'), {
+      lastError: { statusCode: 429, responseBody: '{"error":{"message":"Quota exhausted"}}' }
+    })
+
+    const out = normalizeGenerateRequestError(retryError) as Error & { status?: number }
+    expect(out.message).toBe('Quota exhausted')
+    expect(out.status).toBe(429)
+  })
+
   it('builds a text-only prompt from extracted sources', () => {
     const sources: ExtractedGenerateSource[] = [
       {

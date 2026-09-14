@@ -117,9 +117,9 @@ describe('linked-folder generation', () => {
   it('splits a large individual PDF without losing text', () => {
     const text = ('A paragraph about cells.\n\n').repeat(3000)
     const batches = batchGenerateSources([source('large', { kind: 'pdf', text, pageCount: 50 })])
-    expect(batches.length).toBeGreaterThan(3)
+    expect(batches.length).toBeGreaterThan(1)
     expect(batches.flat().map((item) => item.text).join('')).toBe(text)
-    expect(batches.every((batch) => batch.reduce((sum, item) => sum + item.text.length, 0) <= 18000)).toBe(true)
+    expect(batches.every((batch) => batch.reduce((sum, item) => sum + item.text.length, 0) <= 60000)).toBe(true)
   })
 
   it('runs provider requests sequentially and merges in source order', async () => {
@@ -134,7 +134,7 @@ describe('linked-folder generation', () => {
       active -= 1
       return { text: `\`\`\`study_guide_md\n# Guide ${index}\n\`\`\`\n\`\`\`flashcards_tsv\nTerm ${index}\tDefinition ${index}\n\`\`\`` }
     })
-    const pending = generateLinkedFolderContent({ model: {}, sources: [source('large', { text: 'x'.repeat(72000) })] })
+    const pending = generateLinkedFolderContent({ model: {}, sources: [source('large', { text: 'x'.repeat(220000) })] })
     await vi.waitFor(() => expect(releases).toHaveLength(1))
     releases[0]!()
     await vi.waitFor(() => expect(releases).toHaveLength(2))
