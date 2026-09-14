@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { displayNameFromUser, isGoogleUser } from '../../src/composables/auth/account'
+import { displayNameFromUser, isGoogleUser, normalizeUsername, validateUsername } from '../../src/composables/auth/account'
 import { normalizeAuthError, TracerAuthError } from '../../src/composables/auth/errors'
 import { isInvalidStoredSessionError, parseStoredSession } from '../../src/composables/auth/session'
 
@@ -10,6 +10,13 @@ describe('Supabase account authentication', () => {
     expect(displayNameFromUser(user, 'Local Name')).toBe('Local Name')
     expect(displayNameFromUser(user)).toBe('Google Name')
     expect(displayNameFromUser({ user_metadata: {} } as any)).toBe('')
+  })
+
+  it('normalizes and validates public usernames', () => {
+    expect(normalizeUsername('  AkHiL_2 ')).toBe('akhil_2')
+    expect(validateUsername('akhil_2')).toBeNull()
+    expect(validateUsername('Upper Case')).toContain('lowercase')
+    expect(validateUsername('ab')).toContain('3–30')
   })
 
   it('detects Google from server-controlled app metadata', () => {

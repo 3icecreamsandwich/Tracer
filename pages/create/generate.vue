@@ -52,7 +52,10 @@
             v-if="hasTauriInternals"
           >
             <LoadingSpinner v-if="linkBusy" size="sm" :label="t('create.linkingFolder')" />
-            <template v-else>{{ t('create.linkFolder') }}</template>
+            <template v-else>
+              <AppIcon name="add-folder" class="mr-1.5" :size="17" />
+              {{ t('create.linkFolder') }}
+            </template>
           </button>
           <button
             type="button"

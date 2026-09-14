@@ -1806,7 +1806,7 @@
                                 :to="item.to"
                                 :replace="item.replace"
                                 class="inline-flex h-14 min-w-0 items-center justify-center rounded-xl border bg-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:bg-slate-950"
-                                :class="item.active ? 'border-slate-400 bg-slate-200 dark:border-slate-600 dark:bg-slate-800' : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900'"
+                                :class="item.active ? 'border-slate-500 bg-slate-300 dark:border-slate-500 dark:bg-slate-700' : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900'"
                                 :aria-label="item.title"
                                 :title="item.title"
                             >
@@ -3877,19 +3877,16 @@ function applyPracticeSettings() {
         const currentSet = set.value;
         if (!currentSet) return;
         clampPracticeQuestionCount();
-        void router.push({
-            name: "set-id-test",
-            params: { id: currentSet.id },
-            query: {
-                published: isPublicSet.value ? "1" : undefined,
-                types: enabledPracticeQuestionTypes().join(","),
-                count: String(practiceQuestionCount.value),
-                shuffle: practiceShuffle.value ? "1" : "0",
-                timed: practiceTimed.value ? "1" : "0",
-                minutes: String(practiceTimeLimitMinutes.value),
-                seed: String(learnSeed()),
-            },
+        const query = new URLSearchParams({
+            types: enabledPracticeQuestionTypes().join(","),
+            count: String(practiceQuestionCount.value),
+            shuffle: practiceShuffle.value ? "1" : "0",
+            timed: practiceTimed.value ? "1" : "0",
+            minutes: String(practiceTimeLimitMinutes.value),
+            seed: String(learnSeed()),
         });
+        if (isPublicSet.value) query.set("published", "1");
+        void router.push(`/set/${currentSet.id}-test?${query.toString()}`);
         return;
     }
     learnRunCounter.value += 1;

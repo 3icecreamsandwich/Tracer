@@ -39,14 +39,49 @@
 
           <LoadingSpinner v-if="localSettingsPending" size="sm" />
           <div v-else class="min-w-0">
-            <p class="truncate text-sm font-medium text-slate-900 dark:text-slate-50">
-              {{ profile?.name ?? t('common.user') }}
-            </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <p class="truncate text-sm font-medium text-slate-900 dark:text-slate-50">
+                {{ profile?.name ?? t('common.user') }}
+              </p>
+              <span v-if="superAccount" class="relative top-0.5 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900 dark:border-amber-500/50 dark:bg-amber-400/20 dark:text-amber-200" title="Tracer developer">
+                <AppIcon name="crown" :size="15" :stroke-width="2.4" /> DEV
+              </span>
+            </div>
             <p class="truncate text-sm text-slate-600 dark:text-slate-300">
               {{ profile?.email ?? '' }}
             </p>
+            <p v-if="usernameDraft" class="truncate text-sm text-slate-500 dark:text-slate-400">@{{ usernameDraft }}</p>
           </div>
         </div>
+
+        <form v-if="!isWebPreview && accountOnline" class="mt-5 grid gap-4 border-t border-slate-200 pt-5 dark:border-slate-800 sm:grid-cols-2" @submit.prevent="onSaveProfileIdentity">
+          <div class="flex items-center justify-between sm:col-span-2">
+            <p class="text-sm font-semibold">Profile details</p>
+            <button v-if="!profileEditing" type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" aria-label="Edit profile" title="Edit profile" @click="startProfileEditing">
+              <AppIcon name="edit" :size="17" />
+            </button>
+            <button v-else type="button" class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white" @click="cancelProfileEditing">Cancel</button>
+          </div>
+          <label class="text-sm font-medium">
+            Display name
+            <input v-model="displayNameDraft" maxlength="80" autocomplete="name" :readonly="!profileEditing" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 font-normal shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 read-only:cursor-default read-only:bg-slate-50 read-only:text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:read-only:bg-slate-900 dark:read-only:text-slate-300" />
+            <span class="mt-1 block text-xs font-normal text-slate-500">Shown to other people. It does not have to be unique.</span>
+          </label>
+          <label class="text-sm font-medium">
+            Username
+            <div class="mt-1 flex rounded-md border border-slate-300 shadow-sm focus-within:ring-2 focus-within:ring-orange-500" :class="profileEditing ? 'bg-white dark:bg-slate-950' : 'bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300'">
+              <span class="px-3 py-2 text-slate-500">@</span>
+              <input v-model="usernameDraft" maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" :readonly="!profileEditing" class="min-w-0 flex-1 bg-transparent py-2 pe-3 font-normal outline-none read-only:cursor-default" @input="usernameDraft = normalizeUsername(usernameDraft)" />
+            </div>
+            <span class="mt-1 block text-xs font-normal text-slate-500">Unique, lowercase, 3–30 characters. Letters, numbers, and underscores only.</span>
+          </label>
+          <div class="sm:col-span-2 flex flex-wrap items-center gap-3">
+            <button type="submit" class="rounded-md px-4 py-2 text-sm font-semibold transition-colors" :class="profileCanSave ? 'bg-slate-950 text-white shadow-sm hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200' : 'cursor-not-allowed bg-slate-200 text-slate-400 dark:bg-slate-800 dark:text-slate-500'" :disabled="!profileCanSave">
+              {{ profileIdentityPending ? 'Saving…' : t('common.save') }}
+            </button>
+            <p v-if="profileIdentityError" role="alert" class="text-sm text-red-600 dark:text-red-300">{{ profileIdentityError }}</p>
+          </div>
+        </form>
       </section>
 
       <section
@@ -55,7 +90,6 @@
       >
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 class="text-sm font-medium">{{ t('settings.account') }}</h2>
             <p v-if="accountRole" class="mt-1 text-sm font-medium">{{ t('settings.accountType') }}: {{ accountRoleLabel }}</p>
             <p v-if="superAccount" class="mt-1 text-sm font-medium">{{ t('settings.superAccount') }}</p>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ accountEmail || profile?.email }}</p>
@@ -803,6 +837,12 @@
 <script setup lang="ts">
 import { getAccountRole } from '../src/composables/classrooms'
 import type { AccountRole } from '../src/composables/auth/account'
+import {
+  loadAccountProfileIdentity,
+  normalizeUsername,
+  updateAccountProfileIdentity,
+  validateUsername,
+} from '../src/composables/auth/account'
 import { studyStorageOwner } from '~/src/composables/platform/web'
 
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
@@ -883,12 +923,66 @@ const accountActionPending = ref(false)
 const accountConnectionPending = computed(() => cachedAccountConnectionPending.value || accountActionPending.value)
 const superAccount = ref(false)
 const accountRole = ref<AccountRole | null>(null)
+const displayNameDraft = ref('')
+const usernameDraft = ref('')
+const savedDisplayName = ref('')
+const savedUsername = ref('')
+const profileEditing = ref(false)
+const profileIdentityPending = ref(false)
+const profileIdentityError = ref<string | null>(null)
+const profileIdentityDirty = computed(() => displayNameDraft.value.trim() !== savedDisplayName.value || usernameDraft.value !== savedUsername.value)
+const profileCanSave = computed(() => profileEditing.value && profileIdentityDirty.value && !profileIdentityPending.value && !!displayNameDraft.value.trim() && !validateUsername(usernameDraft.value))
+function startProfileEditing() {
+  profileIdentityError.value = null
+  profileEditing.value = true
+}
+function cancelProfileEditing() {
+  displayNameDraft.value = savedDisplayName.value
+  usernameDraft.value = savedUsername.value
+  profileIdentityError.value = null
+  profileEditing.value = false
+}
+async function refreshProfileIdentity() {
+  if (accountConnectionStatus.value !== 'online') return
+  profileIdentityPending.value = true
+  profileIdentityError.value = null
+  try {
+    const identity = await loadAccountProfileIdentity()
+    if (!identity) return
+    displayNameDraft.value = identity.displayName
+    usernameDraft.value = identity.username
+    savedDisplayName.value = identity.displayName
+    savedUsername.value = identity.username
+  } catch (e: unknown) {
+    profileIdentityError.value = toSafeErrorMessage(e, 'Could not load your profile.')
+  } finally {
+    profileIdentityPending.value = false
+  }
+}
+async function onSaveProfileIdentity() {
+  profileIdentityError.value = null
+  profileIdentityPending.value = true
+  try {
+    const identity = await updateAccountProfileIdentity({ displayName: displayNameDraft.value, username: usernameDraft.value })
+    displayNameDraft.value = identity.displayName
+    usernameDraft.value = identity.username
+    savedDisplayName.value = identity.displayName
+    savedUsername.value = identity.username
+    if (profile.value) profile.value = { ...profile.value, name: identity.displayName }
+    profileEditing.value = false
+  } catch (e: unknown) {
+    profileIdentityError.value = toSafeErrorMessage(e, 'Could not save your profile.')
+  } finally {
+    profileIdentityPending.value = false
+  }
+}
 watch(() => [accountIdentity.value?.id, accountConnectionStatus.value], async (_, __, onCleanup) => {
   let cancelled = false
   onCleanup(() => { cancelled = true })
   superAccount.value = false
   accountRole.value = null
   if (accountConnectionStatus.value !== 'online') return
+  await refreshProfileIdentity()
   const role = await getAccountRole().catch(() => null)
   if (!cancelled) {
     accountRole.value = role

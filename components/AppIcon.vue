@@ -14,8 +14,9 @@ import Pencil from '@lucide/vue/dist/esm/icons/pencil.mjs'
 import Share2 from '@lucide/vue/dist/esm/icons/share-2.mjs'
 import FolderPlus from '@lucide/vue/dist/esm/icons/folder-plus.mjs'
 import Settings from '@lucide/vue/dist/esm/icons/settings.mjs'
+import Crown from '@lucide/vue/dist/esm/icons/crown.mjs'
 withDefaults(defineProps<{
-  name: 'close' | 'copy' | 'download' | 'select' | 'publish' | 'filter' | 'dashboard' | 'edit' | 'share' | 'add-folder' | 'settings'
+  name: 'close' | 'copy' | 'download' | 'select' | 'publish' | 'filter' | 'dashboard' | 'edit' | 'share' | 'add-folder' | 'settings' | 'crown'
   size?: number
   strokeWidth?: number
 }>(), {
@@ -34,5 +35,6 @@ const icons = {
   share: Share2,
   'add-folder': FolderPlus,
   settings: Settings,
+  crown: Crown,
 }
 </script>

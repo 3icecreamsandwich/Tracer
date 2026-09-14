@@ -27,7 +27,7 @@ export async function loadGeneratePlan(): Promise<GeneratePlan> {
     ])
     const { data: current } = await client.auth.getSession()
     if (current.session?.user.id !== userId) return 'free'
-    if (!role.error && role.data?.role === 'super') return 'pro'
+    if (!role.error && role.data?.role === 'super') return 'super'
     return subscription.error ? 'free' : subscriptionGeneratePlan(subscription.data)
   } catch {
     return 'free'

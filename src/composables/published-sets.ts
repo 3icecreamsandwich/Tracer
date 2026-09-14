@@ -15,6 +15,8 @@ export type PublishedSetSummary = {
   title: string
   description: string | null
   publisher_name: string
+  publisher_username: string | null
+  publisher_is_dev: boolean
   tags: PublicSetTag[]
   allow_copying: boolean
   card_count: number
@@ -31,7 +33,7 @@ type Cached<T> = { expires: number; request: Promise<T> }
 const catalogCache = new Map<string, Cached<{ items: PublishedSetSummary[]; hasMore: boolean }>>()
 const detailCache = new Map<string, Cached<PublishedSet>>()
 const settingsCache = new Map<string, Cached<PublicationSettings | null>>()
-const profileCache = new Map<string, Cached<string>>()
+const profileCache = new Map<string, Cached<{ name: string; username: string; isDev: boolean }>>()
 export type PublicationSettings = { id: string; tags: PublicSetTag[]; allow_copying: boolean }
 function cached<T>(
   cache: Map<string, Cached<T>>,
@@ -74,18 +76,23 @@ async function publishingSession() {
   // This identity selects the row; Postgres RLS authorizes every write.
   return { db, user: session?.user ?? null }
 }
-function publisherName(db: ReturnType<typeof getSupabaseClient>, userId: string) {
+function publisherIdentity(db: ReturnType<typeof getSupabaseClient>, userId: string) {
   return cached(
     profileCache,
     userId,
     async () => {
       const { data, error } = await db
         .from('profiles')
-        .select('display_name')
+        .select('display_name,username,user_roles(role)')
         .eq('id', userId)
         .maybeSingle()
       if (error) throw error
-      return data?.display_name || 'Tracer user'
+      const roles = Array.isArray(data?.user_roles) ? data.user_roles : []
+      return {
+        name: data?.display_name || 'Tracer user',
+        username: data?.username || '',
+        isDev: roles.some((entry: { role?: string }) => entry.role === 'super'),
+      }
     },
     300_000,
   )
@@ -117,7 +124,7 @@ export function getPublishedSet(id: string): Promise<PublishedSet> {
       const { data, error } = await getPublicSupabaseClient()
         .from('published_sets')
         .select(
-          'id,title,description,publisher_name,tags,allow_copying,card_count,created_at,updated_at,terms,icon_key,icon_tone',
+          'id,title,description,publisher_name,publisher_username,publisher_is_dev,tags,allow_copying,card_count,created_at,updated_at,terms,icon_key,icon_tone',
         )
         .eq('id', id)
         .single()
@@ -136,12 +143,21 @@ export function prefetchPublicCatalog() {
 }
 
 export function publishedSetToStudySet(row: PublishedSet): FlashcardSet {
+  const terms = (Array.isArray(row.terms) ? row.terms : [])
+    .map((term, index) => ({
+      ...term,
+      id: String(term?.id ?? `published-term-${index + 1}`).trim() || `published-term-${index + 1}`,
+      front: String(term?.front ?? '').trim(),
+      back: String(term?.back ?? '').trim(),
+    }))
+    .filter((term) => term.front.length > 0 && term.back.length > 0)
+
   return {
     id: row.id,
     folderId: null,
     title: row.title,
     description: row.description,
-    terms: row.terms,
+    terms,
     iconKey: row.icon_key,
     iconTone: row.icon_tone,
     createdAt: row.created_at,
@@ -153,14 +169,16 @@ export async function publishSet(set: FlashcardSet, tags: PublicSetTag[], allowC
   if (!user) throw new Error('Sign in to your Tracer account in Settings to publish a set.')
   if (!set.terms.length || !set.title.trim())
     throw new Error('Add a title and at least one card before publishing.')
-  const name = await publisherName(db, user.id)
+  const identity = await publisherIdentity(db, user.id)
   const { data, error } = await db
     .from('published_sets')
     .upsert(
       {
         publisher_id: user.id,
         source_set_id: set.id,
-        publisher_name: name,
+        publisher_name: identity.name,
+        publisher_username: identity.username,
+        publisher_is_dev: identity.isDev,
         title: set.title.trim(),
         description: set.description,
         terms: set.terms,
@@ -185,7 +203,7 @@ export async function getPublicationSettings(sourceSetId: string) {
   const { db, user } = await publishingSession()
   if (!user) return null
   // Warm the profile lookup while the publisher chooses subjects.
-  void publisherName(db, user.id).catch(() => {})
+  void publisherIdentity(db, user.id).catch(() => {})
   return cached(settingsCache, `${user.id}:${sourceSetId}`, async () => {
     const { data, error } = await db
       .from('published_sets')

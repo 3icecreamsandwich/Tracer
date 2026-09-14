@@ -12,6 +12,7 @@ import { callbackUrl, cancelOAuthCallback, finishOAuthCallback, startOAuthCallba
 
 export type SignupAccountRole = 'student' | 'teacher'
 export type AccountRole = SignupAccountRole | 'super'
+export type AccountProfileIdentity = { displayName: string; username: string }
 export type PendingEmailVerification = { listener: OAuthCallbackListener; email: string; role: SignupAccountRole }
 const browserVerificationSubscriptions = new Map<PendingEmailVerification, () => void>()
 
@@ -29,6 +30,56 @@ export function displayNameFromUser(user: User, submittedName = ''): string {
     if (typeof value === 'string' && value.trim()) return value.trim()
   }
   return ''
+}
+
+export function normalizeUsername(value: string): string {
+  return value.trim().toLowerCase()
+}
+
+export function validateUsername(value: string): string | null {
+  const username = normalizeUsername(value)
+  if (username.length < 3 || username.length > 30) return 'Username must be 3–30 characters.'
+  if (!/^[a-z0-9][a-z0-9_]*$/.test(username)) {
+    return 'Use only lowercase letters, numbers, and underscores; start with a letter or number.'
+  }
+  return null
+}
+
+export async function loadAccountProfileIdentity(): Promise<AccountProfileIdentity | null> {
+  const client = getSupabaseClient()
+  const { data: { user }, error: userError } = await client.auth.getUser()
+  if (userError) throw userError
+  if (!user) return null
+  const { data, error } = await client.from('profiles').select('display_name,username').eq('id', user.id).single()
+  if (error) throw error
+  return { displayName: data.display_name, username: data.username }
+}
+
+export async function updateAccountProfileIdentity(input: AccountProfileIdentity): Promise<AccountProfileIdentity> {
+  const displayName = input.displayName.trim()
+  const username = normalizeUsername(input.username)
+  if (!displayName || displayName.length > 80) throw new Error('Display name must be 1–80 characters.')
+  const usernameError = validateUsername(username)
+  if (usernameError) throw new Error(usernameError)
+
+  const client = getSupabaseClient()
+  const { data: { user }, error: userError } = await client.auth.getUser()
+  if (userError) throw userError
+  if (!user?.email) throw new Error('Sign in before changing your profile.')
+  const { error } = await client.from('profiles').update({
+    display_name: displayName,
+    username,
+    updated_at: new Date().toISOString(),
+  }).eq('id', user.id)
+  if (error?.code === '23505') throw new Error('That username is already taken.')
+  if (error) throw error
+
+  const localProfile = await createProfileRepo(await useTracerDb()).set({
+    name: displayName,
+    email: user.email,
+    supabaseUserId: user.id,
+  })
+  return { displayName: localProfile.name, username }
 }
 
 export async function signInWithGoogle(
@@ -256,6 +307,11 @@ export async function upsertAuthenticatedCloudProfile(input: {
     })
     throw new TracerAuthError('profile_failed', error.message)
   }
+  const { error: identityError } = await getSupabaseClient()
+    .from('profiles')
+    .update({ updated_at: new Date().toISOString() })
+    .eq('id', user.id)
+  if (identityError) throw new TracerAuthError('profile_failed', identityError.message)
   return { displayName: displayName || email.split('@')[0], email }
 }
 
