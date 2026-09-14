@@ -20,12 +20,18 @@
    resolveAppShortcut,
    shouldPreventFullscreenExit,
  } from '~/src/composables/navigation/app-navigation'
+ import { useTestSessionState } from '~/src/composables/test-session'
 
  const route = useRoute()
  const router = useRouter()
+ const { testSessionCompleted } = useTestSessionState()
 
  const hideNavbar = computed(() => route.meta?.hideNavbar === true)
- const hideFloatingChat = computed(() => route.meta?.hideFloatingChat === true)
+ const isTestRoute = computed(() => /^\/set\/.+-test\/?$/.test(route.path))
+ const hideFloatingChat = computed(() =>
+   route.meta?.hideFloatingChat === true ||
+   (isTestRoute.value && !testSessionCompleted.value)
+ )
 
  const hideFloatingBackButton = computed(() => {
    if (route.meta?.hideBackButton === true) return true

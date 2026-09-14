@@ -347,6 +347,7 @@ import {
 import { lockGetStatus } from "~/src/composables/lock"
 import { useLockSession } from "~/src/composables/lock-session"
 import { navigateBack } from "~/src/composables/navigation/app-navigation"
+import { setTestSessionCompleted } from "~/src/composables/test-session"
 import { hasTauriRuntime } from "~/src/composables/tauri"
 import { invoke } from "@tauri-apps/api/core"
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
@@ -460,6 +461,14 @@ const testProgressPercent = computed(() => {
     if (total <= 0) return 0
     return Math.min(100, (answeredCount.value / total) * 100)
 })
+
+watch(
+    testSubmitted,
+    (submitted) => {
+        setTestSessionCompleted(submitted)
+    },
+    { immediate: true },
+)
 
 const timerText = computed(() => {
     const seconds = Math.max(0, secondsRemaining.value)
@@ -888,6 +897,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+    setTestSessionCompleted(false)
     finishClassroomTest()
     window.removeEventListener("pagehide", onPageHide)
     testGradingAbort.value?.abort()
