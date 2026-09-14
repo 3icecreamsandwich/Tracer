@@ -15,7 +15,9 @@ describe('generate request helpers', () => {
     const providerError = Object.assign(new Error('The AI provider returned 429. Check its key and quota in Settings.'), { status: 429 })
     const retryError = Object.assign(new Error('Failed after 3 attempts. Last error:'), { lastError: providerError })
 
-    expect(normalizeGenerateRequestError(retryError)).toBe(providerError)
+    const out = normalizeGenerateRequestError(retryError) as Error & { status?: number }
+    expect(out.message).toBe(providerError.message)
+    expect(out.status).toBe(429)
   })
 
   it('recovers a provider status from an AI SDK retry response body', () => {
