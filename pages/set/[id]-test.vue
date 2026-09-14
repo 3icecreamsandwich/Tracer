@@ -324,6 +324,10 @@ import {
     useTracerDb,
 } from "~/src/composables/db"
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content"
+import {
+    getPublishedSet,
+    publishedSetToStudySet,
+} from "~/src/composables/published-sets"
 import { resolveAiModel } from "~/src/composables/ai/registry"
 import {
     normalizeAiError,
@@ -390,7 +394,9 @@ const assignedPriorCorrect = ref(0)
 const assignedPriorAttempted = ref(0)
 let assignedSessionFinished = false
 
-const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.id === 'demo')
+const isPublishedSet = computed(() => route.query.published === "1")
+const isDemoSet = computed(() => isWebPreviewRuntime() || route.params.id === "demo")
+const isWebPreview = computed(() => isPublishedSet.value || isDemoSet.value)
 const assignedAssignmentId = computed(() =>
     parseAssignedAssignmentId(route.query.assignment),
 )
@@ -804,7 +810,7 @@ async function loadSet(setId: Uuid) {
 }
 
 watch(language, () => {
-    if (!isWebPreview.value) return
+    if (!isDemoSet.value) return
     set.value = createWebPreviewDemoSet(t)
     buildTest()
 })
@@ -818,7 +824,21 @@ onMounted(async () => {
     window.addEventListener("pagehide", onPageHide)
     try {
         await activateTestExitGuards()
-        if (isWebPreview.value) {
+        const idParam = route.params.id
+        if (typeof idParam !== "string" || !idParam.trim()) {
+            busy.value = false
+            loadError.value = "Missing set id."
+            return
+        }
+
+        if (isPublishedSet.value) {
+            set.value = publishedSetToStudySet(await getPublishedSet(idParam))
+            busy.value = false
+            buildTest()
+            return
+        }
+
+        if (isDemoSet.value) {
             set.value = createWebPreviewDemoSet(t)
             busy.value = false
             buildTest()
@@ -847,16 +867,14 @@ onMounted(async () => {
             markUnlocked()
         }
 
-        const idParam = route.params.id
-        if (typeof idParam !== "string" || !idParam.trim()) {
-            busy.value = false
-            loadError.value = "Missing set id."
-            return
-        }
-
         await loadSet(idParam as Uuid)
         if (set.value) buildTest()
     } catch {
+        if (isPublishedSet.value) {
+            busy.value = false
+            loadError.value = "Failed to load published set."
+            return
+        }
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__?.invoke
         if (tauriInvoke !== "function") {
             set.value = createWebPreviewDemoSet(t)

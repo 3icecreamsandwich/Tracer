@@ -485,7 +485,7 @@ import {
     type PracticeProgress,
 } from "~/src/composables/practice-progress";
 import {
-    generateLearnQuestions,
+    generateLearnQuestionsWithFallback,
     type LearnQuestion,
     type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
@@ -508,6 +508,10 @@ import {
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 import {
+    getPublishedSet,
+    publishedSetToStudySet,
+} from "~/src/composables/published-sets";
+import {
     beginAssignedAttempt,
     completeAssignedAttempt,
     parseAssignedAssignmentId,
@@ -519,11 +523,14 @@ const router = useRouter();
 const { language, t } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
-const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.id === 'demo');
+const isPublishedSet = computed(() => route.query.published === "1");
+const isDemoSet = computed(() => isWebPreviewRuntime() || route.params.id === "demo");
+const isWebPreview = computed(() => isPublishedSet.value || isDemoSet.value);
 const assignedAssignmentId = computed(() =>
     parseAssignedAssignmentId(route.query.assignment),
 );
 const backToSetPath = computed(() => {
+    if (isPublishedSet.value && set.value) return `/public-sets/${set.value.id}`;
     const classroomId =
         typeof route.query.class === "string" ? route.query.class : null;
     return assignedAssignmentId.value && classroomId && set.value
@@ -1044,7 +1051,7 @@ function buildLearnAugmentPrompt(args: {
 async function buildLearnQuestionsForSet(s: FlashcardSet) {
     const seed = learnSeed();
     const selectedTypes = enabledPracticeQuestionTypes();
-    const baseline = generateLearnQuestions(s.terms, {
+    const baseline = generateLearnQuestionsWithFallback(s.terms, {
         seed,
         maxQuestions: Math.min(
             practiceQuestionCount.value,
@@ -1192,8 +1199,10 @@ function applyPracticeSettings() {
         if (!currentSet) return;
         clampPracticeQuestionCount();
         void router.push({
-            path: `/set/${currentSet.id}-test`,
+            name: "set-id-test",
+            params: { id: currentSet.id },
             query: {
+                published: isPublishedSet.value ? "1" : undefined,
                 assignment: assignedAssignmentId.value ?? undefined,
                 class:
                     typeof route.query.class === "string"
@@ -1228,7 +1237,7 @@ async function loadSet(setId: Uuid) {
 }
 
 watch(language, async () => {
-    if (!isWebPreview.value) return;
+    if (!isDemoSet.value) return;
     set.value = createWebPreviewDemoSet(t);
     await startLearnRun({ resetCounter: true });
 });
@@ -1253,7 +1262,21 @@ watch(practiceTimed, (enabled) => {
 onMounted(async () => {
     window.addEventListener("pagehide", onPageHide);
     try {
-        if (isWebPreview.value) {
+        const idParam = route.params.id;
+        if (typeof idParam !== "string" || !idParam.trim()) {
+            busy.value = false;
+            loadError.value = "Missing set id.";
+            return;
+        }
+
+        if (isPublishedSet.value) {
+            set.value = publishedSetToStudySet(await getPublishedSet(idParam));
+            busy.value = false;
+            await initializePracticeRun();
+            return;
+        }
+
+        if (isDemoSet.value) {
             set.value = createWebPreviewDemoSet(t);
             busy.value = false;
             await initializePracticeRun();
@@ -1285,13 +1308,6 @@ onMounted(async () => {
             markUnlocked();
         }
 
-        const idParam = route.params.id;
-        if (typeof idParam !== "string" || !idParam.trim()) {
-            busy.value = false;
-            loadError.value = "Missing set id.";
-            return;
-        }
-
         await loadSet(idParam as Uuid);
 
         if (set.value) {
@@ -1299,6 +1315,11 @@ onMounted(async () => {
             beginClassroomPractice();
         }
     } catch {
+        if (isPublishedSet.value) {
+            busy.value = false;
+            loadError.value = "Failed to load published set.";
+            return;
+        }
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
         if (tauriInvoke !== "function") {

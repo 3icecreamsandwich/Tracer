@@ -152,7 +152,7 @@
         <button type="button" class="mt-4 w-full text-sm text-blue-700 hover:underline dark:text-blue-300" @click="returnToSignIn">{{ t('auth.returnToSignIn') }}</button>
       </template>
 
-      <template v-else>
+      <template v-else-if="stage === 'local'">
         <div class="mt-5 rounded border border-slate-200 p-3 text-sm dark:border-slate-700">
           <div class="font-medium">{{ authenticatedEmail }}</div>
           <div class="mt-1 text-slate-500 dark:text-slate-400">
@@ -160,10 +160,6 @@
           </div>
         </div>
         <form class="mt-6 space-y-4" @submit.prevent="onLocalSetup">
-          <div>
-            <label class="block text-sm font-medium" for="profile-name">{{ t('auth.name') }}</label>
-            <input id="profile-name" v-model="name" autocomplete="name" class="auth-input" />
-          </div>
           <div v-if="usesGoogleDeviceKey && hasTauriRuntime()" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
             <p class="font-medium">{{ t('auth.deviceKeyTitle') }}</p>
             <p class="mt-2">{{ t('auth.deviceKeyDescription') }}</p>
@@ -200,6 +196,8 @@
           </button>
         </form>
       </template>
+
+      <LoadingSpinner v-else screen label="Finishing sign in…" />
 
       <p v-if="error" role="alert" class="mt-4 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
       <button
@@ -263,8 +261,8 @@ const { markUnlocked } = useLockSession()
 const { language, t } = useAppLanguage()
 
 const configured = isSupabaseConfigured()
-const stage = ref<'account' | 'verify' | 'local'>('account')
-const mode = ref<'signup' | 'signin'>('signup')
+const stage = ref<'account' | 'verify' | 'local' | 'finishing'>('account')
+const mode = ref<'signup' | 'signin'>('signin')
 const accountRole = ref<AccountRole>('student')
 const roleOptions: Array<{ value: AccountRole; label: string }> = [
   { value: 'student', label: 'auth.students' },
@@ -341,8 +339,9 @@ function acceptSession(
   if (provider === 'google' && signupRole) acceptedTerms.value = false
   accountPassword.value = ''
   showAccountPassword.value = false
-  stage.value = 'local'
+  stage.value = hasTauriRuntime() ? 'local' : 'finishing'
   clearError()
+  if (!hasTauriRuntime()) void onLocalSetup()
 }
 
 async function onGoogle() {
@@ -474,7 +473,11 @@ async function onLocalSetup() {
       return
     }
     await router.replace('/')
-  } catch (input) { localPassword.value = ''; localConfirm.value = ''; translatedError(input) }
+  } catch (input) {
+    localPassword.value = ''; localConfirm.value = ''
+    if (!hasTauriRuntime()) stage.value = 'account'
+    translatedError(input)
+  }
   finally { busyProvider.value = null }
 }
 

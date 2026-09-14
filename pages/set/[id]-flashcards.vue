@@ -419,6 +419,10 @@ import { loadAppProfileOnce } from "~/src/composables/app-profile-cache";
 import { loadAppSettingsOnce } from "~/src/composables/app-settings-cache";
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
+import {
+    getPublishedSet,
+    publishedSetToStudySet,
+} from "~/src/composables/published-sets";
 import type { FlashcardSet, Uuid } from "~/src/composables/db/types";
 import {
     createFlashcardProgressRepo,
@@ -458,11 +462,14 @@ const route = useRoute();
 const router = useRouter();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
-const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.id === 'demo');
+const isPublishedSet = computed(() => route.query.published === "1");
+const isDemoSet = computed(() => isWebPreviewRuntime() || route.params.id === "demo");
+const isWebPreview = computed(() => isPublishedSet.value || isDemoSet.value);
 const assignedAssignmentId = computed(() =>
     parseAssignedAssignmentId(route.query.assignment),
 );
 const backToSetPath = computed(() => {
+    if (isPublishedSet.value && set.value) return `/public-sets/${set.value.id}`;
     const classroomId =
         typeof route.query.class === "string" ? route.query.class : null;
     return assignedAssignmentId.value && classroomId && set.value
@@ -1072,7 +1079,7 @@ async function restoreSavedFlashcardRun(setId: Uuid) {
 }
 
 watch(language, async () => {
-    if (!isWebPreview.value) return;
+    if (!isDemoSet.value) return;
     set.value = createWebPreviewDemoSet(t);
     flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
     await restoreSavedFlashcardRun(set.value.id);
@@ -1098,8 +1105,15 @@ onMounted(async () => {
     reviewClockTimer = setInterval(() => (reviewClock.value = Date.now()), 30_000);
     window.addEventListener("pagehide", onPageHide);
     try {
-        if (isWebPreview.value) {
-            set.value = createWebPreviewDemoSet(t);
+        const idParam = route.params.id;
+        if (typeof idParam !== "string" || !idParam.trim()) {
+            busy.value = false;
+            loadError.value = "Missing set id.";
+            return;
+        }
+
+        if (isPublishedSet.value) {
+            set.value = publishedSetToStudySet(await getPublishedSet(idParam));
             busy.value = false;
             flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
             reviewOwnerId.value = "web-preview";
@@ -1115,10 +1129,20 @@ onMounted(async () => {
             return;
         }
 
-        const idParam = route.params.id;
-        if (typeof idParam !== "string" || !idParam.trim()) {
+        if (isDemoSet.value) {
+            set.value = createWebPreviewDemoSet(t);
             busy.value = false;
-            loadError.value = "Missing set id.";
+            flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
+            reviewOwnerId.value = "web-preview";
+            await loadStars(set.value.id);
+            await restoreSavedFlashcardRun(set.value.id);
+            await nextTick();
+            viewerButtonEl.value?.focus();
+            window.addEventListener("keydown", onKeydown);
+            document.addEventListener(
+                "pointerdown",
+                onDocumentFlashcardSettingsPointerDown,
+            );
             return;
         }
 
@@ -1171,6 +1195,11 @@ onMounted(async () => {
             onDocumentFlashcardSettingsPointerDown,
         );
     } catch {
+        if (isPublishedSet.value) {
+            busy.value = false;
+            loadError.value = "Failed to load published set.";
+            return;
+        }
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
         if (tauriInvoke !== "function") {

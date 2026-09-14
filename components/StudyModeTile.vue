@@ -2,7 +2,7 @@
   <div
     class="study-mode-tile group flex min-h-[60px] items-stretch overflow-hidden rounded-xl border text-left shadow-sm transition hover:bg-slate-50 hover:shadow-md dark:hover:bg-slate-900"
     :class="active
-      ? 'border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-900'
+      ? 'border-slate-400 bg-slate-200 dark:border-slate-600 dark:bg-slate-800'
       : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950'"
   >
     <NuxtLink

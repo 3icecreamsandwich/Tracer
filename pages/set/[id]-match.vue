@@ -187,6 +187,10 @@ import {
 import { useAppLanguage } from "~/src/composables/language";
 import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
 import {
+    getPublishedSet,
+    publishedSetToStudySet,
+} from "~/src/composables/published-sets";
+import {
     beginAssignedAttempt,
     completeAssignedAttempt,
     parseAssignedAssignmentId,
@@ -201,11 +205,14 @@ const router = useRouter();
 const { language, t } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
-const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.id === 'demo');
+const isPublishedSet = computed(() => route.query.published === "1");
+const isDemoSet = computed(() => isWebPreviewRuntime() || route.params.id === "demo");
+const isWebPreview = computed(() => isPublishedSet.value || isDemoSet.value);
 const assignedAssignmentId = computed(() =>
     parseAssignedAssignmentId(route.query.assignment),
 );
 const backToSetPath = computed(() => {
+    if (isPublishedSet.value && set.value) return `/public-sets/${set.value.id}`;
     const classroomId = typeof route.query.class === "string" ? route.query.class : null;
     return assignedAssignmentId.value && classroomId && set.value
         ? `/student/classes/${classroomId}`
@@ -532,7 +539,7 @@ async function loadSet(setId: Uuid) {
 }
 
 watch(language, () => {
-    if (!isWebPreview.value) return;
+    if (!isDemoSet.value) return;
     set.value = createWebPreviewDemoSet(t, { termCount: 4 });
     resetMatchStateForRun();
     if (set.value) matchPrepareTiles(set.value);
@@ -541,7 +548,26 @@ watch(language, () => {
 onMounted(async () => {
     window.addEventListener("pagehide", onPageHide);
     try {
-        if (isWebPreview.value) {
+        const idParam = route.params.id;
+        if (typeof idParam !== "string" || !idParam.trim()) {
+            busy.value = false;
+            loadError.value = "Missing set id.";
+            return;
+        }
+
+        if (isPublishedSet.value) {
+            set.value = publishedSetToStudySet(await getPublishedSet(idParam));
+            busy.value = false;
+            resetMatchStateForRun();
+            matchPrepareTiles(set.value);
+            document.addEventListener(
+                "pointerdown",
+                onDocumentMatchPointerDown,
+            );
+            return;
+        }
+
+        if (isDemoSet.value) {
             set.value = createWebPreviewDemoSet(t, { termCount: 4 });
             busy.value = false;
             resetMatchStateForRun();
@@ -574,13 +600,6 @@ onMounted(async () => {
             markUnlocked();
         }
 
-        const idParam = route.params.id;
-        if (typeof idParam !== "string" || !idParam.trim()) {
-            busy.value = false;
-            loadError.value = "Missing set id.";
-            return;
-        }
-
         await loadSet(idParam as Uuid);
 
         if (set.value) {
@@ -589,6 +608,11 @@ onMounted(async () => {
         }
         document.addEventListener("pointerdown", onDocumentMatchPointerDown);
     } catch {
+        if (isPublishedSet.value) {
+            busy.value = false;
+            loadError.value = "Failed to load published set.";
+            return;
+        }
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
             ?.invoke;
         if (tauriInvoke !== "function") {

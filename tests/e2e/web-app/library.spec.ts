@@ -33,7 +33,6 @@ async function signInFixture(context: BrowserContext, page: Page, userId = owner
   await context.route('**/rest/v1/**', route => route.fulfill({ json: route.request().url().includes('user_roles') ? [{ role: 'student' }] : [] }))
   await context.route('**/api/web/credentials', route => route.fulfill({ json: { openai: false, anthropic: false, gemini: false, ollama_cloud: false, openai_compat: false } }))
   await page.goto('first-run')
-  await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
 }
 
@@ -52,6 +51,17 @@ async function createSet(page: Page) {
   return page.url()
 }
 
+test('authentication defaults to sign in and skips browser profile editing', async ({ context, page }) => {
+  await page.goto('first-run')
+  await expect(page.getByRole('button', { name: 'Sign in with email', exact: true })).toBeVisible()
+  await expect(page.getByLabel('Name', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Need an account? Sign up', exact: true })).toBeVisible()
+
+  await signInFixture(context, page)
+  await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
+  await expect(page.getByLabel('Name', { exact: true })).toHaveCount(0)
+})
+
 test('real browser library persists edits and progress across reloads and tabs', async ({ context, page }) => {
   await signInFixture(context, page)
   const url = await createSet(page)
@@ -65,9 +75,24 @@ test('real browser library persists edits and progress across reloads and tabs',
   await second.goto(url)
   await expect(second.getByRole('heading', { name: 'Edited on the web', exact: true })).toBeVisible()
   await second.getByRole('button', { name: 'Got it', exact: true }).click()
-  await expect(second.getByText('1/2', { exact: true })).toBeVisible()
+  await expect(second.getByRole('region', { name: 'Flashcards' }).getByText('1/2', { exact: true })).toBeVisible()
   await second.reload()
-  await expect(second.getByText('1/2', { exact: true })).toBeVisible()
+  await expect(second.getByRole('region', { name: 'Flashcards' }).getByText('1/2', { exact: true })).toBeVisible()
+})
+
+test('local practice settings open a generated fullscreen test', async ({ context, page }) => {
+  await signInFixture(context, page)
+  const url = await createSet(page)
+  const setPath = new URL(url).pathname.slice(basePath.length)
+
+  await page.goto(`${setPath}?mode=learn&seed=1`)
+  await page.getByRole('button', { name: 'Practice settings' }).click()
+  await page.getByRole('button', { name: 'test', exact: true }).click()
+  await page.getByRole('button', { name: 'Restart test' }).click()
+
+  await expect(page).toHaveURL(/\/set\/.+-test\?/)
+  await expect(page.getByRole('region', { name: 'Test questions' }).locator('article')).toHaveCount(2)
+  await expect(page.getByText('No questions could be generated for this test.')).toHaveCount(0)
 })
 
 test('phone layout supports creation, study modes and settings without horizontal overflow', async ({ context, page }, testInfo) => {
@@ -83,7 +108,7 @@ test('phone layout supports creation, study modes and settings without horizonta
   await expect(studyModeTiles.first().getByText('Flashcards', { exact: true })).toBeHidden()
   await expect(studyModeTiles.nth(2).locator('svg')).toHaveCount(0)
   await expect(page.getByText('Space to flip · ←/→ to browse · Mark correct/incorrect to progress')).toBeHidden()
-  await expect(page.getByRole('link', { name: 'Fullscreen', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Fullscreen', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Prev', exact: true }).getByText('Prev', { exact: true })).toBeHidden()
   await expect(page.getByRole('button', { name: 'Next', exact: true }).getByText('Next', { exact: true })).toBeHidden()
   await expect(page.getByRole('button', { name: 'Missed it', exact: true }).getByText('×', { exact: true })).toBeVisible()

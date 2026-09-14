@@ -109,6 +109,38 @@ test('copy-enabled public set shares without publishing; failure never becomes d
   await expect(page.getByText('Could not load published sets.', { exact: false })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Demo set' })).toHaveCount(0)
 })
+
+test('published sets open every fullscreen mode with their published cards', async ({ page }) => {
+  await page.route('**/rest/v1/published_sets?*', route => route.fulfill({ json: fixture }))
+  await page.goto(`/public-sets/${id}`)
+
+  const fullscreen = page.getByRole('link', { name: 'Open Flashcards fullscreen' })
+  await expect(fullscreen).toHaveAttribute('href', `/set/${id}-flashcards?published=1`)
+  await fullscreen.click()
+  await expect(page).toHaveURL(new RegExp(`/set/${id}-flashcards\\?published=1$`))
+  await expect(page.getByRole('button', { name: /Cell|Ecosystem/ })).toBeVisible()
+
+  await page.goto(`/public-sets/${id}?mode=match`)
+  await page.getByRole('link', { name: 'Open Match fullscreen' }).click()
+  await expect(page).toHaveURL(new RegExp(`/set/${id}-match\\?published=1$`))
+  await page.getByRole('button', { name: 'Start', exact: true }).click()
+  await expect(page.locator('[data-match-tile="true"]')).toHaveCount(4)
+
+  await page.goto(`/public-sets/${id}?mode=learn&seed=1`)
+  const practiceFullscreen = page.getByRole('link', { name: 'Open Practice fullscreen' })
+  await expect(practiceFullscreen).toHaveAttribute('href', `/set/${id}-learn?published=1`)
+  await practiceFullscreen.click()
+  await expect(page).toHaveURL(new RegExp(`/set/${id}-learn\\?published=1$`))
+  await expect(page.getByText(/True or False|Write the definition/).first()).toBeVisible()
+
+  await page.goto(`/public-sets/${id}?mode=learn&seed=1`)
+  await page.getByRole('button', { name: 'Practice settings' }).click()
+  await page.getByRole('button', { name: 'test', exact: true }).click()
+  await page.getByRole('button', { name: 'Restart test' }).click()
+  await expect(page).toHaveURL(/-test\?.*published=1/)
+  await expect(page.getByRole('region', { name: 'Test questions' }).locator('article')).toHaveCount(2)
+  await expect(page.getByText('No questions could be generated for this test.')).toHaveCount(0)
+})
 test('shared modal traps focus and restores page scrolling', async ({ page }) => {
   await page.goto('/set/demo')
   const trigger = page.getByRole('button', { name: 'Share', exact: true })

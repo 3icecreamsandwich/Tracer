@@ -1806,7 +1806,7 @@
                                 :to="item.to"
                                 :replace="item.replace"
                                 class="inline-flex h-14 min-w-0 items-center justify-center rounded-xl border bg-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:bg-slate-950"
-                                :class="item.active ? 'border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-900' : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900'"
+                                :class="item.active ? 'border-slate-400 bg-slate-200 dark:border-slate-600 dark:bg-slate-800' : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900'"
                                 :aria-label="item.title"
                                 :title="item.title"
                             >
@@ -2170,7 +2170,7 @@ import {
     type PracticeProgress,
 } from "~/src/composables/practice-progress";
 import {
-    generateLearnQuestions,
+    generateLearnQuestionsWithFallback,
     type LearnQuestion,
     type LearnQuestionKind,
 } from "~/src/composables/learn/generator";
@@ -2296,8 +2296,11 @@ function setModePath(nextMode: SetMode) {
 }
 
 function fullscreenModePath(nextMode: TrackedSetMode) {
-    if (isPublicSet.value) return undefined;
-    return `/set/${set.value?.id ?? route.params.id}-${nextMode}${assignedQuery()}`;
+    const setId = set.value?.id ?? route.params.id;
+    const query = isPublicSet.value
+        ? "published=1"
+        : assignedQuery().replace(/^\?/, "");
+    return `/set/${setId}-${nextMode}${query ? `?${query}` : ""}`;
 }
 
 async function openFullscreenMode(nextMode: TrackedSetMode) {
@@ -3728,7 +3731,7 @@ function parseLearnAugmentJson(raw: string): LearnQuestion[] {
 async function buildLearnQuestionsForSet(s: FlashcardSet) {
     const seed = learnSeed();
     const selectedTypes = enabledPracticeQuestionTypes();
-    const baseline = generateLearnQuestions(s.terms, {
+    const baseline = generateLearnQuestionsWithFallback(s.terms, {
         seed,
         maxQuestions: Math.min(
             practiceQuestionCount.value,
@@ -3875,8 +3878,10 @@ function applyPracticeSettings() {
         if (!currentSet) return;
         clampPracticeQuestionCount();
         void router.push({
-            path: `/set/${currentSet.id}-test`,
+            name: "set-id-test",
+            params: { id: currentSet.id },
             query: {
+                published: isPublicSet.value ? "1" : undefined,
                 types: enabledPracticeQuestionTypes().join(","),
                 count: String(practiceQuestionCount.value),
                 shuffle: practiceShuffle.value ? "1" : "0",
