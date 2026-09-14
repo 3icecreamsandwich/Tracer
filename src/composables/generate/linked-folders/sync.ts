@@ -1,5 +1,6 @@
 import { basename } from '@tauri-apps/api/path'
 import { watch, type WatchEvent } from '@tauri-apps/plugin-fs'
+import { hasTauriRuntime } from '../../tauri'
 import {
   createLinkedFoldersRepo,
   createSettingsRepo,
@@ -312,7 +313,14 @@ async function performLinkedFolderSync(setId: Uuid, changedPaths: Set<string> | 
   }
 }
 
+function isBrowserLinkedFolderRuntime() {
+  return !hasTauriRuntime() && typeof indexedDB !== 'undefined'
+}
+
 export function syncLinkedFolder(setId: Uuid): Promise<LinkedFolder | null> {
+  if (isBrowserLinkedFolderRuntime()) {
+    return import('./browser').then(({ syncBrowserLinkedFolder }) => syncBrowserLinkedFolder(setId))
+  }
   const current = syncBySet.get(setId)
   if (current) return current
   if (!pendingChanges.has(setId)) pendingChanges.set(setId, null)
@@ -381,6 +389,7 @@ async function installWatch(linkedFolder: LinkedFolder) {
 
 export async function refreshLinkedFolderSyncManager() {
   if (!managerStarted) return
+  if (isBrowserLinkedFolderRuntime()) return
   const db = await useTracerDb()
   const linkedFolders = await createLinkedFoldersRepo(db).list()
   const activeIds = new Set(linkedFolders.map((linkedFolder) => linkedFolder.setId))
@@ -402,6 +411,7 @@ export async function refreshLinkedFolderSyncManager() {
 export async function startLinkedFolderSyncManager(options: { syncOnStart?: boolean } = {}) {
   if (managerStarted) return
   managerStarted = true
+  if (isBrowserLinkedFolderRuntime()) return
   const db = await useTracerDb()
   const linkedFolders = await createLinkedFoldersRepo(db).list()
   await Promise.all(
@@ -432,6 +442,10 @@ export async function unlinkFolder(setId: Uuid) {
   debounceBySet.delete(setId)
   unwatchBySet.get(setId)?.()
   unwatchBySet.delete(setId)
+
+  if (isBrowserLinkedFolderRuntime()) {
+    await (await import('./browser')).deleteBrowserLinkedFolderHandle(setId)
+  }
 
   const db = await useTracerDb()
   await createLinkedFoldersRepo(db).delete(setId)
