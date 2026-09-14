@@ -28,7 +28,9 @@ function nestedAiError(err: unknown): unknown {
     if (!next) break
     const currentMessage = errorMessage(current).trim()
     const nextMessage = errorMessage(next).trim()
-    if (nextMessage && (!currentMessage || currentMessage.includes('Last error:'))) current = next
+    // AI SDK retry wrappers often keep the useful provider details only in the
+    // nested response body, leaving the nested Error.message blank.
+    if (currentMessage.includes('Last error:') || (nextMessage && !currentMessage)) current = next
     else break
   }
   return current
