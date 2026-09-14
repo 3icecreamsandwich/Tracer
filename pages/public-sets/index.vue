@@ -69,7 +69,13 @@
               aria-hidden="true"
               class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white"
               >{{ item.publisher_name.slice(0, 1).toUpperCase() }}</span
-            ><span class="truncate text-sm font-semibold">{{ item.publisher_name }}</span>
+            ><div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="truncate text-sm font-semibold">{{ item.publisher_name }}</span>
+                <span v-if="item.publisher_is_dev" class="relative top-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900" title="Tracer developer"><AppIcon name="crown" :size="15" :stroke-width="2.4" /> DEV</span>
+              </div>
+              <p v-if="item.publisher_username" class="truncate text-xs text-slate-500">@{{ item.publisher_username }}</p>
+            </div>
           </div>
         </NuxtLink>
       </li>

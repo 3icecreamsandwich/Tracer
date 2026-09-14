@@ -51,11 +51,11 @@ describe('generate request helpers', () => {
   })
 
   it('validates combined Generate source limits', () => {
-    expect(() => assertGenerateSourceLimits({ pdfPages: 15, imageCount: 10 })).not.toThrow()
+    expect(() => assertGenerateSourceLimits({ pdfPages: 15, imageCount: 5 })).not.toThrow()
     expect(() => assertGenerateSourceLimits({ pdfPages: 16, imageCount: 1 })).toThrow(
       /PDF page limit exceeded/
     )
-    expect(() => assertGenerateSourceLimits({ pdfPages: 1, imageCount: 11 })).toThrow(
+    expect(() => assertGenerateSourceLimits({ pdfPages: 1, imageCount: 6 })).toThrow(
       /Too many images/
     )
   })

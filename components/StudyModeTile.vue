@@ -1,9 +1,9 @@
 <template>
   <div
-    class="study-mode-tile group flex min-h-[60px] items-stretch overflow-hidden rounded-xl border text-left shadow-sm transition hover:bg-slate-50 hover:shadow-md dark:hover:bg-slate-900"
+    class="study-mode-tile group flex min-h-[60px] items-stretch overflow-hidden rounded-xl border text-left shadow-sm transition hover:shadow-md"
     :class="active
-      ? 'border-slate-400 bg-slate-200 dark:border-slate-600 dark:bg-slate-800'
-      : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950'"
+      ? 'border-slate-500 bg-slate-300 hover:bg-slate-300 dark:border-slate-500 dark:bg-slate-700 dark:hover:bg-slate-700'
+      : 'border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900'"
   >
     <NuxtLink
       :to="to"

@@ -14,11 +14,14 @@ describe('generation subscription limits', () => {
     mocks.row.mockReset()
     mocks.eq.mockReset().mockReturnValue({ maybeSingle: mocks.row })
   })
-  it.each(['free', 'plus', 'pro'] as const)('enforces exact %s boundaries', (plan) => {
+  it.each(['free', 'plus', 'pro', 'super'] as const)('enforces exact %s boundaries', (plan) => {
     const limits = GENERATE_PLAN_LIMITS[plan]
     expect(() => assertGenerateSourceLimits({ pdfPages: limits.pdfPages, imageCount: limits.images }, limits)).not.toThrow()
     expect(() => assertGenerateSourceLimits({ pdfPages: limits.pdfPages + 1, imageCount: 0 }, limits)).toThrow(/PDF page/)
     expect(() => assertGenerateSourceLimits({ pdfPages: 0, imageCount: limits.images + 1 }, limits)).toThrow(/Too many images/)
+  })
+  it.each(['free', 'plus', 'pro'] as const)('limits non-Super %s accounts to 5 images', (plan) => {
+    expect(GENERATE_PLAN_LIMITS[plan].images).toBe(5)
   })
   it('handles legacy max, trials, expiration and unknown plans', () => {
     const row = { plan: 'max', status: 'active', current_period_end: null }
@@ -37,9 +40,10 @@ describe('generation subscription limits', () => {
     expect(await loadGeneratePlan()).toBe('plus')
     expect(mocks.eq).toHaveBeenCalledWith('user_id', 'owner')
   })
-  it('gives Super Pro limits even without an active subscription', async () => {
+  it('gives the Super account its dedicated 30-image limit', async () => {
     mocks.row.mockResolvedValueOnce({ data: null }).mockResolvedValueOnce({ data: { role: 'super' } })
-    expect(await loadGeneratePlan()).toBe('pro')
+    expect(await loadGeneratePlan()).toBe('super')
+    expect(GENERATE_PLAN_LIMITS.super.images).toBe(30)
   })
   it('does not use Super limits after an account switch', async () => {
     mocks.row.mockResolvedValueOnce({ data: null }).mockResolvedValueOnce({ data: { role: 'super' } })
