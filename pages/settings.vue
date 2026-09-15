@@ -173,10 +173,8 @@
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         :aria-label="t('settings.language')"
       >
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-sm font-medium">{{ t('settings.language') }}</h2>
-          </div>
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-sm font-medium">{{ t('settings.language') }}</h2>
 
           <div ref="languageMenuRoot" class="relative shrink-0">
             <button

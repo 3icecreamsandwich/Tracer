@@ -215,7 +215,7 @@
           ref="importTextareaEl"
           v-model="importText"
           rows="10"
-          placeholder="term\tdefinition\nterm\tdefinition"
+          :placeholder="'term\tdefinition\nterm\tdefinition'"
           class="w-full resize-y rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
         />
       </div>
