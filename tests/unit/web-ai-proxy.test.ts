@@ -4,8 +4,9 @@ const state = vi.hoisted(() => ({
   body: {} as any,
   rpc: vi.fn(),
   auth: vi.fn(),
+  limit: vi.fn(),
 }))
-vi.mock('../../server/utils/web-auth', () => ({ authenticatedWebClient: state.auth }))
+vi.mock('../../server/utils/web-auth', () => ({ authenticatedWebContext: state.auth, limitWebAi: state.limit }))
 vi.mock('../../server/utils/web-body', () => ({ readWebJson: async () => state.body }))
 vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
 vi.stubGlobal('useRuntimeConfig', () => ({ webAiCompatibleOrigin: '' }))
@@ -18,7 +19,8 @@ const { default: handler } = await import('../../server/api/web/ai.post')
 describe('authenticated web AI forwarding', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    state.auth.mockResolvedValue({ rpc: state.rpc })
+    state.auth.mockResolvedValue({ client: { rpc: state.rpc }, userId: 'verified-account' })
+    state.limit.mockResolvedValue(undefined)
     state.rpc.mockResolvedValue({ data: [{ provider_id: 'openai', api_key: 'server-secret' }] })
     state.body = { url: 'https://api.openai.com/v1/responses', method: 'POST', headers: { authorization: 'Bearer attacker', 'x-api-key': 'attacker' }, body: '{"input":"hello"}' }
   })
@@ -33,6 +35,7 @@ describe('authenticated web AI forwarding', () => {
     expect(options.headers.get('x-api-key')).toBeNull()
     expect(options.redirect).toBe('manual')
     expect(options.body).toBe(state.body.body)
+    expect(state.limit).toHaveBeenCalledWith(expect.anything(), 'verified-account')
   })
   it('rejects arbitrary destinations before reading provider secrets', async () => {
     state.body.url = 'http://127.0.0.1/private'
