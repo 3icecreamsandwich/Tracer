@@ -40,7 +40,7 @@ jobs:
       - run: bun x playwright install --with-deps chromium
       - run: bun run test:e2e:cloudflare
       - run: TRACER_BUILD_DIR=.nuxt-desktop-check bun --bun run generate
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: browser-failure-output
@@ -83,7 +83,7 @@ jobs:
           fi
           printf 'Commit: `%s`\nTarget: `%s`\n' "$GITHUB_SHA" "$RELEASE_TARGET" >> "$GITHUB_STEP_SUMMARY"
           sed -n '/Current Version ID:/p' release.log >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-${{ inputs.target }}-${{ github.sha }}
           path: release.log
