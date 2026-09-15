@@ -39,7 +39,7 @@
         "style-src": "'self' 'unsafe-inline'",
         "worker-src": "'self' blob:"
       },
-      "freezePrototype": false
+      "freezePrototype": true
     }
   },
   "plugins": {

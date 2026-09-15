@@ -10,6 +10,11 @@ type TauriConf = {
   bundle?: {
     targets?: string[]
   }
+  app?: {
+    security?: {
+      freezePrototype?: boolean
+    }
+  }
 }
 
 describe('tauri.conf.json scaffold invariants', () => {
@@ -28,5 +33,13 @@ describe('tauri.conf.json scaffold invariants', () => {
     const conf = JSON.parse(raw) as TauriConf
 
     expect(conf.bundle?.targets).not.toContain('dmg')
+  })
+
+  it('keeps WebView prototype freezing enabled', async () => {
+    const confPath = path.resolve(process.cwd(), 'src-tauri', 'tauri.conf.json')
+    const raw = await readFile(confPath, 'utf8')
+    const conf = JSON.parse(raw) as TauriConf
+
+    expect(conf.app?.security?.freezePrototype).toBe(true)
   })
 })
