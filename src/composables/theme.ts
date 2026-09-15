@@ -1,22 +1,44 @@
 import { createSettingsRepo, useTracerDb } from './db'
 import { loadAppSettingsOnce } from './app-settings-cache'
+import { browserStorageKey } from './platform/web'
+import { hasTauriRuntime } from './tauri'
 
-const DARK_MODE_CACHE_KEY = 'tracer:dark-mode'
+const DARK_MODE_CACHE_KEY = browserStorageKey('dark-mode')
+
+type ThemeCache = {
+  enabled: boolean
+  userId?: string
+}
 
 function applyDarkClass(enabled: boolean) {
   const root = document.documentElement
   root.classList.toggle('dark', enabled)
 }
 
+function currentWebUserId(): string | null {
+  if (hasTauriRuntime()) return null
+  try {
+    const session = JSON.parse(window.localStorage.getItem(browserStorageKey('auth')) ?? 'null') as { user?: { id?: unknown } } | null
+    return typeof session?.user?.id === 'string' ? session.user.id : null
+  } catch {
+    return null
+  }
+}
+
 function cacheDarkMode(enabled: boolean) {
-  try { window.localStorage.setItem(DARK_MODE_CACHE_KEY, String(enabled)) } catch {}
+  try {
+    const userId = currentWebUserId()
+    if (!hasTauriRuntime() && !userId) return
+    window.localStorage.setItem(DARK_MODE_CACHE_KEY, JSON.stringify({ enabled, userId } satisfies ThemeCache))
+  } catch {}
 }
 
 export function themeInitFromCache() {
   try {
-    const cached = window.localStorage.getItem(DARK_MODE_CACHE_KEY)
-    if (cached === null) return null
-    const enabled = cached === 'true'
+    const cached = JSON.parse(window.localStorage.getItem(DARK_MODE_CACHE_KEY) ?? 'null') as ThemeCache | null
+    if (!cached || typeof cached.enabled !== 'boolean') return null
+    if (!hasTauriRuntime() && cached.userId !== currentWebUserId()) return null
+    const enabled = cached.enabled
     applyDarkClass(enabled)
     return enabled
   } catch {

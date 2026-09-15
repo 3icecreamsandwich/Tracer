@@ -54,7 +54,7 @@
           </div>
         </div>
 
-        <form v-if="!isWebPreview && accountOnline" class="mt-5 grid gap-4 border-t border-slate-200 pt-5 dark:border-slate-800 sm:grid-cols-2" @submit.prevent="onSaveProfileIdentity">
+        <form v-if="!isWebPreview && accountOnline && profileIdentityReady" class="mt-5 grid gap-4 border-t border-slate-200 pt-5 dark:border-slate-800 sm:grid-cols-2" @submit.prevent="onSaveProfileIdentity">
           <div class="flex items-center justify-between sm:col-span-2">
             <p class="text-sm font-semibold">Profile details</p>
             <button v-if="!profileEditing" type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" aria-label="Edit profile" title="Edit profile" @click="startProfileEditing">
@@ -82,6 +82,10 @@
             <p v-if="profileIdentityError" role="alert" class="text-sm text-red-600 dark:text-red-300">{{ profileIdentityError }}</p>
           </div>
         </form>
+        <div v-else-if="!isWebPreview && accountOnline" class="mt-5 flex items-center gap-2 border-t border-slate-200 pt-5 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <LoadingSpinner size="sm" />
+          <span>Loading profile…</span>
+        </div>
       </section>
 
       <section
@@ -919,6 +923,7 @@ const savedDisplayName = ref('')
 const savedUsername = ref('')
 const profileEditing = ref(false)
 const profileIdentityPending = ref(false)
+const profileIdentityReady = ref(false)
 const profileIdentityError = ref<string | null>(null)
 const profileIdentityDirty = computed(() => displayNameDraft.value.trim() !== savedDisplayName.value || usernameDraft.value !== savedUsername.value)
 const profileCanSave = computed(() => profileEditing.value && profileIdentityDirty.value && !profileIdentityPending.value && !!displayNameDraft.value.trim() && !validateUsername(usernameDraft.value))
@@ -971,8 +976,11 @@ watch(() => [accountIdentity.value?.id, accountConnectionStatus.value], async (_
   onCleanup(() => { cancelled = true })
   superAccount.value = false
   accountRole.value = null
+  profileIdentityReady.value = false
   if (accountConnectionStatus.value !== 'online') return
   await refreshProfileIdentity()
+  if (cancelled) return
+  profileIdentityReady.value = true
   const role = await getAccountRole().catch(() => null)
   if (!cancelled) {
     accountRole.value = role
