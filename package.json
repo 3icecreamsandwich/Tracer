@@ -37,7 +37,7 @@
     "katex": "^0.17.0",
     "markdown-it": "^14.3.1",
     "nuxt": "^4.5.2",
-    "ollama-ai-provider-v2": "^3.6.0",
+    "ollama-ai-provider-v2": "^4.0.1",
     "pdfjs-dist": "^6.3.289",
     "sql.js": "1.14.2",
     "tesseract.js": "^7.0.0",
