@@ -57,6 +57,44 @@ function countDelimiterOutsideQuotes(line: string, delimiter: TermsDelimiter) {
   return count
 }
 
+type DelimitedRecord = { line: string; lineNumber: number }
+
+function hasOpenQuote(value: string, initiallyOpen = false) {
+  let inQuotes = initiallyOpen
+  for (let i = 0; i < value.length; i += 1) {
+    if (value[i] !== '"') continue
+    if (inQuotes && value[i + 1] === '"') {
+      i += 1
+      continue
+    }
+    inQuotes = !inQuotes
+  }
+  return inQuotes
+}
+
+/** Keep line breaks inside a quoted CSV/TSV field instead of treating them as a new card. */
+function splitDelimitedRecords(input: string): DelimitedRecord[] {
+  const records: DelimitedRecord[] = []
+  const physicalLines = cleanLine(input).split('\n')
+  let current: string[] = []
+  let recordStart = 1
+  let inQuotes = false
+
+  for (let index = 0; index < physicalLines.length; index += 1) {
+    const line = physicalLines[index] ?? ''
+    if (current.length === 0) recordStart = index + 1
+    current.push(line)
+    inQuotes = hasOpenQuote(line, inQuotes)
+    if (!inQuotes) {
+      records.push({ line: current.join('\n'), lineNumber: recordStart })
+      current = []
+    }
+  }
+
+  if (inQuotes) throw new TsvParseError(`line ${recordStart} contains an unclosed quote`)
+  return records
+}
+
 function detectDelimiter(lines: string[]): TermsDelimiter {
   let best: TermsDelimiter = 'tab'
   let bestScore = 0
@@ -226,10 +264,10 @@ export function parseTermsDelimited(
 ): TermInput[] {
   if (typeof input !== 'string') throw new TsvParseError('input must be a string')
 
-  const lines = cleanLine(input)
-    .split('\n')
-    .map(normalizeGeneratedLine)
-    .filter((line) => line && !line.startsWith('```'))
+  const records = splitDelimitedRecords(input)
+    .map(({ line, lineNumber }) => ({ line: normalizeGeneratedLine(line), lineNumber }))
+    .filter(({ line }) => line && !line.startsWith('```'))
+  const lines = records.map(({ line }) => line)
 
   const preferred =
     opts?.delimiter && opts.delimiter !== 'auto'
@@ -238,9 +276,7 @@ export function parseTermsDelimited(
   const skipHeader = opts?.skipHeader ?? true
   const terms: TermInput[] = []
 
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i] ?? ''
-    const lineNumber = i + 1
+  for (const { line, lineNumber } of records) {
 
     if (isMarkdownTableSeparator(line)) continue
     if (terms.length === 0 && isLikelyGeneratedPreamble(line)) continue

@@ -66,6 +66,17 @@ describe('parseTermsDelimited', () => {
     ])
   })
 
+  it('keeps a line break inside a quoted definition', () => {
+    expect(parseTermsDelimited('"term","first line\nsecond line"\nnext,definition\n')).toEqual([
+      { front: 'term', back: 'first line\nsecond line' },
+      { front: 'next', back: 'definition' }
+    ])
+  })
+
+  it('reports an actually unclosed quote', () => {
+    expect(() => parseTermsDelimited('"term","definition\n')).toThrow('line 1 contains an unclosed quote')
+  })
+
   it('accepts generated bullets and numbering', () => {
     expect(parseTermsDelimited('- alpha\tone\n1. beta\ttwo\n')).toEqual([
       { front: 'alpha', back: 'one' },
