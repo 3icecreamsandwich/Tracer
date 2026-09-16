@@ -134,6 +134,9 @@
         <button type="button" class="mt-2 w-full text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-950 dark:text-slate-300 dark:hover:text-white" :disabled="busy" @click="toggleMode">
           {{ mode === 'signup' ? t('auth.haveAccount') : t('auth.needAccount') }}
         </button>
+        <NuxtLink v-if="mode === 'signup'" to="/parent-consent-request" class="mt-3 block text-center text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-950 dark:text-slate-300 dark:hover:text-white">
+          Need an account for someone under 13? Ask a parent for consent.
+        </NuxtLink>
 
         <div v-if="authorizationUrl && errorCode === 'browser_open_failed'" class="mt-4 rounded border border-slate-300 p-3 text-sm dark:border-slate-700">
           <p>{{ t('auth.copyBrowserLink') }}</p>
