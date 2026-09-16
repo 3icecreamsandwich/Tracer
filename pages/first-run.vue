@@ -110,9 +110,9 @@
             />
             <span>
               {{ t('auth.agreePrefix') }}
-              <a href="https://tracerquiz.com/tos/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">{{ t('auth.termsOfService') }}</a>
+              <NuxtLink to="/terms" class="underline underline-offset-2">{{ t('auth.termsOfService') }}</NuxtLink>
               {{ t('auth.and') }}
-              <a href="https://tracerquiz.com/privacy/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">{{ t('auth.privacyPolicy') }}</a>
+              <NuxtLink to="/privacy" class="underline underline-offset-2">{{ t('auth.privacyPolicy') }}</NuxtLink>
             </span>
           </label>
           <TurnstileWidget
@@ -198,9 +198,9 @@
             />
             <span>
               {{ t('auth.agreePrefix') }}
-              <a href="https://tracerquiz.com/tos/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">{{ t('auth.termsOfService') }}</a>
+              <NuxtLink to="/terms" class="underline underline-offset-2">{{ t('auth.termsOfService') }}</NuxtLink>
               {{ t('auth.and') }}
-              <a href="https://tracerquiz.com/privacy/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">{{ t('auth.privacyPolicy') }}</a>
+              <NuxtLink to="/privacy" class="underline underline-offset-2">{{ t('auth.privacyPolicy') }}</NuxtLink>
             </span>
           </label>
           <button type="submit" class="auth-primary" :disabled="busy">

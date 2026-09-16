@@ -686,7 +686,6 @@
           </div>
           <ul
             class="mt-3 max-h-72 overflow-auto rounded-md border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
-            role="listbox"
             :aria-label="modelPickerStep === 'providers' ? 'Providers' : 'Models'"
           >
             <li v-for="(item, idx) in modelPickerItems" :key="item.key">
