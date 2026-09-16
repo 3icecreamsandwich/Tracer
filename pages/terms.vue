@@ -1,5 +1,5 @@
 <template>
-  <PolicyPage title="Terms of Service" updated="September 15, 2026">
+  <PolicyPage title="Terms of Service" updated="September 16, 2026">
     <section aria-labelledby="terms-agreement">
       <h2 id="terms-agreement" class="text-xl font-semibold text-slate-950 dark:text-white">Using Tracer</h2>
       <p class="mt-3">These terms explain the current rules for using the Tracer web app. They are not a claim that Tracer is legally compliant in every jurisdiction. Tracer should receive jurisdiction-specific legal review before a broader launch.</p>
@@ -8,7 +8,7 @@
 
     <section aria-labelledby="terms-account">
       <h2 id="terms-account" class="text-xl font-semibold text-slate-950 dark:text-white">Accounts and age</h2>
-      <p class="mt-3">Tracer is intended for people 13 and older. If someone is under 13, a parent or guardian must use the separate consent-request flow. That flow requires manual approval before a child account is created.</p>
+      <p class="mt-3">Users should be 13 or older to use Tracer. If a user is under 13, they need parent or guardian approval through the separate consent-request flow before a child account is created.</p>
       <p class="mt-3">Provide accurate account information and choose a display name and username that do not impersonate another person or violate another person’s rights. We may limit access needed to protect the service or its users.</p>
     </section>
 
@@ -27,6 +27,23 @@
     <section aria-labelledby="terms-availability">
       <h2 id="terms-availability" class="text-xl font-semibold text-slate-950 dark:text-white">Availability and changes</h2>
       <p class="mt-3">Tracer may change, pause, or remove features as the product develops. The service is provided without a promise that every feature will always be available or error-free. These terms do not remove rights that cannot be waived under applicable law.</p>
+    </section>
+
+    <section aria-labelledby="terms-eula">
+      <h2 id="terms-eula" class="text-xl font-semibold text-slate-950 dark:text-white">End User License Agreement</h2>
+      <p class="mt-3">Subject to these terms, Tracer gives you a limited, personal, non-exclusive, non-transferable, revocable right to use the Tracer web app for its intended study and classroom features. This is a permission to use the service, not a sale of the service or its software. You may not copy, reverse engineer, disrupt, or use Tracer to access another person’s account or data without permission.</p>
+    </section>
+
+    <section aria-labelledby="terms-warranties">
+      <h2 id="terms-warranties" class="text-xl font-semibold text-slate-950 dark:text-white">No warranty and service limits</h2>
+      <p class="mt-3">To the maximum extent permitted by law, Tracer is provided “as is” and “as available.” We do not promise uninterrupted, error-free, or completely secure service, or that every item of content will be preserved or recoverable. Keep your own copies of study material that is important to you.</p>
+      <p class="mt-3">AI providers, sign-in providers, hosting providers, and other third-party services operate under their own terms and privacy practices. To the maximum extent permitted by law, Tracer is not responsible for their content, availability, outages, charges, or handling of information that you choose to send to them.</p>
+    </section>
+
+    <section aria-labelledby="terms-liability">
+      <h2 id="terms-liability" class="text-xl font-semibold text-slate-950 dark:text-white">Limitation of liability</h2>
+      <p class="mt-3">To the maximum extent permitted by law, Tracer and its operators are not liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or for lost profits, lost data, lost use, goodwill, or other intangible losses arising from the service. This includes harm connected with service interruptions, inaccurate AI output, user-published content, third-party services, or unauthorized access to or alteration of content.</p>
+      <p class="mt-3">Nothing in these terms excludes or limits liability, a user’s rights, or notice obligations that applicable law does not allow us to exclude or limit. A data-security incident will be handled according to applicable legal requirements; this section is not a promise that Tracer can avoid responsibility for conduct that the law makes it responsible for.</p>
     </section>
 
     <section aria-labelledby="terms-help">
