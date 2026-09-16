@@ -159,7 +159,7 @@ jobs:
           echo "macOS Gatekeeper may block this artifact outside local testing."
 
       - name: Upload DMG installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tracer-macos-installer
           path: |

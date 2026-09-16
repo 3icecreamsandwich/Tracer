@@ -52,14 +52,14 @@ jobs:
         run: bun run tauri build --bundles deb appimage
 
       - name: Upload DEB installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tracer-linux-deb-installer
           path: src-tauri/target/release/bundle/deb/*.deb
           if-no-files-found: error
 
       - name: Upload AppImage artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tracer-linux-appimage
           path: src-tauri/target/release/bundle/appimage/*.AppImage
