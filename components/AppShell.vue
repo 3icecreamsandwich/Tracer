@@ -42,6 +42,7 @@
  })
 
  const showWebFooter = computed(() => !hasTauriRuntime() && route.meta?.hidePublicFooter !== true)
+ const isStudyRoute = computed(() => /^\/set\/.+-(flashcards|learn|match|test)\/?$/.test(route.path))
 
  function onGlobalKeydown(event: KeyboardEvent) {
    // Cancel the native window action without stopping propagation so Escape
@@ -84,6 +85,7 @@
 
  onMounted(() => {
    window.addEventListener('keydown', onGlobalKeydown, { capture: true })
+   startStudyStreakTracking(() => isStudyRoute.value)
  })
 
  onBeforeUnmount(() => {

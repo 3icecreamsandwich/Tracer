@@ -299,7 +299,6 @@
             </AppButton>
           </div>
         </section>
-
         <Teleport to="body">
           <div
             v-if="dragState.active"
@@ -313,6 +312,7 @@
         </Teleport>
 
         <div class="tracer-home-actions grid content-start gap-7">
+          <StudyStreakCard />
           <section
             class="rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
             aria-labelledby="home-create"
