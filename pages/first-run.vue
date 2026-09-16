@@ -26,6 +26,16 @@
           </button>
         </div>
 
+        <label v-if="mode === 'signup'" class="mt-4 flex items-center gap-3 text-sm leading-[18px] text-neutral-800 dark:text-slate-200">
+          <input
+            v-model="ageConfirmed"
+            type="checkbox"
+            class="h-5 w-5 shrink-0 rounded border-neutral-300 accent-neutral-800"
+            :disabled="busy"
+          />
+          <span>{{ t('auth.ageConfirmation') }}</span>
+        </label>
+
         <div v-if="!configured" class="mt-6 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
           {{ t('auth.notConfigured') }}
         </div>
@@ -33,7 +43,7 @@
         <button
           type="button"
           class="mt-[18px] flex h-11 w-full items-center justify-center rounded-[10px] border border-neutral-300 bg-white px-4 font-medium text-neutral-950 shadow-sm hover:bg-neutral-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:hover:bg-slate-800"
-          :disabled="busy || !configured"
+          :disabled="busy || !configured || (mode === 'signup' && !ageConfirmed)"
           @click="onGoogle"
         >
           <LoadingSpinner v-if="busyProvider === 'google'" class="mr-auto" size="sm" :show-label="false" />
@@ -115,7 +125,7 @@
             @expired="onCaptchaExpired"
             @error="onCaptchaError"
           />
-          <button type="submit" class="auth-primary" :disabled="busy || !configured || (turnstileEnabled && !captchaToken)">
+          <button type="submit" class="auth-primary" :disabled="busy || !configured || (mode === 'signup' && !ageConfirmed) || (turnstileEnabled && !captchaToken)">
             <LoadingSpinner v-if="busyProvider === 'email'" size="sm" />
             <template v-else>{{ mode === 'signup' ? t('auth.letsGo') : t('auth.signInEmail') }}</template>
           </button>
@@ -274,6 +284,7 @@ const accountPassword = ref('')
 const showAccountPassword = ref(false)
 const pendingEmailPassword = ref('')
 const acceptedTerms = ref(false)
+const ageConfirmed = ref(false)
 const localPassword = ref('')
 const localConfirm = ref('')
 const authenticatedEmail = ref('')
@@ -320,7 +331,7 @@ function clearCaptcha() { captchaToken.value = ''; turnstileWidget.value?.reset(
 function onCaptchaVerified(token: string) { captchaToken.value = token; clearError() }
 function onCaptchaExpired() { captchaToken.value = '' }
 function onCaptchaError() { captchaToken.value = ''; error.value = t('auth.errorCaptcha') }
-function toggleMode() { mode.value = mode.value === 'signup' ? 'signin' : 'signup'; accountPassword.value = ''; showAccountPassword.value = false; pendingEmailPassword.value = ''; acceptedTerms.value = false; clearCaptcha(); clearError() }
+function toggleMode() { mode.value = mode.value === 'signup' ? 'signin' : 'signup'; accountPassword.value = ''; showAccountPassword.value = false; pendingEmailPassword.value = ''; acceptedTerms.value = false; ageConfirmed.value = false; clearCaptcha(); clearError() }
 function returnToSignIn() { void cancelPendingEmailVerification(pendingVerification.value); pendingVerification.value = null; pendingEmailPassword.value = ''; stage.value = 'account'; mode.value = 'signin'; accountPassword.value = ''; showAccountPassword.value = false; clearCaptcha(); clearError() }
 
 function acceptSession(
@@ -346,6 +357,7 @@ function acceptSession(
 
 async function onGoogle() {
   clearError()
+  if (mode.value === 'signup' && !ageConfirmed.value) { error.value = t('auth.errorAge'); return }
   if (!hasTauriRuntime()) {
     if (mode.value === 'signup') localStorage.setItem(browserStorageKey('signup-role'), accountRole.value)
     else localStorage.removeItem(browserStorageKey('signup-role'))
@@ -365,6 +377,7 @@ async function onGoogle() {
 
 async function onEmail() {
   clearError()
+  if (mode.value === 'signup' && !ageConfirmed.value) { error.value = t('auth.errorAge'); return }
   if (mode.value === 'signup' && !name.value.trim()) { error.value = t('auth.errorName'); return }
   if (!email.value.trim() || accountPassword.value.length < 8) { error.value = t('auth.errorEmailPassword'); return }
   if (mode.value === 'signup' && !acceptedTerms.value) { error.value = t('auth.errorTerms'); return }
