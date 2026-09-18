@@ -24,7 +24,7 @@
     "types:cloudflare": "node scripts/cloudflare/types.mjs"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.116",
+    "@ai-sdk/anthropic": "^4.0.53",
     "@ai-sdk/google": "^3.0.121",
     "@ai-sdk/openai": "^3.0.109",
     "@ai-sdk/openai-compatible": "^2.0.74",
