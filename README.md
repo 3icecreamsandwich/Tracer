@@ -18,7 +18,7 @@ Note: for macOS, please run in Terminal:
 codesign --force --deep --sign - /Applications/Tracer.app
 xattr -dr com.apple.quarantine /Applications/Tracer.app
 ```
-This is to override macOS's requirement for a developer certificate, which we do not have yet 😅.
+This is to override macOS's requirement for a developer certificate, which we do not have yet.
 
 ## How to Use
 On first startup, create or open a Tracer account with Google or verified email.
