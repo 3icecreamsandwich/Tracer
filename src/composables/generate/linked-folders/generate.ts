@@ -76,9 +76,23 @@ function isGeneratedOutputParseError(error: unknown) {
   )
 }
 
-function buildFormatRepairPrompt(raw: string) {
+function summarizeGeneratedOutputParseError(error: unknown) {
+  const message = error instanceof Error && error.message.trim()
+    ? error.message.trim()
+    : 'The generated output did not match Tracer\'s expected format.'
+
+  if (error instanceof GenerateContractParseError) return `Output structure: ${message}`
+  if (error instanceof TsvParseError) return `Flashcard TSV: ${message}`
+  if (error instanceof TermsValidationError) return `Flashcard validation: ${message}`
+  return message
+}
+
+function buildFormatRepairPrompt(raw: string, parseError: unknown) {
   return [
     'Repair the formatting of the previous study-material output without adding, removing, or changing facts.',
+    '',
+    'Tracer parser report:',
+    summarizeGeneratedOutputParseError(parseError),
     'Return EXACTLY two fenced code blocks and NOTHING else:',
     '',
     '```study_guide_md',
@@ -99,18 +113,39 @@ function buildFormatRepairPrompt(raw: string) {
   ].join('\n')
 }
 
-async function parseOrRepairBatchOutput(model: any, raw: string) {
+const MAX_FORMAT_REPAIR_ATTEMPTS = 3
+
+async function parseOrRepairBatchOutput(
+  model: any,
+  raw: string,
+  resolveRepairModel?: () => Promise<any>
+) {
   try {
     return { raw, ...parseBatchOutput(raw) }
   } catch (error) {
     if (!isGeneratedOutputParseError(error)) throw error
 
-    const repairedResponse = await generateText({
-      model,
-      prompt: buildFormatRepairPrompt(raw)
-    })
-    const repairedRaw = repairedResponse.text ?? ''
-    return { raw: repairedRaw, ...parseBatchOutput(repairedRaw) }
+    const repairModel = resolveRepairModel ? await resolveRepairModel() : model
+    let failedRaw = raw
+    let parseError = error
+
+    for (let attempt = 0; attempt < MAX_FORMAT_REPAIR_ATTEMPTS; attempt += 1) {
+      const repairedResponse = await generateText({
+        model: repairModel,
+        prompt: buildFormatRepairPrompt(failedRaw, parseError)
+      })
+      const repairedRaw = repairedResponse.text ?? ''
+
+      try {
+        return { raw: repairedRaw, ...parseBatchOutput(repairedRaw) }
+      } catch (nextError) {
+        if (!isGeneratedOutputParseError(nextError)) throw nextError
+        failedRaw = repairedRaw
+        parseError = nextError
+      }
+    }
+
+    throw parseError
   }
 }
 
@@ -143,6 +178,7 @@ export function appendStudyGuide(existing: string, addition: string) {
 
 export async function generateLinkedFolderContent(input: {
   model: any
+  resolveRepairModel?: () => Promise<any>
   sources: ExtractedGenerateSource[]
   instructions?: string
   incremental?: boolean
@@ -160,7 +196,7 @@ export async function generateLinkedFolderContent(input: {
     const raw = response.text ?? ''
     rawBatches[index] = raw
     input.onRawOutput?.(rawBatches.map((text, i) => text ? `Batch ${i + 1}\n\n${text}` : '').filter(Boolean).join('\n\n'))
-    return parseOrRepairBatchOutput(input.model, raw)
+    return parseOrRepairBatchOutput(input.model, raw, input.resolveRepairModel)
   })
 
   return {

@@ -81,7 +81,11 @@ async function resolveDefaultModel() {
   const { resolveAiModel } = await import('../../ai/registry')
   const model = await resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
   if (!model) throw new Error('The Default AI Model could not be loaded.')
-  return { db, model }
+  return {
+    db,
+    model,
+    resolveRepairModel: () => resolveAiModel(settings.defaultModelId!)
+  }
 }
 
 function fileRecords(
@@ -112,7 +116,7 @@ export async function createSetFromLinkedFolder(input: LinkFolderInput): Promise
   const extraction = await processing.extractGenerateSources(scan.sources)
   const context = await modelRequest
   if ('error' in context) throw context.error
-  const { db, model } = context
+  const { db, model, resolveRepairModel } = context
   if (extraction.extracted.length === 0) {
     const details = extraction.failed[0]?.reason ?? scan.ignored[0]?.reason
     throw new Error(details ? `No readable files were found. ${details}` : 'No readable files were found in this folder.')
@@ -120,6 +124,7 @@ export async function createSetFromLinkedFolder(input: LinkFolderInput): Promise
 
   const generated = await processing.generateLinkedFolderContent({
     model,
+    resolveRepairModel,
     sources: extraction.extracted,
     instructions: input.instructions
   })
@@ -250,9 +255,10 @@ async function performLinkedFolderSync(setId: Uuid, changedPaths: Set<string> | 
   try {
     const context = await modelRequest
     if ('error' in context) throw context.error
-    const { model } = context
+    const { model, resolveRepairModel } = context
     const generated = await processing.generateLinkedFolderContent({
       model,
+      resolveRepairModel,
       sources: extraction.extracted,
       incremental: true
     })

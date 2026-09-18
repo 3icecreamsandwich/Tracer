@@ -178,7 +178,11 @@ async function resolveDefaultModel() {
   const { resolveAiModel } = await import('../../ai/registry')
   const model = await resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
   if (!model) throw new Error('The Default AI Model could not be loaded.')
-  return { db, model }
+  return {
+    db,
+    model,
+    resolveRepairModel: () => resolveAiModel(settings.defaultModelId!)
+  }
 }
 
 function records(sources: BrowserLinkedFolderSource[], status: 'processed' | 'failed', error?: string | null) {
@@ -202,7 +206,8 @@ async function importScan(
     throw new Error(reason ? `No readable files were found. ${reason}` : 'No readable files were found in this folder.')
   }
   const generated = await generation.generateLinkedFolderContent({
-    model: context.model, sources: extracted.extracted, instructions: options.instructions,
+    model: context.model, resolveRepairModel: context.resolveRepairModel,
+    sources: extracted.extracted, instructions: options.instructions,
     incremental: options.incremental
   })
   const setId = options.setId ?? crypto.randomUUID() as Uuid

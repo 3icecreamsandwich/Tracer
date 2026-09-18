@@ -75,6 +75,9 @@ describe('linked-folder generation', () => {
   })
 
   it('asks the model to repair an invalid flashcard block once', async () => {
+    const generationModel = { modelId: 'generation-route' }
+    const defaultModel = { modelId: 'default-model' }
+    const resolveRepairModel = vi.fn().mockResolvedValue(defaultModel)
     generateTextMock
       .mockResolvedValueOnce({
         text: [
@@ -99,13 +102,20 @@ describe('linked-folder generation', () => {
       })
 
     const result = await generateLinkedFolderContent({
-      model: { modelId: 'test-model' },
+      model: generationModel,
+      resolveRepairModel,
       sources: [source('limits')]
     })
 
     expect(generateTextMock).toHaveBeenCalledTimes(2)
+    expect(generateTextMock.mock.calls[0]?.[0]?.model).toBe(generationModel)
+    expect(generateTextMock.mock.calls[1]?.[0]?.model).toBe(defaultModel)
+    expect(resolveRepairModel).toHaveBeenCalledTimes(1)
     expect(generateTextMock.mock.calls[1]?.[0]?.prompt).toContain(
       'Repair the formatting'
+    )
+    expect(generateTextMock.mock.calls[1]?.[0]?.prompt).toContain(
+      'Tracer parser report:\nFlashcard TSV: line 1 must contain a comma or tab separator'
     )
     expect(result.terms).toEqual([
       expect.objectContaining({
@@ -114,6 +124,56 @@ describe('linked-folder generation', () => {
       })
     ])
   })
+
+  it('feeds each failed repair back to the default model and stops when parsing succeeds', async () => {
+    const initialRaw = '```study_guide_md\n# Initial\n```\n```flashcards_tsv\nMissing separator\n```'
+    const firstRepair = '```study_guide_md\n# First\n```\n```flashcards_tsv\nStill missing separator\n```'
+    const secondRepair = '```study_guide_md\n# Fixed\n```\n```flashcards_tsv\nCell\tBasic unit of life\n```'
+    const defaultModel = { modelId: 'default-model' }
+    const resolveRepairModel = vi.fn().mockResolvedValue(defaultModel)
+
+    generateTextMock
+      .mockResolvedValueOnce({ text: initialRaw })
+      .mockResolvedValueOnce({ text: firstRepair })
+      .mockResolvedValueOnce({ text: secondRepair })
+
+    const result = await generateLinkedFolderContent({
+      model: { modelId: 'generation-route' },
+      resolveRepairModel,
+      sources: [source('biology')]
+    })
+
+    expect(generateTextMock).toHaveBeenCalledTimes(3)
+    expect(generateTextMock.mock.calls[1]?.[0]?.model).toBe(defaultModel)
+    expect(generateTextMock.mock.calls[2]?.[0]?.model).toBe(defaultModel)
+    expect(generateTextMock.mock.calls[2]?.[0]?.prompt).toContain(firstRepair)
+    expect(result.terms).toEqual([
+      expect.objectContaining({ front: 'Cell', back: 'Basic unit of life' })
+    ])
+  })
+
+  it('throws the third repair parser error after three failed repair attempts', async () => {
+    const invalidOutputs = [
+      'Initial invalid row',
+      'First invalid repair',
+      'Second invalid repair',
+      'Third invalid repair'
+    ].map((row) => `\`\`\`study_guide_md\n# Guide\n\`\`\`\n\`\`\`flashcards_tsv\n${row}\n\`\`\``)
+    const defaultModel = { modelId: 'default-model' }
+
+    for (const text of invalidOutputs) generateTextMock.mockResolvedValueOnce({ text })
+
+    await expect(generateLinkedFolderContent({
+      model: { modelId: 'generation-route' },
+      resolveRepairModel: async () => defaultModel,
+      sources: [source('biology')]
+    })).rejects.toThrow('line 1 must contain a comma or tab separator')
+
+    expect(generateTextMock).toHaveBeenCalledTimes(4)
+    expect(generateTextMock.mock.calls.slice(1).every((call) => call[0]?.model === defaultModel)).toBe(true)
+    expect(generateTextMock.mock.calls[3]?.[0]?.prompt).toContain('Second invalid repair')
+  })
+
   it('splits a large individual PDF without losing text', () => {
     const text = ('A paragraph about cells.\n\n').repeat(3000)
     const batches = batchGenerateSources([source('large', { kind: 'pdf', text, pageCount: 50 })])

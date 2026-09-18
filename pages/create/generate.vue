@@ -305,7 +305,11 @@ const parseFailureOpen = ref(false)
 const parseFailures = ref<FailedGenerateSource[]>([])
 const pendingExtractedSources = ref<ExtractedGenerateSource[]>([])
 const parseFailureCanContinue = computed(() => parseFailures.value.length > 0 && pendingExtractedSources.value.length > 0)
-type GenerateModelContext = { db: Awaited<ReturnType<typeof useTracerDb>>; model: any }
+type GenerateModelContext = {
+  db: Awaited<ReturnType<typeof useTracerDb>>
+  model: any
+  resolveRepairModel: () => Promise<any>
+}
 const pendingGenerateModelContext = shallowRef<Promise<GenerateModelContext | Error> | null>(null)
 
 function showAiError(err: unknown) {
@@ -527,7 +531,11 @@ async function prepareGenerateModelContext(): Promise<GenerateModelContext> {
     throw new Error('Choose a Default AI Model to use Generate.')
   }
   const model = await resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
-  return { db, model }
+  return {
+    db,
+    model,
+    resolveRepairModel: () => resolveAiModel(settings.defaultModelId!)
+  }
 }
 
 async function saveGeneratedOutput(
@@ -541,7 +549,7 @@ async function saveGeneratedOutput(
       throw modelContext
     }
 
-    const { db, model } = modelContext
+    const { db, model, resolveRepairModel } = modelContext
     if (!model) {
       aiError.value = aiErrorForMissingDefaultModel()
       aiErrorOpen.value = true
@@ -550,6 +558,7 @@ async function saveGeneratedOutput(
 
     const generated = await generateLinkedFolderContent({
       model,
+      resolveRepairModel,
       instructions: instructions.value,
       sources: sourceTexts,
       onRawOutput: (raw) => { rawOutput.value = raw }

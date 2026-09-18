@@ -37,6 +37,12 @@ function isDashSeparatorAt(line: string, index: number) {
   return /\s/.test(line[index - 1] ?? '') && /\s/.test(line[index + 1] ?? '')
 }
 
+function isBackslashEscaped(text: string, index: number) {
+  let slashCount = 0
+  for (let i = index - 1; i >= 0 && text[i] === '\\'; i -= 1) slashCount += 1
+  return slashCount % 2 === 1
+}
+
 function countDelimiterOutsideQuotes(line: string, delimiter: TermsDelimiter) {
   const sep = delimiter === 'dash' ? null : delimiterChar(delimiter)
   let count = 0
@@ -44,6 +50,7 @@ function countDelimiterOutsideQuotes(line: string, delimiter: TermsDelimiter) {
   for (let i = 0; i < line.length; i += 1) {
     const ch = line[i]
     if (ch === '"') {
+      if (isBackslashEscaped(line, i)) continue
       if (inQuotes && line[i + 1] === '"') {
         i += 1
       } else {
@@ -81,6 +88,10 @@ function parseDelimitedLine(line: string, delimiter: TermsDelimiter, lineNumber:
 
   for (let i = 0; i < line.length; i += 1) {
     const ch = line[i]
+    if ((ch === '"' || ch === "'" || ch === '`') && isBackslashEscaped(line, i)) {
+      current = `${current.slice(0, -1)}${ch}`
+      continue
+    }
     if (ch === '"') {
       if (inQuotes && line[i + 1] === '"') {
         current += '"'

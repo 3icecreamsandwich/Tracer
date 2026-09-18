@@ -66,6 +66,23 @@ describe('parseTermsDelimited', () => {
     ])
   })
 
+  it('treats backslash-escaped quotes and ticks as literal cell content', () => {
+    expect(parseTermsDelimited([
+      '\\"Quoted term\\"\tA \\"quoted\\" definition',
+      "Apostrophes\tIt\\'s also called \\'prime\\' notation",
+      'Inline code\tUse \\`const value = 1\\`'
+    ].join('\n'), { delimiter: 'tab' })).toEqual([
+      { front: '"Quoted term"', back: 'A "quoted" definition' },
+      { front: 'Apostrophes', back: "It's also called 'prime' notation" },
+      { front: 'Inline code', back: 'Use `const value = 1`' }
+    ])
+  })
+
+  it('still rejects a genuinely unclosed CSV quote', () => {
+    expect(() => parseTermsDelimited('"open,term\tdefinition', { delimiter: 'tab' }))
+      .toThrow('unclosed quote')
+  })
+
   it('accepts generated bullets and numbering', () => {
     expect(parseTermsDelimited('- alpha\tone\n1. beta\ttwo\n')).toEqual([
       { front: 'alpha', back: 'one' },
