@@ -29,7 +29,7 @@
     "@ai-sdk/openai": "^3.0.109",
     "@ai-sdk/openai-compatible": "^2.0.74",
     "@lucide/vue": "1.36.0",
-    "@supabase/supabase-js": "2.112.3",
+    "@supabase/supabase-js": "2.116.0",
     "@tauri-apps/plugin-dialog": "^2.7.3",
     "@tauri-apps/plugin-fs": "^2.5.2",
     "@tauri-apps/plugin-http": "^2.6.0",
