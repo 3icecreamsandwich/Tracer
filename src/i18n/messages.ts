@@ -54,7 +54,7 @@ const en: Messages = {
   'settings.profile': 'Profile',
   'settings.theme': 'Theme',
   'settings.darkMode': 'Dark mode',
-  'settings.darkModeDescription': 'Affects the whole app and persists on restart.',
+  'settings.darkModeDescription': 'Turns screen to dark.',
   'settings.language': 'Language',
   'settings.languageDescription': 'Changes Tracer system text. Your study content is not translated.',
   'settings.chooseLanguage': 'Choose language',
@@ -71,7 +71,7 @@ const en: Messages = {
   'settings.startupLock': 'Require password on startup',
   'settings.startupLockDescription': 'When disabled, Tracer will auto-unlock using your OS keychain.',
   'settings.dangerZone': 'Danger zone',
-  'settings.resetDescription': 'Reset removes your vault and local database.',
+  'settings.resetDescription': 'Reset removes all your local Tracer data.',
   'settings.resetTracer': 'Reset Tracer',
   'home.sets': 'Sets',
   'home.subtitle': 'Your flashcard sets and study guides',
@@ -1149,7 +1149,7 @@ for (const language of Object.keys(authAccountMessages) as AppLanguage[]) {
 
 const signupRoleMessages: Record<AppLanguage, Messages> = {
   en: {
-    'auth.accountType': 'Account type', 'auth.students': 'Students', 'auth.teachers': 'Teachers', 'auth.googleSignIn': 'Sign in with Google', 'auth.or': 'OR', 'auth.agreePrefix': 'I have read and agreed to Tracer’s', 'auth.termsOfService': 'Terms of Service', 'auth.and': 'and', 'auth.privacyPolicy': 'Privacy Policy', 'auth.letsGo': 'Let’s go!', 'auth.errorTerms': 'Agree to the Terms of Service and Privacy Policy to continue.'
+    'auth.accountType': 'Account type', 'auth.students': 'Students', 'auth.teachers': 'Teachers', 'auth.googleSignIn': 'Sign in with Google', 'auth.or': 'OR', 'auth.ageConfirmation': 'I confirm that I am at least 13 years old.', 'auth.errorAge': 'Tracer is intended for people age 13 and older.', 'auth.agreePrefix': 'I have read and agreed to Tracer’s', 'auth.termsOfService': 'Terms of Service', 'auth.and': 'and', 'auth.privacyPolicy': 'Privacy Policy', 'auth.letsGo': 'Let’s go!', 'auth.errorTerms': 'Agree to the Terms of Service and Privacy Policy to continue.'
   },
   es: {
     'auth.accountType': 'Tipo de cuenta', 'auth.students': 'Estudiantes', 'auth.teachers': 'Docentes', 'auth.googleSignIn': 'Iniciar sesión con Google', 'auth.or': 'O', 'auth.agreePrefix': 'He leído y acepto los', 'auth.termsOfService': 'Términos del servicio', 'auth.and': 'y la', 'auth.privacyPolicy': 'Política de privacidad', 'auth.letsGo': '¡Vamos!', 'auth.errorTerms': 'Acepta los Términos del servicio y la Política de privacidad para continuar.'

@@ -1,14 +1,16 @@
 <template>
-  <div class="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50">
+  <div class="flex min-h-screen flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50">
     <AppTopbar v-if="!hideNavbar" />
 
     <div v-if="!hideFloatingBackButton" class="tracer-back-control fixed bottom-6 left-6 z-50">
       <BackButton />
     </div>
 
-    <main>
+    <div class="flex-1">
       <slot />
-    </main>
+    </div>
+
+    <PublicFooter v-if="showWebFooter" />
 
     <LazyFloatingPageChat v-if="!hideFloatingChat" />
   </div>
@@ -38,6 +40,9 @@
    // Fullscreen study pages have their own header back button.
    return /^\/(set|study-guide)\/.+-(flashcards|learn|match|test)\/?$/.test(route.path)
  })
+
+ const showWebFooter = computed(() => !hasTauriRuntime() && route.meta?.hidePublicFooter !== true)
+ const isStudyRoute = computed(() => /^\/set\/.+-(flashcards|learn|match|test)\/?$/.test(route.path))
 
  function onGlobalKeydown(event: KeyboardEvent) {
    // Cancel the native window action without stopping propagation so Escape
@@ -80,6 +85,7 @@
 
  onMounted(() => {
    window.addEventListener('keydown', onGlobalKeydown, { capture: true })
+   startStudyStreakTracking(() => isStudyRoute.value)
  })
 
  onBeforeUnmount(() => {

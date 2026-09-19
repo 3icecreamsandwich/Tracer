@@ -177,12 +177,12 @@ describe('linked-folder generation', () => {
   it('splits a large individual PDF without losing text', () => {
     const text = ('A paragraph about cells.\n\n').repeat(3000)
     const batches = batchGenerateSources([source('large', { kind: 'pdf', text, pageCount: 50 })])
-    expect(batches.length).toBeGreaterThan(3)
+    expect(batches.length).toBeGreaterThan(1)
     expect(batches.flat().map((item) => item.text).join('')).toBe(text)
-    expect(batches.every((batch) => batch.reduce((sum, item) => sum + item.text.length, 0) <= 18000)).toBe(true)
+    expect(batches.every((batch) => batch.reduce((sum, item) => sum + item.text.length, 0) <= 60000)).toBe(true)
   })
 
-  it('runs three requests concurrently and merges in source order', async () => {
+  it('runs provider requests sequentially and merges in source order', async () => {
     let active = 0
     let peak = 0
     const releases: Array<() => void> = []
@@ -194,19 +194,21 @@ describe('linked-folder generation', () => {
       active -= 1
       return { text: `\`\`\`study_guide_md\n# Guide ${index}\n\`\`\`\n\`\`\`flashcards_tsv\nTerm ${index}\tDefinition ${index}\n\`\`\`` }
     })
-    const pending = generateLinkedFolderContent({ model: {}, sources: [source('large', { text: 'x'.repeat(72000) })] })
+    const pending = generateLinkedFolderContent({ model: {}, sources: [source('large', { text: 'x'.repeat(220000) })] })
+    await vi.waitFor(() => expect(releases).toHaveLength(1))
+    releases[0]!()
+    await vi.waitFor(() => expect(releases).toHaveLength(2))
+    releases[1]!()
     await vi.waitFor(() => expect(releases).toHaveLength(3))
     releases[2]!()
     await vi.waitFor(() => expect(releases).toHaveLength(4))
     releases[3]!()
-    releases[1]!()
-    releases[0]!()
     const output = await pending
-    expect(peak).toBe(3)
+    expect(peak).toBe(1)
     expect(output.terms.map((term) => term.front)).toEqual(['Term 0', 'Term 1', 'Term 2', 'Term 3'])
   })
 
-  it('stops scheduling batches after a failure and retains raw output', async () => {
+  it('stops scheduling batches after a failure', async () => {
     const onRawOutput = vi.fn()
     let calls = 0
     generateTextMock.mockImplementation(async () => {
@@ -218,8 +220,8 @@ describe('linked-folder generation', () => {
     await expect(generateLinkedFolderContent({
       model: {}, sources: [source('large', { text: 'x'.repeat(90000) })], onRawOutput
     })).rejects.toThrow('Provider unavailable')
-    expect(calls).toBe(3)
-    expect(onRawOutput).toHaveBeenCalledWith(expect.stringContaining('Cell\tBasic unit of life'))
+    expect(calls).toBe(1)
+    expect(onRawOutput).not.toHaveBeenCalled()
   })
 
 })

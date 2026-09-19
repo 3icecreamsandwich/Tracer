@@ -6,7 +6,7 @@ export const MAX_LINKED_FOLDER_BATCH_CHARACTERS = 60_000
 
 // Split large individual PDFs too, so a single long document can use parallel requests.
 // Prefer paragraph boundaries; never truncate source material.
-export function batchGenerateSources(sources: ExtractedGenerateSource[], budget = 18_000) {
+export function batchGenerateSources(sources: ExtractedGenerateSource[], budget = MAX_LINKED_FOLDER_BATCH_CHARACTERS) {
   if (!Number.isInteger(budget) || budget < 1) throw new Error('Invalid generation batch budget')
   const pieces = sources.flatMap((source) => {
     const parts: ExtractedGenerateSource[] = []

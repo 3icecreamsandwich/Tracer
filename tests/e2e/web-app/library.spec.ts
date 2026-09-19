@@ -157,8 +157,8 @@ test('account deletion requires typed confirmation and calls the self-delete RPC
   await page.goto('settings')
   await expect(page.getByText('Connected', { exact: true })).toBeVisible()
 
-  const dangerZone = page.getByLabel('Danger zone')
-  await dangerZone.getByRole('button', { name: 'Delete account', exact: true }).click()
+  const accountControls = page.getByLabel('Reset and account controls')
+  await accountControls.getByRole('button', { name: 'Delete account', exact: true }).click()
   const dialog = page.getByRole('alertdialog', { name: 'Delete account' })
   const deleteButton = dialog.getByRole('button', { name: 'Delete account', exact: true })
   await expect(deleteButton).toBeDisabled()

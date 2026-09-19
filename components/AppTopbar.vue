@@ -50,7 +50,7 @@
                 <div
                     v-if="searchOpen"
                     class="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-                    role="listbox"
+                    role="region"
                     :aria-label="t('nav.searchResults')"
                 >
                     <div
@@ -76,7 +76,6 @@
                             <NuxtLink
                                 :to="topbarSearchItemTo(item)"
                                 class="flex items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500"
-                                role="option"
                                 @click="selectSearchResult"
                             >
                                 <span class="min-w-0">

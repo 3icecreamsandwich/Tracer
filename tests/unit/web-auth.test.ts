@@ -8,12 +8,14 @@ vi.mock('h3', () => ({
   setHeader: vi.fn(),
 }))
 vi.stubGlobal('useRuntimeConfig', () => ({ supabaseUrl: 'fallback', supabasePublishableKey: 'fallback' }))
-const { authenticatedWebClient } = await import('../../server/utils/web-auth')
+const { authenticatedWebClient, limitWebAi, limitWebAuthHandoff } = await import('../../server/utils/web-auth')
 
 function event() {
   return { headers: { authorization: 'Bearer untrusted-token' }, context: { cloudflare: { env: {
     NUXT_SUPABASE_URL: 'https://fixture.supabase.co', NUXT_SUPABASE_PUBLISHABLE_KEY: 'public-key',
     WEB_RATE_LIMITER: { limit: state.limit },
+    WEB_AI_RATE_LIMITER: { limit: state.limit },
+    WEB_AUTH_RATE_LIMITER: { limit: state.limit },
   } } } } as any
 }
 beforeEach(() => {
@@ -21,6 +23,22 @@ beforeEach(() => {
   state.createClient.mockReturnValue({ auth: { getUser: state.getUser } })
   state.getUser.mockResolvedValue({ data: { user: { id: 'verified-account' } }, error: null })
   state.limit.mockResolvedValue({ success: true })
+})
+it('uses dedicated limits for AI and sign-in handoffs', async () => {
+  const fixture = event()
+  fixture.headers['cf-connecting-ip'] = '203.0.113.9'
+  await limitWebAi(fixture, 'verified-account')
+  expect(state.limit).toHaveBeenCalledWith({ key: 'verified-account' })
+  await limitWebAuthHandoff(fixture, 'verified-account')
+  expect(state.limit).toHaveBeenCalledWith({ key: 'verified-account:203.0.113.9' })
+})
+it('fails closed when dedicated production rate limiters are missing', async () => {
+  const fixture = event()
+  delete fixture.context.cloudflare.env.WEB_AI_RATE_LIMITER
+  await expect(limitWebAi(fixture, 'verified-account')).rejects.toMatchObject({ statusCode: 503 })
+  fixture.context.cloudflare.env.WEB_AI_RATE_LIMITER = { limit: state.limit }
+  delete fixture.context.cloudflare.env.WEB_AUTH_RATE_LIMITER
+  await expect(limitWebAuthHandoff(fixture)).rejects.toMatchObject({ statusCode: 503 })
 })
 it('uses runtime bindings and keys limits by the verified account', async () => {
   await authenticatedWebClient(event())

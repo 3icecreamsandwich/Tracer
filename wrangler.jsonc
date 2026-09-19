@@ -25,6 +25,7 @@
   },
   "vars": {
     "TRACER_MAINTENANCE": "0",
+    "TRACER_BUILD_SHA": "local",
     "NUXT_APP_BASE_URL": "/",
     "NUXT_GITHUB_OAUTH_CLIENT_ID": "",
     "NUXT_WEB_AI_COMPATIBLE_ORIGIN": "",
@@ -39,6 +40,22 @@
         "limit": 120,
         "period": 60
       }
+    },
+    {
+      "name": "WEB_AI_RATE_LIMITER",
+      "namespace_id": "1003",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    },
+    {
+      "name": "WEB_AUTH_RATE_LIMITER",
+      "namespace_id": "1005",
+      "simple": {
+        "limit": 20,
+        "period": 60
+      }
     }
   ],
   "env": {
@@ -47,6 +64,7 @@
       "workers_dev": false,
       "vars": {
         "TRACER_MAINTENANCE": "0",
+        "TRACER_BUILD_SHA": "local",
         "NUXT_APP_BASE_URL": "/",
         "NUXT_GITHUB_OAUTH_CLIENT_ID": "",
         "NUXT_WEB_AI_COMPATIBLE_ORIGIN": "",
@@ -59,6 +77,22 @@
           "namespace_id": "1002",
           "simple": {
             "limit": 120,
+            "period": 60
+          }
+        },
+        {
+          "name": "WEB_AI_RATE_LIMITER",
+          "namespace_id": "1004",
+          "simple": {
+            "limit": 30,
+            "period": 60
+          }
+        },
+        {
+          "name": "WEB_AUTH_RATE_LIMITER",
+          "namespace_id": "1006",
+          "simple": {
+            "limit": 20,
             "period": 60
           }
         }

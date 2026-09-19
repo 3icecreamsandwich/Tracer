@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { createError, setCookie, setResponseStatus } from 'h3'
-import { authenticatedWebClient } from '../../../utils/web-auth'
+import { authenticatedWebContext, limitWebAuthHandoff } from '../../../utils/web-auth'
 import {
   allowLandingAuthOrigin,
   WEB_AUTH_HANDOFF_COOKIE,
@@ -11,7 +11,8 @@ import { webRuntimeConfig } from '../../../utils/web-config'
 
 export default defineEventHandler(async (event) => {
   allowLandingAuthOrigin(event)
-  const authenticatedClient = await authenticatedWebClient(event)
+  const { client: authenticatedClient, userId } = await authenticatedWebContext(event)
+  await limitWebAuthHandoff(event, userId)
   const body = await readWebJson(event, 16 * 1024)
   if (typeof body?.refreshToken !== 'string' || body.refreshToken.length < 8 || body.refreshToken.length > 8192) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid sign-in handoff.' })

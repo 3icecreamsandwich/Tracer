@@ -5,9 +5,11 @@ import {
   WEB_AUTH_HANDOFF_COOKIE_PATH,
 } from '../../../../utils/web-auth-handoff'
 import { webRuntimeConfig } from '../../../../utils/web-config'
+import { limitWebAuthHandoff } from '../../../../utils/web-auth'
 
 export default defineEventHandler(async (event) => {
   setHeader(event, 'Cache-Control', 'private, no-store')
+  await limitWebAuthHandoff(event)
   const refreshToken = getCookie(event, WEB_AUTH_HANDOFF_COOKIE)
   deleteCookie(event, WEB_AUTH_HANDOFF_COOKIE, {
     secure: true,

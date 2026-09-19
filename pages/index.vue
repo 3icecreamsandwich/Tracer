@@ -129,16 +129,10 @@
                       aria-hidden="true"
                     />
                     <div
-                      role="button"
-                      tabindex="0"
                       data-root-entry-hit="true"
                       :data-folder-drop-id="folder.id"
                       class="flex min-h-12 w-full min-w-0 items-center gap-1 overflow-hidden rounded-md border border-slate-200 px-2 py-2 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:gap-3 sm:px-3 dark:border-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                       :class="folderRowClass(folder.id)"
-                      @click.stop="selectFolder(folder.id, $event)"
-                      @dblclick="handleFolderDoubleClick(folder.id)"
-                      @keydown.enter.prevent="beginFolderRename(folder)"
-                      @keydown.space.prevent="toggleFolder(folder.id)"
                     >
                       <button
                         type="button"
@@ -151,17 +145,20 @@
                       >
                         <svg aria-hidden="true" viewBox="0 0 16 20" class="h-5 w-4" fill="currentColor"><circle cx="5" cy="4" r="1.3"/><circle cx="11" cy="4" r="1.3"/><circle cx="5" cy="10" r="1.3"/><circle cx="11" cy="10" r="1.3"/><circle cx="5" cy="16" r="1.3"/><circle cx="11" cy="16" r="1.3"/></svg>
                       </button>
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        class="h-5 w-6 shrink-0 text-slate-500 sm:h-6 sm:w-7 dark:text-slate-400"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
+                      <button
+                        v-if="editingFolderId !== folder.id"
+                        type="button"
+                        class="flex min-w-0 flex-1 items-center gap-1 rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                        :aria-label="`Select folder ${folder.name}`"
+                        @click="selectFolder(folder.id, $event)"
+                        @dblclick="handleFolderDoubleClick(folder.id)"
                       >
-                        <path d="M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-15v-13.5Z" />
-                        <path d="M3.5 8.5v-2a2 2 0 0 1 2-2h3l2 2" />
-                      </svg>
+                        <svg aria-hidden="true" viewBox="0 0 24 24" class="h-5 w-6 shrink-0 text-slate-500 sm:h-6 sm:w-7 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8">
+                          <path d="M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-15v-13.5Z" />
+                          <path d="M3.5 8.5v-2a2 2 0 0 1 2-2h3l2 2" />
+                        </svg>
+                        <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 dark:text-slate-50 select-none">{{ folder.name }}</span>
+                      </button>
 
                       <input
                         v-if="editingFolderId === folder.id"
@@ -175,12 +172,6 @@
                         @keydown.esc.stop.prevent="cancelFolderRename(folder)"
                         @blur="commitFolderRename(folder)"
                       />
-                      <span
-                        v-else
-                        class="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 dark:text-slate-50 select-none"
-                      >
-                        {{ folder.name }}
-                      </span>
 
                       <span class="shrink-0 text-sm font-medium text-slate-500 dark:text-slate-400 select-none">
                         {{ folderSetCount(folder.id) }}
@@ -203,19 +194,17 @@
                       >
                         <svg aria-hidden="true" viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 6.5h9M8 4h4M7 6.5l.6 9h4.8l.6-9" /></svg>
                       </button>
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 20 20"
-                        class="h-6 w-6 shrink-0 cursor-pointer rounded p-1 text-slate-500 transition hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
-                        :class="{ 'rotate-90': folderIsOpen(folder.id) }"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
+                      <button
+                        type="button"
+                        class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded text-slate-500 transition hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
+                        :aria-label="folderIsOpen(folder.id) ? `Collapse folder ${folder.name}` : `Expand folder ${folder.name}`"
+                        :aria-expanded="folderIsOpen(folder.id)"
+                        :aria-controls="`folder-contents-${folder.id}`"
                         @click.stop="toggleFolder(folder.id)"
                         @dblclick.stop
                       >
-                        <path d="m7 4 6 6-6 6" />
-                      </svg>
+                        <svg aria-hidden="true" viewBox="0 0 20 20" class="h-6 w-6 transition-transform" :class="{ 'rotate-90': folderIsOpen(folder.id) }" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 4 6 6-6 6" /></svg>
+                      </button>
                     </div>
 
                     <div
@@ -231,6 +220,7 @@
 
                     <ul
                       v-if="folderIsOpen(folder.id)"
+                      :id="`folder-contents-${folder.id}`"
                       class="ms-6 mt-2 space-y-3 border-s border-slate-200 ps-3 dark:border-slate-800"
                       :data-folder-drop-id="folder.id"
                     >
@@ -309,7 +299,6 @@
             </AppButton>
           </div>
         </section>
-
         <Teleport to="body">
           <div
             v-if="dragState.active"
@@ -323,6 +312,7 @@
         </Teleport>
 
         <div class="tracer-home-actions grid content-start gap-7">
+          <StudyStreakCard />
           <section
             class="rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
             aria-labelledby="home-create"

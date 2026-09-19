@@ -186,7 +186,9 @@ export async function generateLinkedFolderContent(input: {
 }): Promise<LinkedFolderGeneratedContent> {
   const batches = batchGenerateSources(input.sources)
   const rawBatches = new Array<string>(batches.length)
-  const outputs = await mapWithConcurrency(batches, 3, async (sources, index) => {
+  // Linked folders often create several batches at once. Keep provider calls
+  // sequential so low-RPM accounts are not rate-limited by a burst of requests.
+  const outputs = await mapWithConcurrency(batches, 1, async (sources, index) => {
     const prompt = buildGenerateTextPrompt({
       instructions: input.instructions,
       sources,

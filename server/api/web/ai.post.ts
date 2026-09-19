@@ -1,10 +1,11 @@
 import { webRuntimeConfig } from '../../utils/web-config'
 import { readWebJson } from '../../utils/web-body'
 import { resolveWebAiTarget } from '../../../src/composables/platform/ai-target'
-import { authenticatedWebClient } from '../../utils/web-auth'
+import { authenticatedWebContext, limitWebAi } from '../../utils/web-auth'
 
 export default defineEventHandler(async (event) => {
-  const client = await authenticatedWebClient(event)
+  const { client, userId } = await authenticatedWebContext(event)
+  await limitWebAi(event, userId)
   const config = webRuntimeConfig(event)
   const body = await readWebJson(event, 5 * 1024 * 1024)
   if (typeof body?.url !== 'string' || typeof body?.body !== 'string' || body.body.length > 4 * 1024 * 1024) {

@@ -17,8 +17,57 @@ function errorMessage(err: unknown): string {
   return ''
 }
 
+function nestedAiError(err: unknown): unknown {
+  let current = err
+  const visited = new Set<unknown>()
+  for (let depth = 0; depth < 4 && typeof current === 'object' && current !== null; depth += 1) {
+    if (visited.has(current)) break
+    visited.add(current)
+    const value = current as { lastError?: unknown; cause?: unknown }
+    const next = value.lastError ?? value.cause
+    if (!next) break
+    const currentMessage = errorMessage(current).trim()
+    const nextMessage = errorMessage(next).trim()
+    // AI SDK retry wrappers often keep the useful provider details only in the
+    // nested response body, leaving the nested Error.message blank.
+    if (currentMessage.includes('Last error:') || (nextMessage && !currentMessage)) current = next
+    else break
+  }
+  return current
+}
+
+function retryErrorDetails(err: unknown): Error | null {
+  if (typeof err !== 'object' || err === null) return null
+  const value = err as { statusCode?: unknown; status?: unknown; responseBody?: unknown; data?: unknown }
+  const status = typeof value.statusCode === 'number' ? value.statusCode : typeof value.status === 'number' ? value.status : null
+  const candidates = [value.responseBody, value.data]
+  for (const candidate of candidates) {
+    let message = ''
+    if (typeof candidate === 'string') {
+      try {
+        const parsed = JSON.parse(candidate)
+        message = errorMessage(parsed?.error ?? parsed)
+      } catch {
+        message = candidate
+      }
+    } else {
+      message = errorMessage(candidate)
+    }
+    message = message.replace(/\s+/g, ' ').trim()
+    if (message) return Object.assign(new Error(message), status === null ? {} : { status })
+  }
+  if (status !== null) return Object.assign(new Error(`The AI provider returned ${status}. Check its key and quota in Settings.`), { status })
+  return null
+}
+
 export function normalizeGenerateRequestError(err: unknown): unknown {
   if (err instanceof GenerateTextRequestFormatError) return err
+
+  const retryWrapper = err
+  err = nestedAiError(err)
+  if (errorMessage(err).trim().length === 0 || errorMessage(retryWrapper).includes('Last error:')) {
+    err = retryErrorDetails(err) ?? retryErrorDetails(retryWrapper) ?? err
+  }
 
   const message = errorMessage(err).toLowerCase()
   if (

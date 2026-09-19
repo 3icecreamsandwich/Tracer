@@ -39,6 +39,36 @@ describe('renderMarkdownHtml', () => {
     expect(html).not.toContain("href='javascript:")
   })
 
+  it.each([
+    '[mixed case](JaVaScRiPt:alert(1))',
+    '[encoded](javascript&#58;alert(1))',
+    '[data](data:text/html,<script>alert(1)</script>)',
+    '[file](file:///etc/passwd)',
+    '[protocol relative](//attacker.example/x)',
+  ])('does not render hostile or capability-bearing links: %s', (source) => {
+    const html = renderMarkdownHtml(source)
+    expect(html).not.toContain('<a ')
+    expect(html).not.toMatch(/href=/i)
+  })
+
+  it('never renders Markdown images or remote tracking pixels', () => {
+    const html = renderMarkdownHtml('![tracking pixel](https://attacker.example/pixel.png)')
+    expect(html).not.toContain('<img')
+    expect(html).not.toContain('attacker.example')
+  })
+
+  it.each([
+    String.raw`$\href{javascript:alert(1)}{click}$`,
+    String.raw`$\url{javascript:alert(1)}$`,
+    String.raw`$\includegraphics{https://attacker.example/pixel.png}$`,
+    String.raw`$\htmlClass{evil}{payload}$`,
+  ])('keeps untrusted KaTeX commands from creating active content: %s', (source) => {
+    const html = renderMarkdownHtml(source)
+    expect(html).not.toMatch(/href=["']javascript:/i)
+    expect(html).not.toContain('<img')
+    expect(html).not.toContain('class="evil"')
+  })
+
   it('adds safe attributes to explicit links', () => {
     const html = renderMarkdownHtml('[docs](https://example.com)')
 

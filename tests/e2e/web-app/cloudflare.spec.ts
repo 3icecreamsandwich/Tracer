@@ -33,6 +33,11 @@ test('deep links render the app and fingerprinted worker assets retain their typ
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toContain('text/html')
     expect(response.headers()['x-robots-tag']).toContain('noindex')
+    expect(response.headers()['content-security-policy']).toContain("frame-ancestors 'none'")
+    expect(response.headers()['strict-transport-security']).toContain('max-age=31536000')
+    expect(response.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin')
+    expect(response.headers()['permissions-policy']).toContain('camera=()')
+    expect(response.headers()['x-content-type-options']).toBe('nosniff')
   }
   const assets = readdirSync('.output-cloudflare/public/_nuxt')
   for (const prefix of ['browser.worker-', 'pdf.worker.', 'sql-wasm.', 'worker.min.']) {

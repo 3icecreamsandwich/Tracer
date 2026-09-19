@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({
   authenticatedClient: { auth: { getUser: vi.fn() } },
   transferClient: { auth: { refreshSession: vi.fn() } },
   authenticate: vi.fn(),
+  limitHandoff: vi.fn(),
   createClient: vi.fn(),
   setHeader: vi.fn(),
   setResponseStatus: vi.fn(),
@@ -15,7 +16,10 @@ const state = vi.hoisted(() => ({
 }))
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: state.createClient }))
-vi.mock('../../server/utils/web-auth', () => ({ authenticatedWebClient: state.authenticate }))
+vi.mock('../../server/utils/web-auth', () => ({
+  authenticatedWebContext: state.authenticate,
+  limitWebAuthHandoff: state.limitHandoff,
+}))
 vi.mock('../../server/utils/web-body', () => ({ readWebJson: async () => state.body }))
 vi.mock('../../server/utils/web-config', () => ({
   webRuntimeConfig: () => ({ supabaseUrl: 'https://project.supabase.co', supabasePublishableKey: 'public-key' }),
@@ -43,7 +47,8 @@ describe('landing-site auth handoff', () => {
     state.origin = 'https://tracerquiz.com'
     state.body = { refreshToken: 'landing-refresh-token' }
     state.cookie = 'handoff-refresh-token'
-    state.authenticate.mockResolvedValue(state.authenticatedClient)
+    state.authenticate.mockResolvedValue({ client: state.authenticatedClient, userId: 'user-1' })
+    state.limitHandoff.mockResolvedValue(undefined)
     state.authenticatedClient.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     state.transferClient.auth.refreshSession.mockResolvedValue({
       data: { user: { id: 'user-1' }, session: { access_token: 'next-access', refresh_token: 'next-refresh' } },
@@ -74,6 +79,7 @@ describe('landing-site auth handoff', () => {
       maxAge: 90,
       path: '/api/web/auth/handoff/consume',
     })
+    expect(state.limitHandoff).toHaveBeenCalledWith(expect.anything(), 'user-1')
   })
 
   it('rejects session swapping when the access and refresh tokens name different users', async () => {

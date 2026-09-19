@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { scanBrowserLinkedFolder } from '../../src/composables/generate/linked-folders/browser'
+import { scanBrowserLinkedFolder } from '../../src/composables/generate/linked-folders/browser-scan'
 
 const generatePage = readFileSync(new URL('../../pages/create/generate.vue', import.meta.url), 'utf8')
 

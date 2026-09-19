@@ -8,7 +8,24 @@ const markdown = new MarkdownIt({
   breaks: false
 })
 
-markdown.disable('image')
+// Parse image syntax so it cannot degrade into a clickable link, but render
+// only the escaped alt text. User/AI Markdown never controls an image request.
+markdown.renderer.rules.image = (tokens, idx) => markdown.utils.escapeHtml(tokens[idx]?.content ?? '')
+
+// Keep generated links deliberately boring: normal web/mail links and local
+// navigation only. In particular, reject data:, javascript:, file:, blob: and
+// other executable or capability-bearing schemes even if obfuscated.
+markdown.validateLink = (url) => {
+  const value = url.trim()
+  if (!value || /[\u0000-\u001f\u007f]/.test(value)) return false
+  if (/^(?:#|\/|\.\/|\.\.\/)/.test(value)) return !value.startsWith('//')
+  try {
+    const protocol = new URL(value).protocol.toLowerCase()
+    return protocol === 'https:' || protocol === 'http:' || protocol === 'mailto:'
+  } catch {
+    return false
+  }
+}
 
 export type RenderMarkdownOptions = {
   repairMath?: boolean
