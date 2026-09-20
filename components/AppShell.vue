@@ -22,6 +22,8 @@
    resolveAppShortcut,
    shouldPreventFullscreenExit,
  } from '~/src/composables/navigation/app-navigation'
+ import { hasTauriRuntime } from '~/src/composables/tauri'
+ import { startStudyStreakTracking } from '~/src/composables/study-streak'
  import { useTestSessionState } from '~/src/composables/test-session'
 
  const route = useRoute()

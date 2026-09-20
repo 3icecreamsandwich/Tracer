@@ -255,6 +255,7 @@
 import { lockGetStatus } from '~/src/composables/lock'
 import { useLockSession } from '~/src/composables/lock-session'
 import { createProfileRepo, createSettingsRepo, createSetsRepo, useTracerDb } from '~/src/composables/db'
+import { syncPrivateSets } from '~/src/composables/private-set-sync'
 import { useAppLanguage } from '~/src/composables/language'
 import { normalizeTerms, parseTermsDelimited, type TermInput, TermsValidationError } from '~/src/composables/db/validators'
 import type { TermImage } from '~/src/composables/db/types'
@@ -565,6 +566,7 @@ async function onCreate(skipDuplicateReview = false) {
     const repo = createSetsRepo(db)
     const id = crypto.randomUUID()
     await repo.create({ id, title: t, description: desc, terms })
+    void syncPrivateSets().catch(() => false)
     await router.replace(`/set/${id}`)
   } catch (e: unknown) {
     if (e instanceof TermsValidationError) {

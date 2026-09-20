@@ -4,7 +4,7 @@ import { GenerateTextRequestFormatError } from '../generate-request'
 import { TermsValidationError, TsvParseError } from '../../db/validators'
 import { redactSensitiveText } from '../../security/redact'
 import type { AiErrorUx } from './types'
-import { errorStatus, isFetchOfflineError, isRateLimitError } from './predicates'
+import { errorStatus, isFetchOfflineError, isNetworkTransportError, isRateLimitError } from './predicates'
 
 export function normalizeAiError(err: unknown): AiErrorUx {
   if (err instanceof TsvParseError || err instanceof TermsValidationError || err instanceof GenerateContractParseError) {
@@ -63,6 +63,15 @@ export function normalizeAiError(err: unknown): AiErrorUx {
       key: 'network_offline',
       title: 'You are offline',
       message: 'Reconnect to the internet and try again.',
+      showGoToSettings: false
+    }
+  }
+
+  if (isNetworkTransportError(err)) {
+    return {
+      key: 'provider_error',
+      title: 'Could not reach the AI service',
+      message: 'Your device appears online, but the AI provider or its connection failed. Try again in a moment.',
       showGoToSettings: false
     }
   }

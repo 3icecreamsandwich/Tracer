@@ -246,6 +246,7 @@ import {
   useTracerDb,
   type Uuid
 } from '~/src/composables/db'
+import { syncPrivateSets } from '~/src/composables/private-set-sync'
 import { useLockSession } from '~/src/composables/lock-session'
 import { resolveAiModel } from '~/src/composables/ai/registry'
 import { hasTauriRuntime } from '~/src/composables/tauri'
@@ -582,6 +583,8 @@ async function saveGeneratedOutput(
       markdown: generated.studyGuideMarkdown
     })
 
+    void syncPrivateSets().catch(() => false)
+
     await router.replace(`/set/${setId}`)
   } catch (e: unknown) {
     showAiError(normalizeGenerateRequestError(e))
@@ -639,7 +642,9 @@ async function onGenerate() {
   )
   parseBusy.value = true
   try {
-    const result = await extractGenerateSources(selectedGenerateSources())
+    const result = await extractGenerateSources(selectedGenerateSources(), {}, {
+      allowUnreadable: instructions.value.trim().length > 0
+    })
     parseBusy.value = false
     const decision = createGenerateParseDecision(result)
 

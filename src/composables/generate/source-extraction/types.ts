@@ -12,7 +12,7 @@ export type ExtractedGenerateSource = {
   kind: GenerateSourceKind
   text: string
   pageCount?: number
-  method: 'pdf-text' | 'ocr' | 'mixed' | 'text'
+  method: 'pdf-text' | 'ocr' | 'mixed' | 'text' | 'unreadable'
 }
 
 export type FailedGenerateSource = {

@@ -34,7 +34,8 @@ function sourceFilename(file: File) {
 async function extractPdfSource(
   source: GenerateSourceFile,
   pdf: PdfAdapter,
-  getOcr: () => Promise<OcrAdapter>
+  getOcr: () => Promise<OcrAdapter>,
+  allowUnreadable: boolean
 ): Promise<ExtractedGenerateSource> {
   const extracted = await pdf.extract(source.file)
   const pageBlocks: string[] = []
@@ -66,6 +67,16 @@ async function extractPdfSource(
 
   const text = normalizeExtractedText(pageBlocks.join('\n\n'))
   if (!isMeaningfulExtractedText(text)) {
+    if (allowUnreadable) {
+      return {
+        id: source.id,
+        filename: sourceFilename(source.file),
+        kind: 'pdf',
+        text: '[No readable text could be extracted from this PDF. Follow the user instructions and make the best safe study material possible.]',
+        pageCount: extracted.pageCount,
+        method: 'unreadable'
+      }
+    }
     throw new Error(ocrAttempted ? 'OCR did not find readable text in this PDF.' : 'No readable text found in this PDF.')
   }
 
@@ -82,9 +93,18 @@ async function extractPdfSource(
   }
 }
 
-async function extractImageSource(source: GenerateSourceFile, getOcr: () => Promise<OcrAdapter>) {
+async function extractImageSource(source: GenerateSourceFile, getOcr: () => Promise<OcrAdapter>, allowUnreadable: boolean) {
   const text = normalizeExtractedText(await (await getOcr()).recognize(source.file))
   if (!isMeaningfulExtractedText(text)) {
+    if (allowUnreadable) {
+      return {
+        id: source.id,
+        filename: sourceFilename(source.file),
+        kind: 'image' as const,
+        text: '[No readable text could be extracted from this image. Follow the user instructions and make the best safe study material possible.]',
+        method: 'unreadable' as const
+      }
+    }
     throw new Error('OCR did not find readable text in this image.')
   }
 
@@ -135,7 +155,8 @@ async function mapWithConcurrency<T, R>(
 
 export async function extractGenerateSources(
   files: GenerateSourceFile[],
-  adapters: SourceExtractionAdapters = {}
+  adapters: SourceExtractionAdapters = {},
+  options: { allowUnreadable?: boolean } = {}
 ): Promise<ExtractGenerateSourcesResult> {
   const pdf = adapters.pdf ?? createDefaultPdfAdapter()
   let ownedOcr: Promise<OcrAdapter> | null = null
@@ -160,10 +181,10 @@ export async function extractGenerateSources(
     const results = await mapWithConcurrency(files, 2, async (source) => {
       try {
         if (source.kind === 'pdf') {
-          return { extracted: await extractPdfSource(source, pdf, getOcr) }
+          return { extracted: await extractPdfSource(source, pdf, getOcr, options.allowUnreadable === true) }
         }
         if (source.kind === 'image') {
-          return { extracted: await extractImageSource(source, getOcr) }
+          return { extracted: await extractImageSource(source, getOcr, options.allowUnreadable === true) }
         }
         return { extracted: await extractTextSource(source) }
       } catch (err) {

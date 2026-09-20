@@ -243,6 +243,7 @@ import {
   type FlashcardSetListItem,
   type Uuid
 } from '~/src/composables/db'
+import { syncPrivateSets } from '~/src/composables/private-set-sync'
 import { useLockSession } from '~/src/composables/lock-session'
 import { parseTermsDelimited, TsvParseError, normalizeTerms, TermsValidationError } from '~/src/composables/db/validators'
 import { resolveAiModel } from '~/src/composables/ai/registry'
@@ -479,6 +480,7 @@ async function onCreate() {
       description: synthesisDescription(selectedSets.value),
       terms
     })
+    void syncPrivateSets().catch(() => false)
 
     await router.replace(`/set/${id}`)
   } catch (e: unknown) {

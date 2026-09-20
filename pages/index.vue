@@ -312,7 +312,6 @@
         </Teleport>
 
         <div class="tracer-home-actions grid content-start gap-7">
-          <StudyStreakCard />
           <section
             class="rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
             aria-labelledby="home-create"
@@ -354,6 +353,9 @@
           <HomeDestinationLink v-if="(accountRole === 'teacher' || accountRole === 'super')" to="/teacher" icon="dashboard" :title="t('classroom.dashboard')" :description="t('classroom.dashboardDescription')" />
         </div>
       </div>
+      <div class="mt-7">
+        <StudyStreakCard :preview-complete="accountRole === 'super'" />
+      </div>
     </div>
 
     <ClassJoinDialog
@@ -369,6 +371,7 @@
 <script setup lang="ts">
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import { prefetchPublicCatalog } from '~/src/composables/published-sets'
+import { syncPrivateSets } from '~/src/composables/private-set-sync'
 import { lockGetStatus } from '../src/composables/lock'
 import {
   createFoldersRepo,
@@ -1373,9 +1376,6 @@ onMounted(async () => {
       lockGetStatus(),
       useTracerDb()
     ])
-    const dashboardSnapshotPromise = fetchHomeDashboard(db)
-    void dashboardSnapshotPromise.catch(() => {})
-
     const profilePromise = createProfileRepo(db).get()
     const settingsPromise = createSettingsRepo(db).get()
     const profile = await profilePromise
@@ -1385,6 +1385,11 @@ onMounted(async () => {
       return
     }
 
+    // Private sets are pulled before the home list is read, so a set created
+    // on another device appears as soon as this account opens Tracer.
+    await syncPrivateSets().catch(() => false)
+    const dashboardSnapshotPromise = fetchHomeDashboard(db)
+    void dashboardSnapshotPromise.catch(() => {})
     const localDashboardLoad = loadHomeList(dashboardSnapshotPromise)
     const settings = await settingsPromise
 

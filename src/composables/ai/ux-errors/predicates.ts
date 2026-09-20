@@ -24,7 +24,13 @@ function isOffline(): boolean {
 }
 
 export function isFetchOfflineError(err: unknown): boolean {
+  // A browser's `Failed to fetch` also covers provider outages, CORS, a bad
+  // gateway, and blocked requests. It is not proof that the user is offline.
   if (isOffline()) return true
+  return false
+}
+
+export function isNetworkTransportError(err: unknown): boolean {
   if (!(err instanceof Error)) return false
   const msg = err.message.toLowerCase()
   if (msg.includes('failed to fetch')) return true
