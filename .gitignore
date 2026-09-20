@@ -47,3 +47,5 @@ notes.md
 .wrangler/
 .dev.vars*
 .nuxt-desktop-check/
+
+/test-results
