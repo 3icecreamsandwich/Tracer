@@ -10,8 +10,6 @@
       <slot />
     </div>
 
-    <PublicFooter v-if="showWebFooter" />
-
     <LazyFloatingPageChat v-if="!hideFloatingChat" />
   </div>
 </template>
@@ -42,8 +40,6 @@
    // Fullscreen study pages have their own header back button.
    return /^\/(set|study-guide)\/.+-(flashcards|learn|match|test)\/?$/.test(route.path)
  })
-
- const showWebFooter = computed(() => !hasTauriRuntime() && route.meta?.hidePublicFooter !== true)
  const isStudyRoute = computed(() => /^\/set\/.+-(flashcards|learn|match|test)\/?$/.test(route.path))
 
  function onGlobalKeydown(event: KeyboardEvent) {
