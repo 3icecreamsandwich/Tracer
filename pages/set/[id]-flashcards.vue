@@ -127,16 +127,8 @@
 
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
-            <!-- Title -->
-            <div class="mb-6 text-center select-none">
-                <h1
-                    class="text-xl font-semibold text-slate-900 dark:text-slate-50"
-                >
-                    {{ t("set.flashcards") }}
-                </h1>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                    {{ t("set.flashcardInstructions") }}
-                </p>
+            <div aria-hidden="true" class="mb-6 h-[3.25rem]" />
+            <div v-if="smartReviewEnabled" class="mb-6 text-center select-none">
                 <div v-if="smartReviewEnabled" class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
                     <button v-for="filter in reviewFilters" :key="filter.value" type="button"
                         class="rounded-full border px-3 py-1 transition-colors"

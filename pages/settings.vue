@@ -95,7 +95,6 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p v-if="accountRole" class="mt-1 text-sm font-medium">{{ t('settings.accountType') }}: {{ accountRoleLabel }}</p>
-            <p v-if="superAccount" class="mt-1 text-sm font-medium">{{ t('settings.superAccount') }}</p>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ accountEmail || profile?.email }}</p>
             <LoadingSpinner
               v-if="accountConnectionPending"
@@ -157,9 +156,6 @@
         <div class="flex items-center justify-between gap-4">
           <div>
             <h2 class="text-sm font-medium">{{ t('settings.darkMode') }}</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {{ t('settings.darkModeDescription') }}
-            </p>
           </div>
 
           <button

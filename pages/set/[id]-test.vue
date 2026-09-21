@@ -20,12 +20,7 @@
                         @activate="requestQuitTest('navigation')"
                     />
                 </div>
-                <div class="text-center">
-                    <h1 class="text-xl font-semibold">Test</h1>
-                    <p class="mt-1 hidden text-xs text-slate-500 sm:block dark:text-slate-400">
-                        Answer every question, then submit once.
-                    </p>
-                </div>
+                <div aria-hidden="true" class="h-12" />
                 <div class="flex items-center justify-self-end gap-3">
                     <span
                         v-if="testTimed && !testSubmitted"

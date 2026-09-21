@@ -56,18 +56,7 @@
 
         <!-- Main Content Area -->
         <div class="flex flex-1 flex-col items-center justify-start px-6 py-8">
-            <!-- Title -->
-            <div class="mb-6 text-center">
-                <h1
-                    class="text-xl font-semibold text-slate-900 dark:text-slate-50"
-                >
-                    {{ t("set.learn") }}
-                </h1>
-                <p class="mt-1 hidden text-sm text-slate-600 sm:block dark:text-slate-300">
-                    {{ t("set.learnInstructions") }}
-                </p>
-            </div>
-
+            <div aria-hidden="true" class="mb-6 h-[3.25rem]" />
             <div
                 v-if="practiceSettingsOpen"
                 class="mb-6 w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"

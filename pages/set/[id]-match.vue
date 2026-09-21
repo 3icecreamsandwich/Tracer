@@ -16,18 +16,7 @@
 
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
-            <!-- Title -->
-            <div class="mb-6 text-center">
-                <h1
-                    class="text-xl font-semibold text-slate-900 dark:text-slate-50"
-                >
-                    {{ t("set.match") }}
-                </h1>
-                <p class="mt-1 hidden text-sm text-slate-600 sm:block dark:text-slate-300">
-                    {{ t("set.matchInstructions") }}
-                </p>
-            </div>
-
+            <div aria-hidden="true" class="mb-6 h-[3.25rem]" />
             <p v-if="matchError" class="text-sm text-red-700 dark:text-red-300">
                 {{ matchError }}
             </p>

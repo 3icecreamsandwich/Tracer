@@ -33,7 +33,9 @@
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
                         >
                             <AppIcon name="edit" class="sm:hidden" />
-                            <span class="sr-only sm:not-sr-only">{{ t("common.edit") }}</span>
+                            <span class="sr-only sm:not-sr-only">{{
+                                t("common.edit")
+                            }}</span>
                         </NuxtLink>
                         <button
                             type="button"
@@ -42,7 +44,9 @@
                             @click="openExport"
                         >
                             <AppIcon name="share" class="sm:hidden" />
-                            <span class="sr-only sm:not-sr-only">{{ t("public.share") }}</span>
+                            <span class="sr-only sm:not-sr-only">{{
+                                t("public.share")
+                            }}</span>
                         </button>
                     </div>
                 </div>
@@ -67,11 +71,16 @@
                                     :class="linkedFolderStatusClass"
                                 >
                                     <LoadingSpinner
-                                        v-if="linkedFolder.status === 'pending' || linkedFolder.status === 'syncing'"
+                                        v-if="
+                                            linkedFolder.status === 'pending' ||
+                                            linkedFolder.status === 'syncing'
+                                        "
                                         size="sm"
                                         :label="linkedFolderStatusLabel"
                                     />
-                                    <template v-else>{{ linkedFolderStatusLabel }}</template>
+                                    <template v-else>{{
+                                        linkedFolderStatusLabel
+                                    }}</template>
                                 </span>
                             </div>
                             <p
@@ -115,9 +124,18 @@
                 </div>
 
                 <div class="mt-5">
-                    <div v-if="loadError" role="alert" class="space-y-3 text-sm text-red-700 dark:text-red-300">
+                    <div
+                        v-if="loadError"
+                        role="alert"
+                        class="space-y-3 text-sm text-red-700 dark:text-red-300"
+                    >
                         <p>{{ loadError }}</p>
-                        <AppButton v-if="isPublicSet" variant="white" @click="openSetPage">{{ t('common.retry') }}</AppButton>
+                        <AppButton
+                            v-if="isPublicSet"
+                            variant="white"
+                            @click="openSetPage"
+                            >{{ t("common.retry") }}</AppButton
+                        >
                     </div>
 
                     <LoadingSpinner v-else-if="busy" screen />
@@ -259,12 +277,18 @@
                             aria-label="Flashcards"
                             class="mobile-study-panel flex min-h-[calc(100dvh-14.5rem)] flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:hidden dark:border-slate-800 dark:bg-slate-950"
                         >
-                            <div class="flex items-start justify-between gap-3 px-1">
+                            <div
+                                class="flex items-start justify-between gap-3 px-1"
+                            >
                                 <div>
-                                    <p class="text-base font-semibold text-slate-950 dark:text-white">
+                                    <p
+                                        class="text-base font-semibold text-slate-950 dark:text-white"
+                                    >
                                         {{ t("set.flashcards") }}
                                     </p>
-                                    <p class="mt-1 text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    <p
+                                        class="mt-1 text-sm font-medium text-slate-700 dark:text-slate-300"
+                                    >
                                         {{ ratioText }}
                                     </p>
                                 </div>
@@ -273,87 +297,373 @@
                                     <details class="group relative">
                                         <summary
                                             class="inline-flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                                            :aria-label="t('set.flashcardSettings')"
+                                            :aria-label="
+                                                t('set.flashcardSettings')
+                                            "
                                             :title="t('set.flashcardSettings')"
                                         >
-                                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-6 w-6">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z" />
+                                            <svg
+                                                aria-hidden="true"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="1.8"
+                                                class="h-6 w-6"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
+                                                />
                                                 <circle cx="12" cy="12" r="3" />
                                             </svg>
                                         </summary>
-                                        <div class="absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30" role="menu">
-                                            <button type="button" role="menuitemcheckbox" :aria-checked="shuffleEnabled" class="mobile-settings-item" :disabled="totalCount === 0" @click="shuffleFromFlashcardSettings">
-                                                <span>{{ t("set.shuffle") }}</span><span aria-hidden="true">{{ shuffleEnabled ? "✓" : "" }}</span>
+                                        <div
+                                            class="absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                                            role="menu"
+                                        >
+                                            <button
+                                                type="button"
+                                                role="menuitemcheckbox"
+                                                :aria-checked="shuffleEnabled"
+                                                class="mobile-settings-item"
+                                                :disabled="totalCount === 0"
+                                                @click="
+                                                    shuffleFromFlashcardSettings
+                                                "
+                                            >
+                                                <span>{{
+                                                    t("set.shuffle")
+                                                }}</span
+                                                ><span aria-hidden="true">{{
+                                                    shuffleEnabled ? "✓" : ""
+                                                }}</span>
                                             </button>
-                                            <button type="button" role="menuitemcheckbox" :aria-checked="smartReviewEnabled" class="mobile-settings-item" @click="toggleSmartReview">
-                                                <span>Smart Review</span><span aria-hidden="true">{{ smartReviewEnabled ? "✓" : "" }}</span>
+                                            <button
+                                                type="button"
+                                                role="menuitemcheckbox"
+                                                :aria-checked="
+                                                    smartReviewEnabled
+                                                "
+                                                class="mobile-settings-item"
+                                                @click="toggleSmartReview"
+                                            >
+                                                <span>Smart Review</span
+                                                ><span aria-hidden="true">{{
+                                                    smartReviewEnabled
+                                                        ? "✓"
+                                                        : ""
+                                                }}</span>
                                             </button>
-                                            <button type="button" role="menuitemcheckbox" :aria-checked="starredOnly" class="mobile-settings-item" :disabled="starredStudyCount === 0 && !starredOnly" @click="toggleStarredOnlyFromFlashcardSettings">
-                                                <span>{{ t("set.starredOnly") }}</span><span aria-hidden="true">{{ starredOnly ? "✓" : "" }}</span>
+                                            <button
+                                                type="button"
+                                                role="menuitemcheckbox"
+                                                :aria-checked="starredOnly"
+                                                class="mobile-settings-item"
+                                                :disabled="
+                                                    starredStudyCount === 0 &&
+                                                    !starredOnly
+                                                "
+                                                @click="
+                                                    toggleStarredOnlyFromFlashcardSettings
+                                                "
+                                            >
+                                                <span>{{
+                                                    t("set.starredOnly")
+                                                }}</span
+                                                ><span aria-hidden="true">{{
+                                                    starredOnly ? "✓" : ""
+                                                }}</span>
                                             </button>
-                                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
-                                            <button v-for="filter in (['learning', 'mastered', 'all'] as const)" :key="filter" type="button" role="menuitemradio" :aria-checked="flashcardStudyFilter === filter" class="mobile-settings-item" @click="selectFlashcardStudyFilter(filter)">
-                                                <span>{{ filter === 'all' ? t('set.filterAll') : t(`set.${filter}`) }}</span><span aria-hidden="true">{{ flashcardStudyFilter === filter ? '✓' : '' }}</span>
+                                            <div
+                                                class="my-1 border-t border-slate-200 dark:border-slate-800"
+                                            />
+                                            <button
+                                                v-for="filter in [
+                                                    'learning',
+                                                    'mastered',
+                                                    'all',
+                                                ] as const"
+                                                :key="filter"
+                                                type="button"
+                                                role="menuitemradio"
+                                                :aria-checked="
+                                                    flashcardStudyFilter ===
+                                                    filter
+                                                "
+                                                class="mobile-settings-item"
+                                                @click="
+                                                    selectFlashcardStudyFilter(
+                                                        filter,
+                                                    )
+                                                "
+                                            >
+                                                <span>{{
+                                                    filter === "all"
+                                                        ? t("set.filterAll")
+                                                        : t(`set.${filter}`)
+                                                }}</span
+                                                ><span aria-hidden="true">{{
+                                                    flashcardStudyFilter ===
+                                                    filter
+                                                        ? "✓"
+                                                        : ""
+                                                }}</span>
                                             </button>
-                                            <button type="button" role="menuitem" class="mobile-settings-item" :disabled="allStudyTermIds.length === 0" @click="restartFromFlashcardSettings">{{ t("common.restart") }}</button>
-                                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
-                                            <button type="button" role="menuitem" class="mobile-settings-item" :disabled="flashcardFrontPreferenceBusy" @click="togglePreferredFlashcardFront">{{ preferredFlashcardFrontOptionLabel }}</button>
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="mobile-settings-item"
+                                                :disabled="
+                                                    allStudyTermIds.length === 0
+                                                "
+                                                @click="
+                                                    restartFromFlashcardSettings
+                                                "
+                                            >
+                                                {{ t("common.restart") }}
+                                            </button>
+                                            <div
+                                                class="my-1 border-t border-slate-200 dark:border-slate-800"
+                                            />
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="mobile-settings-item"
+                                                :disabled="
+                                                    flashcardFrontPreferenceBusy
+                                                "
+                                                @click="
+                                                    togglePreferredFlashcardFront
+                                                "
+                                            >
+                                                {{
+                                                    preferredFlashcardFrontOptionLabel
+                                                }}
+                                            </button>
                                         </div>
                                     </details>
 
                                     <button
-                                        v-if="set && fullscreenModePath('flashcards')"
+                                        v-if="
+                                            set &&
+                                            fullscreenModePath('flashcards')
+                                        "
                                         type="button"
                                         class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
                                         :aria-label="t('set.fullscreen')"
                                         :title="t('set.fullscreen')"
-                                        @click="openFullscreenMode('flashcards')"
+                                        @click="
+                                            openFullscreenMode('flashcards')
+                                        "
                                     >
-                                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6">
-                                            <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
+                                        <svg
+                                            aria-hidden="true"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            class="h-6 w-6"
+                                        >
+                                            <path
+                                                d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"
+                                            />
                                         </svg>
                                     </button>
                                 </div>
                             </div>
 
-                            <div v-if="smartReviewEnabled" class="mt-3 flex flex-wrap gap-1.5 text-[11px]">
-                                <button v-for="filter in reviewFilters" :key="filter.value" type="button" class="rounded-full border px-2 py-1" :class="reviewFilter === filter.value ? 'border-amber-500 bg-amber-50 text-amber-800' : 'border-slate-200 text-slate-600'" @click="setReviewFilter(filter.value)">
-                                    {{ filter.value === "due" && filter.count > 0 ? t("set.reviewReadyNow") : filter.label }} ({{ filter.count }})
+                            <div
+                                v-if="smartReviewEnabled"
+                                class="mt-3 flex flex-wrap gap-1.5 text-[11px]"
+                            >
+                                <button
+                                    v-for="filter in reviewFilters"
+                                    :key="filter.value"
+                                    type="button"
+                                    class="rounded-full border px-2 py-1"
+                                    :class="
+                                        reviewFilter === filter.value
+                                            ? 'border-amber-500 bg-amber-50 text-amber-800'
+                                            : 'border-slate-200 text-slate-600'
+                                    "
+                                    @click="setReviewFilter(filter.value)"
+                                >
+                                    {{
+                                        filter.value === "due" &&
+                                        filter.count > 0
+                                            ? t("set.reviewReadyNow")
+                                            : filter.label
+                                    }}
+                                    ({{ filter.count }})
                                 </button>
                             </div>
 
-                            <div v-if="isFinished" class="flex flex-1 flex-col items-center justify-center px-4 text-center">
-                                <h2 class="text-xl font-semibold text-slate-950 dark:text-white">{{ t("common.results") }}</h2>
-                                <p class="mt-3 text-slate-700 dark:text-slate-200">{{ t("set.accuracy") }} <span class="font-semibold">{{ accuracyText }}</span></p>
-                                <div class="mt-5 flex flex-wrap justify-center gap-2">
-                                    <button v-if="hasIncorrectCards" type="button" class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white" @click="resumeIncorrect">{{ t("set.resumeIncorrect") }}</button>
-                                    <button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-slate-950" @click="restartAllFlashcards">{{ t("common.restart") }}</button>
+                            <div
+                                v-if="isFinished"
+                                class="flex flex-1 flex-col items-center justify-center px-4 text-center"
+                            >
+                                <h2
+                                    class="text-xl font-semibold text-slate-950 dark:text-white"
+                                >
+                                    {{ t("common.results") }}
+                                </h2>
+                                <p
+                                    class="mt-3 text-slate-700 dark:text-slate-200"
+                                >
+                                    {{ t("set.accuracy") }}
+                                    <span class="font-semibold">{{
+                                        accuracyText
+                                    }}</span>
+                                </p>
+                                <div
+                                    class="mt-5 flex flex-wrap justify-center gap-2"
+                                >
+                                    <button
+                                        v-if="hasIncorrectCards"
+                                        type="button"
+                                        class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white"
+                                        @click="resumeIncorrect"
+                                    >
+                                        {{ t("set.resumeIncorrect") }}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-slate-950"
+                                        @click="restartAllFlashcards"
+                                    >
+                                        {{ t("common.restart") }}
+                                    </button>
                                 </div>
                             </div>
-                            <div v-else-if="totalCount === 0" class="flex flex-1 items-center justify-center px-4 text-center text-sm text-slate-600 dark:text-slate-300">{{ t("set.noCards") }}</div>
+                            <div
+                                v-else-if="totalCount === 0"
+                                class="flex flex-1 items-center justify-center px-4 text-center text-sm text-slate-600 dark:text-slate-300"
+                            >
+                                {{ t("set.noCards") }}
+                            </div>
                             <template v-else>
                                 <button
                                     ref="mobileViewerButtonEl"
                                     type="button"
                                     class="mobile-flashcard-card relative mt-5 flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl px-5 py-10 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
-                                    :class="[flashcardSurfaceClass, { 'animate-flip': isFlipping, 'animate-slide-left': isNavigating === 'next', 'animate-slide-right': isNavigating === 'prev' }]"
+                                    :class="[
+                                        flashcardSurfaceClass,
+                                        {
+                                            'animate-flip': isFlipping,
+                                            'animate-slide-left':
+                                                isNavigating === 'next',
+                                            'animate-slide-right':
+                                                isNavigating === 'prev',
+                                        },
+                                    ]"
                                     :disabled="flashcardAnswerBusy"
                                     @click="toggleFlip"
                                 >
-                                    <span v-if="isCurrentRetry" class="absolute right-4 top-4 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">{{ t("set.tryAgain") }}</span>
-                                    <p class="absolute left-5 top-5 text-sm font-medium text-slate-500 dark:text-slate-400">{{ showingDefinition ? t("create.definition") : t("create.term") }}</p>
-                                    <div class="flashcard-content-row flex w-full items-center justify-center overflow-y-auto text-center text-[clamp(1.75rem,8vw,2.5rem)] font-medium text-slate-900 dark:text-slate-50" :class="{ 'flashcard-content-row--paired': viewerImage && viewerHasText }">
-                                        <img v-if="viewerImage" class="flashcard-side-image shrink-0 border border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-950/70" :src="viewerImage.dataUrl" :alt="viewerImage.filename" />
-                                        <div v-if="viewerHasText" class="flashcard-side-text" :class="{ 'flashcard-side-text--paired': viewerImage }"><MarkdownRenderer :markdown="viewerText" variant="flashcard" /></div>
+                                    <span
+                                        v-if="isCurrentRetry"
+                                        class="absolute right-4 top-4 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800"
+                                        >{{ t("set.tryAgain") }}</span
+                                    >
+                                    <p
+                                        class="absolute left-5 top-5 text-sm font-medium text-slate-500 dark:text-slate-400"
+                                    >
+                                        {{
+                                            showingDefinition
+                                                ? t("create.definition")
+                                                : t("create.term")
+                                        }}
+                                    </p>
+                                    <div
+                                        class="flashcard-content-row flex w-full items-center justify-center overflow-y-auto text-center text-[clamp(1.75rem,8vw,2.5rem)] font-medium text-slate-900 dark:text-slate-50"
+                                        :class="{
+                                            'flashcard-content-row--paired':
+                                                viewerImage && viewerHasText,
+                                        }"
+                                    >
+                                        <img
+                                            v-if="viewerImage"
+                                            class="flashcard-side-image shrink-0 border border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-950/70"
+                                            :src="viewerImage.dataUrl"
+                                            :alt="viewerImage.filename"
+                                        />
+                                        <div
+                                            v-if="viewerHasText"
+                                            class="flashcard-side-text"
+                                            :class="{
+                                                'flashcard-side-text--paired':
+                                                    viewerImage,
+                                            }"
+                                        >
+                                            <MarkdownRenderer
+                                                :markdown="viewerText"
+                                                variant="flashcard"
+                                            />
+                                        </div>
                                     </div>
                                 </button>
 
                                 <div class="mt-3 grid grid-cols-5 gap-2">
-                                    <button type="button" class="mobile-flashcard-action text-slate-700 dark:text-slate-200" :disabled="cursorIndex === 0 || flashcardAnswerBusy" :aria-label="t('set.previous')" @click="goPrev"><span aria-hidden="true">←</span></button>
-                                    <button type="button" class="mobile-flashcard-action text-slate-700 dark:text-slate-200" :disabled="cursorIndex >= order.length - 1 || flashcardAnswerBusy" :aria-label="t('set.next')" @click="goNext"><span aria-hidden="true">→</span></button>
-                                    <button type="button" class="mobile-flashcard-action border-amber-400 text-amber-500" :disabled="!currentTerm || starBusy" :aria-pressed="isCurrentStarred" :aria-label="isCurrentStarred ? 'Unstar card' : 'Star card'" @click="toggleStar"><StarGlyph :active="isCurrentStarred" /></button>
-                                    <button type="button" class="mobile-flashcard-action border-red-400 text-red-500" :disabled="!currentTerm || flashcardAnswerBusy" :aria-label="t('set.missed')" @click="markIncorrect"><span aria-hidden="true">×</span></button>
-                                    <button type="button" class="mobile-flashcard-action border-green-500 text-green-600" :disabled="!currentTerm || flashcardAnswerBusy" :aria-label="t('set.gotIt')" @click="markCorrect"><span aria-hidden="true">✓</span></button>
+                                    <button
+                                        type="button"
+                                        class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
+                                        :disabled="
+                                            cursorIndex === 0 ||
+                                            flashcardAnswerBusy
+                                        "
+                                        :aria-label="t('set.previous')"
+                                        @click="goPrev"
+                                    >
+                                        <span aria-hidden="true">←</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
+                                        :disabled="
+                                            cursorIndex >= order.length - 1 ||
+                                            flashcardAnswerBusy
+                                        "
+                                        :aria-label="t('set.next')"
+                                        @click="goNext"
+                                    >
+                                        <span aria-hidden="true">→</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="mobile-flashcard-action border-amber-400 text-amber-500"
+                                        :disabled="!currentTerm || starBusy"
+                                        :aria-pressed="isCurrentStarred"
+                                        :aria-label="
+                                            isCurrentStarred
+                                                ? 'Unstar card'
+                                                : 'Star card'
+                                        "
+                                        @click="toggleStar"
+                                    >
+                                        <StarGlyph :active="isCurrentStarred" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="mobile-flashcard-action border-red-400 text-red-500"
+                                        :disabled="
+                                            !currentTerm || flashcardAnswerBusy
+                                        "
+                                        :aria-label="t('set.missed')"
+                                        @click="markIncorrect"
+                                    >
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="mobile-flashcard-action border-green-500 text-green-600"
+                                        :disabled="
+                                            !currentTerm || flashcardAnswerBusy
+                                        "
+                                        :aria-label="t('set.gotIt')"
+                                        @click="markCorrect"
+                                    >
+                                        <span aria-hidden="true">✓</span>
+                                    </button>
                                 </div>
                             </template>
                         </section>
@@ -366,18 +676,12 @@
                             <div
                                 class="flex flex-wrap items-center justify-between gap-3"
                             >
-                                <div>
-                                    <p
-                                        class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                                    >
-                                        {{ t("set.flashcards") }}
-                                    </p>
-                                    <p
-                                        class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400"
-                                    >
-                                        {{ t("set.flashcardInstructions") }}
-                                    </p>
-                                </div>
+                                <p
+                                    class="text-lg font-medium text-slate-900 dark:text-slate-50"
+                                >
+                                    {{ t("set.flashcards") }}
+                                </p>
+
                                 <div class="flex flex-wrap items-center gap-2">
                                     <p
                                         v-if="practiceTimed && !learnIsFinished"
@@ -447,18 +751,38 @@
                                                     shuffleFromFlashcardSettings
                                                 "
                                             >
-                                                <span>{{ t("set.shuffle") }}</span>
-                                                <span class="w-4 text-center" aria-hidden="true">{{ shuffleEnabled ? "✓" : "" }}</span>
+                                                <span>{{
+                                                    t("set.shuffle")
+                                                }}</span>
+                                                <span
+                                                    class="w-4 text-center"
+                                                    aria-hidden="true"
+                                                    >{{
+                                                        shuffleEnabled
+                                                            ? "✓"
+                                                            : ""
+                                                    }}</span
+                                                >
                                             </button>
                                             <button
                                                 type="button"
                                                 role="menuitemcheckbox"
-                                                :aria-checked="smartReviewEnabled"
+                                                :aria-checked="
+                                                    smartReviewEnabled
+                                                "
                                                 class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900"
                                                 @click="toggleSmartReview"
                                             >
                                                 <span>Smart Review</span>
-                                                <span class="w-4 text-center" aria-hidden="true">{{ smartReviewEnabled ? "✓" : "" }}</span>
+                                                <span
+                                                    class="w-4 text-center"
+                                                    aria-hidden="true"
+                                                    >{{
+                                                        smartReviewEnabled
+                                                            ? "✓"
+                                                            : ""
+                                                    }}</span
+                                                >
                                             </button>
                                             <button
                                                 type="button"
@@ -484,18 +808,44 @@
                                                     }}</span
                                                 >
                                             </button>
-                                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
+                                            <div
+                                                class="my-1 border-t border-slate-200 dark:border-slate-800"
+                                            />
                                             <button
-                                                v-for="filter in (['learning', 'mastered', 'all'] as const)"
+                                                v-for="filter in [
+                                                    'learning',
+                                                    'mastered',
+                                                    'all',
+                                                ] as const"
                                                 :key="filter"
                                                 type="button"
                                                 role="menuitemradio"
-                                                :aria-checked="flashcardStudyFilter === filter"
+                                                :aria-checked="
+                                                    flashcardStudyFilter ===
+                                                    filter
+                                                "
                                                 class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900"
-                                                @click="selectFlashcardStudyFilter(filter)"
+                                                @click="
+                                                    selectFlashcardStudyFilter(
+                                                        filter,
+                                                    )
+                                                "
                                             >
-                                                <span>{{ filter === 'all' ? t('set.filterAll') : t(`set.${filter}`) }}</span>
-                                                <span class="w-4 text-center" aria-hidden="true">{{ flashcardStudyFilter === filter ? '✓' : '' }}</span>
+                                                <span>{{
+                                                    filter === "all"
+                                                        ? t("set.filterAll")
+                                                        : t(`set.${filter}`)
+                                                }}</span>
+                                                <span
+                                                    class="w-4 text-center"
+                                                    aria-hidden="true"
+                                                    >{{
+                                                        flashcardStudyFilter ===
+                                                        filter
+                                                            ? "✓"
+                                                            : ""
+                                                    }}</span
+                                                >
                                             </button>
                                             <button
                                                 type="button"
@@ -542,18 +892,28 @@
                                     :key="filter.value"
                                     type="button"
                                     class="rounded-full border px-3 py-1.5 transition-colors"
-                                    :class="reviewFilter === filter.value
-                                        ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
-                                        : 'border-slate-200 text-slate-600 hover:border-amber-300 dark:border-slate-700 dark:text-slate-300'"
+                                    :class="
+                                        reviewFilter === filter.value
+                                            ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+                                            : 'border-slate-200 text-slate-600 hover:border-amber-300 dark:border-slate-700 dark:text-slate-300'
+                                    "
                                     @click="setReviewFilter(filter.value)"
                                 >
-                                    {{ filter.value === "due" && filter.count > 0 ? t("set.reviewReadyNow") : filter.label }} ({{ filter.count }})
+                                    {{
+                                        filter.value === "due" &&
+                                        filter.count > 0
+                                            ? t("set.reviewReadyNow")
+                                            : filter.label
+                                    }}
+                                    ({{ filter.count }})
                                 </button>
                                 <p
                                     v-if="dueCount === 0 && nextReviewText"
                                     class="w-full pt-1 text-slate-500 dark:text-slate-400"
                                 >
-                                    {{ t("set.nothingReady") }} · {{ t("set.nextReview") }} {{ nextReviewText }}
+                                    {{ t("set.nothingReady") }} ·
+                                    {{ t("set.nextReview") }}
+                                    {{ nextReviewText }}
                                 </p>
                             </div>
 
@@ -1107,7 +1467,11 @@
                                 </div>
                             </div>
 
-                            <LoadingSpinner v-if="learnBusy" class="mt-4" centered />
+                            <LoadingSpinner
+                                v-if="learnBusy"
+                                class="mt-4"
+                                centered
+                            />
 
                             <div
                                 v-else-if="learnIsFinished"
@@ -1147,7 +1511,11 @@
                                         v-if="set"
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 shadow-sm hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
-                                        @click="initializePracticeRun({ forceNew: true })"
+                                        @click="
+                                            initializePracticeRun({
+                                                forceNew: true,
+                                            })
+                                        "
                                     >
                                         Restart
                                     </button>
@@ -1339,8 +1707,16 @@
                                                         )
                                                     "
                                                 >
-                                                    <LoadingSpinner v-if="practiceAnswerBusy" size="sm" label="Checking…" />
-                                                    <template v-else>Save</template>
+                                                    <LoadingSpinner
+                                                        v-if="
+                                                            practiceAnswerBusy
+                                                        "
+                                                        size="sm"
+                                                        label="Checking…"
+                                                    />
+                                                    <template v-else
+                                                        >Save</template
+                                                    >
                                                 </button>
                                             </div>
                                         </form>
@@ -1477,11 +1853,13 @@
                                     <div
                                         class="max-w-[85%] rounded-lg px-3 py-2"
                                         :class="
-                                            m.role === 'assistant' && chatBusy && !m.content
+                                            m.role === 'assistant' &&
+                                            chatBusy &&
+                                            !m.content
                                                 ? ''
                                                 : m.role === 'user'
-                                                ? 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
-                                                : 'border border-slate-200 bg-slate-50 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50'
+                                                  ? 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
+                                                  : 'border border-slate-200 bg-slate-50 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50'
                                         "
                                     >
                                         <LoadingSpinner
@@ -1743,7 +2121,10 @@
                             </div>
                         </section>
 
-                        <section class="hidden sm:block" :aria-label="t('set.studyModes')">
+                        <section
+                            class="hidden sm:block"
+                            :aria-label="t('set.studyModes')"
+                        >
                             <div
                                 class="study-mode-bar flex flex-nowrap gap-3 overflow-x-auto pb-1"
                             >
@@ -1754,7 +2135,6 @@
                                     "
                                     :icon="flashcardsModeIcon"
                                     :title="t('set.flashcards')"
-                                    :hint="t('set.flashcardsHint')"
                                     :active="mode === 'flashcards'"
                                     replace
                                 />
@@ -1763,7 +2143,6 @@
                                     :fullscreen-to="fullscreenModePath('learn')"
                                     :icon="practiceModeIcon"
                                     :title="t('set.learn')"
-                                    :hint="t('set.learnHint')"
                                     :active="mode === 'learn'"
                                     replace
                                 />
@@ -1771,7 +2150,6 @@
                                     :to="setModePath('chat')"
                                     :icon="chatModeIcon"
                                     :title="t('set.chat')"
-                                    :hint="t('set.chatHint')"
                                     :active="mode === 'chat'"
                                     replace
                                 />
@@ -1780,7 +2158,6 @@
                                     :fullscreen-to="fullscreenModePath('match')"
                                     :icon="matchModeIcon"
                                     :title="t('set.match')"
-                                    :hint="t('set.matchHint')"
                                     :active="mode === 'match'"
                                     replace
                                 />
@@ -1789,7 +2166,6 @@
                                     :to="`/study-guide/${studyGuideSetId}`"
                                     :icon="studyGuideModeIcon"
                                     :title="t('set.studyGuide')"
-                                    :hint="t('set.studyGuideHint')"
                                     show-caret
                                 />
                             </div>
@@ -1797,7 +2173,11 @@
 
                         <nav
                             class="grid gap-2 sm:hidden"
-                            :class="mobileStudyModes.length === 5 ? 'grid-cols-5' : 'grid-cols-4'"
+                            :class="
+                                mobileStudyModes.length === 5
+                                    ? 'grid-cols-5'
+                                    : 'grid-cols-4'
+                            "
                             :aria-label="t('set.studyModes')"
                         >
                             <NuxtLink
@@ -1806,11 +2186,20 @@
                                 :to="item.to"
                                 :replace="item.replace"
                                 class="inline-flex h-14 min-w-0 items-center justify-center rounded-xl border bg-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:bg-slate-950"
-                                :class="item.active ? 'border-slate-500 bg-slate-300 dark:border-slate-500 dark:bg-slate-700' : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900'"
+                                :class="
+                                    item.active
+                                        ? 'border-slate-500 bg-slate-300 dark:border-slate-500 dark:bg-slate-700'
+                                        : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900'
+                                "
                                 :aria-label="item.title"
                                 :title="item.title"
                             >
-                                <img :src="item.icon" alt="" class="max-h-7 max-w-8 object-contain" aria-hidden="true" />
+                                <img
+                                    :src="item.icon"
+                                    alt=""
+                                    class="max-h-7 max-w-8 object-contain"
+                                    aria-hidden="true"
+                                />
                             </NuxtLink>
                         </nav>
 
@@ -1920,17 +2309,34 @@
                                     :key="term.id"
                                 >
                                     <h3
-                                        v-if="idx === 0 || isTermMastered(filteredTerms[idx - 1]!.id as Uuid) !== isTermMastered(term.id as Uuid)"
+                                        v-if="
+                                            idx === 0 ||
+                                            isTermMastered(
+                                                filteredTerms[idx - 1]!
+                                                    .id as Uuid,
+                                            ) !==
+                                                isTermMastered(term.id as Uuid)
+                                        "
                                         class="mb-2 text-xs font-semibold uppercase tracking-wide"
-                                        :class="isTermMastered(term.id as Uuid) ? 'text-emerald-700 dark:text-emerald-300' : 'text-orange-700 dark:text-orange-300'"
+                                        :class="
+                                            isTermMastered(term.id as Uuid)
+                                                ? 'text-emerald-700 dark:text-emerald-300'
+                                                : 'text-orange-700 dark:text-orange-300'
+                                        "
                                     >
-                                        {{ isTermMastered(term.id as Uuid) ? t("set.mastered") : t("set.learning") }}
+                                        {{
+                                            isTermMastered(term.id as Uuid)
+                                                ? t("set.mastered")
+                                                : t("set.learning")
+                                        }}
                                     </h3>
                                     <div
                                         class="relative rounded-md border p-4 shadow-sm"
-                                        :class="isTermMastered(term.id as Uuid)
-                                            ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/25'
-                                            : 'border-orange-200 bg-orange-50/70 dark:border-orange-900 dark:bg-orange-950/25'"
+                                        :class="
+                                            isTermMastered(term.id as Uuid)
+                                                ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/25'
+                                                : 'border-orange-200 bg-orange-50/70 dark:border-orange-900 dark:bg-orange-950/25'
+                                        "
                                     >
                                         <button
                                             type="button"
@@ -2003,139 +2409,145 @@
         </div>
 
         <BaseModal
-          :open="Boolean(chatHistoryOpen)"
-          :title="(t(&quot;chat.history&quot;))"
-          panel-class="max-w-xl"
-          :close-label="t('common.close')"
-          @close="closeChatHistory"
+            :open="Boolean(chatHistoryOpen)"
+            :title="t('chat.history')"
+            panel-class="max-w-xl"
+            :close-label="t('common.close')"
+            @close="closeChatHistory"
         >
-          <div class="flex items-start justify-between gap-4">
-              <div>
-                  <p
-                      class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                  >
-                      {{ set?.title }}
-                  </p>
-              </div>
-          </div>
-          <div class="mt-4 max-h-[26rem] overflow-y-auto">
-              <p
-                  v-if="chatHistoryError"
-                  class="text-sm text-red-700 dark:text-red-300"
-              >
-                  {{ chatHistoryError }}
-              </p>
-              <LoadingSpinner
-                  v-else-if="chatHistoryBusy"
-                  class="text-sm text-slate-600 dark:text-slate-300"
-              />
-              <p
-                  v-else-if="savedChats.length === 0"
-                  class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-              >
-                  {{ t("chat.noHistory") }}
-              </p>
-              <ul v-else class="space-y-2">
-                  <li
-                      v-for="savedChat in savedChats"
-                      :key="savedChat.id"
-                      class="group relative"
-                  >
-                      <button
-                          type="button"
-                          class="w-full rounded-md border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                          :disabled="chatHistoryBusy || chatDeleteBusy"
-                          @click="openSavedChat(savedChat.id)"
-                      >
-                          <span
-                              class="block truncate text-sm font-medium text-slate-900 dark:text-slate-50"
-                          >
-                              {{ savedChat.title }}
-                          </span>
-                          <span
-                              class="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400"
-                          >
-                              {{ set?.title }} ·
-                              {{
-                                  formatSavedChatDate(
-                                      savedChat.lastOpenedAt,
-                                  )
-                              }}
-                          </span>
-                      </button>
-                      <button
-                          type="button"
-                          class="absolute top-1/2 right-3 inline-flex -translate-y-1/2 items-center justify-center rounded-md p-2 text-slate-500 opacity-0 hover:bg-red-50 hover:text-red-700 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
-                          :aria-label="
-                              t('chat.deleteNamed', {
-                                  title: savedChat.title,
-                              })
-                          "
-                          :disabled="chatDeleteBusy"
-                          @click.stop="requestDeleteChat(savedChat)"
-                      >
-                          <svg
-                              aria-hidden="true"
-                              viewBox="0 0 24 24"
-                              class="h-4 w-4"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                          >
-                              <path d="M3 6h18" />
-                              <path d="M8 6V4h8v2" />
-                              <path d="M19 6l-1 14H6L5 6" />
-                              <path d="M10 11v5M14 11v5" />
-                          </svg>
-                      </button>
-                  </li>
-              </ul>
-          </div>
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                        {{ set?.title }}
+                    </p>
+                </div>
+            </div>
+            <div class="mt-4 max-h-[26rem] overflow-y-auto">
+                <p
+                    v-if="chatHistoryError"
+                    class="text-sm text-red-700 dark:text-red-300"
+                >
+                    {{ chatHistoryError }}
+                </p>
+                <LoadingSpinner
+                    v-else-if="chatHistoryBusy"
+                    class="text-sm text-slate-600 dark:text-slate-300"
+                />
+                <p
+                    v-else-if="savedChats.length === 0"
+                    class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                >
+                    {{ t("chat.noHistory") }}
+                </p>
+                <ul v-else class="space-y-2">
+                    <li
+                        v-for="savedChat in savedChats"
+                        :key="savedChat.id"
+                        class="group relative"
+                    >
+                        <button
+                            type="button"
+                            class="w-full rounded-md border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            :disabled="chatHistoryBusy || chatDeleteBusy"
+                            @click="openSavedChat(savedChat.id)"
+                        >
+                            <span
+                                class="block truncate text-sm font-medium text-slate-900 dark:text-slate-50"
+                            >
+                                {{ savedChat.title }}
+                            </span>
+                            <span
+                                class="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400"
+                            >
+                                {{ set?.title }} ·
+                                {{
+                                    formatSavedChatDate(savedChat.lastOpenedAt)
+                                }}
+                            </span>
+                        </button>
+                        <button
+                            type="button"
+                            class="absolute top-1/2 right-3 inline-flex -translate-y-1/2 items-center justify-center rounded-md p-2 text-slate-500 opacity-0 hover:bg-red-50 hover:text-red-700 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                            :aria-label="
+                                t('chat.deleteNamed', {
+                                    title: savedChat.title,
+                                })
+                            "
+                            :disabled="chatDeleteBusy"
+                            @click.stop="requestDeleteChat(savedChat)"
+                        >
+                            <svg
+                                aria-hidden="true"
+                                viewBox="0 0 24 24"
+                                class="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path d="M3 6h18" />
+                                <path d="M8 6V4h8v2" />
+                                <path d="M19 6l-1 14H6L5 6" />
+                                <path d="M10 11v5M14 11v5" />
+                            </svg>
+                        </button>
+                    </li>
+                </ul>
+            </div>
         </BaseModal>
 
         <BaseModal
-          :open="Boolean(chatDeleteTarget)"
-          :title="(t(&quot;chat.deleteTitle&quot;))"
-          panel-class="max-w-md"
-          :close-label="t('common.close')"
-          @close="cancelDeleteChat"
+            :open="Boolean(chatDeleteTarget)"
+            :title="t('chat.deleteTitle')"
+            panel-class="max-w-md"
+            :close-label="t('common.close')"
+            @close="cancelDeleteChat"
         >
-          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              {{
-                  t("chat.deleteDescription", {
-                      title: chatDeleteTarget.title,
-                  })
-              }}
-          </p>
-          <div class="mt-5 flex justify-end gap-2">
-              <button
-                  type="button"
-                  class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                  :disabled="chatDeleteBusy"
-                  @click="cancelDeleteChat"
-              >
-                  {{ t("common.cancel") }}
-              </button>
-              <button
-                  type="button"
-                  class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
-                  :disabled="chatDeleteBusy"
-                  @click="confirmDeleteChat"
-              >
-                  {{ t("common.delete") }}
-              </button>
-          </div>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                {{
+                    t("chat.deleteDescription", {
+                        title: chatDeleteTarget.title,
+                    })
+                }}
+            </p>
+            <div class="mt-5 flex justify-end gap-2">
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    :disabled="chatDeleteBusy"
+                    @click="cancelDeleteChat"
+                >
+                    {{ t("common.cancel") }}
+                </button>
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
+                    :disabled="chatDeleteBusy"
+                    @click="confirmDeleteChat"
+                >
+                    {{ t("common.delete") }}
+                </button>
+            </div>
         </BaseModal>
 
-        <ShareSetDialog :open="isExportOpen" :set="set" :public-set="isPublicSet" :allow-copying="publishedSet?.allow_copying ?? true" @close="closeExport" />
+        <ShareSetDialog
+            :open="isExportOpen"
+            :set="set"
+            :public-set="isPublicSet"
+            :allow-copying="publishedSet?.allow_copying ?? true"
+            @close="closeExport"
+        />
     </main>
 </template>
 
 <script setup lang="ts">
-import { studyStorageOwner } from '~/src/composables/platform/web'
+import { studyStorageOwner } from "~/src/composables/platform/web";
 
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
-import { getPublishedSet, publishedSetToStudySet, type PublishedSet } from '~/src/composables/published-sets';
+import {
+    getPublishedSet,
+    publishedSetToStudySet,
+    type PublishedSet,
+} from "~/src/composables/published-sets";
 import flashcardsModeIcon from "~/assets/icons/study-modes/flashcards.png";
 import studyGuideModeIcon from "~/assets/icons/study-modes/study-guide.png";
 import practiceModeIcon from "~/assets/icons/study-modes/practice.png";
@@ -2220,12 +2632,8 @@ import {
     completeAssignedAttempt,
     parseAssignedAssignmentId,
 } from "~/src/composables/assignment-progress";
-import {
-    type AssignedMatchLeaderboardEntry,
-} from "~/src/composables/classrooms";
-import {
-    createRandomSeed,
-} from "~/src/composables/random";
+import { type AssignedMatchLeaderboardEntry } from "~/src/composables/classrooms";
+import { createRandomSeed } from "~/src/composables/random";
 import {
     readWebFlashcardFrontPreference,
     readWebFlashcardProgress,
@@ -2234,7 +2642,10 @@ import {
     type SavedFlashcardProgress,
 } from "~/src/composables/cards/web-flashcard-state";
 import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion";
-import { createFlashcardRun, flashcardPassProgress } from "~/src/composables/cards/flashcard-run";
+import {
+    createFlashcardRun,
+    flashcardPassProgress,
+} from "~/src/composables/cards/flashcard-run";
 import {
     getCardReviews,
     getGlobalSmartReviewEnabled,
@@ -2270,16 +2681,25 @@ const isNestedSetRoute = computed(() =>
             match.name === "set-id-edit" || match.name === "set-id-results",
     ),
 );
-const isWebPreview = computed(() => isPublicSet.value || isWebPreviewRuntime() || route.params.id === 'demo');
+const isWebPreview = computed(
+    () =>
+        isPublicSet.value ||
+        isWebPreviewRuntime() ||
+        route.params.id === "demo",
+);
 
 type SetMode = "flashcards" | "learn" | "match" | "chat";
 type TrackedSetMode = Exclude<SetMode, "chat">;
 
 const assignedAssignmentId = computed(() =>
-    isPublicSet.value ? null : parseAssignedAssignmentId(route.query.assignment),
+    isPublicSet.value
+        ? null
+        : parseAssignedAssignmentId(route.query.assignment),
 );
 const assignedClassId = computed(() =>
-    !isPublicSet.value && typeof route.query.class === "string" ? route.query.class : null,
+    !isPublicSet.value && typeof route.query.class === "string"
+        ? route.query.class
+        : null,
 );
 
 function assignedQuery(extra: Record<string, string> = {}) {
@@ -2292,7 +2712,7 @@ function assignedQuery(extra: Record<string, string> = {}) {
 }
 
 function setModePath(nextMode: SetMode) {
-    return `${isPublicSet.value ? '/public-sets' : '/set'}/${set.value?.id ?? route.params.id}${assignedQuery({ mode: nextMode })}`;
+    return `${isPublicSet.value ? "/public-sets" : "/set"}/${set.value?.id ?? route.params.id}${assignedQuery({ mode: nextMode })}`;
 }
 
 function fullscreenModePath(nextMode: TrackedSetMode) {
@@ -2319,13 +2739,48 @@ const mode = computed<SetMode>(() => {
 
 const mobileStudyModes = computed(() => {
     const items = [
-        { key: "flashcards", to: setModePath("flashcards"), icon: flashcardsModeIcon, title: t("set.flashcards"), active: mode.value === "flashcards", replace: true },
-        { key: "learn", to: setModePath("learn"), icon: practiceModeIcon, title: t("set.learn"), active: mode.value === "learn", replace: true },
-        { key: "chat", to: setModePath("chat"), icon: chatModeIcon, title: t("set.chat"), active: mode.value === "chat", replace: true },
-        { key: "match", to: setModePath("match"), icon: matchModeIcon, title: t("set.match"), active: mode.value === "match", replace: true },
+        {
+            key: "flashcards",
+            to: setModePath("flashcards"),
+            icon: flashcardsModeIcon,
+            title: t("set.flashcards"),
+            active: mode.value === "flashcards",
+            replace: true,
+        },
+        {
+            key: "learn",
+            to: setModePath("learn"),
+            icon: practiceModeIcon,
+            title: t("set.learn"),
+            active: mode.value === "learn",
+            replace: true,
+        },
+        {
+            key: "chat",
+            to: setModePath("chat"),
+            icon: chatModeIcon,
+            title: t("set.chat"),
+            active: mode.value === "chat",
+            replace: true,
+        },
+        {
+            key: "match",
+            to: setModePath("match"),
+            icon: matchModeIcon,
+            title: t("set.match"),
+            active: mode.value === "match",
+            replace: true,
+        },
     ];
     if (studyGuideSetId.value) {
-        items.push({ key: "study-guide", to: `/study-guide/${studyGuideSetId.value}`, icon: studyGuideModeIcon, title: t("set.studyGuide"), active: false, replace: false });
+        items.push({
+            key: "study-guide",
+            to: `/study-guide/${studyGuideSetId.value}`,
+            icon: studyGuideModeIcon,
+            title: t("set.studyGuide"),
+            active: false,
+            replace: false,
+        });
     }
     return items;
 });
@@ -2351,9 +2806,8 @@ async function loadMatchLeaderboard() {
     matchLeaderboardLoading.value = true;
     matchLeaderboardError.value = false;
     try {
-        const { listAssignedMatchLeaderboard } = await import(
-            "~/src/composables/classrooms"
-        );
+        const { listAssignedMatchLeaderboard } =
+            await import("~/src/composables/classrooms");
         matchLeaderboard.value =
             await listAssignedMatchLeaderboard(assignmentId);
     } catch {
@@ -2483,7 +2937,9 @@ type ReviewRunSnapshot = {
     correctAttempts: number;
     retries: Uuid[];
 };
-const reviewRunSnapshots = ref<Partial<Record<"all" | ReviewBucket, ReviewRunSnapshot>>>({});
+const reviewRunSnapshots = ref<
+    Partial<Record<"all" | ReviewBucket, ReviewRunSnapshot>>
+>({});
 const savedFlashcardTermId = ref<Uuid | null>(null);
 const savedFlashcardCorrectTermIds = ref<Uuid[]>([]);
 const masteryByTermId = ref<FlashcardMasteryByTermId>({});
@@ -2585,8 +3041,10 @@ const filteredTerms = computed(() => {
         masteryByTermId.value,
     );
     if (termsFilter.value === "all") return sorted;
-    if (termsFilter.value === "learning") return sorted.filter((term) => !isTermMastered(term.id as Uuid));
-    if (termsFilter.value === "mastered") return sorted.filter((term) => isTermMastered(term.id as Uuid));
+    if (termsFilter.value === "learning")
+        return sorted.filter((term) => !isTermMastered(term.id as Uuid));
+    if (termsFilter.value === "mastered")
+        return sorted.filter((term) => isTermMastered(term.id as Uuid));
     const showStarred = termsFilter.value === "starred";
     return sorted.filter(
         (term) => starredTermIds.value.has(term.id as Uuid) === showStarred,
@@ -2705,9 +3163,9 @@ async function getCachedChatModel(modelId: string) {
             : import("~/src/composables/ai/registry")
                   .then(({ resolveAiModel }) => resolveAiModel(route))
                   .finally(() => {
-                  if (cachedChatModelPromise.value?.id === cacheId) {
-                      cachedChatModelPromise.value = null;
-                  }
+                      if (cachedChatModelPromise.value?.id === cacheId) {
+                          cachedChatModelPromise.value = null;
+                      }
                   });
     if (existing?.id !== cacheId) {
         cachedChatModelPromise.value = { id: cacheId, promise };
@@ -2895,10 +3353,12 @@ async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
         publishedSet.value = await getPublishedSet(props.publicSetId!);
         set.value = publishedSetToStudySet(publishedSet.value);
         if (hasTauriRuntime()) {
-            void loadAppSettingsOnce().then((settings) => {
-                defaultModelId.value = settings.defaultModelId;
-                fallbackModelIds.value = settings.fallbackModelIds;
-            }).catch(() => {});
+            void loadAppSettingsOnce()
+                .then((settings) => {
+                    defaultModelId.value = settings.defaultModelId;
+                    fallbackModelIds.value = settings.fallbackModelIds;
+                })
+                .catch(() => {});
         }
     } else set.value = createWebPreviewDemoSet(t, { id: demoId as Uuid });
     // Web preview fallback: allow E2E validation of study guide navigation.
@@ -2951,10 +3411,32 @@ const allStudyTermIds = computed(() => {
 const reviewFilters = computed(() => {
     void reviewClock.value;
     return [
-    { value: "all" as const, label: "All", count: allStudyTermIds.value.length },
-    { value: "due" as const, label: t("set.reviewReady"), count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "due").length },
-    { value: "learning" as const, label: "Learning", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "learning").length },
-    { value: "strong" as const, label: "Strong", count: allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "strong").length },
+        {
+            value: "all" as const,
+            label: "All",
+            count: allStudyTermIds.value.length,
+        },
+        {
+            value: "due" as const,
+            label: t("set.reviewReady"),
+            count: allStudyTermIds.value.filter(
+                (id) => reviewBucket(cardReviews.value[id]) === "due",
+            ).length,
+        },
+        {
+            value: "learning" as const,
+            label: "Learning",
+            count: allStudyTermIds.value.filter(
+                (id) => reviewBucket(cardReviews.value[id]) === "learning",
+            ).length,
+        },
+        {
+            value: "strong" as const,
+            label: "Strong",
+            count: allStudyTermIds.value.filter(
+                (id) => reviewBucket(cardReviews.value[id]) === "strong",
+            ).length,
+        },
     ];
 });
 
@@ -2967,12 +3449,23 @@ const studyTermIds = computed(() => {
               : !isTermMastered(id),
     );
     if (smartReviewEnabled.value && reviewFilter.value !== "all") {
-        ids = ids.filter((id) => reviewBucket(cardReviews.value[id]) === reviewFilter.value);
+        ids = ids.filter(
+            (id) => reviewBucket(cardReviews.value[id]) === reviewFilter.value,
+        );
     } else if (smartReviewEnabled.value) {
-        const rank: Record<ReviewBucket, number> = { due: 0, learning: 1, strong: 2 };
-        ids = [...ids].sort((a, b) => rank[reviewBucket(cardReviews.value[a])] - rank[reviewBucket(cardReviews.value[b])]);
+        const rank: Record<ReviewBucket, number> = {
+            due: 0,
+            learning: 1,
+            strong: 2,
+        };
+        ids = [...ids].sort(
+            (a, b) =>
+                rank[reviewBucket(cardReviews.value[a])] -
+                rank[reviewBucket(cardReviews.value[b])],
+        );
     }
-    if (starredOnly.value) ids = ids.filter((id) => starredTermIds.value.has(id));
+    if (starredOnly.value)
+        ids = ids.filter((id) => starredTermIds.value.has(id));
     return ids;
 });
 
@@ -2990,8 +3483,13 @@ const isStarredOnlyEmpty = computed(
 // Smart Review category changes must not make Results appear or disappear.
 const totalCount = computed(() => new Set(order.value).size);
 
-const dueCount = computed(() =>
-    (reviewClock.value, allStudyTermIds.value.filter((id) => reviewBucket(cardReviews.value[id]) === "due").length),
+const dueCount = computed(
+    () => (
+        reviewClock.value,
+        allStudyTermIds.value.filter(
+            (id) => reviewBucket(cardReviews.value[id]) === "due",
+        ).length
+    ),
 );
 const nextReviewText = computed(() => {
     const now = reviewClock.value;
@@ -3009,7 +3507,9 @@ const nextReviewText = computed(() => {
     today.setHours(0, 0, 0, 0);
     const day = new Date(date);
     day.setHours(0, 0, 0, 0);
-    const dayOffset = Math.round((day.getTime() - today.getTime()) / 86_400_000);
+    const dayOffset = Math.round(
+        (day.getTime() - today.getTime()) / 86_400_000,
+    );
     if (dayOffset === 0) return `in ${Math.ceil(remaining / 3_600_000)} hr`;
     if (dayOffset === 1) return "tomorrow";
     return new Intl.DateTimeFormat(undefined, {
@@ -3028,12 +3528,18 @@ const termById = computed(() => {
 
 const attemptedCount = computed(() => answerAttemptsCount.value);
 const correctCount = computed(() => correctAttemptsCount.value);
-const isFinished = computed(() =>
-    order.value.length > 0 && order.value.every((id) => completedTermIds.value.has(id)),
+const isFinished = computed(
+    () =>
+        order.value.length > 0 &&
+        order.value.every((id) => completedTermIds.value.has(id)),
 );
 const hasIncorrectCards = computed(() => retryTermIds.value.size > 0);
 const currentPassProgress = computed(() =>
-    flashcardPassProgress(order.value, answersByTermId.value, completedTermIds.value),
+    flashcardPassProgress(
+        order.value,
+        answersByTermId.value,
+        completedTermIds.value,
+    ),
 );
 
 const ratioText = computed(() => {
@@ -3101,7 +3607,6 @@ const accuracyText = computed(() => {
     return `${pct}% (${correctAttemptsCount.value}/${attempted})`;
 });
 
-
 const {
     toggleFlip,
     goPrev,
@@ -3119,7 +3624,8 @@ const {
     setNavigating: (direction) => (isNavigating.value = direction),
     onNavigate: () => {
         const id = order.value[cursorIndex.value];
-        if (id) completedTermIds.value = new Set(completedTermIds.value).add(id);
+        if (id)
+            completedTermIds.value = new Set(completedTermIds.value).add(id);
     },
     isBusy: () => flashcardAnswerBusy.value,
 });
@@ -3747,8 +4253,12 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
     learnBusy.value = true;
     try {
         const { generateText } = await import("ai");
-        const { resolveAiModel } = await import("~/src/composables/ai/registry");
-        const model = await resolveAiModel([defaultModelId.value, ...fallbackModelIds.value]);
+        const { resolveAiModel } =
+            await import("~/src/composables/ai/registry");
+        const model = await resolveAiModel([
+            defaultModelId.value,
+            ...fallbackModelIds.value,
+        ]);
         const prompt = buildLearnAugmentPrompt({
             title: s.title,
             description: s.description,
@@ -3928,14 +4438,22 @@ const {
     onAnswer: (answer, termId) => {
         masteryByTermId.value = {
             ...masteryByTermId.value,
-            [termId]: updateFlashcardMastery(masteryByTermId.value[termId], answer),
+            [termId]: updateFlashcardMastery(
+                masteryByTermId.value[termId],
+                answer,
+            ),
         };
         recordInlineAssignedAnswer("flashcards", answer === "correct");
         const setId = set.value?.id as Uuid | undefined;
         if (setId && termId && smartReviewEnabled.value) {
             cardReviews.value = {
                 ...cardReviews.value,
-                [termId]: recordCardReview(setId, termId, answer === "correct", reviewOwnerId.value),
+                [termId]: recordCardReview(
+                    setId,
+                    termId,
+                    answer === "correct",
+                    reviewOwnerId.value,
+                ),
             };
         }
     },
@@ -3947,7 +4465,11 @@ function shuffleFromFlashcardSettings() {
     const setId = set.value?.id as Uuid | undefined;
     if (!setId) return;
     shuffleEnabled.value = !shuffleEnabled.value;
-    saveFlashcardShuffleEnabled(setId, shuffleEnabled.value, reviewOwnerId.value);
+    saveFlashcardShuffleEnabled(
+        setId,
+        shuffleEnabled.value,
+        reviewOwnerId.value,
+    );
     if (shuffleEnabled.value) {
         shuffleRun();
         return;
@@ -3956,7 +4478,9 @@ function shuffleFromFlashcardSettings() {
     const normalOrder = [...studyTermIds.value];
     order.value = normalOrder;
     lastOrder.value = normalOrder;
-    cursorIndex.value = currentId ? Math.max(0, normalOrder.indexOf(currentId)) : 0;
+    cursorIndex.value = currentId
+        ? Math.max(0, normalOrder.indexOf(currentId))
+        : 0;
     isFlipped.value = false;
     nextTick(focusFlashcardViewer);
 }
@@ -4000,7 +4524,11 @@ function toggleSmartReview() {
     const setId = set.value?.id as Uuid | undefined;
     if (!setId) return;
     smartReviewEnabled.value = !smartReviewEnabled.value;
-    saveSmartReviewEnabled(setId, smartReviewEnabled.value, reviewOwnerId.value);
+    saveSmartReviewEnabled(
+        setId,
+        smartReviewEnabled.value,
+        reviewOwnerId.value,
+    );
     flashcardSettingsOpen.value = false;
     reviewRunSnapshots.value = {};
     reviewFilter.value = "all";
@@ -4036,7 +4564,9 @@ function setReviewFilter(filter: "all" | ReviewBucket) {
     order.value = [...saved.order];
     cursorIndex.value = saved.cursorIndex;
     answersByTermId.value = { ...saved.answers };
-    completedTermIds.value = new Set(saved.completed ?? Object.keys(saved.answers));
+    completedTermIds.value = new Set(
+        saved.completed ?? Object.keys(saved.answers),
+    );
     answerAttemptsCount.value = saved.attempts;
     correctAttemptsCount.value = saved.correctAttempts;
     retryTermIds.value = new Set(saved.retries);
@@ -4046,10 +4576,22 @@ function setReviewFilter(filter: "all" | ReviewBucket) {
 
 async function loadStars(setId: Uuid) {
     const storedGlobal = getGlobalSmartReviewEnabled(reviewOwnerId.value);
-    const globalEnabled = storedGlobal ?? (isWebPreview.value ? false : (await loadAppSettingsOnce()).smartReviewEnabled);
-    if (storedGlobal === null) saveGlobalSmartReviewEnabled(globalEnabled, reviewOwnerId.value);
-    smartReviewEnabled.value = resolveSmartReviewEnabled(setId, globalEnabled, reviewOwnerId.value);
-    shuffleEnabled.value = isFlashcardShuffleEnabled(setId, reviewOwnerId.value);
+    const globalEnabled =
+        storedGlobal ??
+        (isWebPreview.value
+            ? false
+            : (await loadAppSettingsOnce()).smartReviewEnabled);
+    if (storedGlobal === null)
+        saveGlobalSmartReviewEnabled(globalEnabled, reviewOwnerId.value);
+    smartReviewEnabled.value = resolveSmartReviewEnabled(
+        setId,
+        globalEnabled,
+        reviewOwnerId.value,
+    );
+    shuffleEnabled.value = isFlashcardShuffleEnabled(
+        setId,
+        reviewOwnerId.value,
+    );
     cardReviews.value = getCardReviews(setId, reviewOwnerId.value);
     if (isWebPreview.value) {
         starredTermIds.value = new Set();
@@ -4538,8 +5080,12 @@ async function sendChat() {
     }
 }
 
-function openExport() { isExportOpen.value = true; }
-function closeExport() { isExportOpen.value = false; }
+function openExport() {
+    isExportOpen.value = true;
+}
+function closeExport() {
+    isExportOpen.value = false;
+}
 
 async function openSetPage() {
     let lockGateEvaluated = false;
@@ -4585,8 +5131,12 @@ async function openSetPage() {
             createSetsRepo(db).get(setId),
             createLinkedFoldersRepo(db).getBySetId(setId),
             createStudyGuidesRepo(db).getBySetId(setId),
-            createStarsRepo(db).listTermIds(setId).catch(() => []),
-            createFlashcardProgressRepo(db).get(setId).catch(() => null),
+            createStarsRepo(db)
+                .listTermIds(setId)
+                .catch(() => []),
+            createFlashcardProgressRepo(db)
+                .get(setId)
+                .catch(() => null),
         ]);
         if (!profile || !status.has_verifier) {
             markLocked();
@@ -4632,9 +5182,19 @@ async function openSetPage() {
         busy.value = false;
 
         if (loadedSet) {
-            smartReviewEnabled.value = resolveSmartReviewEnabled(setId, settings.smartReviewEnabled, reviewOwnerId.value);
-            saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, reviewOwnerId.value);
-            shuffleEnabled.value = isFlashcardShuffleEnabled(setId, reviewOwnerId.value);
+            smartReviewEnabled.value = resolveSmartReviewEnabled(
+                setId,
+                settings.smartReviewEnabled,
+                reviewOwnerId.value,
+            );
+            saveGlobalSmartReviewEnabled(
+                settings.smartReviewEnabled,
+                reviewOwnerId.value,
+            );
+            shuffleEnabled.value = isFlashcardShuffleEnabled(
+                setId,
+                reviewOwnerId.value,
+            );
             cardReviews.value = getCardReviews(setId, reviewOwnerId.value);
             starredTermIds.value = new Set(starredIds);
             savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
@@ -4679,7 +5239,7 @@ async function openSetPage() {
     } catch {
         if (isPublicSet.value) {
             busy.value = false;
-            loadError.value = t('public.loadFailed');
+            loadError.value = t("public.loadFailed");
             return;
         }
         const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
@@ -4706,7 +5266,10 @@ async function openSetPage() {
 }
 
 onMounted(async () => {
-    reviewClockTimer = setInterval(() => (reviewClock.value = Date.now()), 30_000);
+    reviewClockTimer = setInterval(
+        () => (reviewClock.value = Date.now()),
+        30_000,
+    );
     window.addEventListener("pagehide", onAssignedPageHide);
     await openSetPage();
     beginInlineAssignedMode(mode.value);
@@ -4800,7 +5363,8 @@ watch(
 );
 
 watch(language, async () => {
-    if (isPublicSet.value || !isWebPreview.value || isNestedSetRoute.value) return;
+    if (isPublicSet.value || !isWebPreview.value || isNestedSetRoute.value)
+        return;
     await initWebDemoSet({ forceNewPractice: true });
 });
 
