@@ -21,7 +21,7 @@ jobs:
       VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_fixture
       CI: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
@@ -61,7 +61,7 @@ jobs:
       NUXT_WEB_AI_COMPATIBLE_ORIGIN: ${{ vars.NUXT_WEB_AI_COMPATIBLE_ORIGIN }}
       RELEASE_TARGET: ${{ github.event_name == 'push' && 'production' || inputs.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
