@@ -35,7 +35,7 @@
     "@tauri-apps/plugin-http": "^2.6.0",
     "ai": "^7.0.99",
     "katex": "^0.17.0",
-    "markdown-it": "^14.3.1",
+    "markdown-it": "^15.0.2",
     "nuxt": "^4.5.2",
     "ollama-ai-provider-v2": "^4.0.1",
     "pdfjs-dist": "^6.3.289",
