@@ -546,19 +546,22 @@
                                 <button
                                     ref="mobileViewerButtonEl"
                                     type="button"
-                                    class="mobile-flashcard-card relative mt-5 flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl px-5 py-10 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+                                    class="mobile-flashcard-card relative mt-5 flex min-h-0 flex-1 touch-pan-y flex-col items-center justify-center overflow-hidden rounded-2xl px-5 py-10 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
                                     :class="[
                                         flashcardSurfaceClass,
                                         {
                                             'animate-flip': isFlipping,
-                                            'animate-slide-left':
+                                            'animate-card-swipe-left':
                                                 isNavigating === 'next',
-                                            'animate-slide-right':
+                                            'animate-card-swipe-right':
                                                 isNavigating === 'prev',
                                         },
                                     ]"
                                     :disabled="flashcardAnswerBusy"
-                                    @click="toggleFlip"
+                                    @touchstart.passive="flashcardSwipe.onTouchStart"
+                                    @touchend.passive="flashcardSwipe.onTouchEnd"
+                                    @touchcancel="flashcardSwipe.onTouchCancel"
+                                    @click="flashcardSwipe.onClick"
                                 >
                                     <span
                                         v-if="isCurrentRetry"
@@ -1011,21 +1014,24 @@
                                 <button
                                     ref="viewerButtonEl"
                                     type="button"
-                                    class="relative mt-3 flex min-h-[clamp(16rem,34vh,24rem)] w-full items-center justify-center rounded-lg p-6 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2"
+                                    class="relative mt-3 flex min-h-[clamp(16rem,34vh,24rem)] w-full touch-pan-y items-center justify-center rounded-lg p-6 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2"
                                     :class="[
                                         flashcardSurfaceClass,
                                         {
                                             'animate-flip': isFlipping,
-                                            'animate-slide-left':
+                                            'animate-card-swipe-left':
                                                 isNavigating === 'next',
-                                            'animate-slide-right':
+                                            'animate-card-swipe-right':
                                                 isNavigating === 'prev',
                                         },
                                     ]"
                                     :disabled="
                                         totalCount === 0 || flashcardAnswerBusy
                                     "
-                                    @click="toggleFlip"
+                                    @touchstart.passive="flashcardSwipe.onTouchStart"
+                                    @touchend.passive="flashcardSwipe.onTouchEnd"
+                                    @touchcancel="flashcardSwipe.onTouchCancel"
+                                    @click="flashcardSwipe.onClick"
                                 >
                                     <span
                                         v-if="isCurrentRetry"
@@ -1154,7 +1160,7 @@
                         <section
                             v-else-if="mode === 'learn'"
                             aria-label="Practice"
-                            class="study-panel flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="study-panel study-panel--practice relative flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-center justify-between gap-3"
@@ -1185,6 +1191,7 @@
                                         aria-label="Practice settings"
                                         title="Practice settings"
                                         @click="openPracticeSettings"
+                                        @keydown.esc="practiceSettingsOpen = false"
                                     >
                                         <svg
                                             aria-hidden="true"
@@ -1221,9 +1228,20 @@
                                 {{ learnError }}
                             </p>
 
+                            <button
+                                v-if="practiceSettingsOpen"
+                                type="button"
+                                class="fixed inset-0 z-40 cursor-default"
+                                aria-label="Close practice settings"
+                                @click="practiceSettingsOpen = false"
+                            />
+
                             <div
                                 v-if="practiceSettingsOpen"
-                                class="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+                                class="absolute inset-x-4 top-14 z-50 max-h-[min(72dvh,40rem)] overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900"
+                                role="dialog"
+                                aria-label="Practice and test settings"
+                                @keydown.esc="practiceSettingsOpen = false"
                             >
                                 <div
                                     class="flex flex-wrap items-start justify-between gap-3"
@@ -1763,7 +1781,7 @@
                         <section
                             v-else-if="mode === 'chat'"
                             aria-label="Chat"
-                            class="study-panel flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="study-panel study-panel--chat flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-center justify-between gap-3"
@@ -2641,7 +2659,7 @@ import {
     saveWebFlashcardProgress,
     type SavedFlashcardProgress,
 } from "~/src/composables/cards/web-flashcard-state";
-import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion";
+import { createFlashcardMotion, createFlashcardSwipe } from "~/src/composables/cards/flashcard-motion";
 import {
     createFlashcardRun,
     flashcardPassProgress,
@@ -3630,6 +3648,8 @@ const {
     isBusy: () => flashcardAnswerBusy.value,
 });
 
+const flashcardSwipe = createFlashcardSwipe({ goPrev, goNext, flip: toggleFlip });
+
 function matchSeed() {
     const s = baseSeed.value;
     if (s !== null) return s + matchRunCounter.value;
@@ -3911,7 +3931,6 @@ function openPracticeSettings() {
     practiceSettingsOpen.value = !practiceSettingsOpen.value;
     if (practiceSettingsOpen.value) {
         clampPracticeQuestionCount();
-        clearPracticeTimer();
     }
 }
 
@@ -5426,6 +5445,21 @@ onBeforeUnmount(() => {
     overflow: auto;
 }
 
+.study-panel--chat {
+    min-height: clamp(28rem, 68dvh, 46rem);
+    max-height: none;
+    overflow: visible;
+}
+
+.study-panel--practice {
+    overflow: visible;
+}
+
+.study-panel--chat [role="log"] {
+    min-height: clamp(18rem, 44dvh, 31rem);
+    max-height: min(60dvh, 38rem);
+}
+
 .mobile-settings-item {
     display: flex;
     width: 100%;
@@ -5486,6 +5520,10 @@ onBeforeUnmount(() => {
         max-height: none;
         overflow: visible;
     }
+
+    .study-panel--chat {
+        min-height: clamp(24rem, 65dvh, 40rem);
+    }
 }
 
 @keyframes flip {
@@ -5535,6 +5573,28 @@ onBeforeUnmount(() => {
 
 .animate-slide-right {
     animation: slideRight 0.25s ease-in-out;
+}
+
+@keyframes cardSwipeLeft {
+    0% { transform: translateX(0); opacity: 1; }
+    49% { transform: translateX(-18%); opacity: 0; }
+    50% { transform: translateX(18%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes cardSwipeRight {
+    0% { transform: translateX(0); opacity: 1; }
+    49% { transform: translateX(18%); opacity: 0; }
+    50% { transform: translateX(-18%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+.animate-card-swipe-left { animation: cardSwipeLeft 0.25s ease-in-out; }
+.animate-card-swipe-right { animation: cardSwipeRight 0.25s ease-in-out; }
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-card-swipe-left,
+    .animate-card-swipe-right { animation: none; }
 }
 
 .flashcard-side-image {

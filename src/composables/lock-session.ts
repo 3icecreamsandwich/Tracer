@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { clearCachedHomeDashboard } from './home-dashboard-cache'
 
 const STORAGE_KEY = 'tracer:unlockedThisSession'
 
@@ -33,6 +34,7 @@ export function useLockSession() {
   function markLocked() {
     unlockedThisSession.value = false
     writeSessionFlag(false)
+    clearCachedHomeDashboard()
   }
 
   return {

@@ -1,1 +1,0 @@
-function e(e,t){if(!e)return null;let n=/^\s*\S+\s+/.exec(e);if(!n&&!t)return null;let r=n??/^\s*\S+/.exec(e)??/^\s+/.exec(e);if(!r)return null;let i=r[0];return{unit:i,pending:e.slice(i.length)}}export{e as t};

@@ -1,1 +1,0 @@
-{"version":3,"file":"handoff.options.mjs","sources":["../../../../../../../server/api/web/auth/handoff.options.ts"],"names":["handoff_options","defineEventHandler","event","allowLandingAuthOrigin","setHeader","setResponseStatus"],"mappings":"iOAGA,MAAAA,EAAAC,EAAAC,IACAC,EAAAD,GACAE,EAAAF,EAAA,+BAAA,iBACAE,EAAAF,EAAA,+BAAA,+BACAE,EAAAF,EAAA,yBAAA,OACAG,EAAAH,EAAA,KACA"}

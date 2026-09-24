@@ -1,2 +1,0 @@
-import{d as o,a as e,s as r}from"../../../../nitro/nitro.mjs";import{a as t}from"../../../../_/web-auth-handoff.mjs";import"node:process";import"cloudflare:workers";import"node:events";import"node:buffer";import"node:timers";const s=o(o=>(t(o),e(o,"Access-Control-Allow-Methods","POST, OPTIONS"),e(o,"Access-Control-Allow-Headers","Authorization, Content-Type"),e(o,"Access-Control-Max-Age","600"),r(o,204),null));export{s as default};
-//# sourceMappingURL=handoff.options.mjs.map

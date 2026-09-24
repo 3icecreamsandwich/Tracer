@@ -33,6 +33,7 @@
                         aria-label="Practice settings"
                         title="Practice settings"
                         @click="openPracticeSettings"
+                        @keydown.esc="practiceSettingsOpen = false"
                     >
                         <svg
                             aria-hidden="true"
@@ -55,11 +56,21 @@
         </div>
 
         <!-- Main Content Area -->
-        <div class="flex flex-1 flex-col items-center justify-start px-6 py-8">
+        <div class="relative flex flex-1 flex-col items-center justify-start px-6 py-8">
             <div aria-hidden="true" class="mb-6 h-[3.25rem]" />
+            <button
+                v-if="practiceSettingsOpen"
+                type="button"
+                class="fixed inset-0 z-40 cursor-default"
+                aria-label="Close practice settings"
+                @click="practiceSettingsOpen = false"
+            />
             <div
                 v-if="practiceSettingsOpen"
-                class="mb-6 w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                class="absolute top-4 z-50 w-[calc(100%-3rem)] max-w-4xl max-h-[min(78dvh,44rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-950"
+                role="dialog"
+                aria-label="Practice and test settings"
+                @keydown.esc="practiceSettingsOpen = false"
             >
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -707,7 +718,6 @@ function openPracticeSettings() {
     practiceSettingsOpen.value = !practiceSettingsOpen.value;
     if (practiceSettingsOpen.value) {
         clampPracticeQuestionCount();
-        clearPracticeTimer();
     }
 }
 

@@ -1,1 +1,0 @@
-import{P as e,rt as t,u as n,y as r}from"./CoT1qCUq.js";import{f as i}from"./C1OZectE.js";import{t as a}from"./DSZsAmZy.js";var o=r({__name:`[id]`,setup(r){let o=i();return(r,i)=>(e(),n(a,{key:String(t(o).params.id),"public-set-id":String(t(o).params.id)},null,8,[`public-set-id`]))}});export{o as default};

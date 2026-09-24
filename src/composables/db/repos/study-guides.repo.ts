@@ -1,5 +1,6 @@
 import type { DbClient, StudyGuide, StudyGuideSummary, Uuid } from '../types'
 import { nowIsoSql } from '../sql'
+import { invalidateCachedHomeDashboard } from '../../home-dashboard-cache'
 
 type DbStudyGuideRow = {
   id: string
@@ -20,6 +21,7 @@ export function createStudyGuidesRepo(db: DbClient) {
       )
       const guide = await this.getBySetId(input.setId)
       if (!guide) throw new Error('Failed to create study guide')
+      invalidateCachedHomeDashboard()
       return guide
     },
 

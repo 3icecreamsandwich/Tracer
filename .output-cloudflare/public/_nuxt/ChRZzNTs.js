@@ -1,1 +1,0 @@
-import{n as e,t}from"./DMK6l-5U.js";function n(){return{providers:e,modelsByProvider:t}}export{n as t};

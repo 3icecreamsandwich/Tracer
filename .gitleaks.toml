@@ -1,0 +1,22 @@
+title = "Tracer secret scanning"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+
+  [[rules.allowlists]]
+  description = "Supabase publishable keys are intended for public clients"
+  regexTarget = "secret"
+  regexes = ['''^sb_publishable_[A-Za-z0-9_-]+$''']
+
+  [[rules.allowlists]]
+  description = "Literal dummy tokens used by the redaction unit test"
+  condition = "AND"
+  paths = ['''^tests/unit/redact-sensitive\.test\.ts$''']
+  regexTarget = "line"
+  regexes = [
+    '''gho_0123456789abcdef''',
+    '''sk-0123456789abcdef'''
+  ]

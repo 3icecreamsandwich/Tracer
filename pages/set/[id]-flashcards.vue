@@ -215,17 +215,20 @@
                 <button
                     ref="viewerButtonEl"
                     type="button"
-                    class="relative flex flex-col items-center justify-center w-[calc(100%-2rem)] sm:w-[75vw] min-h-64 h-[55dvh] sm:h-[60vh] rounded-lg px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                    class="relative flex touch-pan-y flex-col items-center justify-center w-[calc(100%-2rem)] sm:w-[75vw] min-h-64 h-[55dvh] sm:h-[60vh] rounded-lg px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
                     :class="[
                         flashcardSurfaceClass,
                         {
                             'animate-flip': isFlipping,
-                            'animate-slide-left': isNavigating === 'next',
-                            'animate-slide-right': isNavigating === 'prev',
+                            'animate-card-swipe-left': isNavigating === 'next',
+                            'animate-card-swipe-right': isNavigating === 'prev',
                         },
                     ]"
                     :disabled="totalCount === 0 || flashcardAnswerBusy"
-                    @click="toggleFlip"
+                    @touchstart.passive="flashcardSwipe.onTouchStart"
+                    @touchend.passive="flashcardSwipe.onTouchEnd"
+                    @touchcancel="flashcardSwipe.onTouchCancel"
+                    @click="flashcardSwipe.onClick"
                 >
                     <span
                         v-if="isCurrentRetry"
@@ -438,7 +441,7 @@ import {
     saveWebFlashcardProgress,
     type SavedFlashcardProgress,
 } from "~/src/composables/cards/web-flashcard-state";
-import { createFlashcardMotion } from "~/src/composables/cards/flashcard-motion";
+import { createFlashcardMotion, createFlashcardSwipe } from "~/src/composables/cards/flashcard-motion";
 import { createFlashcardRun, flashcardPassProgress } from "~/src/composables/cards/flashcard-run";
 import { getCardReviews, getGlobalSmartReviewEnabled, isFlashcardShuffleEnabled, recordCardReview, resolveSmartReviewEnabled, reviewBucket, saveFlashcardShuffleEnabled, saveGlobalSmartReviewEnabled, saveSmartReviewEnabled, type CardReview, type ReviewBucket } from "~/src/composables/cards/spaced-repetition";
 import {
@@ -966,6 +969,8 @@ const {
     isBusy: () => flashcardAnswerBusy.value,
 });
 
+const flashcardSwipe = createFlashcardSwipe({ goPrev, goNext, flip: toggleFlip });
+
 async function loadStars(setId: Uuid) {
     const storedGlobal = getGlobalSmartReviewEnabled(reviewOwnerId.value);
     const globalEnabled = storedGlobal ?? (isWebPreview.value ? false : (await loadAppSettingsOnce()).smartReviewEnabled);
@@ -1303,6 +1308,28 @@ onBeforeUnmount(() => {
 
 .animate-slide-right {
     animation: slideRight 0.25s ease-in-out;
+}
+
+@keyframes cardSwipeLeft {
+    0% { transform: translateX(0); opacity: 1; }
+    49% { transform: translateX(-18%); opacity: 0; }
+    50% { transform: translateX(18%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes cardSwipeRight {
+    0% { transform: translateX(0); opacity: 1; }
+    49% { transform: translateX(18%); opacity: 0; }
+    50% { transform: translateX(-18%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+.animate-card-swipe-left { animation: cardSwipeLeft 0.25s ease-in-out; }
+.animate-card-swipe-right { animation: cardSwipeRight 0.25s ease-in-out; }
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-card-swipe-left,
+    .animate-card-swipe-right { animation: none; }
 }
 
 .flashcard-side-image {

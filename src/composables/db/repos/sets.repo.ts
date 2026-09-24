@@ -6,6 +6,7 @@ import type {
   Uuid
 } from '../types'
 import { nowIsoSql } from '../sql'
+import { invalidateCachedHomeDashboard } from '../../home-dashboard-cache'
 
 type DbSetRow = {
   id: string
@@ -101,6 +102,7 @@ export function createSetsRepo(db: DbClient) {
 
       const set = await this.get(input.id)
       if (!set) throw new Error('Failed to create set')
+      invalidateCachedHomeDashboard()
       return set
     },
 
@@ -136,11 +138,13 @@ export function createSetsRepo(db: DbClient) {
 
       const set = await this.get(input.id)
       if (!set) throw new Error('Failed to update set')
+      invalidateCachedHomeDashboard()
       return set
     },
 
     async delete(id: Uuid): Promise<void> {
       await db.execute(`DELETE FROM flashcard_sets WHERE id = ?;`, [id])
+      invalidateCachedHomeDashboard()
     },
 
     async hideFromLibrary(id: Uuid): Promise<void> {
@@ -148,6 +152,7 @@ export function createSetsRepo(db: DbClient) {
         `UPDATE flashcard_sets SET hidden_from_library = 1 WHERE id = ?;`,
         [id]
       )
+      invalidateCachedHomeDashboard()
     },
 
     async hideManyFromLibrary(ids: Uuid[]): Promise<void> {
@@ -157,6 +162,7 @@ export function createSetsRepo(db: DbClient) {
         `UPDATE flashcard_sets SET hidden_from_library = 1 WHERE id IN (${placeholders});`,
         ids
       )
+      invalidateCachedHomeDashboard()
     }
   }
 }

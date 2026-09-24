@@ -1,1 +1,0 @@
-function e(){if({}.VITE_TRACER_FORCE_WEB===`1`)return!1;let e=globalThis?.window;if(!e)return!1;if(e.__TAURI_INTERNALS__&&typeof e.__TAURI_INTERNALS__==`object`||globalThis?.isTauri)return!0;let t=e.navigator?.userAgent??``;return/\bTauri\b/i.test(t)}export{e as t};

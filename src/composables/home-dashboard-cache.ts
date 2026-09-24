@@ -23,6 +23,7 @@ export type HomeDashboardSnapshot = {
 }
 
 let cachedSnapshot: HomeDashboardSnapshot | null = null
+let privateSetsSynced = false
 
 function cloneSnapshot(snapshot: HomeDashboardSnapshot): HomeDashboardSnapshot {
   return {
@@ -42,6 +43,19 @@ export function setCachedHomeDashboard(snapshot: HomeDashboardSnapshot) {
 
 export function clearCachedHomeDashboard() {
   cachedSnapshot = null
+  privateSetsSynced = false
+}
+
+export function invalidateCachedHomeDashboard() {
+  cachedSnapshot = null
+}
+
+export function hasSyncedPrivateSetsThisSession() {
+  return privateSetsSynced
+}
+
+export function markPrivateSetsSyncedThisSession() {
+  privateSetsSynced = true
 }
 
 export function toHomeDashboardSetItem(set: FlashcardSetListItem): HomeDashboardItem {

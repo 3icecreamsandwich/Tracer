@@ -1,1 +1,0 @@
-import"#entry";var e=``+new URL(`worker.min.32WLk7pY.js`,import.meta.url).href;export{e as default};

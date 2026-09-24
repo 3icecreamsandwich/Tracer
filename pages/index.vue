@@ -411,6 +411,8 @@ import {
 import {
   getCachedHomeDashboard,
   setCachedHomeDashboard,
+  hasSyncedPrivateSetsThisSession,
+  markPrivateSetsSyncedThisSession,
   toHomeDashboardSetItem,
   type HomeDashboardItem,
   type HomeDashboardSnapshot,
@@ -752,16 +754,17 @@ function cacheCurrentHomeDashboard() {
   })
 }
 
-async function loadHomeList(pendingSnapshot?: Promise<HomeDashboardSnapshot>) {
+async function loadHomeList() {
   busy.value = true
   loadError.value = null
   const cached = getCachedHomeDashboard()
   if (cached) {
     applyHomeDashboard(cached)
     busy.value = false
+    return
   }
   try {
-    const snapshot = await (pendingSnapshot ?? useTracerDb().then(fetchHomeDashboard))
+    const snapshot = await useTracerDb().then(fetchHomeDashboard)
     applyHomeDashboard(snapshot)
     cacheCurrentHomeDashboard()
   } catch {
@@ -1387,10 +1390,11 @@ onMounted(async () => {
 
     // Private sets are pulled before the home list is read, so a set created
     // on another device appears as soon as this account opens Tracer.
-    await syncPrivateSets().catch(() => false)
-    const dashboardSnapshotPromise = fetchHomeDashboard(db)
-    void dashboardSnapshotPromise.catch(() => {})
-    const localDashboardLoad = loadHomeList(dashboardSnapshotPromise)
+    if (!hasSyncedPrivateSetsThisSession()) {
+      const synced = await syncPrivateSets().catch(() => false)
+      if (synced) markPrivateSetsSyncedThisSession()
+    }
+    const localDashboardLoad = loadHomeList()
     const settings = await settingsPromise
 
     accountRole.value = getCachedAccountRole(profile.supabaseUserId)

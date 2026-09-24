@@ -157,6 +157,8 @@ export async function restoreAuthSession(
 }
 
 export async function clearAuthSession(options: { remote?: boolean } = {}): Promise<void> {
+  const { clearCachedHomeDashboard } = await import('../home-dashboard-cache')
+  clearCachedHomeDashboard()
   if (options.remote !== false) {
     try { await getSupabaseClient().auth.signOut({ scope: 'local' }) } catch {}
   }

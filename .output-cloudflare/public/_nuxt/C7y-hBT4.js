@@ -1,1 +1,0 @@
-import{t as e}from"./BSPB2cL8.js";function t(){return!e()&&!1}function n(){return`/${`/`.split(`/`).filter(Boolean).join(`/`)}`}function r(e=``){return`${n()}${e.replace(/^\/+/,``)}`}function i(e){return`tracer:${n()}:${e}`}function a(t){if(t)return e()?t.id:i(`study:${t.supabaseUserId??t.id}`)}export{a as i,i as n,t as r,r as t};

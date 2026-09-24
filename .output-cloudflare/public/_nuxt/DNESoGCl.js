@@ -1,1 +1,0 @@
-function e(){return`strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`}export{e as t};

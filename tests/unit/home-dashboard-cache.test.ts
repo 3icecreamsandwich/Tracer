@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   clearCachedHomeDashboard,
   getCachedHomeDashboard,
+  hasSyncedPrivateSetsThisSession,
+  invalidateCachedHomeDashboard,
+  markPrivateSetsSyncedThisSession,
   setCachedHomeDashboard,
   toHomeDashboardSetItem,
 } from '../../src/composables/home-dashboard-cache'
@@ -46,5 +49,15 @@ describe('home dashboard cache', () => {
       title: 'Biology',
       cardCount: 24,
     })
+  })
+
+  it('invalidates a changed library without rerunning session sync', () => {
+    setCachedHomeDashboard({ items: [], folders: [], homeOrder: [] })
+    markPrivateSetsSyncedThisSession()
+    invalidateCachedHomeDashboard()
+    expect(getCachedHomeDashboard()).toBeNull()
+    expect(hasSyncedPrivateSetsThisSession()).toBe(true)
+    clearCachedHomeDashboard()
+    expect(hasSyncedPrivateSetsThisSession()).toBe(false)
   })
 })

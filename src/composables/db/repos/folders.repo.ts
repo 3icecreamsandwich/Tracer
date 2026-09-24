@@ -1,5 +1,6 @@
 import type { DbClient, SetFolder, Uuid } from '../types'
 import { nowIsoSql } from '../sql'
+import { invalidateCachedHomeDashboard } from '../../home-dashboard-cache'
 
 export type HomeLibraryOrderEntry = {
   kind: 'folder' | 'set'
@@ -56,6 +57,7 @@ export function createFoldersRepo(db: DbClient) {
       )
       const folder = await this.get(input.id)
       if (!folder) throw new Error('Failed to create folder')
+      invalidateCachedHomeDashboard()
       return folder
     },
 
@@ -81,6 +83,7 @@ export function createFoldersRepo(db: DbClient) {
       )
       const folder = await this.get(id)
       if (!folder) throw new Error('Folder not found')
+      invalidateCachedHomeDashboard()
       return folder
     },
 
@@ -94,12 +97,14 @@ export function createFoldersRepo(db: DbClient) {
          WHERE id IN (${placeholders});`,
         [folderId, ...uniqueIds]
       )
+      invalidateCachedHomeDashboard()
     },
 
     async reorder(folderIds: Uuid[]): Promise<void> {
       for (const [index, id] of folderIds.entries()) {
         await db.execute(`UPDATE folders SET sort_order = ? WHERE id = ?;`, [index, id])
       }
+      invalidateCachedHomeDashboard()
     },
 
     async listHomeOrder(): Promise<HomeLibraryOrderEntry[]> {
@@ -124,10 +129,12 @@ export function createFoldersRepo(db: DbClient) {
           [entry.kind, entry.id, index]
         )
       }
+      invalidateCachedHomeDashboard()
     },
 
     async delete(id: Uuid): Promise<void> {
       await db.execute(`DELETE FROM folders WHERE id = ?;`, [id])
+      invalidateCachedHomeDashboard()
     }
   }
 }
