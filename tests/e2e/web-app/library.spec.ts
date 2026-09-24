@@ -132,6 +132,9 @@ test('phone layout supports creation, study modes and settings without horizonta
     await page.goto(path)
     await expect(page.locator('body')).not.toContainText('Internal Server Error')
     if (path.endsWith('-flashcards')) await expect(page.getByRole('button', { name: 'Got it', exact: true })).toBeVisible()
+    else if (path.endsWith('-learn')) await expect(page.getByRole('button', { name: 'Practice settings' })).toBeVisible()
+    else if (path.endsWith('-match')) await expect(page.getByRole('button', { name: 'Start', exact: true })).toBeVisible()
+    else if (path.endsWith('-test')) await expect(page.getByRole('progressbar', { name: 'Test progress' })).toBeVisible()
     else await expect(page.locator('h1').first()).toBeVisible()
     for (const width of [320, 390]) {
       await page.setViewportSize({ width, height: 844 })
