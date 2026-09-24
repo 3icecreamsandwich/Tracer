@@ -1852,6 +1852,22 @@ const captchaMessages: Record<AppLanguage, Messages> = {
   ko: { 'auth.errorCaptcha': '보안 확인을 완료한 후 다시 시도하세요.' },
 }
 
+const ageConfirmationMessages: Partial<Record<AppLanguage, Messages>> = {
+  es: { 'auth.ageConfirmation': 'Confirmo que tengo al menos 13 años.', 'auth.errorAge': 'Tracer está destinado a personas de 13 años o más.' },
+  fr: { 'auth.ageConfirmation': 'Je confirme avoir au moins 13 ans.', 'auth.errorAge': 'Tracer est destiné aux personnes âgées de 13 ans et plus.' },
+  'zh-CN': { 'auth.ageConfirmation': '我确认自己已年满 13 周岁。', 'auth.errorAge': 'Tracer 仅供年满 13 周岁的人使用。' },
+  hi: { 'auth.ageConfirmation': 'मैं पुष्टि करता/करती हूँ कि मेरी उम्र कम से कम 13 वर्ष है।', 'auth.errorAge': 'Tracer केवल 13 वर्ष या उससे अधिक उम्र के लोगों के लिए है।' },
+  ar: { 'auth.ageConfirmation': 'أؤكد أن عمري 13 عامًا على الأقل.', 'auth.errorAge': 'Tracer مخصص للأشخاص الذين تبلغ أعمارهم 13 عامًا فأكثر.' },
+  de: { 'auth.ageConfirmation': 'Ich bestätige, dass ich mindestens 13 Jahre alt bin.', 'auth.errorAge': 'Tracer ist für Personen ab 13 Jahren bestimmt.' },
+  ru: { 'auth.ageConfirmation': 'Подтверждаю, что мне не менее 13 лет.', 'auth.errorAge': 'Tracer предназначен для людей от 13 лет.' },
+  ja: { 'auth.ageConfirmation': '私は13歳以上であることを確認します。', 'auth.errorAge': 'Tracer は13歳以上の方を対象としています。' },
+  ko: { 'auth.ageConfirmation': '본인은 만 13세 이상임을 확인합니다.', 'auth.errorAge': 'Tracer는 만 13세 이상을 대상으로 합니다.' },
+}
+
+for (const [language, translations] of Object.entries(ageConfirmationMessages)) {
+  Object.assign(messageTargets[language as AppLanguage], translations)
+}
+
 for (const language of Object.keys(captchaMessages) as AppLanguage[]) {
   Object.assign(messageTargets[language], captchaMessages[language])
 }
