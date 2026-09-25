@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-const migration = readFileSync(fileURLToPath(new URL('../../supabase/migrations/20260915233606_deny_direct_client_access_to_internal_tables.sql', import.meta.url)), 'utf8')
+const migration = readFileSync(fileURLToPath(new URL('../../supabase/migrations/20260915233702_deny_direct_client_access_to_internal_tables.sql', import.meta.url)), 'utf8')
 const crossUserTest = readFileSync(fileURLToPath(new URL('../../supabase/tests/cross_user_authorization.sql', import.meta.url)), 'utf8')
 
 describe('Supabase cross-user guardrails', () => {

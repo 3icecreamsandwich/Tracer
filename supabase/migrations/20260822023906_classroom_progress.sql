@@ -102,15 +102,10 @@ begin
     on ar.assignment_id = a.id
    and ar.student_id = current_user_id
    and ar.status = 'assigned'
-  join public.class_memberships as student_membership
-    on student_membership.class_id = a.class_id
-   and student_membership.user_id = current_user_id
-   and student_membership.role = 'student'
-   and student_membership.status = 'active'
   where a.id = requested_assignment_id
     and a.status = 'published'
-    and (a.available_at is null or a.available_at <= requested_started_at)
-    and (a.closes_at is null or requested_submitted_at <= a.closes_at)
+    and (a.available_at is null or a.available_at <= pg_catalog.now())
+    and (a.closes_at is null or a.closes_at >= pg_catalog.now())
     and (a.mode = 'any' or a.mode = normalized_mode);
 
   if not found then
@@ -251,7 +246,7 @@ begin
       attempt.submitted_at,
       attempt.duration_seconds,
       pg_catalog.round(
-        (attempt.score_earned / nullif(attempt.score_possible, 0)) * 100,
+        (attempt.score_earned / pg_catalog.nullif(attempt.score_possible, 0)) * 100,
         2
       ) as accuracy_percent
     from public.attempts as attempt
@@ -266,7 +261,7 @@ begin
       pg_catalog.count(*) as attempt_count,
       pg_catalog.round(
         pg_catalog.max(
-          (attempt.score_earned / nullif(attempt.score_possible, 0)) * 100
+          (attempt.score_earned / pg_catalog.nullif(attempt.score_possible, 0)) * 100
         ),
         2
       ) as best_accuracy_percent

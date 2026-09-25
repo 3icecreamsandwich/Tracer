@@ -1,7 +1,3 @@
--- Keep the privileged attempt writer out of the exposed public schema. The
--- public RPC is an invoker wrapper; the private implementation still performs
--- all auth.uid(), assignment-recipient, timestamp, score, and limit checks.
-
 begin;
 
 alter function public.submit_tracer_assignment_attempt(

@@ -77,7 +77,7 @@ describe('Supabase session restoration', () => {
       online: true,
       identity: { id: 'user-1' },
     })
-    expect(finishProviderKeySync).toBeTypeOf('function')
+    await vi.waitFor(() => expect(finishProviderKeySync).toBeTypeOf('function'))
 
     finishProviderKeySync?.()
     await waitForProviderKeySync()

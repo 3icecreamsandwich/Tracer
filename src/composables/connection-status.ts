@@ -45,15 +45,6 @@ let networkRefreshRequest: Promise<void> | null = null
 let networkCheckedAt = 0
 let listenersInstalled = false
 
-type ConnectionStatusSnapshot = {
-  checkedAt: number
-  accountConnectionStatus: Exclude<AccountConnectionStatus, 'pending'>
-  accountIdentity: AuthIdentity | null
-  providerApiKeyPresence: ProviderApiKeyPresence
-  openAiCompatConfig: OpenAiCompatConfig
-  githubModelsAuthState: GithubModelsAuthState
-}
-
 function normalizedOpenAiCompatConfig(config?: OpenAiCompatConfig | null): OpenAiCompatConfig {
   return {
     baseURL: config?.baseURL.trim() ?? '',
@@ -68,48 +59,11 @@ function applyGithubState(state: GithubModelsAuthState) {
     : []
 }
 
-function readSessionSnapshot(): ConnectionStatusSnapshot | null {
-  if (typeof window === 'undefined') return null
+function clearLegacySessionSnapshot() {
+  if (typeof window === 'undefined') return
   try {
-    const parsed = JSON.parse(window.sessionStorage.getItem(CONNECTION_STATUS_SNAPSHOT_KEY) ?? '') as Partial<ConnectionStatusSnapshot>
-    if (!Number.isFinite(parsed.checkedAt)) return null
-    if (!['online', 'offline', 'signed_out'].includes(String(parsed.accountConnectionStatus))) return null
-    if (!parsed.providerApiKeyPresence || !parsed.openAiCompatConfig || !parsed.githubModelsAuthState) return null
-    return parsed as ConnectionStatusSnapshot
-  } catch {
-    return null
-  }
-}
-
-function writeSessionSnapshot() {
-  if (typeof window === 'undefined' || !initialized.value || accountConnectionStatus.value === 'pending') return
-  try {
-    window.sessionStorage.setItem(CONNECTION_STATUS_SNAPSHOT_KEY, JSON.stringify({
-      checkedAt: networkCheckedAt,
-      accountConnectionStatus: accountConnectionStatus.value,
-      accountIdentity: accountIdentity.value,
-      providerApiKeyPresence: providerApiKeyPresence.value,
-      openAiCompatConfig: openAiCompatConfig.value,
-      githubModelsAuthState: githubModelsAuthState.value,
-    } satisfies ConnectionStatusSnapshot))
+    window.sessionStorage.removeItem(CONNECTION_STATUS_SNAPSHOT_KEY)
   } catch {}
-}
-
-function restoreFreshSessionSnapshot(now = Date.now()) {
-  const snapshot = readSessionSnapshot()
-  if (!snapshot || now - snapshot.checkedAt >= NETWORK_STATUS_MAX_AGE_MS) return false
-  accountConnectionStatus.value = snapshot.accountConnectionStatus
-  accountIdentity.value = snapshot.accountIdentity
-  providerApiKeyPresence.value = snapshot.providerApiKeyPresence
-  providerApiKeyPresencePending.value = false
-  providerKeySyncPending.value = false
-  openAiCompatConfig.value = normalizedOpenAiCompatConfig(snapshot.openAiCompatConfig)
-  openAiCompatConfigPending.value = false
-  applyGithubState(snapshot.githubModelsAuthState)
-  githubConnectionPending.value = false
-  initialized.value = true
-  networkCheckedAt = snapshot.checkedAt
-  return true
 }
 
 async function refreshProviderPresence() {
@@ -151,9 +105,9 @@ export async function refreshGithubConnectionStatus(): Promise<void> {
 }
 
 export async function initializeConnectionStatuses(): Promise<void> {
+  clearLegacySessionSnapshot()
   if (initialized.value) return
   if (initializationRequest) return initializationRequest
-  if (restoreFreshSessionSnapshot()) return
 
   const initialProviderPresence = (async () => {
     try {
@@ -190,7 +144,6 @@ export async function initializeConnectionStatuses(): Promise<void> {
   ]).then(() => {
     initialized.value = true
     networkCheckedAt = Date.now()
-    writeSessionSnapshot()
   }).finally(() => {
     if (initializationRequest === request) initializationRequest = null
   })
@@ -211,7 +164,6 @@ export async function refreshNetworkConnectionStatuses(options: { force?: boolea
     refreshGithubConnection(),
   ]).then(() => {
     networkCheckedAt = Date.now()
-    writeSessionSnapshot()
   }).finally(() => {
     if (networkRefreshRequest === request) networkRefreshRequest = null
   })
@@ -223,14 +175,12 @@ export function setAccountConnectionOnline(identity: AuthIdentity) {
   accountIdentity.value = identity
   accountConnectionStatus.value = 'online'
   providerKeySyncPending.value = true
-  writeSessionSnapshot()
 }
 
 export function setAccountConnectionSignedOut() {
   accountIdentity.value = null
   accountConnectionStatus.value = 'signed_out'
   providerKeySyncPending.value = false
-  writeSessionSnapshot()
 }
 
 export function markAccountConnectionOffline() {
@@ -238,7 +188,6 @@ export function markAccountConnectionOffline() {
     accountConnectionStatus.value = 'offline'
   }
   networkCheckedAt = 0
-  writeSessionSnapshot()
 }
 
 export function setProviderApiKeyPresence(id: ProviderApiKeyId, present: boolean) {
@@ -247,19 +196,16 @@ export function setProviderApiKeyPresence(id: ProviderApiKeyId, present: boolean
     [id]: present,
   }
   providerApiKeyPresencePending.value = false
-  writeSessionSnapshot()
 }
 
 export function setOpenAiCompatConnectionConfig(config: OpenAiCompatConfig) {
   openAiCompatConfig.value = normalizedOpenAiCompatConfig(config)
   openAiCompatConfigPending.value = false
-  writeSessionSnapshot()
 }
 
 export function setGithubConnectionState(state: GithubModelsAuthState) {
   applyGithubState(state)
   githubConnectionPending.value = false
-  writeSessionSnapshot()
 }
 
 export function installConnectionStatusListeners() {
@@ -288,7 +234,7 @@ function onWindowFocus() {
   void refreshNetworkConnectionStatuses()
 }
 
-export function resetConnectionStatusCache(options: { clearSession?: boolean } = {}) {
+export function resetConnectionStatusCache() {
   initializationRequest = null
   networkRefreshRequest = null
   accountConnectionStatus.value = 'pending'
@@ -302,11 +248,7 @@ export function resetConnectionStatusCache(options: { clearSession?: boolean } =
   githubConnectionPending.value = true
   initialized.value = false
   networkCheckedAt = 0
-  if (options.clearSession !== false && typeof window !== 'undefined') {
-    try {
-      window.sessionStorage.removeItem(CONNECTION_STATUS_SNAPSHOT_KEY)
-    } catch {}
-  }
+  clearLegacySessionSnapshot()
 }
 
 export function useConnectionStatus() {

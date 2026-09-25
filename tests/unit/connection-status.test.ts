@@ -99,8 +99,11 @@ describe('session connection-status cache', () => {
     expect(mocks.aiOpenAiCompatGetConfig).toHaveBeenCalledTimes(1)
   })
 
-  it('hydrates a fresh document from session storage without repeating remote checks', async () => {
+  it('removes legacy session snapshots and reloads statuses after a fresh document', async () => {
     const values = new Map<string, string>()
+    values.set(CONNECTION_STATUS_SNAPSHOT_KEY, JSON.stringify({
+      accountIdentity: { id: 'stale-user', email: 'stale@example.com', userMetadata: { secret: 'old-value' } },
+    }))
     vi.stubGlobal('window', {
       sessionStorage: {
         getItem: (key: string) => values.get(key) ?? null,
@@ -110,15 +113,16 @@ describe('session connection-status cache', () => {
     })
 
     await initializeConnectionStatuses()
-    expect(values.has(CONNECTION_STATUS_SNAPSHOT_KEY)).toBe(true)
+    expect(values.has(CONNECTION_STATUS_SNAPSHOT_KEY)).toBe(false)
 
-    resetConnectionStatusCache({ clearSession: false })
+    resetConnectionStatusCache()
     await initializeConnectionStatuses()
 
     expect(useConnectionStatus().accountConnectionStatus.value).toBe('online')
     expect(useConnectionStatus().accountIdentity.value?.email).toBe('user@example.com')
-    expect(mocks.restoreAuthSession).toHaveBeenCalledTimes(1)
-    expect(mocks.githubModelsLoadAuthState).toHaveBeenCalledTimes(1)
-    expect(mocks.aiProviderApiKeyPresence).toHaveBeenCalledTimes(2)
+    expect(mocks.restoreAuthSession).toHaveBeenCalledTimes(2)
+    expect(mocks.githubModelsLoadAuthState).toHaveBeenCalledTimes(2)
+    expect(mocks.aiProviderApiKeyPresence).toHaveBeenCalledTimes(4)
+    expect(values.has(CONNECTION_STATUS_SNAPSHOT_KEY)).toBe(false)
   })
 })

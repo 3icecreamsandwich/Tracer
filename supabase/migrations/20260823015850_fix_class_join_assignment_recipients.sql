@@ -1,4 +1,4 @@
--- Repair class joining and give late-joining students access to all existing
+-- Repair class joining and give late-joining students access to existing
 -- published assignments in the same transaction.
 
 begin;

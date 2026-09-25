@@ -1,7 +1,3 @@
--- Keep privileged classroom writers out of the API-exposed public schema.
--- Public entrypoints remain security-invoker wrappers with the same signatures,
--- so existing clients keep working while Supabase's API surface stays narrow.
-
 begin;
 
 create or replace function private.join_tracer_class(requested_code text)
@@ -28,10 +24,8 @@ begin
     raise exception 'Authentication required' using errcode = '42501';
   end if;
   if not exists (
-    select 1
-    from public.user_roles as ur
-    where ur.user_id = current_user_id
-      and ur.role in ('student', 'super')
+    select 1 from public.user_roles as ur
+    where ur.user_id = current_user_id and ur.role in ('student', 'super')
   ) then
     raise exception 'Student account required' using errcode = '42501';
   end if;
@@ -45,8 +39,7 @@ begin
 
   select c.* into matched_class
   from public.classes as c
-  where c.join_code = normalized_code
-    and c.archived_at is null;
+  where c.join_code = normalized_code and c.archived_at is null;
 
   if matched_class.id is null then
     raise exception 'Class code not found' using errcode = 'P0002';
@@ -58,8 +51,7 @@ begin
 
   select cm.status into membership_status
   from public.class_memberships as cm
-  where cm.class_id = matched_class.id
-    and cm.user_id = current_user_id;
+  where cm.class_id = matched_class.id and cm.user_id = current_user_id;
 
   if membership_status <> 'active' then
     raise exception 'Class membership is not active' using errcode = '42501';
@@ -68,8 +60,7 @@ begin
   insert into public.assignment_recipients (assignment_id, student_id, assigned_at, status)
   select assignment.id, current_user_id, pg_catalog.now(), 'assigned'
   from public.assignments as assignment
-  where assignment.class_id = matched_class.id
-    and assignment.status = 'published'
+  where assignment.class_id = matched_class.id and assignment.status = 'published'
   on conflict on constraint assignment_recipients_pkey do nothing;
 
   return query
@@ -102,8 +93,6 @@ $function$;
 revoke all on function public.join_tracer_class(text) from public, anon;
 grant execute on function public.join_tracer_class(text) to authenticated;
 
--- The eight-argument overload was superseded by the hardened ten-argument
--- wrapper and is no longer called by the application.
 drop function if exists public.submit_tracer_assignment_attempt(
   uuid, uuid, text, timestamptz, timestamptz, numeric, numeric, integer
 );

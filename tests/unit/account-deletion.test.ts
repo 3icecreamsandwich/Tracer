@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const migration = readFileSync(
-  new URL('../../supabase/migrations/20260912230224_preserve_publications_on_account_delete.sql', import.meta.url),
+  new URL('../../supabase/migrations/20260916045145_preserve_publications_on_account_delete.sql', import.meta.url),
   'utf8',
 )
 const dialog = readFileSync(new URL('../../components/DeleteAccountDialog.vue', import.meta.url), 'utf8')

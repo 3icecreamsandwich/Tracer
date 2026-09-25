@@ -78,8 +78,8 @@ begin
    and student_membership.status = 'active'
   where a.id = requested_assignment_id
     and a.status = 'published'
-    and (a.available_at is null or a.available_at <= requested_started_at)
-    and (a.closes_at is null or requested_submitted_at <= a.closes_at)
+    and (a.available_at is null or a.available_at <= pg_catalog.now())
+    and (a.closes_at is null or a.closes_at >= pg_catalog.now())
     and (a.mode = 'any' or a.mode = normalized_mode);
 
   if not found then

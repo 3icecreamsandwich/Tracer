@@ -67,19 +67,19 @@ const allowEmptyAttemptsSql = readFileSync(
   'utf8',
 )
 const matchLeaderboardSql = readFileSync(
-  fileURLToPath(new URL('../../supabase/migrations/20260824013548_assigned_match_leaderboard.sql', import.meta.url)),
+  fileURLToPath(new URL('../../supabase/migrations/20260824014841_assigned_match_leaderboard.sql', import.meta.url)),
   'utf8',
 )
 const hardenedMatchAttemptSql = readFileSync(
-  fileURLToPath(new URL('../../supabase/migrations/20260824015007_harden_match_attempt_rpc.sql', import.meta.url)),
+  fileURLToPath(new URL('../../supabase/migrations/20260824015049_harden_match_attempt_rpc.sql', import.meta.url)),
   'utf8',
 )
 const restrictStudentManagementSql = readFileSync(
-  fileURLToPath(new URL('../../supabase/migrations/20260912041942_restrict_student_class_management.sql', import.meta.url)),
+  fileURLToPath(new URL('../../supabase/migrations/20260912042402_restrict_student_class_management.sql', import.meta.url)),
   'utf8',
 )
 const hardenedExposedClassroomRpcsSql = readFileSync(
-  fileURLToPath(new URL('../../supabase/migrations/20260912000000_harden_exposed_classroom_rpcs.sql', import.meta.url)),
+  fileURLToPath(new URL('../../supabase/migrations/20260912161221_harden_exposed_classroom_rpcs.sql', import.meta.url)),
   'utf8',
 )
 const matchLeaderboardComponentSource = readFileSync(
