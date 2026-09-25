@@ -35,3 +35,7 @@ tempfile = "3"
 
 [profile.dev.package.scrypt]
 opt-level = 3
+
+[patch.crates-io]
+# Tauri's GTK3 stack requires glib 0.18; backport gtk-rs/gtk-rs-core#1343.
+glib = { path = "../vendor/glib-0.18.5" }
