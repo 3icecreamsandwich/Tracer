@@ -333,7 +333,10 @@ function clearError() { error.value = null; errorCode.value = null }
 function clearCaptcha() { captchaToken.value = ''; turnstileWidget.value?.reset() }
 function onCaptchaVerified(token: string) { captchaToken.value = token; clearError() }
 function onCaptchaExpired() { captchaToken.value = '' }
-function onCaptchaError() { captchaToken.value = ''; error.value = t('auth.errorCaptcha') }
+// Turnstile only protects email actions. A browser extension, network filter, or
+// privacy setting can prevent it from loading, but that must not show a red
+// error or interfere with the separate Google OAuth flow.
+function onCaptchaError() { captchaToken.value = '' }
 function toggleMode() { mode.value = mode.value === 'signup' ? 'signin' : 'signup'; accountPassword.value = ''; showAccountPassword.value = false; pendingEmailPassword.value = ''; acceptedTerms.value = false; ageConfirmed.value = false; clearCaptcha(); clearError() }
 function returnToSignIn() { void cancelPendingEmailVerification(pendingVerification.value); pendingVerification.value = null; pendingEmailPassword.value = ''; stage.value = 'account'; mode.value = 'signin'; accountPassword.value = ''; showAccountPassword.value = false; clearCaptcha(); clearError() }
 
