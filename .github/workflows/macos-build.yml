@@ -31,7 +31,7 @@ jobs:
           node-version: 24
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.120.0
+        uses: dtolnay/rust-toolchain@1.88.0
         with:
           targets: x86_64-apple-darwin,aarch64-apple-darwin
 
