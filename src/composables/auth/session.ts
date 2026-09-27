@@ -160,7 +160,10 @@ export async function clearAuthSession(options: { remote?: boolean } = {}): Prom
   const { clearCachedHomeDashboard } = await import('../home-dashboard-cache')
   clearCachedHomeDashboard()
   if (options.remote !== false) {
-    try { await getSupabaseClient().auth.signOut({ scope: 'local' }) } catch {}
+    // A deliberate sign-out must revoke the session at Supabase as well as on
+    // this device. Keeping the default local-only leaves a valid refresh token
+    // on the server until it expires.
+    try { await getSupabaseClient().auth.signOut({ scope: 'global' }) } catch {}
   }
   clearSupabaseMemorySession()
   if (hasTauriRuntime()) {
