@@ -4,10 +4,13 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 describe('page metadata', () => {
-  it('ships a cache-versioned favicon in the initial Nuxt document head', () => {
+  it('ships a PNG favicon in the initial Nuxt document head', () => {
     const config = readFileSync(fileURLToPath(new URL('../../nuxt.config.ts', import.meta.url)), 'utf8')
+    const favicon = readFileSync(fileURLToPath(new URL('../../public/tracer-favicon.png', import.meta.url)))
     expect(config).toContain("rel: 'icon'")
-    expect(config).toContain("href: '/favicon.ico?v=2'")
+    expect(config).toContain("type: 'image/png'")
+    expect(config).toContain("href: '/tracer-favicon.png'")
+    expect(favicon.subarray(1, 4).toString()).toBe('PNG')
   })
 
   it.each([

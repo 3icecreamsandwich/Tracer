@@ -8,7 +8,7 @@ export default defineNuxtConfig({
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }],
       // Keep this in the initial document head. Browsers often do not refresh a
       // favicon that is added only after the client-side app hydrates.
-      link: [{ rel: 'icon', type: 'image/x-icon', sizes: '32x32', href: '/favicon.ico?v=2' }],
+      link: [{ rel: 'icon', type: 'image/png', sizes: '32x32', href: '/tracer-favicon.png' }],
     }
   },
   runtimeConfig: {
