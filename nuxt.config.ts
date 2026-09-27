@@ -4,7 +4,12 @@ export default defineNuxtConfig({
   app: {
     // app.tracerquiz.com uses '/'; set NUXT_APP_BASE_URL for a subdirectory.
     baseURL: process.env.NUXT_APP_BASE_URL || '/',
-    head: { meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }] }
+    head: {
+      meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }],
+      // Keep this in the initial document head. Browsers often do not refresh a
+      // favicon that is added only after the client-side app hydrates.
+      link: [{ rel: 'icon', type: 'image/x-icon', sizes: '32x32', href: '/favicon.ico?v=2' }],
+    }
   },
   runtimeConfig: {
     githubOauthClientId: process.env.VITE_GITHUB_OAUTH_CLIENT_ID || '',

@@ -72,10 +72,6 @@ export function installPageMetadata() {
     titleTemplate: (pageTitle) => pageTitle && pageTitle !== 'Tracer'
       ? `Tracer | ${pageTitle}`
       : 'Tracer',
-    link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-      { rel: 'shortcut icon', type: 'image/x-icon', href: '/favicon.ico' },
-    ],
   })
 
   watch(

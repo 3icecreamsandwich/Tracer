@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { getPageTitleFallback } from '../../src/composables/page-metadata'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 
 describe('page metadata', () => {
+  it('ships a cache-versioned favicon in the initial Nuxt document head', () => {
+    const config = readFileSync(fileURLToPath(new URL('../../nuxt.config.ts', import.meta.url)), 'utf8')
+    expect(config).toContain("rel: 'icon'")
+    expect(config).toContain("href: '/favicon.ico?v=2'")
+  })
+
   it.each([
     ['/', 'Library'],
     ['/create/generate', 'Generate'],
