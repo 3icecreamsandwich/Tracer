@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
   setSession: vi.fn(),
+  signOut: vi.fn(),
   clearMemory: vi.fn(),
   syncCloudProviderApiKeysToDevice: vi.fn(async () => []),
 }))
@@ -14,7 +15,7 @@ vi.mock('../../src/composables/auth/client', () => ({
   getSupabaseClient: () => ({
     auth: {
       setSession: mocks.setSession,
-      signOut: vi.fn(),
+      signOut: mocks.signOut,
     },
   }),
 }))
@@ -41,6 +42,7 @@ const refreshedSession = {
 beforeEach(() => {
   mocks.invoke.mockReset()
   mocks.setSession.mockReset()
+  mocks.signOut.mockReset()
   mocks.clearMemory.mockReset()
   mocks.syncCloudProviderApiKeysToDevice.mockReset()
   mocks.syncCloudProviderApiKeysToDevice.mockResolvedValue([])
@@ -51,6 +53,14 @@ beforeEach(() => {
 })
 
 describe('Supabase session restoration', () => {
+  it('revokes the server session for a deliberate sign-out', async () => {
+    const { clearAuthSession } = await import('../../src/composables/auth/session')
+
+    await clearAuthSession()
+
+    expect(mocks.signOut).toHaveBeenCalledWith({ scope: 'global' })
+  })
+
   it('shares one refresh across simultaneous startup callers', async () => {
     mocks.setSession.mockResolvedValue({ data: { session: refreshedSession }, error: null })
 
