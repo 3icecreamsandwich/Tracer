@@ -18,5 +18,5 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Accessibility Statement · Tracer' })
+useHead({ title: 'Accessibility Statement' })
 </script>

@@ -44,5 +44,5 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Privacy Policy · Tracer' })
+useHead({ title: 'Privacy Policy' })
 </script>

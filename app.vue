@@ -11,6 +11,7 @@ import { textScaleInit } from '~/src/composables/text-scale'
 import { floatingChatInitFromDb } from '~/src/composables/floating-chat'
 import { useLockSession } from '~/src/composables/lock-session'
 import { hasTauriRuntime } from '~/src/composables/tauri'
+import { installPageMetadata } from '~/src/composables/page-metadata'
 import {
   CONNECTION_STARTUP_STATE_KEY,
   isDocumentReload,
@@ -19,6 +20,7 @@ import {
 } from '~/src/composables/refresh-startup'
 
 const { unlockedThisSession } = useLockSession()
+installPageMetadata()
 themeInitFromCache()
 let linkedFolderStartTimer: number | null = null
 let linkedFolderModule: Promise<typeof import('~/src/composables/generate/linked-folders/sync')> | null = null

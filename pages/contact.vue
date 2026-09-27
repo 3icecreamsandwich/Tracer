@@ -13,5 +13,5 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Contact · Tracer' })
+useHead({ title: 'Contact' })
 </script>
