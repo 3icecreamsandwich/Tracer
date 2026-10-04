@@ -201,6 +201,14 @@ pub fn run() {
             app.manage(VaultKeyState::default());
             app.manage(OAuthCallbackState::default());
             app.manage(TestModeExitState::default());
+
+            #[cfg(desktop)]
+            {
+                app.handle()
+                    .plugin(tauri_plugin_updater::Builder::new().build())?;
+                app.handle().plugin(tauri_plugin_process::init())?;
+            }
+
             Ok(())
         })
         .plugin(tauri_plugin_dialog::init())
