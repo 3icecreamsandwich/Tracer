@@ -122,7 +122,7 @@ jobs:
           releaseName: Tracer v__VERSION__
           releaseBody: Download the installer for your operating system.
           releaseDraft: true
-          prerelease: false
+          prerelease: true
           uploadUpdaterJson: true
           uploadUpdaterSignatures: true
           updaterJsonPreferNsis: true
