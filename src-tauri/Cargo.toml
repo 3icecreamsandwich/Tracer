@@ -1,6 +1,6 @@
 [package]
 name = "Tracer"
-version = "0.1.0-beta"
+version = "0.0.1-beta"
 description = "Tracer"
 authors = ["you"]
 edition = "2021"
