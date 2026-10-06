@@ -13,12 +13,13 @@
         <div>
           <h1 class="text-2xl font-semibold">{{ t('common.edit') }} {{ t('home.setKind') }}</h1>
           <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Update the title, description, and cards in this set.
+            {{ isPublishedEdit ? 'Changes are published to the catalog when you save.' : 'Update the title, description, and cards in this set.' }}
           </p>
         </div>
 
         <div class="flex shrink-0 flex-wrap items-center gap-2">
           <button
+            v-if="!isPublishedEdit"
             type="button"
             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             :disabled="busy || factCheckBusy || !setId"
@@ -42,7 +43,7 @@
             @click="onUpdate()"
           >
             <LoadingSpinner v-if="busy" size="sm" />
-            <template v-else>{{ t('common.update') }}</template>
+            <template v-else>{{ isPublishedEdit ? 'Publish changes' : t('common.update') }}</template>
           </button>
         </div>
       </div>
@@ -319,7 +320,13 @@
 
 <script setup lang="ts">
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
-import { getPublicationSettings, updatePublishedSet, type PublicationSettings } from '~/src/composables/published-sets'
+import {
+  getOwnedPublishedSet,
+  getPublicationSettings,
+  updateOwnedPublishedSet,
+  updatePublishedSet,
+  type PublicationSettings,
+} from '~/src/composables/published-sets'
 
 import { lockGetStatus } from '~/src/composables/lock'
 import { useLockSession } from '~/src/composables/lock-session'
@@ -352,6 +359,7 @@ const router = useRouter()
 const { language, t } = useAppLanguage()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.id === 'demo')
+const isPublishedEdit = computed(() => route.query.published === '1')
 
 const setId = computed<Uuid | null>(() => {
   const raw = route.params.id
@@ -644,7 +652,44 @@ async function loadSet() {
     busy.value = false
   }
 }
+async function loadPublishedSet() {
+  const id = setId.value
 
+  if (!id) {
+    loadError.value = 'Missing published set id.'
+    return
+  }
+
+  busy.value = true
+  loadError.value = null
+
+  try {
+    const published = await getOwnedPublishedSet(id)
+
+    setDraftFromSet({
+      id: published.id as Uuid,
+      folderId: null,
+      title: published.title,
+      description: published.description,
+      terms: published.terms,
+      iconKey: published.icon_key,
+      iconTone: published.icon_tone,
+      createdAt: published.created_at,
+      updatedAt: published.updated_at,
+    })
+
+    initialLoading.value = false
+    await nextTick()
+    titleEl.value?.focus()
+  } catch (err) {
+    loadError.value = toErrorMessage(
+      err,
+      'You can only edit catalog sets you published.',
+    )
+  } finally {
+    busy.value = false
+  }
+}
 async function initWebDemoSet() {
   const id = setId.value ?? ('demo' as Uuid)
   setDraftFromSet(createWebPreviewDemoSet(t, {
@@ -659,7 +704,7 @@ async function initWebDemoSet() {
 }
 
 watch(language, async () => {
-  if (!isWebPreview.value) return;
+  if (!isWebPreview.value || isPublishedEdit.value) return;
   await initWebDemoSet()
 })
 
@@ -679,6 +724,12 @@ async function onUpdate(skipDuplicateReview = false, updatePublic = false) {
       id, folderId: null, title: validated.title, description: validated.description,
       iconKey: iconKey.value, iconTone: iconTone.value, terms,
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    }
+    if (isPublishedEdit.value) {
+      await updateOwnedPublishedSet(id, snapshot)
+      notifySearchItemsChanged()
+      await router.replace(`/public-sets/${id}`)
+      return
     }
     if (!isWebPreview.value) {
       const db = await useTracerDb()
@@ -727,6 +778,10 @@ async function onDelete() {
 
 onMounted(async () => {
   try {
+    if (isPublishedEdit.value) {
+      await loadPublishedSet()
+      return
+    }
     if (isWebPreview.value) {
       await initWebDemoSet()
       void loadPublication()

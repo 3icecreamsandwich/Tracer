@@ -7,7 +7,7 @@ export const PUBLIC_SET_TAGS = [
   'history',
   'math',
   'science',
-  'coding',
+  'computer science',
 ] as const
 export type PublicSetTag = (typeof PUBLIC_SET_TAGS)[number]
 export type PublishedSetSummary = {
@@ -135,6 +135,45 @@ export function getPublishedSet(id: string): Promise<PublishedSet> {
     8,
   )
 }
+export async function isPublishedSetOwner(id: string): Promise<boolean> {
+  const { db, user } = await publishingSession()
+
+  if (!user) return false
+
+  const { data, error } = await db
+    .from('published_sets')
+    .select('id')
+    .eq('id', id)
+    .eq('publisher_id', user.id)
+    .maybeSingle()
+
+  if (error) throw error
+
+  return Boolean(data)
+}
+export async function getOwnedPublishedSet(
+  id: string,
+): Promise<PublishedSet> {
+  const { db, user } = await publishingSession()
+
+  if (!user) {
+    throw new Error('Sign in to edit a published set.')
+  }
+
+  const { data, error } = await db
+    .from('published_sets')
+    .select(
+      'id,title,description,publisher_name,publisher_username,publisher_is_dev,tags,allow_copying,card_count,created_at,updated_at,terms,icon_key,icon_tone',
+    )
+    .eq('id', id)
+    .eq('publisher_id', user.id)
+    .single()
+
+  if (error) throw error
+
+  return data as PublishedSet
+}
+
 export function prefetchPublishedSet(id: string) {
   void getPublishedSet(id).catch(() => {})
 }
@@ -239,5 +278,35 @@ export async function updatePublishedSet(set: FlashcardSet) {
   catalogCache.clear()
   detailCache.clear()
   settingsCache.clear()
+  return data.id as string
+}
+export async function updateOwnedPublishedSet(
+  id: string,
+  set: FlashcardSet,
+) {
+  const { db, user } = await publishingSession()
+
+  if (!user) {
+    throw new Error('Sign in to edit a published set.')
+  }
+
+  const { data, error } = await db
+    .from('published_sets')
+    .update({
+      title: set.title.trim(),
+      description: set.description,
+      terms: set.terms,
+      icon_key: set.iconKey ?? null,
+      icon_tone: set.iconTone ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('publisher_id', user.id)
+    .select('id')
+    .single()
+
+  if (error) throw error
+
+  clearPublishedSetCache()
   return data.id as string
 }

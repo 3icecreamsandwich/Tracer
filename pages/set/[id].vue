@@ -37,6 +37,13 @@
                                 t("common.edit")
                             }}</span>
                         </NuxtLink>
+                        <NuxtLink
+                            v-else-if="set && canEditPublishedSet"
+                            :to="`/set/${set.id}/edit?published=1`"
+                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
+                        >
+                            Edit
+                        </NuxtLink>
                         <button
                             type="button"
                             class="inline-flex items-center rounded-md border border-slate-800 bg-black px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-60 dark:border-slate-200 dark:bg-white dark:text-black dark:hover:bg-slate-300"
@@ -2563,6 +2570,7 @@ import { studyStorageOwner } from "~/src/composables/platform/web";
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import {
     getPublishedSet,
+    isPublishedSetOwner,
     publishedSetToStudySet,
     type PublishedSet,
 } from "~/src/composables/published-sets";
@@ -2687,6 +2695,7 @@ import {
 
 const props = defineProps<{ publicSetId?: string }>();
 const isPublicSet = computed(() => Boolean(props.publicSetId));
+const canEditPublishedSet = ref(false);
 const publishedSet = ref<PublishedSet | null>(null);
 const route = useRoute();
 const router = useRouter();
@@ -3369,6 +3378,9 @@ async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
             : "demo";
     if (isPublicSet.value) {
         publishedSet.value = await getPublishedSet(props.publicSetId!);
+        void isPublishedSetOwner(props.publicSetId!)
+            .then((ownsSet) => (canEditPublishedSet.value = ownsSet))
+            .catch(() => (canEditPublishedSet.value = false));
         set.value = publishedSetToStudySet(publishedSet.value);
         if (hasTauriRuntime()) {
             void loadAppSettingsOnce()
