@@ -7,7 +7,7 @@ export const PUBLIC_SET_TAGS = [
   'history',
   'math',
   'science',
-  'computer science',
+  'coding',
 ] as const
 export type PublicSetTag = (typeof PUBLIC_SET_TAGS)[number]
 export type PublishedSetSummary = {

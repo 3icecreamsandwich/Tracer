@@ -5,8 +5,6 @@ export const publicSetMessages: Record<string, Record<string, string>> = {
     'public.publishNow': 'Publish Now',
     'public.tags': 'Subjects',
     'public.allowCopying': 'Allow copying',
-    'public.snapshot':
-      'Publish a public snapshot. Publish again to update it. Copying controls Tracer’s copy and download actions.',
     'public.published': 'Your set is published.',
     'public.publishFailed': 'Could not publish the set. Check your connection and try again.',
     'public.view': 'View published set',
@@ -29,7 +27,7 @@ export const publicSetMessages: Record<string, Record<string, string>> = {
     'public.tag.history': 'History',
     'public.tag.math': 'Math',
     'public.tag.science': 'Science',
-    'public.tag.coding': 'Coding',
+    'public.tag.coding': 'Computer Science',
   },
   es: {
     'public.share': 'Compartir',

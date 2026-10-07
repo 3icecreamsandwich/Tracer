@@ -92,7 +92,6 @@
                         aria-hidden="true"
                         class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" /></span
             ></label>
-            <p class="text-xs text-slate-500">{{ t("public.snapshot") }}</p>
         </div>
         <p v-if="message" role="status" class="mt-4 text-sm">{{ message }}</p>
         <p
