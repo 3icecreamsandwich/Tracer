@@ -25,6 +25,17 @@ with check (
   and status = 'new'
   and reviewed_at is null
   and reviewed_by is null
+  and (
+    not exists (
+      select 1 from public.published_sets set_to_report
+      where set_to_report.id = published_set_id
+        and set_to_report.publisher_id = (select auth.uid())
+    )
+    or exists (
+      select 1 from public.user_roles roles
+      where roles.user_id = (select auth.uid()) and roles.role = 'super'
+    )
+  )
 );
 
 create policy "Super account can review public set reports"

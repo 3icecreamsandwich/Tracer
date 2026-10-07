@@ -45,7 +45,7 @@
                             Edit
                         </NuxtLink>
                         <NuxtLink
-                            v-if="set && isPublicSet"
+                            v-if="set && isPublicSet && publicSetReportable"
                             :to="`/report?set=${encodeURIComponent(set.id)}`"
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
                         >
@@ -2577,6 +2577,7 @@ import { studyStorageOwner } from "~/src/composables/platform/web";
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import {
     getPublishedSet,
+    canReportPublishedSet,
     isPublishedSetOwner,
     publishedSetToStudySet,
     type PublishedSet,
@@ -2703,6 +2704,7 @@ import {
 const props = defineProps<{ publicSetId?: string }>();
 const isPublicSet = computed(() => Boolean(props.publicSetId));
 const canEditPublishedSet = ref(false);
+const publicSetReportable = ref(false);
 const publishedSet = ref<PublishedSet | null>(null);
 const route = useRoute();
 const router = useRouter();
@@ -3388,6 +3390,9 @@ async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
         void isPublishedSetOwner(props.publicSetId!)
             .then((ownsSet) => (canEditPublishedSet.value = ownsSet))
             .catch(() => (canEditPublishedSet.value = false));
+        void canReportPublishedSet(props.publicSetId!)
+            .then((allowed) => (publicSetReportable.value = allowed))
+            .catch(() => (publicSetReportable.value = false));
         set.value = publishedSetToStudySet(publishedSet.value);
         if (hasTauriRuntime()) {
             void loadAppSettingsOnce()

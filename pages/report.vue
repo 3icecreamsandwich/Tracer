@@ -2,7 +2,7 @@
   <PolicyPage title="Report public content">
     <section aria-labelledby="report-content">
       <h2 id="report-content" class="text-xl font-semibold text-slate-950 dark:text-white">Tell us what is wrong</h2>
-      <p class="mt-3">Use this form to report a public set that may violate someone’s rights, privacy, or safety. Reports are reviewed by Tracer; submitting one does not automatically remove content.</p>
+      <p class="mt-3">Use this form to report a public set that may violate someone’s rights, privacy, or safety. Reports are reviewed by our moderation team; submitting one does not automatically remove content.</p>
 
       <form class="mt-6 space-y-5" @submit.prevent="submitReport">
         <div v-if="setTitle" class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import { getSupabaseClient } from '~/src/composables/auth/client'
-import { getPublishedSet } from '~/src/composables/published-sets'
+import { canReportPublishedSet, getPublishedSet } from '~/src/composables/published-sets'
 
 useHead({ title: 'Report public content' })
 
@@ -50,11 +50,17 @@ const setTitle = ref('')
 const busy = ref(false)
 const submitted = ref(false)
 const error = ref('')
+const canReport = ref(false)
 
 onMounted(async () => {
   if (!reportSetId.value) return
   try {
     setTitle.value = (await getPublishedSet(reportSetId.value)).title
+    if (!await canReportPublishedSet(reportSetId.value)) {
+      error.value = 'You cannot report a set you published.'
+      return
+    }
+    canReport.value = true
   } catch {
     error.value = 'This public set could not be found.'
   }
@@ -64,6 +70,10 @@ async function submitReport() {
   error.value = ''
   if (!reportSetId.value) {
     error.value = 'Open this page from the public set you want to report.'
+    return
+  }
+  if (!canReport.value) {
+    error.value = 'You cannot report a set you published.'
     return
   }
   const { data: { user } } = await getSupabaseClient().auth.getUser()

@@ -151,6 +151,30 @@ export async function isPublishedSetOwner(id: string): Promise<boolean> {
 
   return Boolean(data)
 }
+
+/** Super moderators may report any catalog item; other publishers cannot report their own. */
+export async function canReportPublishedSet(id: string): Promise<boolean> {
+  const { db, user } = await publishingSession()
+  if (!user) return false
+
+  const { data: profile, error: profileError } = await db
+    .from('profiles')
+    .select('user_roles(role)')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (profileError) throw profileError
+  const roles = Array.isArray(profile?.user_roles) ? profile.user_roles : []
+  if (roles.some((entry: { role?: string }) => entry.role === 'super')) return true
+
+  const { data, error } = await db
+    .from('published_sets')
+    .select('id')
+    .eq('id', id)
+    .eq('publisher_id', user.id)
+    .maybeSingle()
+  if (error) throw error
+  return !data
+}
 export async function getOwnedPublishedSet(
   id: string,
 ): Promise<PublishedSet> {
