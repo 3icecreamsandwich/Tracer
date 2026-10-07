@@ -44,6 +44,13 @@
                         >
                             Edit
                         </NuxtLink>
+                        <NuxtLink
+                            v-if="set && isPublicSet"
+                            :to="`/report?set=${encodeURIComponent(set.id)}`"
+                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
+                        >
+                            Report
+                        </NuxtLink>
                         <button
                             type="button"
                             class="inline-flex items-center rounded-md border border-slate-800 bg-black px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-60 dark:border-slate-200 dark:bg-white dark:text-black dark:hover:bg-slate-300"

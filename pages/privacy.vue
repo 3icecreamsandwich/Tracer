@@ -28,7 +28,7 @@
 
     <section aria-labelledby="privacy-rights">
       <h2 id="privacy-rights" class="text-xl font-semibold text-slate-950 dark:text-white">Your choices and requests</h2>
-      <p class="mt-3">You can update your display name and username in Settings. To request access to, correction of, or deletion of hosted information, email <a class="font-medium underline underline-offset-4" href="mailto:3icecreamsanwich@gmail.com?subject=Tracer%20privacy%20request">3icecreamsanwich@gmail.com</a> from the email address associated with your account. We may need to verify the request before acting on it.</p>
+      <p class="mt-3">You can update your display name and username in Settings. To request access to, correction of, or deletion of hosted information, use the signed-in <NuxtLink class="font-medium underline underline-offset-4" to="/privacy-request">privacy request form</NuxtLink>. We may need to verify the request before acting on it.</p>
     </section>
 
     <section aria-labelledby="privacy-age">
