@@ -1,5 +1,5 @@
 <template>
-  <PolicyPage title="Privacy Policy" updated="September 15, 2026">
+  <PolicyPage title="Privacy Policy" updated="October 11, 2026">
     <section aria-labelledby="privacy-summary">
       <h2 id="privacy-summary" class="text-xl font-semibold text-slate-950 dark:text-white">Summary</h2>
       <p class="mt-3">This policy describes how the Tracer web app handles information when you use it. It is a factual description of the current product, not a statement that Tracer meets every privacy law in every location. Tracer should receive jurisdiction-specific legal review before a broader launch.</p>
@@ -17,6 +17,13 @@
       <p class="mt-3">Tracer uses account and study information to sign you in, show your library and classes, provide study features, maintain public sets you publish, and protect the service from abuse.</p>
       <p class="mt-3">If you choose an AI feature, the study, file-derived, or chat content needed for that request may be sent to the AI provider you selected. The currently supported provider options are OpenAI, Anthropic, Google Gemini, GitHub Models, Ollama Cloud, and an administrator-configured OpenAI-compatible provider. Do not submit information to an AI feature unless you are comfortable sending it to that selected provider.</p>
       <p class="mt-3">Tracer uses Supabase for account authentication, database services, and private file storage. It uses Cloudflare to deliver and protect the hosted web app, including edge security controls and Turnstile verification where enabled. Google is involved only when you choose Google sign-in, and GitHub is involved only when you choose GitHub Models authentication. These providers handle information according to their own terms and privacy practices.</p>
+    </section>
+
+    <section aria-labelledby="privacy-cookies">
+      <h2 id="privacy-cookies" class="text-xl font-semibold text-slate-950 dark:text-white">Cookies and browser storage</h2>
+      <p class="mt-3">The hosted web app uses a short-lived, strictly necessary, HTTP-only cookie only to complete a secure sign-in handoff between Tracer’s public site and web app. It lasts for no more than 90 seconds, is limited to the handoff endpoint, and is cleared after use.</p>
+      <p class="mt-3">Tracer does not currently operate its own advertising, marketing, or session-replay cookie system. Because it does not currently use non-essential Tracer cookies, the hosted app does not offer an optional-cookie preference control. If that changes, this policy and the applicable consent controls will be updated.</p>
+      <p class="mt-3">The web app also uses browser storage for features such as your private study library, progress, and saved chats, as described above. Service providers may use their own cookies or similar technology under their own policies.</p>
     </section>
 
     <section aria-labelledby="privacy-retention">

@@ -1,5 +1,5 @@
 <template>
-  <PolicyPage title="Terms of Service" updated="September 16, 2026">
+  <PolicyPage title="Terms of Service" updated="October 11, 2026">
     <section aria-labelledby="terms-agreement">
       <h2 id="terms-agreement" class="text-xl font-semibold text-slate-950 dark:text-white">Using Tracer</h2>
       <p class="mt-3">These terms explain the current rules for using the Tracer web app. They are not a claim that Tracer is legally compliant in every jurisdiction. Tracer should receive jurisdiction-specific legal review before a broader launch.</p>
@@ -44,6 +44,11 @@
       <h2 id="terms-liability" class="text-xl font-semibold text-slate-950 dark:text-white">Limitation of liability</h2>
       <p class="mt-3">To the maximum extent permitted by law, Tracer and its operators are not liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or for lost profits, lost data, lost use, goodwill, or other intangible losses arising from the service. This includes harm connected with service interruptions, inaccurate AI output, user-published content, third-party services, or unauthorized access to or alteration of content.</p>
       <p class="mt-3">Nothing in these terms excludes or limits liability, a user’s rights, or notice obligations that applicable law does not allow us to exclude or limit. A data-security incident will be handled according to applicable legal requirements; this section is not a promise that Tracer can avoid responsibility for conduct that the law makes it responsible for.</p>
+    </section>
+
+    <section aria-labelledby="terms-cookies">
+      <h2 id="terms-cookies" class="text-xl font-semibold text-slate-950 dark:text-white">Cookies and browser storage</h2>
+      <p class="mt-3">Tracer’s use of the short-lived sign-in security cookie and browser storage is described in the <NuxtLink class="font-medium underline underline-offset-4" to="/privacy">Privacy Policy</NuxtLink>. The current hosted app does not use optional Tracer advertising, marketing, or session-replay cookies.</p>
     </section>
 
     <section aria-labelledby="terms-help">
