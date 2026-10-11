@@ -11,10 +11,7 @@
     <div class="tracer-page mx-auto max-w-3xl p-8">
       <div class="tracer-page-toolbar flex items-start justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-semibold">{{ t('common.edit') }} {{ t('home.setKind') }}</h1>
-          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            {{ isPublishedEdit ? 'Changes are published to the catalog when you save.' : 'Update the title, description, and cards in this set.' }}
-          </p>
+          <h1 class="text-3xl font-semibold">{{ t('common.edit') }} {{ t('home.setKind') }}</h1>
         </div>
 
         <div class="flex shrink-0 flex-wrap items-center gap-2">

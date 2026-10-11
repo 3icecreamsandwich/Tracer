@@ -37,10 +37,7 @@
     <div class="tracer-page mx-auto max-w-3xl p-8">
       <div class="tracer-page-toolbar sticky top-16 z-20 flex items-start justify-between gap-4 rounded-md bg-white/95 py-2 backdrop-blur dark:bg-slate-950/95">
         <div>
-          <h1 class="text-2xl font-semibold">{{ t('create.generateTitle') }}</h1>
-          <p class="hidden sm:block mt-2 text-sm text-slate-600 dark:text-slate-300">
-            {{ t('create.generateDescription') }}
-          </p>
+          <h1 class="text-3xl font-semibold">{{ t('create.generateTitle') }}</h1>
         </div>
 
         <div class="shrink-0 flex flex-wrap items-center justify-end gap-2">
@@ -111,7 +108,7 @@
             <div>
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.sources') }}</p>
+                  <p class="text-lg font-semibold text-slate-900 dark:text-slate-50">{{ t('create.sources') }}</p>
                   <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
                     {{ t('create.sourceLimits', { pages: sourceLimits.pdfPages, images: sourceLimits.images }) }}
                   </p>
@@ -186,12 +183,7 @@
           aria-label="AI output"
         >
           <div class="flex items-start justify-between gap-4">
-            <div>
-              <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.aiOutput') }}</h2>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                If parsing fails, copy the raw output and try again.
-              </p>
-            </div>
+            <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('create.aiOutput') }}</h2>
 
             <div class="shrink-0 flex flex-wrap gap-2">
               <button
@@ -577,11 +569,17 @@ async function saveGeneratedOutput(
     })
 
     const guidesRepo = createStudyGuidesRepo(db)
-    await guidesRepo.create({
-      id: crypto.randomUUID() as Uuid,
-      setId,
-      markdown: generated.studyGuideMarkdown
-    })
+    try {
+      await guidesRepo.create({
+        id: crypto.randomUUID() as Uuid,
+        setId,
+        markdown: generated.studyGuideMarkdown
+      })
+    } catch (error) {
+      // Do not leave a seemingly successful generated set without its guide.
+      await setsRepo.delete(setId)
+      throw error
+    }
 
     void syncPrivateSets().catch(() => false)
 

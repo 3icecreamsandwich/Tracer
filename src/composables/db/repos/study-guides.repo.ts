@@ -30,7 +30,7 @@ export function createStudyGuidesRepo(db: DbClient) {
         `SELECT id, set_id, markdown, created_at
          FROM study_guides
          WHERE set_id = ?
-         ORDER BY created_at DESC
+         ORDER BY created_at DESC, id DESC
          LIMIT 1;`,
         [setId]
       )
@@ -81,6 +81,7 @@ export function createStudyGuidesRepo(db: DbClient) {
       )
       const row = rows[0]
       if (!row) throw new Error('Failed to update study guide')
+      invalidateCachedHomeDashboard()
       return {
         id: row.id as Uuid,
         setId: row.set_id as Uuid,

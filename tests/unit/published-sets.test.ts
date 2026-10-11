@@ -8,6 +8,11 @@ const mocks = vi.hoisted(() => ({
   rpc: vi.fn(),
   restore: vi.fn(),
   single: vi.fn(),
+  guide: vi.fn(),
+}))
+vi.mock('../../src/composables/db', () => ({
+  useTracerDb: async () => ({}),
+  createStudyGuidesRepo: () => ({ getBySetId: mocks.guide }),
 }))
 vi.mock('../../src/composables/auth/client', () => ({
   getSupabaseClient: () => ({
@@ -38,6 +43,7 @@ const set = {
 }
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.guide.mockResolvedValue(null)
   clearPublishedSetCache()
   mocks.getSession.mockResolvedValue({
     data: { session: { user: { id: 'owner' }, expires_at: Date.now() / 1000 + 3600 } },
@@ -57,6 +63,11 @@ beforeEach(() => {
   )
 })
 describe('publishing snapshots', () => {
+  it('includes the local study guide in the public snapshot', async () => {
+    mocks.guide.mockResolvedValue({ markdown: '# Complete guide\n```java\ncode\n```\nSummary' })
+    await publishSet(set, [], true)
+    expect(mocks.upsert.mock.calls[0][0].study_guide_markdown).toContain('Summary')
+  })
   it('binds the publication to the authenticated user and updates the same source without copying private folder metadata', async () => {
     expect(await publishSet(set, ['science'], false)).toBe('published')
     const [payload, options] = mocks.upsert.mock.calls[0]

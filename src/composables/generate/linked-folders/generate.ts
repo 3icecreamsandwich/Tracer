@@ -135,6 +135,9 @@ async function parseOrRepairBatchOutput(
         prompt: buildFormatRepairPrompt(failedRaw, parseError)
       })
       const repairedRaw = repairedResponse.text ?? ''
+      if (repairedResponse.finishReason === 'length') {
+        throw new Error('The AI response exceeded its output limit. Use fewer source pages and try again; no partial study guide was saved.')
+      }
 
       try {
         return { raw: repairedRaw, ...parseBatchOutput(repairedRaw) }
@@ -188,18 +191,29 @@ export async function generateLinkedFolderContent(input: {
   const rawBatches = new Array<string>(batches.length)
   // Linked folders often create several batches at once. Keep provider calls
   // sequential so low-RPM accounts are not rate-limited by a burst of requests.
-  const outputs = await mapWithConcurrency(batches, 1, async (sources, index) => {
+  async function generateBatch(sources: ExtractedGenerateSource[], index: number, depth = 0): Promise<Awaited<ReturnType<typeof parseOrRepairBatchOutput>>[]> {
     const prompt = buildGenerateTextPrompt({
       instructions: input.instructions,
       sources,
       incremental: input.incremental === true || index > 0
     })
     const response = await generateText({ model: input.model, prompt })
+    if (response.finishReason === 'length') {
+      const characters = sources.reduce((sum, source) => sum + source.text.length, 0)
+      if (depth < 3 && characters > 1_000) {
+        const smaller = batchGenerateSources(sources, Math.ceil(characters / 2))
+        const parts = []
+        for (const part of smaller) parts.push(...await generateBatch(part, index, depth + 1))
+        return parts
+      }
+      throw new Error('The AI response exceeded its output limit. Use fewer source pages and try again; no partial study guide was saved.')
+    }
     const raw = response.text ?? ''
     rawBatches[index] = raw
     input.onRawOutput?.(rawBatches.map((text, i) => text ? `Batch ${i + 1}\n\n${text}` : '').filter(Boolean).join('\n\n'))
-    return parseOrRepairBatchOutput(input.model, raw, input.resolveRepairModel)
-  })
+    return [await parseOrRepairBatchOutput(input.model, raw, input.resolveRepairModel)]
+  }
+  const outputs = (await mapWithConcurrency(batches, 1, (sources, index) => generateBatch(sources, index))).flat()
 
   return {
     studyGuideMarkdown: outputs.map((output) => output.studyGuideMarkdown.trim()).join('\n\n---\n\n'),

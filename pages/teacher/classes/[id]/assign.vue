@@ -11,8 +11,7 @@
         <header class="flex flex-wrap items-end justify-between gap-5">
           <div>
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">{{ classroom.name }}</p>
-            <h1 class="mt-1 text-4xl font-semibold">{{ t('classroom.assignSet') }}</h1>
-            <p class="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300">{{ t('classroom.assignSetDescription') }}</p>
+            <h1 class="mt-1 text-5xl font-semibold">{{ t('classroom.assignSet') }}</h1>
           </div>
           <AppButton variant="white" to="/teacher">{{ t('classroom.backToDashboard') }}</AppButton>
         </header>
@@ -23,8 +22,7 @@
 
         <div class="mt-8 grid items-start gap-7 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           <section class="min-h-[calc(100vh-17rem)] rounded-xl border border-slate-200 bg-white p-[26px] shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="assign-library-title">
-            <h2 id="assign-library-title" class="text-[22px] font-semibold">{{ t('classroom.chooseAssignment') }}</h2>
-            <p class="mt-1 text-[15px] text-slate-600 dark:text-slate-300">{{ t('classroom.chooseAssignmentDescription') }}</p>
+            <h2 id="assign-library-title" class="text-3xl font-semibold">{{ t('classroom.chooseAssignment') }}</h2>
 
             <div class="mt-7 grid w-full max-w-[360px] grid-cols-2 rounded-[14px] border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-950" role="tablist" :aria-label="t('home.libraryType')">
               <button
@@ -78,12 +76,11 @@
           </section>
 
           <section class="rounded-xl border border-slate-200 bg-white p-[26px] shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="assign-create-title">
-            <h2 id="assign-create-title" class="text-[22px] font-semibold">{{ t('home.create') }}</h2>
-            <p class="mt-1 text-[15px]">{{ t('home.chooseMode') }}</p>
+            <h2 id="assign-create-title" class="text-3xl font-semibold">{{ t('home.create') }}</h2>
             <div class="mt-8 grid gap-3">
               <NuxtLink v-for="mode in createModes" :key="mode.to" :to="mode.to" class="group flex min-h-[70px] items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900">
                 <CreateModeIcon :name="mode.name" class="h-12 w-12" />
-                <span class="min-w-0 flex-1"><span class="block text-sm font-medium">{{ t(mode.label) }}</span><span class="mt-1 block text-xs">{{ t(mode.hint) }}</span></span>
+                <span class="min-w-0 flex-1 text-lg font-semibold">{{ t(mode.label) }}</span>
                 <CreateChevron />
               </NuxtLink>
             </div>
@@ -150,9 +147,9 @@ const libraryTabs = [
   { value: 'study-guide' as const, label: 'home.studyGuides' },
 ]
 const createModes = [
-  { to: '/create/basic', label: 'home.basic', hint: 'home.basicHint', name: 'basic' as const },
-  { to: '/create/synthesize', label: 'home.synthesize', hint: 'home.synthesizeHint', name: 'synthesize' as const },
-  { to: '/create/generate', label: 'home.generate', hint: 'home.generateHint', name: 'generate' as const },
+  { to: '/create/basic', label: 'home.basic', name: 'basic' as const },
+  { to: '/create/synthesize', label: 'home.synthesize', name: 'synthesize' as const },
+  { to: '/create/generate', label: 'home.generate', name: 'generate' as const },
 ]
 
 onMounted(loadPage)

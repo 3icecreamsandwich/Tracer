@@ -5,11 +5,8 @@
     :aria-label="t('factCheck.title')"
   >
     <div>
-      <p class="text-sm font-medium text-slate-900 dark:text-slate-50">
+      <p class="text-xl font-semibold text-slate-900 dark:text-slate-50">
         {{ t('factCheck.title') }}
-      </p>
-      <p class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-        {{ t('factCheck.hint') }}
       </p>
     </div>
 

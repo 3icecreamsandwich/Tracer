@@ -1,7 +1,6 @@
 <template>
   <li
     class="relative"
-    :class="item.kind === 'study-guide' ? 'mx-auto w-[97.5%]' : ''"
     :data-root-entry-kind="rootEntry ? 'set' : undefined"
     :data-root-entry-id="rootEntry ? (item.setId ?? item.id) : undefined"
     :style="rootEntry && order !== undefined ? { order } : undefined"

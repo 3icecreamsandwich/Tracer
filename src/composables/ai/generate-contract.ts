@@ -3,9 +3,7 @@ export class GenerateContractParseError extends Error {
 }
 
 function indexOfFencedStart(haystack: string, fenceName: string): number {
-  const lower = haystack.toLowerCase()
-  const needle = `\`\`\`${fenceName.toLowerCase()}`
-  return lower.indexOf(needle)
+  return new RegExp(`^\`{3,}${fenceName}[ \\t]*\\r?$`, 'im').exec(haystack)?.index ?? -1
 }
 
 function extractFencedBlock(text: string, fenceName: string): string {
@@ -20,12 +18,19 @@ function extractFencedBlock(text: string, fenceName: string): string {
   }
 
   const contentStart = headerLineEnd + 1
-  const closeIdx = text.indexOf('```', contentStart)
-  if (closeIdx < 0) {
+  // A guide can contain code fences. Its outer boundary is the last
+  // standalone fence before the flashcard contract block.
+  const remainder = text.slice(contentStart)
+  const nextBlock = /^(?:`{3,})(?:flashcards_tsv|tsv|csv)\s*$/im.exec(remainder)
+  const segment = fenceName === 'study_guide_md' || fenceName === 'markdown' || fenceName === 'md'
+    ? remainder.slice(0, nextBlock?.index ?? remainder.length)
+    : remainder
+  const closing = [...segment.matchAll(/^`{3,}[ \t]*\r?$/gm)].at(-1)
+  if (!closing || segment.slice(closing.index + closing[0].length).trim()) {
     throw new GenerateContractParseError(`Missing closing fence: ${fenceName}`)
   }
 
-  const body = text.slice(contentStart, closeIdx).split('\r').join('').trim()
+  const body = segment.slice(0, closing.index).split('\r').join('').trim()
   if (!body) {
     throw new GenerateContractParseError(`Empty fenced block: ${fenceName}`)
   }

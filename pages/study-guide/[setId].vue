@@ -7,7 +7,7 @@
           <div v-if="setTitle && setId" class="mt-2 flex flex-wrap items-center gap-1 text-sm text-slate-950 dark:text-white">
             <span>{{ linkedToLabel }}</span>
             <NuxtLink
-              :to="`/set/${setId}`"
+              :to="linkedSetUrl"
               data-testid="linked-set-link"
               class="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-1 font-medium text-orange-700 underline decoration-orange-400 decoration-1 underline-offset-2 transition hover:bg-orange-100 hover:text-orange-800 focus-visible:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:bg-orange-950/25 dark:text-orange-300 dark:hover:bg-orange-950/45"
             >
@@ -17,7 +17,7 @@
         </div>
 
         <NuxtLink
-          :to="setId ? `/set/${setId}` : '/'"
+          :to="linkedSetUrl"
           class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
         >
           {{ t('studyGuide.goToSet') }}
@@ -58,18 +58,20 @@ import { lockGetStatus } from '~/src/composables/lock'
 import { useLockSession } from '~/src/composables/lock-session'
 import { createProfileRepo, createSettingsRepo, createSetsRepo, createStudyGuidesRepo, useTracerDb } from '~/src/composables/db'
 import type { Uuid } from '~/src/composables/db/types'
-import { hasTauriRuntime } from '~/src/composables/tauri'
 import MarkdownRenderer from '~/components/MarkdownRenderer.vue'
 import { useAppLanguage } from '~/src/composables/language'
+import { getPublishedSet } from '~/src/composables/published-sets'
+import { syncPrivateSets } from '~/src/composables/private-set-sync'
 
 const router = useRouter()
 const route = useRoute()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 const { t } = useAppLanguage()
 
-const hasTauriInternals = hasTauriRuntime()
+const isPublished = computed(() => route.query.published === '1')
+const linkedSetUrl = computed(() => setId.value ? `${isPublished.value ? '/public-sets' : '/set'}/${setId.value}` : '/')
 
-const isWebPreview = computed(() => isWebPreviewRuntime() || route.params.setId === 'demo')
+const isWebPreview = computed(() => !isPublished.value && (isWebPreviewRuntime() || route.params.setId === 'demo'))
 
 const busy = ref(true)
 const loadError = ref<string | null>(null)
@@ -107,11 +109,23 @@ async function loadGuide(setId: Uuid) {
   busy.value = true
   loadError.value = null
   try {
+    if (isPublished.value) {
+      const published = await getPublishedSet(setId)
+      linkedSetTitle.value = published.title
+      markdown.value = published.study_guide_markdown ?? ''
+      if (!markdown.value.trim()) loadError.value = 'Study guide not found.'
+      return
+    }
     const db = await useTracerDb()
-    const [guide, linkedSet] = await Promise.all([
+    let [guide, linkedSet] = await Promise.all([
       createStudyGuidesRepo(db).getBySetId(setId),
       createSetsRepo(db).get(setId)
     ])
+    if (!guide && await syncPrivateSets().catch(() => false)) {
+      ;[guide, linkedSet] = await Promise.all([
+        createStudyGuidesRepo(db).getBySetId(setId), createSetsRepo(db).get(setId)
+      ])
+    }
     if (!guide) {
       markdown.value = ''
       loadError.value = 'Study guide not found.'
@@ -127,6 +141,10 @@ async function loadGuide(setId: Uuid) {
 }
 
 onMounted(async () => {
+  if (isPublished.value && setId.value) {
+    await loadGuide(setId.value)
+    return
+  }
   if (isWebPreview.value) {
     busy.value = false
     return

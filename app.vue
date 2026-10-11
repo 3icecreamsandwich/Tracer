@@ -18,7 +18,9 @@ import {
   parseConnectionStartupState,
   shouldRunConnectionStartup,
 } from '~/src/composables/refresh-startup'
+import { useAppUpdates } from '~/src/composables/app-updates'
 
+const updates = useAppUpdates()
 const { unlockedThisSession } = useLockSession()
 installPageMetadata()
 themeInitFromCache()
@@ -136,6 +138,7 @@ onMounted(() => {
   if (hasTauriRuntime() && unlockedThisSession.value) {
     scheduleLinkedFolderSync()
     scheduleConnectionStartup()
+    void updates.startAutomaticUpdates()
   }
 })
 
@@ -144,6 +147,7 @@ watch(unlockedThisSession, (unlocked) => {
   if (unlocked) {
     scheduleLinkedFolderSync()
     scheduleConnectionStartup()
+    void updates.startAutomaticUpdates()
   }
   else {
     stopLinkedFolderSync()

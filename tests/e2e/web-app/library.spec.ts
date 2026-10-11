@@ -125,8 +125,17 @@ test('phone layout supports creation, study modes and settings without horizonta
 
   await page.goto(basePath)
   await page.getByRole('button', { name: 'Add Folder', exact: true }).click()
-  await expect(page.getByRole('textbox', { name: 'Folder name', exact: true })).toBeVisible()
+  const folderName = page.getByRole('textbox', { name: 'Folder name', exact: true })
+  await expect(folderName).toBeVisible()
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+  await folderName.fill('Temporary folder')
+  await folderName.press('Enter')
+  page.on('dialog', dialog => {
+    throw new Error(`Folder deletion unexpectedly prompted: ${dialog.message()}`)
+  })
+  await page.getByRole('button', { name: 'Delete folder', exact: true }).click()
+  await expect(page.getByText('Temporary folder', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('Persistent web set', { exact: true })).toBeVisible()
 
   for (const path of [setPath, `${setPath}/edit`, `${setPath}-flashcards`, `${setPath}-learn`, `${setPath}-match`, `${setPath}-test`, 'create/generate', 'create/synthesize', 'settings']) {
     await page.goto(path)

@@ -2,7 +2,7 @@
   <AppDialog
     :open="open"
     :title="t('classroom.addClass')"
-    :description="t('classroom.joinDescription')"
+    title-class="text-3xl font-semibold"
     :close-label="t('common.close')"
     :busy="busy"
     @close="emit('close')"

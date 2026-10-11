@@ -3,15 +3,12 @@
     <div class="tracer-page mx-auto max-w-[1280px] px-8 pb-24 pt-10">
       <div class="grid items-stretch gap-7 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         <section
-          class="tracer-library flex min-w-0 min-h-[calc(100vh-13rem)] flex-col rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          class="tracer-library flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           aria-labelledby="home-sets"
         >
           <div class="flex items-start justify-between gap-4">
             <div>
-              <h1 id="home-sets" class="text-[22px] font-semibold">{{ t('home.sets') }}</h1>
-              <p class="hidden sm:block mt-1 text-[15px] text-slate-950 dark:text-slate-100">
-                {{ t('home.subtitle') }}
-              </p>
+              <h1 id="home-sets" class="text-3xl font-semibold">{{ t('home.sets') }}</h1>
             </div>
             <button
               v-if="activeLibraryKind !== 'class'"
@@ -46,7 +43,7 @@
               {{ loadError }}
             </p>
 
-            <div v-else>
+            <div v-else class="tracer-library-scroll max-h-[490px] overflow-y-auto overscroll-contain pe-1">
               <div
                 v-if="isWebPreviewRuntime()"
                 class="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
@@ -71,7 +68,8 @@
                     <NuxtLink
                       v-if="(accountRole === 'teacher' || (accountRole === 'super' && classroom.canTeach))"
                       :to="`/teacher/classes/${classroom.id}`"
-                      class="group flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900"
+                      class="group flex items-center justify-between rounded-xl border border-slate-200 bg-white shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900"
+                      :class="denseLibrary ? 'min-h-[58px] gap-3 px-4 py-2' : 'min-h-[82px] gap-5 px-5 py-3.5'"
                     >
                       <span class="min-w-0">
                         <span class="block truncate font-semibold">{{ classroom.name }}</span>
@@ -82,9 +80,10 @@
                     <NuxtLink
                       v-else
                       :to="`/student/classes/${classroom.id}`"
-                      class="group flex min-h-[82px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-4 text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+                      class="group flex items-center rounded-xl border border-slate-200 bg-white text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+                      :class="denseLibrary ? 'min-h-[58px] gap-3 px-4 py-2' : 'min-h-[82px] gap-5 px-5 py-3.5'"
                     >
-                      <CreateModeIcon name="basic" class="h-14 w-14" />
+                      <CreateModeIcon name="basic" :class="denseLibrary ? 'h-10 w-10' : 'h-14 w-14'" />
                       <span class="min-w-0 flex-1">
                         <span class="block truncate font-semibold">{{ classroom.name }}</span>
                         <span class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">{{ classroomSummary(classroom) }}</span>
@@ -294,7 +293,7 @@
           </div>
 
           <div v-if="activeLibraryKind === 'class' && (accountRole === 'student' || accountRole === 'super')" class="mt-auto pt-7">
-            <AppButton block size="lg" @click="joinOpen = true">
+            <AppButton size="lg" variant="white" class="mx-auto flex w-1/3 !rounded-xl" @click="joinOpen = true">
               {{ t('classroom.addClass') }}
             </AppButton>
           </div>
@@ -316,8 +315,7 @@
             class="rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
             aria-labelledby="home-create"
           >
-            <h2 id="home-create" class="text-[22px] font-semibold">{{ t('home.create') }}</h2>
-            <p class="hidden sm:block mt-1 text-[15px] text-slate-950 dark:text-slate-100">{{ t('home.chooseMode') }}</p>
+            <h2 id="home-create" class="text-3xl font-semibold">{{ t('home.create') }}</h2>
 
             <div class="tracer-create-grid mt-8 grid w-full gap-3">
               <NuxtLink
@@ -325,7 +323,7 @@
                 class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               >
                 <CreateModeIcon name="basic" class="h-14 w-14" />
-                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.basic') }}</p><p class="hidden sm:block mt-1 text-[13px]">{{ t('home.basicHint') }}</p></div>
+                <div class="min-w-0 flex-1"><p class="text-lg font-semibold">{{ t('home.basic') }}</p></div>
                 <CreateChevron />
               </NuxtLink>
 
@@ -334,7 +332,7 @@
                 class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               >
                 <CreateModeIcon name="synthesize" class="h-14 w-14" />
-                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.synthesize') }}</p><p class="hidden sm:block mt-1 text-[13px]">{{ t('home.synthesizeHint') }}</p></div>
+                <div class="min-w-0 flex-1"><p class="text-lg font-semibold">{{ t('home.synthesize') }}</p></div>
                 <CreateChevron />
               </NuxtLink>
 
@@ -343,14 +341,16 @@
                 class="group flex min-h-[70px] items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 text-left text-slate-950 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               >
                 <CreateModeIcon name="generate" class="h-14 w-14" />
-                <div class="min-w-0 flex-1"><p class="text-[15px] font-medium">{{ t('home.generate') }}</p><p class="hidden sm:block mt-1 text-[13px]">{{ t('home.generateHint') }}</p></div>
+                <div class="min-w-0 flex-1"><p class="text-lg font-semibold">{{ t('home.generate') }}</p></div>
                 <CreateChevron />
               </NuxtLink>
             </div>
           </section>
 
-          <HomeDestinationLink to="/public-sets" icon="publish" :title="t('public.browse')" :description="t('public.browseHint')" @pointerenter="prefetchPublicCatalog" @focusin="prefetchPublicCatalog" />
-          <HomeDestinationLink v-if="(accountRole === 'teacher' || accountRole === 'super')" to="/teacher" icon="dashboard" :title="t('classroom.dashboard')" :description="t('classroom.dashboardDescription')" />
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <HomeDestinationLink to="/public-sets" icon="publish" :title="t('public.browse')" @pointerenter="prefetchPublicCatalog" @focusin="prefetchPublicCatalog" />
+            <HomeDestinationLink v-if="(accountRole === 'teacher' || accountRole === 'super')" to="/teacher" icon="dashboard" :title="t('classroom.dashboard')" />
+          </div>
         </div>
       </div>
       <div class="mt-7">
@@ -515,10 +515,10 @@ const rootItems = computed(() => {
   return items.value.filter((item) => item.kind === activeLibraryKind.value && item.folderId === null && itemMatchesQuery(item))
 })
 
-const visibleLibraryCount = computed(() =>
-  items.value.filter((item) => item.kind === activeLibraryKind.value && itemMatchesQuery(item)).length
+// Keep all library tabs sized like their flashcard counterparts.
+const denseLibrary = computed(() =>
+  items.value.filter((item) => item.kind === 'set' && itemMatchesQuery(item)).length >= 4
 )
-const denseLibrary = computed(() => visibleLibraryCount.value >= 4)
 
 const visibleFolders = computed(() => {
   if (activeLibraryKind.value === 'class') return []
@@ -1049,16 +1049,20 @@ async function reorderRootEntry(dragged: RootEntryKey, target: RootDropTarget | 
 }
 
 async function deleteFolder(folder: SetFolder) {
-  if (!window.confirm(`Delete “${folder.name}”? Sets inside it will stay in your library.`)) return
   loadError.value = null
   try {
     const db = await useTracerDb()
-    await createFoldersRepo(db).delete(folder.id)
+    const foldersRepo = createFoldersRepo(db)
+    await foldersRepo.delete(folder.id)
     folders.value = folders.value.filter((candidate) => candidate.id !== folder.id)
     items.value = items.value.map((item) => item.folderId === folder.id ? { ...item, folderId: null } : item)
-    await createFoldersRepo(db).reorderHome(orderedRootKeys())
-    homeOrder.value = orderedRootKeys().map((entry, sortOrder) => ({ ...entry, sortOrder }))
     if (selectedFolderId.value === folder.id) selectedFolderId.value = null
+    const nextOrder = orderedRootKeys()
+    homeOrder.value = nextOrder.map((entry, sortOrder) => ({ ...entry, sortOrder }))
+    cacheCurrentHomeDashboard()
+    // The folder deletion is already complete. A failed order rewrite should
+    // not bring the deleted folder back or report the deletion itself as failed.
+    await foldersRepo.reorderHome(nextOrder).catch(() => undefined)
   } catch {
     loadError.value = 'Failed to delete folder.'
   }

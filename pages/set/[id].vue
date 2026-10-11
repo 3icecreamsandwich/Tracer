@@ -195,7 +195,7 @@
 
                                 <NuxtLink
                                     v-if="studyGuideSetId"
-                                    :to="`/study-guide/${studyGuideSetId}`"
+                                    :to="studyGuideUrl"
                                     class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
                                     <p
@@ -2195,7 +2195,7 @@
                                 />
                                 <StudyModeTile
                                     v-if="studyGuideSetId"
-                                    :to="`/study-guide/${studyGuideSetId}`"
+                                    :to="studyGuideUrl"
                                     :icon="studyGuideModeIcon"
                                     :title="t('set.studyGuide')"
                                     show-caret
@@ -2353,7 +2353,7 @@
                                         :class="
                                             isTermMastered(term.id as Uuid)
                                                 ? 'text-emerald-700 dark:text-emerald-300'
-                                                : 'text-orange-700 dark:text-orange-300'
+                                                : 'text-amber-700 dark:text-amber-300'
                                         "
                                     >
                                         {{
@@ -2367,7 +2367,7 @@
                                         :class="
                                             isTermMastered(term.id as Uuid)
                                                 ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/25'
-                                                : 'border-orange-200 bg-orange-50/70 dark:border-orange-900 dark:bg-orange-950/25'
+                                                : 'border-amber-500/70 bg-amber-50/20 dark:border-amber-600/45 dark:bg-amber-950/5'
                                         "
                                     >
                                         <button
@@ -2811,7 +2811,7 @@ const mobileStudyModes = computed(() => {
     if (studyGuideSetId.value) {
         items.push({
             key: "study-guide",
-            to: `/study-guide/${studyGuideSetId.value}`,
+            to: studyGuideUrl.value,
             icon: studyGuideModeIcon,
             title: t("set.studyGuide"),
             active: false,
@@ -2902,6 +2902,7 @@ function onAssignedPageHide() {
     finishInlineAssignedMode();
 }
 const studyGuideSetId = ref<Uuid | null>(null);
+const studyGuideUrl = computed(() => `/study-guide/${studyGuideSetId.value}${isPublicSet.value ? '?published=1' : ''}`);
 const linkedFolder = ref<LinkedFolder | null>(null);
 const linkedFolderBusy = ref(false);
 const linkedFolderName = computed(() => {
@@ -3404,7 +3405,9 @@ async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
         }
     } else set.value = createWebPreviewDemoSet(t, { id: demoId as Uuid });
     // Web preview fallback: allow E2E validation of study guide navigation.
-    studyGuideSetId.value = isPublicSet.value ? null : set.value.id;
+    studyGuideSetId.value = isPublicSet.value
+        ? (publishedSet.value?.study_guide_markdown?.trim() ? set.value.id : null)
+        : set.value.id;
     busy.value = false;
     isFlipped.value = false;
     flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
@@ -3624,7 +3627,7 @@ const flashcardSurfaceClass = computed(() => {
     if (flashcardAnswerFeedback.value === "incorrect") {
         return "border-2 border-red-700 bg-red-50/70 hover:bg-red-50/70 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/30 dark:hover:bg-red-950/30 dark:focus-visible:ring-red-800";
     }
-    return "border border-orange-200 bg-orange-50/20 hover:bg-orange-50/40 focus-visible:ring-orange-300 dark:border-amber-900/60 dark:bg-amber-950/10 dark:hover:bg-amber-950/20 dark:focus-visible:ring-amber-800";
+    return "border border-amber-500/70 bg-amber-50/20 hover:bg-amber-50/30 focus-visible:ring-amber-300 dark:border-amber-600/45 dark:bg-amber-950/5 dark:hover:bg-amber-950/10 dark:focus-visible:ring-amber-800";
 });
 
 const isCurrentStarred = computed(() => {

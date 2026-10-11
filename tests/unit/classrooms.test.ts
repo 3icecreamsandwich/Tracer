@@ -28,7 +28,9 @@ const studentClassPageUrl = new URL('../../pages/student/classes/[id].vue', impo
 const setPageUrl = new URL('../../pages/set/[id].vue', import.meta.url)
 const detailedClassPageSource = readFileSync(fileURLToPath(detailedClassPageUrl), 'utf8')
 const manageClassPageSource = readFileSync(fileURLToPath(manageClassPageUrl), 'utf8')
+const assignClassPageSource = readFileSync(fileURLToPath(assignClassPageUrl), 'utf8')
 const dashboardPageSource = readFileSync(fileURLToPath(dashboardPageUrl), 'utf8')
+const studentClassPageSource = readFileSync(fileURLToPath(studentClassPageUrl), 'utf8')
 const homePageSource = readFileSync(
   fileURLToPath(new URL('../../pages/index.vue', import.meta.url)),
   'utf8',
@@ -182,6 +184,11 @@ describe('shared app dialog', () => {
 })
 
 describe('teacher classroom routes', () => {
+  it('omits median accuracy from the teacher dashboard overview', () => {
+    expect(dashboardPageSource).not.toContain("t('classroom.medianAccuracy')")
+    expect(dashboardPageSource).not.toContain('progressSummary.medianAccuracy')
+  })
+
   it('keeps detailed roster and class management as distinct sibling pages', () => {
     expect(existsSync(fileURLToPath(detailedClassPageUrl))).toBe(true)
     expect(existsSync(fileURLToPath(manageClassPageUrl))).toBe(true)
@@ -194,6 +201,10 @@ describe('teacher classroom routes', () => {
     expect(manageClassPageSource).toContain('listClassroomAssignments')
     expect(manageClassPageSource).toContain('removeClassroomAssignment')
     expect(manageClassPageSource).toContain('confirmAssignmentRemoval')
+    expect(manageClassPageSource).not.toMatch(/classroom\.(?:manageDescription|classInformationDescription|assignedMaterialsDescription|manageStudentsDescription)/)
+    expect(assignClassPageSource).not.toMatch(/classroom\.(?:assignSetDescription|chooseAssignmentDescription)/)
+    expect(studentClassPageSource).not.toContain("t('classroom.recentSetsDescription')")
+    expect(dashboardPageSource).not.toContain("t('classroom.noClassesDescription')")
     expect(manageClassPageSource).toContain("t('classroom.assignedMaterials')")
     expect(manageClassPageSource).toContain("t('classroom.removeMaterialConfirmation'")
     expect(manageClassPageSource.indexOf('class-information-title')).toBeLessThan(

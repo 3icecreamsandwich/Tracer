@@ -119,38 +119,6 @@
 
       <section
         class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        aria-label="Text size"
-      >
-        <div class="flex flex-wrap items-center justify-between gap-5">
-          <div>
-            <h2 class="text-sm font-medium">Text size</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Adjust text and interface sizing throughout Tracer.</p>
-          </div>
-          <div class="w-full max-w-sm">
-            <div class="flex h-5 items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200">
-              <span>Small</span>
-              <span>Large</span>
-            </div>
-            <input
-              v-model.number="textScale"
-              type="range"
-              min="0"
-              max="4"
-              step="1"
-              class="mt-3 w-full accent-neutral-800"
-              aria-label="Text size"
-              @input="onTextScalePreview"
-              @change="onTextScaleChange"
-            />
-            <div class="mt-1 flex items-center justify-between px-1" aria-hidden="true">
-              <span v-for="stop in 5" :key="stop" class="h-1.5 w-px bg-slate-300 dark:bg-slate-700" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         :aria-label="t('settings.theme')"
       >
         <div class="flex items-center justify-between gap-4">
@@ -862,7 +830,6 @@ import {
   useAppLanguage
 } from '../src/composables/language'
 import type { AppLanguage } from '../src/composables/db/types'
-import { applyTextScale, textScaleSet } from '../src/composables/text-scale'
 import {
   applyGlobalSmartReviewEnabled,
   getGlobalSmartReviewEnabled,
@@ -999,7 +966,6 @@ const defaultModelId = ref<string | null>(null)
 const fallbackModelIds = ref<string[]>([])
 const learnHybridEnabled = ref(false)
 const smartReviewEnabled = ref(false)
-const textScale = ref(0)
 const languageMenuOpen = ref(false)
 const languageMenuRoot = ref<HTMLElement | null>(null)
 
@@ -1616,7 +1582,6 @@ onMounted(() => {
       learnHybridEnabled.value = false
       smartReviewEnabled.value = getGlobalSmartReviewEnabled(studyStorageOwner(profile.value)) ?? false
       floatingChatEnabled.value = true
-      textScale.value = Number(document.documentElement.dataset.textScale || 0)
       void initializeConnectionStatuses()
       localSettingsPending.value = false
       return
@@ -1639,8 +1604,6 @@ onMounted(() => {
       smartReviewEnabled.value = settings.smartReviewEnabled
       saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, studyStorageOwner(p))
       floatingChatEnabled.value = settings.floatingChatEnabled
-      textScale.value = settings.textScale
-      applyTextScale(settings.textScale)
 
       if (settings.startupLockEnabled && status.requires_unlock) {
         if (!unlockedThisSession.value) {
@@ -1691,19 +1654,6 @@ async function onToggleDarkMode() {
     error.value = toSafeErrorMessage(e, 'Failed to update dark mode')
   } finally {
     busy.value = false
-  }
-}
-
-function onTextScalePreview() {
-  applyTextScale(textScale.value)
-}
-
-async function onTextScaleChange() {
-  error.value = null
-  try {
-    textScale.value = await textScaleSet(textScale.value)
-  } catch (e: unknown) {
-    error.value = toSafeErrorMessage(e, 'Failed to update text size')
   }
 }
 
@@ -1954,3 +1904,9 @@ async function onAccountSignOut() {
   }
 }
 </script>
+
+<style scoped>
+.tracer-page > section {
+  padding-block: 17px;
+}
+</style>

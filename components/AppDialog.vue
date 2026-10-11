@@ -5,6 +5,7 @@
 defineProps<{
   open: boolean
   title: string
+  titleClass?: string
   description?: string
   closeLabel: string
   busy?: boolean

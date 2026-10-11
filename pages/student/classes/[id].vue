@@ -17,8 +17,7 @@
         </header>
 
         <section class="mt-9" aria-labelledby="recent-sets-title">
-          <h2 id="recent-sets-title" class="text-2xl font-semibold">{{ t('classroom.recentSets') }}</h2>
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('classroom.recentSetsDescription') }}</p>
+          <h2 id="recent-sets-title" class="text-3xl font-semibold">{{ t('classroom.recentSets') }}</h2>
 
           <p v-if="assignments.length === 0" class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
             {{ t('classroom.noRecentSets') }}

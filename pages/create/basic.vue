@@ -11,10 +11,7 @@
     <div class="tracer-page mx-auto max-w-3xl p-8">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-semibold">{{ t('create.basicTitle') }}</h1>
-          <p class="hidden sm:block mt-2 text-sm text-slate-600 dark:text-slate-300">
-            {{ t('create.basicDescription') }}
-          </p>
+          <h1 class="text-3xl font-semibold">{{ t('create.basicTitle') }}</h1>
         </div>
 
         <div class="flex shrink-0 flex-wrap items-center gap-2">
@@ -197,18 +194,12 @@
     <BaseModal
       :open="Boolean(isImportOpen)"
       title="Import cards"
+      title-class="text-3xl font-semibold"
       panel-class="max-w-2xl"
       :close-label="t('common.close')"
       @close="closeImport"
     >
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            Paste terms and definitions below.
-          </p>
-        </div>
-      </div>
-      <div class="mt-4">
+      <div class="mt-3">
         <label class="sr-only" for="import-cards">{{ t('create.cards') }} · {{ t('common.import') }}</label>
         <textarea
           id="import-cards"

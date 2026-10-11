@@ -1,5 +1,6 @@
-import { createSetsRepo, useTracerDb, type FlashcardSet, type Uuid } from './db'
+import { createSetsRepo, createStudyGuidesRepo, useTracerDb, type FlashcardSet, type Uuid } from './db'
 import { getSupabaseClient } from './auth/client'
+import { clearPublishedSetCache } from './published-sets'
 
 type RemoteSet = {
   set_id: string
@@ -10,6 +11,7 @@ type RemoteSet = {
   terms: FlashcardSet['terms']
   created_at: string
   updated_at: string
+  study_guide_markdown: string | null
 }
 
 function timestamp(value: string) {
@@ -47,9 +49,10 @@ export async function syncPrivateSets(): Promise<boolean> {
 
   const db = await useTracerDb()
   const repo = createSetsRepo(db)
+  const guides = createStudyGuidesRepo(db)
   const { data, error } = await getSupabaseClient()
     .from('private_sets')
-    .select('set_id,title,description,icon_key,icon_tone,terms,created_at,updated_at')
+    .select('set_id,title,description,icon_key,icon_tone,terms,created_at,updated_at,study_guide_markdown')
     .eq('owner_id', userId)
   if (error) throw error
 
@@ -61,8 +64,16 @@ export async function syncPrivateSets(): Promise<boolean> {
     const local = await repo.get(item.id)
     if (!local) continue
     const remote = remoteById.get(local.id)
-    if (remote && timestamp(remote.updated_at) > timestamp(local.updatedAt)) {
-      await repo.update({
+    const localGuide = await guides.getBySetId(local.id)
+    const remoteNewer = Boolean(remote && timestamp(remote.updated_at) > timestamp(local.updatedAt))
+    const markdown = (remoteNewer ? remote?.study_guide_markdown || localGuide?.markdown : localGuide?.markdown || remote?.study_guide_markdown) ?? null
+    if (markdown && markdown !== localGuide?.markdown) {
+      if (localGuide) await guides.update({ id: localGuide.id, markdown })
+      else await guides.create({ id: crypto.randomUUID(), setId: local.id, markdown })
+    }
+    let current = local
+    if (remoteNewer && remote) {
+      current = await repo.update({
         id: local.id,
         title: remote.title,
         description: remote.description,
@@ -70,13 +81,11 @@ export async function syncPrivateSets(): Promise<boolean> {
         iconTone: remote.icon_tone,
         terms: remote.terms,
       })
-      remoteById.delete(local.id)
-      continue
     }
 
     const { error: upsertError } = await getSupabaseClient()
       .from('private_sets')
-      .upsert(toRemoteRow(userId, local), { onConflict: 'owner_id,set_id' })
+      .upsert({ ...toRemoteRow(userId, current), study_guide_markdown: markdown }, { onConflict: 'owner_id,set_id' })
     if (upsertError) throw upsertError
     remoteById.delete(local.id)
   }
@@ -90,6 +99,25 @@ export async function syncPrivateSets(): Promise<boolean> {
       iconTone: remote.icon_tone,
       terms: remote.terms,
     })
+    if (remote.study_guide_markdown?.trim()) {
+      await guides.create({ id: crypto.randomUUID(), setId: remote.set_id, markdown: remote.study_guide_markdown })
+    }
+  }
+
+  // Repair older publication snapshots from surviving local/cloud guides,
+  // without replacing a guide already present in the public version.
+  const { data: publications, error: publicationError } = await getSupabaseClient()
+    .from('published_sets').select('id,source_set_id')
+    .eq('publisher_id', userId).is('study_guide_markdown', null)
+  if (publicationError) throw publicationError
+  for (const publication of publications ?? []) {
+    const guide = await guides.getBySetId(publication.source_set_id)
+    if (!guide?.markdown.trim()) continue
+    const { error: repairError } = await getSupabaseClient().from('published_sets')
+      .update({ study_guide_markdown: guide.markdown })
+      .eq('id', publication.id).eq('publisher_id', userId).is('study_guide_markdown', null)
+    if (repairError) throw repairError
+    clearPublishedSetCache()
   }
 
   return true

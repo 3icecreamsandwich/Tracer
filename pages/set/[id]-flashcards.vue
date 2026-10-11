@@ -2,11 +2,12 @@
     <main class="flex flex-col h-8/9 bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
         <div
-            class="border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950 select-none"
+            class="border-b border-slate-200 bg-white px-3 py-4 dark:border-slate-800 dark:bg-slate-950 select-none sm:px-6"
         >
-            <div class="flex items-center justify-between gap-4">
-                <BackButton native-window-controls-safe />
-                <div class="flex items-center gap-4">
+            <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
+                <BackButton class="justify-self-start" native-window-controls-safe compact-on-mobile />
+                <FullscreenStudyModePicker mode="flashcards" @select="openStudyMode" />
+                <div class="flex items-center justify-self-end gap-4">
                     <p
                         class="text-sm font-medium text-slate-600 dark:text-slate-300 select-none"
                     >
@@ -474,6 +475,10 @@ const backToSetPath = computed(() => {
           : "/";
 });
 
+function openStudyMode(path: string) {
+    void router.push(path);
+}
+
 function beginClassroomFlashcards() {
     if (!set.value) return;
     beginAssignedAttempt({
@@ -772,7 +777,7 @@ const flashcardSurfaceClass = computed(() => {
     if (flashcardAnswerFeedback.value === "incorrect") {
         return "border-2 border-red-700 bg-red-50/70 hover:bg-red-50/70 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/30 dark:hover:bg-red-950/30 dark:focus-visible:ring-red-800";
     }
-    return "border border-amber-200 bg-amber-50/20 hover:bg-amber-50/40 focus-visible:ring-amber-300 dark:border-amber-900/60 dark:bg-amber-950/10 dark:hover:bg-amber-950/20 dark:focus-visible:ring-amber-800";
+    return "border border-amber-500/70 bg-amber-50/20 hover:bg-amber-50/30 focus-visible:ring-amber-300 dark:border-amber-600/45 dark:bg-amber-950/5 dark:hover:bg-amber-950/10 dark:focus-visible:ring-amber-800";
 });
 
 const isCurrentStarred = computed(() => {

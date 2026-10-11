@@ -1,6 +1,7 @@
 import { getSupabaseClient, getPublicSupabaseClient } from './auth/client'
 import { hasTauriRuntime } from './tauri'
 import type { FlashcardSet, Term } from './db/types'
+import { createStudyGuidesRepo, useTracerDb } from './db'
 export const PUBLIC_SET_TAGS = [
   'world-language',
   'english',
@@ -23,6 +24,7 @@ export type PublishedSetSummary = {
   created_at: string
 }
 export type PublishedSet = PublishedSetSummary & {
+  study_guide_markdown?: string | null
   terms: Term[]
   updated_at: string
   icon_key: string | null
@@ -124,7 +126,7 @@ export function getPublishedSet(id: string): Promise<PublishedSet> {
       const { data, error } = await getPublicSupabaseClient()
         .from('published_sets')
         .select(
-          'id,title,description,publisher_name,publisher_username,publisher_is_dev,tags,allow_copying,card_count,created_at,updated_at,terms,icon_key,icon_tone',
+          'id,title,description,publisher_name,publisher_username,publisher_is_dev,tags,allow_copying,card_count,created_at,updated_at,terms,icon_key,icon_tone,study_guide_markdown',
         )
         .eq('id', id)
         .single()
@@ -187,7 +189,7 @@ export async function getOwnedPublishedSet(
   const { data, error } = await db
     .from('published_sets')
     .select(
-      'id,title,description,publisher_name,publisher_username,publisher_is_dev,tags,allow_copying,card_count,created_at,updated_at,terms,icon_key,icon_tone',
+      'id,title,description,publisher_name,publisher_username,publisher_is_dev,tags,allow_copying,card_count,created_at,updated_at,terms,icon_key,icon_tone,study_guide_markdown',
     )
     .eq('id', id)
     .eq('publisher_id', user.id)
@@ -233,6 +235,7 @@ export async function publishSet(set: FlashcardSet, tags: PublicSetTag[], allowC
   if (!set.terms.length || !set.title.trim())
     throw new Error('Add a title and at least one card before publishing.')
   const identity = await publisherIdentity(db, user.id)
+  const guide = await createStudyGuidesRepo(await useTracerDb()).getBySetId(set.id)
   const { data, error } = await db
     .from('published_sets')
     .upsert(
@@ -245,6 +248,7 @@ export async function publishSet(set: FlashcardSet, tags: PublicSetTag[], allowC
         title: set.title.trim(),
         description: set.description,
         terms: set.terms,
+        ...(guide ? { study_guide_markdown: guide.markdown } : {}),
         icon_key: set.iconKey ?? null,
         icon_tone: set.iconTone ?? null,
         tags,
@@ -284,12 +288,14 @@ export async function updatePublishedSet(set: FlashcardSet) {
   const { db, user } = await publishingSession()
   if (!user)
     throw new Error('Sign in to your Tracer account in Settings to update the published version.')
+  const guide = await createStudyGuidesRepo(await useTracerDb()).getBySetId(set.id)
   const { data, error } = await db
     .from('published_sets')
     .update({
       title: set.title.trim(),
       description: set.description,
       terms: set.terms,
+      ...(guide ? { study_guide_markdown: guide.markdown } : {}),
       icon_key: set.iconKey ?? null,
       icon_tone: set.iconTone ?? null,
       updated_at: new Date().toISOString(),

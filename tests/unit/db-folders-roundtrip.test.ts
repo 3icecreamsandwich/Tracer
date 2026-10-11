@@ -63,7 +63,7 @@ describe('folders repo roundtrip (sqlite:tracer.db)', () => {
     try {
       const dbPath = path.join(tmpDir, 'test.db')
       const migrations = await Promise.all(
-        ['001_core.sql', '004_folders.sql', '006_set_icons.sql', '007_folder_order.sql', '008_set_icon_tone.sql', '018_hide_assigned_set_copies.sql'].map((name) =>
+        ['001_core.sql', '004_folders.sql', '006_set_icons.sql', '007_folder_order.sql', '008_set_icon_tone.sql', '010_home_library_order.sql', '018_hide_assigned_set_copies.sql'].map((name) =>
           readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8')
         )
       )
@@ -91,6 +91,10 @@ describe('folders repo roundtrip (sqlite:tracer.db)', () => {
       expect((await foldersRepo.get('folder-1'))?.name).toBe('STEM')
 
       await foldersRepo.moveSets(['set-1', 'set-2'], 'folder-1')
+      await foldersRepo.reorderHome([
+        { kind: 'folder', id: 'folder-1' },
+        { kind: 'folder', id: 'folder-2' },
+      ])
       expect((await setsRepo.list()).map((set) => set.folderId)).toEqual([
         'folder-1',
         'folder-1'
@@ -101,6 +105,9 @@ describe('folders repo roundtrip (sqlite:tracer.db)', () => {
 
       await foldersRepo.delete('folder-1')
       expect((await setsRepo.get('set-2'))?.folderId).toBeNull()
+      expect(await foldersRepo.listHomeOrder()).toEqual([
+        { kind: 'folder', id: 'folder-2', sortOrder: 1 },
+      ])
       await foldersRepo.delete('folder-2')
     } finally {
       await rm(tmpDir, { recursive: true, force: true })

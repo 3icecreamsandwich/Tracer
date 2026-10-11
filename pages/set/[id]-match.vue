@@ -2,12 +2,13 @@
     <main class="flex flex-col h-8/9 bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
         <div
-            class="border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950"
+            class="border-b border-slate-200 bg-white px-3 py-4 dark:border-slate-800 dark:bg-slate-950 sm:px-6"
         >
-            <div class="flex items-center justify-between gap-4">
-                <BackButton native-window-controls-safe />
+            <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
+                <BackButton class="justify-self-start" native-window-controls-safe compact-on-mobile />
+                <FullscreenStudyModePicker mode="match" @select="openStudyMode" />
                 <p
-                    class="text-sm font-medium text-slate-600 dark:text-slate-300"
+                    class="justify-self-end text-sm font-medium text-slate-600 dark:text-slate-300"
                 >
                     {{ matchTopline }}
                 </p>
@@ -207,6 +208,10 @@ const backToSetPath = computed(() => {
         ? `/student/classes/${classroomId}`
         : set.value ? `/set/${set.value.id}` : "/";
 });
+
+function openStudyMode(path: string) {
+    void router.push(path);
+}
 
 const busy = ref(true);
 const loadError = ref<string | null>(null);

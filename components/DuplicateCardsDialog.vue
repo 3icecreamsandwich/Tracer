@@ -2,18 +2,12 @@
   <BaseModal
     :open="Boolean(open)"
     :title="(t('duplicates.title'))"
+    title-class="text-3xl font-semibold"
     panel-class="max-w-3xl"
     :close-label="t('common.close')"
     @close="emit('cancel')"
   >
-    <div class="flex items-start justify-between gap-4">
-      <div>
-        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          {{ t('duplicates.description') }}
-        </p>
-      </div>
-    </div>
-    <div class="mt-4 max-h-[55vh] overflow-auto rounded-md border border-slate-200 dark:border-slate-800">
+    <div class="mt-3 max-h-[55vh] overflow-auto rounded-md border border-slate-200 dark:border-slate-800">
       <div
         v-for="issue in issues"
         :key="issue.id"

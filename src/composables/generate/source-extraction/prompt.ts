@@ -39,6 +39,7 @@ export function buildGenerateTextPrompt(input: {
     'Return EXACTLY two fenced code blocks and NOTHING else.',
     '',
     '1) A markdown study guide:',
+    'Write a complete guide covering the supplied material, including a concluding summary. Keep any code examples inside the guide; never stop midway through a section.',
     '```study_guide_md',
     '(markdown)',
     '```',

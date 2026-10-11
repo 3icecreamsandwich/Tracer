@@ -19,10 +19,7 @@
       <section v-else-if="classes.length === 0" class="flex min-h-[calc(100vh-10rem)] items-center justify-center">
         <div class="w-full max-w-xl rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-950 text-2xl text-white dark:bg-white dark:text-slate-950" aria-hidden="true">＋</div>
-          <h1 class="mt-5 text-3xl font-semibold">{{ t('classroom.noClassesTitle') }}</h1>
-          <p class="mx-auto mt-3 max-w-md text-sm text-slate-600 dark:text-slate-300">
-            {{ t('classroom.noClassesDescription') }}
-          </p>
+          <h1 class="mt-5 text-4xl font-semibold">{{ t('classroom.noClassesTitle') }}</h1>
           <AppButton class="mt-6" size="lg" @click="createOpen = true">
             {{ t('classroom.createClass') }}
           </AppButton>
@@ -62,14 +59,10 @@
             </div>
           </div>
 
-          <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <article class="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
               <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('classroom.meanAccuracy') }}</p>
               <p class="mt-2 text-3xl font-semibold">{{ formatPercent(progressSummary.meanAccuracy) }}</p>
-            </article>
-            <article class="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
-              <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('classroom.medianAccuracy') }}</p>
-              <p class="mt-2 text-3xl font-semibold">{{ formatPercent(progressSummary.medianAccuracy) }}</p>
             </article>
             <article class="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
               <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('classroom.scoreSpread') }}</p>

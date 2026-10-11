@@ -1,13 +1,10 @@
 <template>
   <main>
     <AiErrorModal :open="aiErrorOpen" :error="aiError" from="/create/synthesize" @close="closeAiError" />
-    <div class="tracer-page mx-auto max-w-3xl p-8">
+    <div class="tracer-page mx-auto max-w-5xl p-8">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-semibold">{{ t('create.synthesizeTitle') }}</h1>
-          <p class="hidden sm:block mt-2 text-sm text-slate-600 dark:text-slate-300">
-            {{ t('create.synthesizeDescription') }}
-          </p>
+          <h1 class="text-3xl font-semibold">{{ t('create.synthesizeTitle') }}</h1>
         </div>
 
         <button
@@ -30,17 +27,14 @@
         Synthesize requires the desktop app (Tauri) for vault + database access.
       </div>
 
-      <div class="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <section
           class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
           aria-label="Choose source sets"
         >
           <div class="flex items-start justify-between gap-3">
             <div>
-              <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.sourceSets') }}</h2>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                {{ t('create.searchAndSelect') }}
-              </p>
+              <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('create.sourceSets') }}</h2>
             </div>
 
             <span
@@ -117,10 +111,7 @@
             class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             aria-label="Theme"
           >
-            <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.theme') }} ({{ t('common.optional') }})</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {{ t('create.themeHint') }}
-            </p>
+            <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('create.theme') }} ({{ t('common.optional') }})</h2>
 
             <div class="mt-3">
               <label class="sr-only" for="synth-theme">{{ t('create.theme') }}</label>
@@ -140,7 +131,7 @@
             aria-label="Selected sets"
           >
             <div class="flex items-center justify-between gap-3">
-              <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.selected') }}</h2>
+              <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('create.selected') }}</h2>
               <span
                 class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
               >
@@ -183,12 +174,7 @@
         aria-label="AI output"
       >
         <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-sm font-medium text-slate-900 dark:text-slate-50">{{ t('create.aiOutput') }}</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              If parsing fails, copy the raw output and try again.
-            </p>
-          </div>
+          <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('create.aiOutput') }}</h2>
 
           <div class="shrink-0 flex flex-wrap gap-2">
             <button

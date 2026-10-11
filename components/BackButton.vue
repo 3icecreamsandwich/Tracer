@@ -2,12 +2,13 @@
   <button
     type="button"
     :disabled="isDisabled"
+    :aria-label="props.label ?? t('common.back')"
     class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-3 py-2 text-sm font-medium text-slate-900 shadow-lg shadow-slate-900/5 backdrop-blur transition-[margin,background-color] hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950/85 dark:text-slate-50 dark:shadow-black/25 dark:hover:bg-slate-950"
     :class="{ 'ml-14': needsMacWindowControlsOffset }"
     @click="onBack"
   >
-    <CreateChevron :direction="language === 'ar' ? 'right' : 'left'" />
-    <span>{{ props.label ?? t('common.back') }}</span>
+    <CreateChevron class="-ml-1" :direction="language === 'ar' ? 'right' : 'left'" />
+    <span :class="compactOnMobile ? 'hidden sm:inline' : ''">{{ props.label ?? t('common.back') }}</span>
   </button>
 </template>
 
@@ -23,11 +24,13 @@ const props = withDefaults(
     nativeWindowControlsSafe?: boolean
     label?: string
     preventNavigation?: boolean
+    compactOnMobile?: boolean
   }>(),
   {
     nativeWindowControlsSafe: false,
     label: undefined,
     preventNavigation: false,
+    compactOnMobile: false,
   },
 )
 

@@ -24,7 +24,7 @@
       >
         <div class="flex items-start justify-between gap-5">
           <div class="min-w-0 flex-1">
-            <h2 v-if="title" :id="titleId" class="text-2xl font-semibold">{{ title }}</h2>
+            <h2 v-if="title" :id="titleId" :class="titleClass ?? 'text-2xl font-semibold'">{{ title }}</h2>
             <p
               v-if="description"
               :id="descriptionId"
@@ -58,6 +58,7 @@ const props = defineProps<{
   open: boolean
   panelClass?: string
   title?: string
+  titleClass?: string
   role?: 'dialog' | 'alertdialog'
   description?: string
   closeLabel: string

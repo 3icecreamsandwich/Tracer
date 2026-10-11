@@ -14,15 +14,13 @@
       <template v-else-if="classroom">
         <header class="flex flex-wrap items-start justify-between gap-5">
           <div>
-            <h1 class="text-4xl font-semibold">{{ t('classroom.manageClass') }}</h1>
-            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ t('classroom.manageDescription') }}</p>
+            <h1 class="text-5xl font-semibold">{{ t('classroom.manageClass') }}</h1>
           </div>
           <AppButton variant="white" to="/teacher">{{ t('classroom.backToDashboard') }}</AppButton>
         </header>
 
         <section class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="class-information-title">
-          <h2 id="class-information-title" class="text-xl font-semibold">{{ t('classroom.classInformation') }}</h2>
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('classroom.classInformationDescription') }}</p>
+          <h2 id="class-information-title" class="text-2xl font-semibold">{{ t('classroom.classInformation') }}</h2>
           <form class="mt-6 grid gap-5 sm:grid-cols-2" @submit.prevent="saveClassInformation">
             <label>
               <span class="text-sm font-medium">{{ t('classroom.className') }}</span>
@@ -53,8 +51,7 @@
         <section class="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="manage-assignments-title">
           <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-6 py-5 dark:border-slate-800">
             <div>
-              <h2 id="manage-assignments-title" class="text-xl font-semibold">{{ t('classroom.assignedMaterials') }}</h2>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('classroom.assignedMaterialsDescription') }}</p>
+              <h2 id="manage-assignments-title" class="text-2xl font-semibold">{{ t('classroom.assignedMaterials') }}</h2>
             </div>
             <AppButton :to="`/teacher/classes/${classId}/assign`">{{ t('classroom.assignSet') }}</AppButton>
           </div>
@@ -89,8 +86,7 @@
         <section class="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="manage-students-title">
           <div class="border-b border-slate-200 px-6 py-5 dark:border-slate-800">
             <div>
-              <h2 id="manage-students-title" class="text-xl font-semibold">{{ t('classroom.manageStudents') }}</h2>
-              <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('classroom.manageStudentsDescription') }}</p>
+              <h2 id="manage-students-title" class="text-2xl font-semibold">{{ t('classroom.manageStudents') }}</h2>
             </div>
           </div>
           <p v-if="members.length === 0" class="px-6 py-8 text-sm text-slate-500 dark:text-slate-400">

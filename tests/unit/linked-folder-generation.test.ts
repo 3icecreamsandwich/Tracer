@@ -31,6 +31,20 @@ function source(
 }
 
 describe('linked-folder generation', () => {
+  it('retries oversized output in smaller source batches without retaining partial text', async () => {
+    generateTextMock.mockResolvedValueOnce({ text: '# Cut off', finishReason: 'length' })
+      .mockResolvedValueOnce({ text: '```study_guide_md\n# First half\n```\n```flashcards_tsv\na\tb\n```', finishReason: 'stop' })
+      .mockResolvedValueOnce({ text: '```study_guide_md\n# Second half\n```\n```flashcards_tsv\nc\td\n```', finishReason: 'stop' })
+    const output = await generateLinkedFolderContent({ model: {}, sources: [source('large', { text: 'x'.repeat(4000) })] })
+    expect(output.studyGuideMarkdown).toBe('# First half\n\n---\n\n# Second half')
+    expect(output.terms).toHaveLength(2)
+    expect(generateTextMock).toHaveBeenCalledTimes(3)
+  })
+  it('does not repair or save a token-limited response as complete material', async () => {
+    generateTextMock.mockResolvedValue({ text: '```study_guide_md\n# Partial', finishReason: 'length' })
+    await expect(generateLinkedFolderContent({ model: {}, sources: [source('one')] })).rejects.toThrow('output limit')
+    expect(generateTextMock).toHaveBeenCalledTimes(1)
+  })
   beforeEach(() => {
     generateTextMock.mockReset()
   })

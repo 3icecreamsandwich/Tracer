@@ -31,6 +31,30 @@
   button:not([tabindex='-1']), a.tracer-button { min-height: 44px; }
 }
 
+.tracer-library-scroll {
+  scrollbar-color: #334155 transparent;
+  scrollbar-width: thin;
+}
+
+.tracer-library-scroll::-webkit-scrollbar {
+  width: 0.625rem;
+}
+
+.tracer-library-scroll::-webkit-scrollbar-thumb {
+  background-color: #334155;
+  border: 0.1875rem solid transparent;
+  border-radius: 9999px;
+  background-clip: content-box;
+}
+
+html.dark .tracer-library-scroll {
+  scrollbar-color: #e2e8f0 transparent;
+}
+
+html.dark .tracer-library-scroll::-webkit-scrollbar-thumb {
+  background-color: #e2e8f0;
+}
+
 
 @layer components {
   .tracer-button {

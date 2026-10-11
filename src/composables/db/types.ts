@@ -67,6 +67,7 @@ export type AppSettings = {
   floatingChatEnabled: boolean
   language: AppLanguage
   textScale: number
+  automaticUpdatesEnabled: boolean
 }
 
 export type AppLanguage = 'en' | 'es' | 'fr' | 'zh-CN' | 'hi' | 'ar' | 'de' | 'ru' | 'ja' | 'ko'

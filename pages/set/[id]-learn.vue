@@ -10,11 +10,12 @@
     <main class="flex min-h-screen flex-col bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
         <div
-            class="border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950"
+            class="border-b border-slate-200 bg-white px-3 py-4 dark:border-slate-800 dark:bg-slate-950 sm:px-6"
         >
-            <div class="flex items-center justify-between gap-4">
-                <BackButton native-window-controls-safe />
-                <div class="flex items-center gap-2">
+            <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
+                <BackButton class="justify-self-start" native-window-controls-safe compact-on-mobile />
+                <FullscreenStudyModePicker mode="learn" @select="openStudyMode" />
+                <div class="flex items-center justify-self-end gap-2">
                     <span
                         v-if="practiceTimed && !learnIsFinished"
                         class="rounded-md bg-amber-50 px-2.5 py-2 text-sm font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
@@ -539,6 +540,10 @@ const backToSetPath = computed(() => {
           ? `/set/${set.value.id}`
           : "/";
 });
+
+function openStudyMode(path: string) {
+    void router.push(path);
+}
 
 function beginClassroomPractice() {
     if (!set.value) return;

@@ -144,6 +144,12 @@ pub fn run() {
             sql: include_str!("../migrations/021_linked_folder_file_metadata.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 22,
+            description: "add automatic updates preference",
+            sql: include_str!("../migrations/022_automatic_updates.sql"),
+            kind: MigrationKind::Up,
+        }
     ];
 
     let app = tauri::Builder::default()

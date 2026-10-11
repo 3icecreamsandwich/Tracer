@@ -11,6 +11,7 @@ type DbSettingsRow = {
   floating_chat_enabled: number
   language: string
   text_scale: number
+  automatic_updates_enabled: number
 }
 
 function toBool(v: unknown) {
@@ -42,7 +43,8 @@ export function createSettingsRepo(db: DbClient) {
     async get(): Promise<AppSettings> {
       const rows = await db.select<DbSettingsRow>(
         `SELECT startup_lock_enabled, default_model_id, fallback_model_ids, dark_mode, learn_hybrid_enabled,
-                smart_review_enabled, flashcards_definition_first, floating_chat_enabled, language, text_scale
+                smart_review_enabled, flashcards_definition_first, floating_chat_enabled, language, text_scale,
+                automatic_updates_enabled
          FROM app_settings WHERE id = 1 LIMIT 1;`
       )
       const row = rows[0]
@@ -57,7 +59,8 @@ export function createSettingsRepo(db: DbClient) {
           flashcardsDefinitionFirst: false,
           floatingChatEnabled: true,
           language: 'en',
-          textScale: 0
+          textScale: 0,
+          automaticUpdatesEnabled: true,
         }
       }
 
@@ -71,7 +74,8 @@ export function createSettingsRepo(db: DbClient) {
         flashcardsDefinitionFirst: toBool(row.flashcards_definition_first),
         floatingChatEnabled: toBool(row.floating_chat_enabled),
         language: toLanguage(row.language),
-        textScale: Math.min(4, Math.max(0, Math.round(Number(row.text_scale) || 0)))
+        textScale: Math.min(4, Math.max(0, Math.round(Number(row.text_scale) || 0))),
+        automaticUpdatesEnabled: toBool(row.automatic_updates_enabled),
       }
     },
 
@@ -90,7 +94,9 @@ export function createSettingsRepo(db: DbClient) {
           patch.flashcardsDefinitionFirst ?? current.flashcardsDefinitionFirst,
         floatingChatEnabled: patch.floatingChatEnabled ?? current.floatingChatEnabled,
         language: patch.language ?? current.language,
-        textScale: patch.textScale ?? current.textScale
+        textScale: patch.textScale ?? current.textScale,
+        automaticUpdatesEnabled:
+          patch.automaticUpdatesEnabled ?? current.automaticUpdatesEnabled,
       }
 
       await db.execute(
@@ -105,6 +111,7 @@ export function createSettingsRepo(db: DbClient) {
              floating_chat_enabled = ?,
              language = ?,
              text_scale = ?
+             automaticUpdatesEnabled = ?
          WHERE id = 1;`,
         [
           next.startupLockEnabled ? 1 : 0,
@@ -116,7 +123,8 @@ export function createSettingsRepo(db: DbClient) {
           next.smartReviewEnabled ? 1 : 0,
           next.floatingChatEnabled ? 1 : 0,
           next.language,
-          next.textScale
+          next.textScale,
+          next.automaticUpdatesEnabled ? 1 : 0,
         ]
       )
 

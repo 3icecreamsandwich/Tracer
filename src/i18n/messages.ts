@@ -71,7 +71,7 @@ const en: Messages = {
   'settings.startupLock': 'Require password on startup',
   'settings.startupLockDescription': 'When disabled, Tracer will auto-unlock using your OS keychain.',
   'settings.dangerZone': 'Danger zone',
-  'settings.resetDescription': 'Reset removes all your local Tracer data.',
+  'settings.resetDescription': 'Resetting removes all your Tracer data, including sets, study guides, and other content.',
   'settings.resetTracer': 'Reset Tracer',
   'home.sets': 'Sets',
   'home.subtitle': 'Your flashcard sets and study guides',
@@ -1488,7 +1488,7 @@ for (const language of Object.keys(classroomManagementMessages) as AppLanguage[]
 
 const classroomRefinementMessages: Record<AppLanguage, Messages> = {
   en: {
-    'classroom.dashboardDescription': 'View your classes, invite students, and open detailed progress.',
+    'classroom.dashboardDescription': 'View your classes, invite students, and see progress.',
     'classroom.manageDescription': 'Update class information and manage the student roster.',
     'classroom.classInformation': 'Class information',
     'classroom.classInformationDescription': 'Update the name and details shown to students.',
@@ -1496,7 +1496,7 @@ const classroomRefinementMessages: Record<AppLanguage, Messages> = {
     'classroom.classChangesSaved': 'Class information saved.',
   },
   es: {
-    'classroom.dashboardDescription': 'Consulta tus clases, invita estudiantes y abre el progreso detallado.',
+    'classroom.dashboardDescription': 'View your classes, invite students, and see progress.',
     'classroom.manageDescription': 'Actualiza la información de la clase y gestiona la lista de estudiantes.',
     'classroom.classInformation': 'Información de la clase',
     'classroom.classInformationDescription': 'Actualiza el nombre y los datos que ven los estudiantes.',
@@ -1504,7 +1504,7 @@ const classroomRefinementMessages: Record<AppLanguage, Messages> = {
     'classroom.classChangesSaved': 'Información de la clase guardada.',
   },
   fr: {
-    'classroom.dashboardDescription': 'Consultez vos classes, invitez des élèves et ouvrez la progression détaillée.',
+    'classroom.dashboardDescription': 'View your classes, invite students, and see progress.',
     'classroom.manageDescription': 'Modifiez les informations de la classe et gérez la liste des élèves.',
     'classroom.classInformation': 'Informations de la classe',
     'classroom.classInformationDescription': 'Modifiez le nom et les informations affichées aux élèves.',
@@ -1512,7 +1512,7 @@ const classroomRefinementMessages: Record<AppLanguage, Messages> = {
     'classroom.classChangesSaved': 'Informations de la classe enregistrées.',
   },
   'zh-CN': {
-    'classroom.dashboardDescription': '查看班级、邀请学生并打开详细进度。',
+    'classroom.dashboardDescription': 'View your classes, invite students, and see progress.',
     'classroom.manageDescription': '更新班级信息并管理学生名单。',
     'classroom.classInformation': '班级信息',
     'classroom.classInformationDescription': '更新学生可见的名称和详细信息。',
@@ -1520,7 +1520,7 @@ const classroomRefinementMessages: Record<AppLanguage, Messages> = {
     'classroom.classChangesSaved': '班级信息已保存。',
   },
   hi: {
-    'classroom.dashboardDescription': 'अपनी कक्षाएँ देखें, विद्यार्थियों को आमंत्रित करें और विस्तृत प्रगति खोलें।',
+    'classroom.dashboardDescription': 'View your classes, invite students, and see progress.',
     'classroom.manageDescription': 'कक्षा की जानकारी अपडेट करें और विद्यार्थियों की सूची प्रबंधित करें।',
     'classroom.classInformation': 'कक्षा की जानकारी',
     'classroom.classInformationDescription': 'विद्यार्थियों को दिखने वाला नाम और विवरण अपडेट करें।',
@@ -1528,7 +1528,7 @@ const classroomRefinementMessages: Record<AppLanguage, Messages> = {
     'classroom.classChangesSaved': 'कक्षा की जानकारी सहेजी गई।',
   },
   ar: {
-    'classroom.dashboardDescription': 'اعرض صفوفك وادعُ الطلاب وافتح التقدم التفصيلي.',
+    'classroom.dashboardDescription': 'View your classes, invite students, and see progress.',
     'classroom.manageDescription': 'حدّث معلومات الصف وأدِر قائمة الطلاب.',
     'classroom.classInformation': 'معلومات الصف',
     'classroom.classInformationDescription': 'حدّث الاسم والتفاصيل التي تظهر للطلاب.',
@@ -1536,7 +1536,7 @@ const classroomRefinementMessages: Record<AppLanguage, Messages> = {
     'classroom.classChangesSaved': 'تم حفظ معلومات الصف.',
   },
   de: {
-    'classroom.dashboardDescription': 'Sieh deine Klassen an, lade Lernende ein und öffne den detaillierten Fortschritt.',
+    'classroom.dashboardDescription': 'View your classes, invite students, and see progress.',
     'classroom.manageDescription': 'Aktualisiere die Klasseninformationen und verwalte die Lernendenliste.',
     'classroom.classInformation': 'Klasseninformationen',
     'classroom.classInformationDescription': 'Aktualisiere den Namen und die Details, die Lernende sehen.',
@@ -1544,7 +1544,7 @@ const classroomRefinementMessages: Record<AppLanguage, Messages> = {
     'classroom.classChangesSaved': 'Klasseninformationen gespeichert.',
   },
   ru: {
-    'classroom.dashboardDescription': 'Просматривайте классы, приглашайте учеников и открывайте подробный прогресс.',
+    'classroom.dashboardDescription': 'View your classes, invite students, and see progress.',
     'classroom.manageDescription': 'Обновляйте сведения о классе и управляйте списком учеников.',
     'classroom.classInformation': 'Сведения о классе',
     'classroom.classInformationDescription': 'Измените название и сведения, которые видят ученики.',
@@ -1552,7 +1552,7 @@ const classroomRefinementMessages: Record<AppLanguage, Messages> = {
     'classroom.classChangesSaved': 'Сведения о классе сохранены.',
   },
   ja: {
-    'classroom.dashboardDescription': 'クラスを確認し、生徒を招待して、詳細な進捗を開きます。',
+    'classroom.dashboardDescription': 'View your classes, invite students, and see progress.',
     'classroom.manageDescription': 'クラス情報を更新し、生徒名簿を管理します。',
     'classroom.classInformation': 'クラス情報',
     'classroom.classInformationDescription': '生徒に表示される名前と詳細を更新します。',
@@ -1560,7 +1560,7 @@ const classroomRefinementMessages: Record<AppLanguage, Messages> = {
     'classroom.classChangesSaved': 'クラス情報を保存しました。',
   },
   ko: {
-    'classroom.dashboardDescription': '수업을 확인하고 학생을 초대하며 상세 진행도를 엽니다.',
+    'classroom.dashboardDescription': 'View your classes, invite students, and see progress.',
     'classroom.manageDescription': '수업 정보를 수정하고 학생 명단을 관리합니다.',
     'classroom.classInformation': '수업 정보',
     'classroom.classInformationDescription': '학생에게 표시되는 이름과 정보를 수정합니다.',
@@ -1773,61 +1773,61 @@ for (const [locale, labels] of Object.entries(reviewReadyTranslations)) {
 const accountDeletionMessages: Record<AppLanguage, Messages> = {
   en: {
     'settings.deleteAccount': 'Delete account',
-    'settings.deleteAccountDescription': 'Permanently delete your account and local Tracer data. Published sets stay available with the author shown as <unknown>.',
+    'settings.deleteAccountDescription': 'Permanently deletes your account and Tracer data. Published sets stay available with the author shown as <unknown>.',
     'settings.deleteAccountConfirm': 'Type DELETE to confirm.',
     'settings.deleteAccountError': 'Failed to delete account',
   },
   es: {
     'settings.deleteAccount': 'Eliminar cuenta',
-    'settings.deleteAccountDescription': 'Elimina permanentemente tu cuenta y los datos locales de Tracer. Los conjuntos publicados seguirán disponibles con el autor <unknown>.',
+    'settings.deleteAccountDescription': 'Permanently deletes your account and Tracer data. Published sets stay available with the author shown as <unknown>.',
     'settings.deleteAccountConfirm': 'Escribe DELETE para confirmar.',
     'settings.deleteAccountError': 'No se pudo eliminar la cuenta',
   },
   fr: {
     'settings.deleteAccount': 'Supprimer le compte',
-    'settings.deleteAccountDescription': 'Supprime définitivement votre compte et les données Tracer locales. Les ensembles publiés restent disponibles avec l’auteur <unknown>.',
+    'settings.deleteAccountDescription': 'Permanently deletes your account and Tracer data. Published sets stay available with the author shown as <unknown>.',
     'settings.deleteAccountConfirm': 'Saisissez DELETE pour confirmer.',
     'settings.deleteAccountError': 'Impossible de supprimer le compte',
   },
   'zh-CN': {
     'settings.deleteAccount': '删除账户',
-    'settings.deleteAccountDescription': '永久删除你的账户和本地 Tracer 数据。已发布的卡片集会保留，作者显示为 <unknown>。',
+    'settings.deleteAccountDescription': 'Permanently deletes your account and Tracer data. Published sets stay available with the author shown as <unknown>.',
     'settings.deleteAccountConfirm': '输入 DELETE 以确认。',
     'settings.deleteAccountError': '无法删除账户',
   },
   hi: {
     'settings.deleteAccount': 'खाता हटाएँ',
-    'settings.deleteAccountDescription': 'अपना खाता और स्थानीय Tracer डेटा स्थायी रूप से हटाएँ। प्रकाशित सेट बने रहेंगे और लेखक <unknown> दिखेगा।',
+    'settings.deleteAccountDescription': 'Permanently deletes your account and Tracer data. Published sets stay available with the author shown as <unknown>.',
     'settings.deleteAccountConfirm': 'पुष्टि करने के लिए DELETE लिखें।',
     'settings.deleteAccountError': 'खाता हटाया नहीं जा सका',
   },
   ar: {
     'settings.deleteAccount': 'حذف الحساب',
-    'settings.deleteAccountDescription': 'احذف حسابك وبيانات Tracer المحلية نهائيًا. تبقى المجموعات المنشورة متاحة ويظهر المؤلف باسم <unknown>.',
+    'settings.deleteAccountDescription': 'Permanently deletes your account and Tracer data. Published sets stay available with the author shown as <unknown>.',
     'settings.deleteAccountConfirm': 'اكتب DELETE للتأكيد.',
     'settings.deleteAccountError': 'تعذر حذف الحساب',
   },
   de: {
     'settings.deleteAccount': 'Konto löschen',
-    'settings.deleteAccountDescription': 'Löscht dein Konto und lokale Tracer-Daten dauerhaft. Veröffentlichte Sets bleiben mit <unknown> als Autor verfügbar.',
+    'settings.deleteAccountDescription': 'Permanently deletes your account and Tracer data. Published sets stay available with the author shown as <unknown>.',
     'settings.deleteAccountConfirm': 'Gib zur Bestätigung DELETE ein.',
     'settings.deleteAccountError': 'Konto konnte nicht gelöscht werden',
   },
   ru: {
     'settings.deleteAccount': 'Удалить аккаунт',
-    'settings.deleteAccountDescription': 'Навсегда удаляет аккаунт и локальные данные Tracer. Опубликованные наборы останутся доступны с автором <unknown>.',
+    'settings.deleteAccountDescription': 'Permanently deletes your account and Tracer data. Published sets stay available with the author shown as <unknown>.',
     'settings.deleteAccountConfirm': 'Введите DELETE для подтверждения.',
     'settings.deleteAccountError': 'Не удалось удалить аккаунт',
   },
   ja: {
     'settings.deleteAccount': 'アカウントを削除',
-    'settings.deleteAccountDescription': 'アカウントとローカルの Tracer データを完全に削除します。公開済みセットは残り、作成者は <unknown> と表示されます。',
+    'settings.deleteAccountDescription': 'Permanently deletes your account and Tracer data. Published sets stay available with the author shown as <unknown>.',
     'settings.deleteAccountConfirm': '確認のため DELETE と入力してください。',
     'settings.deleteAccountError': 'アカウントを削除できませんでした',
   },
   ko: {
     'settings.deleteAccount': '계정 삭제',
-    'settings.deleteAccountDescription': '계정과 로컬 Tracer 데이터를 영구 삭제합니다. 공개된 세트는 유지되며 작성자는 <unknown>으로 표시됩니다.',
+    'settings.deleteAccountDescription': 'Permanently deletes your account and Tracer data. Published sets stay available with the author shown as <unknown>.',
     'settings.deleteAccountConfirm': '확인하려면 DELETE를 입력하세요.',
     'settings.deleteAccountError': '계정을 삭제하지 못했습니다',
   },

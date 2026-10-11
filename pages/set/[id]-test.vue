@@ -9,18 +9,19 @@
     />
     <main class="min-h-screen bg-white text-slate-950 dark:bg-slate-950 dark:text-slate-50">
         <header
-            class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-6 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95"
+            class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-3 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:px-6"
         >
-            <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                 <div class="justify-self-start">
                     <BackButton
                         native-window-controls-safe
+                        compact-on-mobile
                         label="Back · Quit test"
                         prevent-navigation
                         @activate="requestQuitTest('navigation')"
                     />
                 </div>
-                <div aria-hidden="true" class="h-12" />
+                <FullscreenStudyModePicker mode="test" @select="requestStudyMode" />
                 <div class="flex items-center justify-self-end gap-3">
                     <span
                         v-if="testTimed && !testSubmitted"
@@ -378,7 +379,8 @@ const answerResultsEl = ref<HTMLElement | null>(null)
 const timerHandle = shallowRef<number | null>(null)
 const secondsRemaining = ref(0)
 const quitTestOpen = ref(false)
-const pendingTestExit = ref<"navigation" | "app">("navigation")
+const pendingTestExit = ref<"navigation" | "app" | "mode">("navigation")
+const pendingStudyModePath = ref<string | null>(null)
 let unlistenTestWindowClose: UnlistenFn | null = null
 let unlistenTestAppQuit: UnlistenFn | null = null
 const aiError = ref<AiErrorUx | null>(null)
@@ -765,6 +767,12 @@ function requestQuitTest(source: "navigation" | "app") {
     quitTestOpen.value = true
 }
 
+function requestStudyMode(path: string) {
+    pendingStudyModePath.value = path
+    pendingTestExit.value = "mode"
+    quitTestOpen.value = true
+}
+
 async function activateTestExitGuards() {
     if (!hasTauriRuntime()) return
     unlistenTestAppQuit = await listen("tracer://test-quit-requested", () => {
@@ -795,6 +803,11 @@ async function confirmQuitTest() {
     finishClassroomTest()
     if (pendingTestExit.value === "app" && hasTauriRuntime()) {
         await invoke("test_mode_confirm_exit")
+        return
+    }
+    if (pendingTestExit.value === "mode" && pendingStudyModePath.value) {
+        await router.push(pendingStudyModePath.value)
+        pendingStudyModePath.value = null
         return
     }
     navigateBack(router, route.path, window.history.state)
