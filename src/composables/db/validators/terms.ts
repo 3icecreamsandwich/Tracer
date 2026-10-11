@@ -40,6 +40,7 @@ function normalizeImage(
   const filename = normalizeText(getStringProp(value, 'filename') ?? '')
   const mimeType = normalizeText(getStringProp(value, 'mimeType') ?? '').toLowerCase()
   const dataUrl = normalizeText(getStringProp(value, 'dataUrl') ?? '')
+  const altText = normalizeText(getStringProp(value, 'altText') ?? '')
 
   if (!filename) throw new TermsValidationError(`term[${index}].${field}.filename must be non-empty`)
   if (!mimeType) throw new TermsValidationError(`term[${index}].${field}.mimeType must be non-empty`)
@@ -47,7 +48,11 @@ function normalizeImage(
     throw new TermsValidationError(`term[${index}].${field}.dataUrl must match mimeType`)
   }
 
-  return { filename, mimeType, dataUrl }
+  if (altText.length > 500) {
+    throw new TermsValidationError(`term[${index}].${field}.altText must be 500 characters or fewer`)
+  }
+
+  return { filename, mimeType, dataUrl, ...(altText ? { altText } : {}) }
 }
 
 export function normalizeTerms(

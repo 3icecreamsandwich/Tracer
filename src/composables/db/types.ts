@@ -6,6 +6,8 @@ export type TermImage = {
   filename: string
   mimeType: string
   dataUrl: string
+  /** Short description read aloud to people who cannot see the image. */
+  altText?: string
 }
 
 export type Term = {

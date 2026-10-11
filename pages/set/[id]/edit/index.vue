@@ -184,6 +184,15 @@
                       >
                         {{ card.frontImage.filename }}
                       </p>
+                      <label class="text-xs font-medium text-slate-600 dark:text-slate-300" :for="`term-image-alt-${card.key}`">Image description</label>
+                      <input
+                        :id="`term-image-alt-${card.key}`"
+                        v-model="card.frontImage.altText"
+                        type="text"
+                        maxlength="500"
+                        placeholder="Describe this image for screen readers"
+                        class="w-full max-w-sm rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
+                      />
                       <button
                         type="button"
                         class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -232,6 +241,15 @@
                       >
                         {{ card.backImage.filename }}
                       </p>
+                      <label class="text-xs font-medium text-slate-600 dark:text-slate-300" :for="`definition-image-alt-${card.key}`">Image description</label>
+                      <input
+                        :id="`definition-image-alt-${card.key}`"
+                        v-model="card.backImage.altText"
+                        type="text"
+                        maxlength="500"
+                        placeholder="Describe this image for screen readers"
+                        class="w-full max-w-sm rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
+                      />
                       <button
                         type="button"
                         class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -339,6 +357,7 @@ import {
 } from '~/src/composables/cards/duplicates'
 import { useFactCheck } from '~/src/composables/ai/use-fact-check'
 import { normalizeSetIconKey, normalizeSetIconTone, setIconOptions, setIconToneOptions, type SetIconKey, type SetIconTone } from '~/src/composables/set-icons'
+import { optimizeTermImage } from '~/src/composables/images/optimize-term-image'
 
 type DraftCardRow = {
   key: string
@@ -520,21 +539,6 @@ function detectImageMimeType(file: File): string | null {
   return null
 }
 
-function arrayBufferToBase64(buffer: ArrayBuffer) {
-  const bytes = new Uint8Array(buffer)
-  const chunkSize = 0x8000
-  let binary = ''
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
-  }
-  return btoa(binary)
-}
-
-async function fileToImageDataUrl(file: File, mimeType: string) {
-  const buffer = await file.arrayBuffer()
-  return `data:${mimeType};base64,${arrayBufferToBase64(buffer)}`
-}
-
 async function onImagePicked(e: Event, cardKey: string, side: CardImageSide) {
   formError.value = null
   const input = e.target
@@ -550,7 +554,7 @@ async function onImagePicked(e: Event, cardKey: string, side: CardImageSide) {
   }
 
   try {
-    const dataUrl = await fileToImageDataUrl(file, mimeType)
+    const optimized = await optimizeTermImage(file, mimeType)
     const next = cards.value.slice()
     const index = next.findIndex((card) => card.key === cardKey)
     const card = next[index]
@@ -559,8 +563,8 @@ async function onImagePicked(e: Event, cardKey: string, side: CardImageSide) {
       ...card,
       [side]: {
         filename: file.name,
-        mimeType,
-        dataUrl
+        mimeType: optimized.mimeType,
+        dataUrl: optimized.dataUrl
       }
     }
     cards.value = next

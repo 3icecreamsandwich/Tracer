@@ -75,6 +75,9 @@
       </div>
 
       <div class="mt-6 space-y-6">
+        <p class="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-100">
+          Files and instructions used here are sent to your selected AI provider to create study content. Do not upload sensitive information unless you are comfortable sharing it with that provider.
+        </p>
         <section
           class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
           aria-label="Generate inputs"

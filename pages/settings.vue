@@ -191,6 +191,9 @@
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
               Models are tried from top to bottom when a provider is unavailable.
             </p>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              Study content, files, and chat messages used with an AI feature are sent to the provider you choose. Do not send sensitive information unless you accept that provider’s handling of it.
+            </p>
           </div>
 
           <button

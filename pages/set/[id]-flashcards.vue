@@ -257,7 +257,7 @@
                             v-if="viewerImage"
                             class="flashcard-side-image shrink-0 border border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-950/70"
                             :src="viewerImage.dataUrl"
-                            :alt="viewerImage.filename"
+                              :alt="viewerImage.altText || viewerImage.filename"
                         />
                         <div
                             v-if="viewerHasText"

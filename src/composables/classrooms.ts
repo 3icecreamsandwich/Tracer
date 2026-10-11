@@ -167,7 +167,7 @@ type AssignmentWithSetRow = {
 
 type SetVersionContentRow = { id: string; content: unknown }
 
-type SnapshotImage = { filename?: unknown; mimeType?: unknown; objectPath?: unknown }
+type SnapshotImage = { filename?: unknown; mimeType?: unknown; objectPath?: unknown; altText?: unknown }
 type SnapshotTerm = {
   id?: unknown
   front?: unknown
@@ -720,6 +720,7 @@ async function downloadSnapshotImage(value: unknown): Promise<TermImage | null> 
     filename: typeof image.filename === 'string' ? image.filename : 'image',
     mimeType: typeof image.mimeType === 'string' ? image.mimeType : data.type || 'application/octet-stream',
     dataUrl: await blobToDataUrl(data),
+    ...(typeof image.altText === 'string' && image.altText.trim() ? { altText: image.altText.trim().slice(0, 500) } : {}),
   }
 }
 
@@ -844,8 +845,8 @@ export async function assignLocalItemToClass(input: AssignClassroomItemInput): P
         id: term.id,
         front: term.front,
         back: term.back,
-        frontImage: null as null | { filename: string; mimeType: string; objectPath: string },
-        backImage: null as null | { filename: string; mimeType: string; objectPath: string },
+        frontImage: null as null | { filename: string; mimeType: string; objectPath: string; altText?: string },
+        backImage: null as null | { filename: string; mimeType: string; objectPath: string; altText?: string },
       }
 
       for (const side of ['front', 'back'] as const) {
@@ -869,6 +870,7 @@ export async function assignLocalItemToClass(input: AssignClassroomItemInput): P
           filename: image.filename,
           mimeType: image.mimeType,
           objectPath,
+          ...(image.altText?.trim() ? { altText: image.altText.trim().slice(0, 500) } : {}),
         }
       }
       terms.push(serialized)
