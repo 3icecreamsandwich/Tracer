@@ -136,11 +136,15 @@ export function createFoldersRepo(db: DbClient) {
       // Detach sets explicitly so deletion preserves contents even when a client
       // connection has not enabled SQLite foreign-key actions.
       await db.execute(`UPDATE flashcard_sets SET folder_id = NULL WHERE folder_id = ?;`, [id])
+      await db.execute(`DELETE FROM folders WHERE id = ?;`, [id])
+
+      // Older local databases can predate the optional ordering table. Its
+      // cleanup must not prevent a user from deleting an otherwise valid folder.
+      // The next successful reorder rebuilds the table when it is available.
       await db.execute(
         `DELETE FROM home_library_order WHERE item_kind = 'folder' AND item_id = ?;`,
         [id]
-      )
-      await db.execute(`DELETE FROM folders WHERE id = ?;`, [id])
+      ).catch(() => undefined)
       invalidateCachedHomeDashboard()
     }
   }

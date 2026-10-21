@@ -75,7 +75,6 @@ export type ClassroomProgressRow = {
 
 export type ClassProgressSummary = {
   meanAccuracy: number | null
-  medianAccuracy: number | null
   spread: number | null
   lowestAccuracy: number | null
   completedCount: number
@@ -662,15 +661,10 @@ function sortedScores(rows: ClassroomProgressRow[]): number[] {
 export function summarizeClassProgress(rows: ClassroomProgressRow[]): ClassProgressSummary {
   const scores = sortedScores(rows)
   if (!scores.length) {
-    return { meanAccuracy: null, medianAccuracy: null, spread: null, lowestAccuracy: null, completedCount: 0, expectedCount: rows.length }
+    return { meanAccuracy: null, spread: null, lowestAccuracy: null, completedCount: 0, expectedCount: rows.length }
   }
-  const middle = Math.floor(scores.length / 2)
-  const median = scores.length % 2
-    ? scores[middle]!
-    : (scores[middle - 1]! + scores[middle]!) / 2
   return {
     meanAccuracy: scores.reduce((sum, value) => sum + value, 0) / scores.length,
-    medianAccuracy: median,
     spread: scores[scores.length - 1]! - scores[0]!,
     lowestAccuracy: scores[0]!,
     completedCount: scores.length,
