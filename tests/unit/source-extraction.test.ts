@@ -116,6 +116,29 @@ describe('generate source extraction', () => {
     )
   })
 
+  it('keeps an unreadable image as an AI-usable source when allowed', async () => {
+    const ocr: OcrAdapter = {
+      recognize: vi.fn(async () => {
+        throw new Error('OCR timed out')
+      })
+    }
+
+    const result = await extractGenerateSources(
+      [{ id: 'image-1', kind: 'image', file: makeFile('vocab.jpg', 'image/jpeg') }],
+      { ocr },
+      { allowUnreadable: true }
+    )
+
+    expect(result.failed).toEqual([])
+    expect(result.extracted).toEqual([
+      expect.objectContaining({
+        id: 'image-1',
+        method: 'unreadable',
+        text: expect.stringContaining('Follow the user instructions')
+      })
+    ])
+  })
+
   it('reads UTF-8 text sources directly without OCR', async () => {
     const ocr: OcrAdapter = {
       recognize: vi.fn(async () => 'unused')

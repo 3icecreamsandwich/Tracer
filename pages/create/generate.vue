@@ -644,7 +644,9 @@ async function onGenerate() {
   parseBusy.value = true
   try {
     const result = await extractGenerateSources(selectedGenerateSources(), {}, {
-      allowUnreadable: instructions.value.trim().length > 0
+      // Generate should still help with vocabulary lists when a photo is not
+      // machine-readable. The model receives an explicit extraction note.
+      allowUnreadable: true
     })
     parseBusy.value = false
     const decision = createGenerateParseDecision(result)
