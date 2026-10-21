@@ -62,6 +62,14 @@
             <LoadingSpinner v-if="busy || parseBusy" size="sm" :label="generateButtonLabel" :show-label="false" />
             {{ generateButtonLabel }}
           </button>
+          <p
+            v-if="generateProgressLabel"
+            class="w-full text-right text-xs text-slate-500 dark:text-slate-400"
+            role="status"
+            aria-live="polite"
+          >
+            {{ generateProgressLabel }}
+          </p>
         </div>
       </div>
 
@@ -287,6 +295,8 @@ const ingestBusy = ref(false)
 const parseBusy = ref(false)
 const busy = ref(false)
 const linkBusy = ref(false)
+const generationStartedAt = ref<number | null>(null)
+const generationClock = ref(Date.now())
 const formError = ref<string | null>(null)
 
 const rawOutput = ref<string | null>(null)
@@ -382,9 +392,29 @@ const pickedSummary = computed(() => {
 const operationBusy = computed(() => busy.value || parseBusy.value || linkBusy.value)
 
 const generateButtonLabel = computed(() => {
-  if (parseBusy.value) return t('create.parsing')
+  if (parseBusy.value) return t('create.generating')
   if (busy.value) return t('create.generating')
   return t('home.generate')
+})
+
+const estimatedReadSeconds = computed(() => {
+  // OCR handles two images at a time. These estimates deliberately lean high
+  // so a user sees a useful expectation rather than a misleading countdown.
+  const imageTime = Math.ceil(pickedImages.value.length / 2) * 55
+  const pdfTime = Math.ceil(totalPdfPages.value / 2) * 12
+  return Math.max(30, imageTime + pdfTime)
+})
+
+function formatEstimate(seconds: number) {
+  const minutes = Math.max(1, Math.ceil(seconds / 60))
+  return `about ${minutes} min${minutes === 1 ? '' : 's'} remaining`
+}
+
+const generateProgressLabel = computed(() => {
+  if (!parseBusy.value) return ''
+  // Depend on the clock so the estimate updates while OCR is working.
+  const elapsed = generationStartedAt.value === null ? 0 : Math.floor((generationClock.value - generationStartedAt.value) / 1000)
+  return `Generating · ${formatEstimate(Math.max(15, estimatedReadSeconds.value - elapsed))}`
 })
 
 const generateDisabled = computed(() => {
@@ -631,6 +661,8 @@ async function onGenerate() {
   clearParseFailureState()
 
   if (operationBusy.value) return
+  generationStartedAt.value = Date.now()
+  generationClock.value = generationStartedAt.value
   parseBusy.value = true
   plan.value = await loadGeneratePlan()
   if (!validateGenerateInput()) {
@@ -668,6 +700,7 @@ async function onGenerate() {
     formError.value = toErrorMessage(err, 'Failed to parse selected files.')
   } finally {
     parseBusy.value = false
+    generationStartedAt.value = null
   }
 }
 
@@ -688,7 +721,26 @@ function abortParseFailures() {
   clearParseFailureState()
 }
 
+function confirmLeaveWhileGenerating() {
+  if (!operationBusy.value || typeof window === 'undefined') return true
+  return window.confirm('Generation is still running. Leave this page? It will keep running in the background.')
+}
+
+function warnBeforeUnload(event: BeforeUnloadEvent) {
+  if (!operationBusy.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+let generationClockTimer: ReturnType<typeof setInterval> | null = null
+
+onBeforeRouteLeave(() => confirmLeaveWhileGenerating())
+
 onMounted(async () => {
+  generationClockTimer = setInterval(() => {
+    generationClock.value = Date.now()
+  }, 1_000)
+  window.addEventListener('beforeunload', warnBeforeUnload)
   try {
     if (isWebPreview.value) {
       return
@@ -726,5 +778,10 @@ onMounted(async () => {
     markLocked()
     await router.replace('/unlock')
   }
+})
+
+onBeforeUnmount(() => {
+  if (generationClockTimer) clearInterval(generationClockTimer)
+  window.removeEventListener('beforeunload', warnBeforeUnload)
 })
 </script>
