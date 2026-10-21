@@ -94,7 +94,19 @@ async function extractPdfSource(
 }
 
 async function extractImageSource(source: GenerateSourceFile, getOcr: () => Promise<OcrAdapter>, allowUnreadable: boolean) {
-  const text = normalizeExtractedText(await (await getOcr()).recognize(source.file))
+  let text: string
+  try {
+    text = normalizeExtractedText(await (await getOcr()).recognize(source.file))
+  } catch (error) {
+    if (!allowUnreadable) throw error
+    return {
+      id: source.id,
+      filename: sourceFilename(source.file),
+      kind: 'image' as const,
+      text: '[No readable text could be extracted from this image. Follow the user instructions and make the best safe study material possible.]',
+      method: 'unreadable' as const
+    }
+  }
   if (!isMeaningfulExtractedText(text)) {
     if (allowUnreadable) {
       return {

@@ -110,8 +110,8 @@ export function createSettingsRepo(db: DbClient) {
              smart_review_enabled = ?,
              floating_chat_enabled = ?,
              language = ?,
-             text_scale = ?
-             automaticUpdatesEnabled = ?
+             text_scale = ?,
+             automatic_updates_enabled = ?
          WHERE id = 1;`,
         [
           next.startupLockEnabled ? 1 : 0,

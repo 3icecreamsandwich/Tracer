@@ -37,6 +37,7 @@ describe('generation OCR pool', () => {
       workerPath: 'test-worker.js',
       corePath: 'test-core.js'
     }))
+    expect(workers[0]!.recognize).toHaveBeenCalledWith('bad', { rotateAuto: true })
     expect(fetchMock).toHaveBeenCalledWith('test-language-data.gz')
     releases[0]!()
     await vi.waitFor(() => expect(releases).toHaveLength(3))
