@@ -113,24 +113,6 @@
             </div>
 
             <NuxtLink
-                v-if="
-                    updateStatus === 'downloading' || updateStatus === 'ready'
-                "
-                to="/settings#app-updates"
-                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-orange-600 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:text-orange-400 dark:hover:bg-orange-950/40"
-                :title="updateIndicatorLabel"
-                :aria-label="updateIndicatorLabel"
-            >
-                <Download
-                    v-if="updateStatus === 'downloading'"
-                    :size="20"
-                    class="motion-safe:animate-pulse"
-                    aria-hidden="true"
-                />
-                <RotateCw v-else :size="20" aria-hidden="true" />
-            </NuxtLink>
-
-            <NuxtLink
                 to="/settings"
                 :aria-label="t('nav.settings')"
                 class="inline-flex h-10 shrink-0 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 text-[15px] font-medium text-slate-950 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
@@ -146,6 +128,24 @@
                     <template v-else>{{ avatarText }}</template>
                 </span>
                 <span class="hidden sm:block">{{ t("nav.settings") }}</span>
+            </NuxtLink>
+
+            <NuxtLink
+                v-if="
+                    updateStatus === 'downloading' || updateStatus === 'ready'
+                "
+                to="/settings#app-updates"
+                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-orange-600 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:text-orange-400 dark:hover:bg-orange-950/40"
+                :title="updateIndicatorLabel"
+                :aria-label="updateIndicatorLabel"
+            >
+                <Download
+                    v-if="updateStatus === 'downloading'"
+                    :size="20"
+                    class="motion-safe:animate-pulse"
+                    aria-hidden="true"
+                />
+                <RotateCw v-else :size="20" aria-hidden="true" />
             </NuxtLink>
 
             <div

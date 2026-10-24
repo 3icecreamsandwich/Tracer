@@ -45,7 +45,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENFOUUyRjFGQjVFMDA2MTIKUldRU0J1QzFIeStlemg0ZytvUnNSVmQ4cWV3L05VSVM2ZmVkbEd6OEpMcFNOeWlvWDU5RHRaaHgK",
       "endpoints": [
-        "https://github.com/3icecreamsandwich/tracer/releases/latest/download/latest.json"
+        "https://github.com/3icecreamsandwich/Tracer/releases/download/updater-beta/latest.json"
       ],
       "windows": {
         "installMode": "passive"

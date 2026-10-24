@@ -99,13 +99,22 @@
         </button>
       </div>
 
-      <progress
+      <div
         v-if="status === 'downloading'"
-        class="mt-3 h-1.5 w-full accent-orange-600"
-        :value="downloadPercent ?? undefined"
-        max="100"
+        class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+        role="progressbar"
+        :aria-valuenow="downloadPercent ?? undefined"
+        :aria-valuetext="downloadPercent === null ? 'Downloading update' : `${downloadPercent}%`"
+        aria-valuemin="0"
+        aria-valuemax="100"
         aria-label="Update download progress"
-      />
+      >
+        <div
+          class="h-full rounded-full bg-orange-500 transition-[width] duration-150 motion-reduce:transition-none"
+          :class="{ 'motion-safe:animate-pulse': downloadPercent === null }"
+          :style="{ width: downloadPercent === null ? '33%' : `${downloadPercent}%` }"
+        />
+      </div>
 
       <p
         v-if="displayError"

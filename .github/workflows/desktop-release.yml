@@ -94,6 +94,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Validate release configuration
+        id: release_config
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         shell: bash
@@ -126,6 +127,14 @@ jobs:
           if (config.bundle?.createUpdaterArtifacts !== true) {
             throw new Error('bundle.createUpdaterArtifacts must be true');
           }
+          const prerelease = config.version.includes('-');
+          const endpoint = prerelease
+            ? 'https://github.com/3icecreamsandwich/Tracer/releases/download/updater-beta/latest.json'
+            : 'https://github.com/3icecreamsandwich/Tracer/releases/latest/download/latest.json';
+          fs.writeFileSync('src-tauri/tauri.release.generated.json', JSON.stringify({
+            plugins: { updater: { endpoints: [endpoint] } }
+          }));
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `prerelease=${prerelease}\n`);
           NODE
 
       - name: Build and upload signed release
@@ -137,12 +146,12 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tauriScript: bun run tauri
-          args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin --bundles app,dmg' || matrix.os == 'windows-latest' && '--bundles nsis' || '--bundles deb,appimage' }}
+          args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin --bundles app,dmg' || matrix.os == 'windows-latest' && '--bundles nsis' || '--bundles deb,appimage' }} --config src-tauri/tauri.release.generated.json
           tagName: ${{ env.RELEASE_TAG }}
           releaseName: Tracer v__VERSION__
           releaseBody: Download the installer for your operating system.
           releaseDraft: ${{ github.event_name != 'workflow_dispatch' || !inputs.published }}
-          prerelease: true
+          prerelease: ${{ steps.release_config.outputs.prerelease == 'true' }}
           uploadUpdaterJson: true
           uploadUpdaterSignatures: true
           updaterJsonPreferNsis: true
