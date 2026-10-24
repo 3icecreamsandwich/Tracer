@@ -30,9 +30,9 @@ describe('streamlined non-settings copy', () => {
     const manage = source('../../pages/teacher/classes/[id]/manage.vue')
     const edit = source('../../pages/set/[id]/edit/index.vue')
 
-    expect(settings).toContain("t('settings.deleteAccountDescription')")
+    expect(settings).toMatch(/t\(\s*(['"])settings\.deleteAccountDescription\1\s*\)/)
     expect(manage).toContain("t('classroom.removeStudentConfirmation'")
     expect(manage).toContain("t('classroom.removeMaterialConfirmation'")
-    expect(edit).toContain('This removes the set, starred terms, and linked study guide')
+    expect(edit).toContain('This deletes the set and its study guide from your account on all devices.')
   })
 })
