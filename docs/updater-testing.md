@@ -59,3 +59,7 @@ The Desktop Release workflow supports manual dispatch with an existing `tag`,
 out that tag, rebuilds the universal app, merges the macOS manifest entries, and
 validates both architectures. Windows and Linux assets are retained. Leave
 `published=false` when rebuilding an existing draft release.
+
+Set `verify_only=true` to validate already uploaded macOS assets without compiling
+again. Validation resolves each manifest URL against release metadata, supporting
+both GitHub asset API URLs and direct browser download URLs.
