@@ -168,7 +168,7 @@ describe('classroom data mapping', () => {
       { studentId: 'one', displayName: 'One', assignmentId: 'b', assignmentTitle: 'B', attemptId: 'y', mode: 'match' as const, scoreEarned: 6, scorePossible: 10, accuracyPercent: 60, submittedAt: '2026-08-21T10:00:00Z', durationSeconds: 30, attemptCount: 1, bestAccuracyPercent: 60 },
       { studentId: 'two', displayName: 'Two', assignmentId: 'a', assignmentTitle: 'A', attemptId: null, mode: null, scoreEarned: null, scorePossible: null, accuracyPercent: null, submittedAt: null, durationSeconds: null, attemptCount: 0, bestAccuracyPercent: null },
     ]
-    expect(summarizeClassProgress(rows)).toEqual({ meanAccuracy: 70, medianAccuracy: 70, spread: 20, lowestAccuracy: 60, completedCount: 2, expectedCount: 3 })
+    expect(summarizeClassProgress(rows)).toEqual({ meanAccuracy: 70, spread: 20, lowestAccuracy: 60, completedCount: 2, expectedCount: 3 })
     expect(summarizeStudentProgress(rows.slice(0, 2))).toMatchObject({ averageAccuracy: 70, bestAccuracy: 80, spread: 20, completedAssignments: 2, totalAssignments: 2, mostRecent: rows[1] })
   })
 })

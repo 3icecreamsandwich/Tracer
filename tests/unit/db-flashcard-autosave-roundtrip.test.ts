@@ -77,6 +77,8 @@ async function applyMigrations(dbPath: string) {
     '018_hide_assigned_set_copies.sql'
     , '019_flashcard_mastery.sql'
     , '020_smart_review_setting.sql'
+    , '021_linked_folder_file_metadata.sql'
+    , '022_automatic_updates.sql'
   ]
   const migrations = await Promise.all(
     names.map((name) => readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8'))
@@ -137,6 +139,8 @@ describe('flashcard autosave persistence (sqlite:tracer.db)', () => {
       expect((await settingsRepo.get()).smartReviewEnabled).toBe(true)
       await settingsRepo.set({ floatingChatEnabled: false })
       expect((await settingsRepo.get()).floatingChatEnabled).toBe(false)
+      await settingsRepo.set({ automaticUpdatesEnabled: false })
+      expect((await settingsRepo.get()).automaticUpdatesEnabled).toBe(false)
       await settingsRepo.set({
         defaultModelId: 'openai:gpt-5.6-terra',
         fallbackModelIds: ['anthropic:claude-haiku-4-5-20251001', 'gemini:gemini-3.7-flash']
