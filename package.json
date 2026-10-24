@@ -69,7 +69,10 @@
     "wrangler": "4.131.0"
   },
   "overrides": {
-    "tar": "7.5.22"
+    "tar": "7.5.22",
+    "shell-quote": "1.12.0",
+    "simple-git": "4.0.2",
+    "@simple-git/argv-parser": "2.0.1"
   },
   "patchedDependencies": {
     "zod@4.3.6": "patches/zod@4.3.6.patch"
