@@ -1,3 +1,5 @@
+import { cloudLibraryEnabled } from '../../cloud-library/client'
+import { cloudSetsRepo } from '../../cloud-library/repos'
 import type {
   DbClient,
   FlashcardSet,
@@ -61,6 +63,11 @@ function rowToSet(row: DbSetRow): FlashcardSet {
 }
 
 export function createSetsRepo(db: DbClient) {
+  return cloudLibraryEnabled() ? cloudSetsRepo(db) : createLocalSetsRepo(db)
+}
+
+/** Legacy device data: used only for recovery/import when cloud storage is configured. */
+export function createLocalSetsRepo(db: DbClient) {
   return {
     async list(): Promise<FlashcardSetListItem[]> {
       const rows = await db.select<DbSetListRow>(
@@ -113,6 +120,7 @@ export function createSetsRepo(db: DbClient) {
       iconKey?: string | null
       iconTone?: string | null
       terms?: Term[]
+      cloudRevision?: number
     }): Promise<FlashcardSet> {
       const current = await this.get(input.id)
       if (!current) throw new Error('Set not found')

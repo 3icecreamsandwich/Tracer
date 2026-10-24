@@ -28,3 +28,21 @@ pub(crate) fn test_mode_confirm_exit(
     state.allow_exit.store(true, Ordering::SeqCst);
     app.exit(0);
 }
+
+#[tauri::command]
+pub(crate) fn updater_preflight(
+    window: tauri::WebviewWindow,
+    state: tauri::State<'_, TestModeExitState>,
+) -> Result<bool, String> {
+    if state.should_confirm_exit() {
+        return Err("Finish or leave your active test before updating.".into());
+    }
+
+    let url = window.url().map_err(|error| error.to_string())?;
+
+    if url.path().trim_end_matches('/') != "/settings" {
+        return Err("Open Settings before installing the update.".into());
+    }
+
+    Ok(cfg!(target_os = "windows"))
+}

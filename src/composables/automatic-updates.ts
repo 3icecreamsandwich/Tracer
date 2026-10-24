@@ -13,7 +13,7 @@ async function initialize(): Promise<void> {
 
   if (!initialization) {
     initialization = (async () => {
-      const db = useTracerDb()
+      const db = await useTracerDb()
       const settings = await createSettingsRepo(db).get()
 
       enabled.value = settings.automaticUpdatesEnabled
@@ -31,7 +31,7 @@ async function setEnabled(value: boolean): Promise<void> {
 
   await initialize()
 
-  const db = useTracerDb()
+  const db = await useTracerDb()
   const settings = await createSettingsRepo(db).set({ automaticUpdatesEnabled: value })
   
   enabled.value = settings.automaticUpdatesEnabled

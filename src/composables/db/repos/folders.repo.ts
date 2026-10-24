@@ -1,3 +1,5 @@
+import { cloudLibraryEnabled } from '../../cloud-library/client'
+import { cloudFoldersRepo } from '../../cloud-library/repos'
 import type { DbClient, SetFolder, Uuid } from '../types'
 import { nowIsoSql } from '../sql'
 import { invalidateCachedHomeDashboard } from '../../home-dashboard-cache'
@@ -33,6 +35,11 @@ function rowToFolder(row: DbFolderRow): SetFolder {
 }
 
 export function createFoldersRepo(db: DbClient) {
+  return cloudLibraryEnabled() ? cloudFoldersRepo(db) : createLocalFoldersRepo(db)
+}
+
+/** Legacy device data: used only for recovery/import when cloud storage is configured. */
+export function createLocalFoldersRepo(db: DbClient) {
   return {
     async list(): Promise<SetFolder[]> {
       const rows = await db.select<DbFolderRow>(

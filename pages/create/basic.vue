@@ -68,7 +68,8 @@
         </div>
       </div>
 
-      <FactCheckPanel
+      <LazyFactCheckPanel
+        v-if="factCheckBusy || factCheckResponse"
         class="mt-4"
         :busy="factCheckBusy"
         :response="factCheckResponse"

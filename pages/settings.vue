@@ -1,797 +1,1424 @@
 <template>
-  <main>
-    <div class="tracer-page mx-auto max-w-3xl p-8">
-      <h1 class="text-2xl font-semibold">{{ t('settings.title') }}</h1>
-
-      <div
-        v-if="gateMessage"
-        class="mt-4 flex items-start justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
-        role="status"
-        aria-live="polite"
-      >
-        <div>
-          <p class="font-medium">{{ t('settings.actionRequired') }}</p>
-          <p class="mt-1 text-amber-800 dark:text-amber-200">
-            {{ gateMessage }}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          class="shrink-0 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
-          @click="dismissGateMessage"
-        >
-          {{ t('common.dismiss') }}
-        </button>
-      </div>
-
-      <section
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        :aria-label="t('settings.profile')"
-      >
-        <div class="flex items-center gap-4">
-          <div
-            class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
-            aria-hidden="true"
-          >
-            {{ avatarText }}
-          </div>
-
-          <LoadingSpinner v-if="localSettingsPending" size="sm" />
-          <div v-else class="min-w-0">
-            <div class="flex flex-wrap items-center gap-2">
-              <p class="truncate text-sm font-medium text-slate-900 dark:text-slate-50">
-                {{ profile?.name ?? t('common.user') }}
-              </p>
-              <span v-if="superAccount" class="relative top-0.5 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900 dark:border-amber-500/50 dark:bg-amber-400/20 dark:text-amber-200" title="Tracer developer">
-                <AppIcon name="crown" :size="15" :stroke-width="2.4" /> DEV
-              </span>
-            </div>
-            <p class="truncate text-sm text-slate-600 dark:text-slate-300">
-              {{ profile?.email ?? '' }}
-            </p>
-            <p v-if="usernameDraft" class="truncate text-sm text-slate-500 dark:text-slate-400">@{{ usernameDraft }}</p>
-          </div>
-        </div>
-
-        <form v-if="!isWebPreview && accountOnline && profileIdentityReady" class="mt-5 grid gap-4 border-t border-slate-200 pt-5 dark:border-slate-800 sm:grid-cols-2" @submit.prevent="onSaveProfileIdentity">
-          <div class="flex items-center justify-between sm:col-span-2">
-            <p class="text-sm font-semibold">Profile details</p>
-            <button v-if="!profileEditing" type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" aria-label="Edit profile" title="Edit profile" @click="startProfileEditing">
-              <AppIcon name="edit" :size="17" />
-            </button>
-            <button v-else type="button" class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white" @click="cancelProfileEditing">Cancel</button>
-          </div>
-          <label class="text-sm font-medium">
-            Display name
-            <input v-model="displayNameDraft" maxlength="80" autocomplete="name" :readonly="!profileEditing" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 font-normal shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 read-only:cursor-default read-only:bg-slate-50 read-only:text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:read-only:bg-slate-900 dark:read-only:text-slate-300" />
-            <span class="mt-1 block text-xs font-normal text-slate-500">Shown to other people. It does not have to be unique.</span>
-          </label>
-          <label class="text-sm font-medium">
-            Username
-            <div class="mt-1 flex rounded-md border border-slate-300 shadow-sm focus-within:ring-2 focus-within:ring-orange-500" :class="profileEditing ? 'bg-white dark:bg-slate-950' : 'bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300'">
-              <span class="px-3 py-2 text-slate-500">@</span>
-              <input v-model="usernameDraft" maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" :readonly="!profileEditing" class="min-w-0 flex-1 bg-transparent py-2 pe-3 font-normal outline-none read-only:cursor-default" @input="usernameDraft = normalizeUsername(usernameDraft)" />
-            </div>
-            <span class="mt-1 block text-xs font-normal text-slate-500">Unique, lowercase, 3–30 characters. Letters, numbers, and underscores only.</span>
-          </label>
-          <div class="sm:col-span-2 flex flex-wrap items-center gap-3">
-            <button type="submit" class="rounded-md px-4 py-2 text-sm font-semibold transition-colors" :class="profileCanSave ? 'bg-slate-950 text-white shadow-sm hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200' : 'cursor-not-allowed bg-slate-200 text-slate-400 dark:bg-slate-800 dark:text-slate-500'" :disabled="!profileCanSave">
-              {{ profileIdentityPending ? 'Saving…' : t('common.save') }}
-            </button>
-            <p v-if="profileIdentityError" role="alert" class="text-sm text-red-600 dark:text-red-300">{{ profileIdentityError }}</p>
-          </div>
-        </form>
-        <div v-else-if="!isWebPreview && accountOnline" class="mt-5 flex items-center gap-2 border-t border-slate-200 pt-5 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-          <LoadingSpinner size="sm" />
-          <span>Loading profile…</span>
-        </div>
-      </section>
-
-      <section
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        :aria-label="t('settings.account')"
-      >
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p v-if="accountRole" class="mt-1 text-sm font-medium">{{ t('settings.accountType') }}: {{ accountRoleLabel }}</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ accountEmail || profile?.email }}</p>
-            <LoadingSpinner
-              v-if="accountConnectionPending"
-              class="mt-1"
-              size="sm"
-              :show-label="false"
-            />
-            <p v-else class="mt-1 text-xs" :class="accountOnline ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'">
-              {{ accountSignedOut ? t('settings.accountSignedOut') : accountOnline ? t('settings.accountOnline') : t('settings.accountOffline') }}
-            </p>
-          </div>
-          <div class="flex gap-2">
-            <button type="button" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900" :disabled="busy || accountConnectionPending || isWebPreview" @click="onReconnectAccount">
-              {{ t('settings.reconnect') }}
-            </button>
-            <button type="button" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900" :disabled="busy || accountConnectionPending || isWebPreview || accountSignedOut" @click="onAccountSignOut">
-              {{ t('common.signOut') }}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        :aria-label="t('settings.theme')"
-      >
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <h2 class="text-sm font-medium">{{ t('settings.darkMode') }}</h2>
-          </div>
-
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy || localSettingsPending"
-            @click="onToggleDarkMode"
-          >
-            {{ darkMode ? t('common.on') : t('common.off') }}
-          </button>
-        </div>
-      </section>
-
-      <section
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        :aria-label="t('settings.language')"
-      >
-        <div class="flex items-center justify-between gap-4">
-          <h2 class="text-sm font-medium">{{ t('settings.language') }}</h2>
-
-          <div ref="languageMenuRoot" class="relative shrink-0">
-            <button
-              type="button"
-              class="inline-flex min-w-40 items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              :aria-expanded="languageMenuOpen"
-              aria-haspopup="menu"
-              @click="languageMenuOpen = !languageMenuOpen"
-            >
-              <span dir="auto">{{ currentLanguageOption.nativeName }}</span>
-              <span aria-hidden="true">⌄</span>
-            </button>
+    <main>
+        <div class="tracer-page mx-auto max-w-3xl p-8">
+            <h1 class="text-2xl font-semibold">{{ t("settings.title") }}</h1>
 
             <div
-              v-if="languageMenuOpen"
-              class="absolute end-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-              role="menu"
-              :aria-label="t('settings.chooseLanguage')"
+                v-if="gateMessage"
+                class="mt-4 flex items-start justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
+                role="status"
+                aria-live="polite"
             >
-              <button
-                v-for="option in languageOptions"
-                :key="option.code"
-                type="button"
-                role="menuitemradio"
-                :aria-checked="language === option.code"
-                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500"
-                @click="onLanguageSelect(option.code)"
-              >
-                <span dir="auto">
-                  {{ option.englishName }}<template v-if="option.nativeName !== option.englishName"> · {{ option.nativeName }}</template>
-                </span>
-                <span v-if="language === option.code" aria-hidden="true">✓</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+                <div>
+                    <p class="font-medium">
+                        {{ t("settings.actionRequired") }}
+                    </p>
+                    <p class="mt-1 text-amber-800 dark:text-amber-200">
+                        {{ gateMessage }}
+                    </p>
+                </div>
 
-      <section
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        aria-label="AI models"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-sm font-medium">AI models</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Models are tried from top to bottom when a provider is unavailable.
-            </p>
-            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Study content, files, and chat messages used with an AI feature are sent to the provider you choose. Do not send sensitive information unless you accept that provider’s handling of it.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            class="inline-flex shrink-0 items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-            :disabled="busy"
-            @click="openModelPicker"
-          >
-            Add model
-          </button>
-        </div>
-
-        <div v-if="modelRouteIds.length" class="mt-4 overflow-hidden rounded-md border border-slate-200 dark:border-slate-800">
-          <div
-            v-for="(modelId, index) in modelRouteIds"
-            :key="modelId"
-            class="flex items-center justify-between gap-3 border-b border-slate-200 px-3 py-3 last:border-b-0 dark:border-slate-800"
-          >
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <p class="truncate text-sm font-medium text-slate-900 dark:text-slate-50">{{ modelLabel(modelId) }}</p>
-                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-900 dark:text-slate-300">
-                  {{ index === 0 ? 'Primary' : `Fallback ${index}` }}
-                </span>
-              </div>
-              <LoadingSpinner
-                v-if="modelConnectionPending(modelId)"
-                class="mt-1"
-                size="sm"
-                :show-label="false"
-              />
-              <p v-else class="mt-1 text-xs" :class="modelConnectionReady(modelId) ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'">
-                {{ modelConnectionReady(modelId) ? 'Ready' : 'Connection required' }}
-              </p>
-            </div>
-            <div class="flex shrink-0 items-center gap-1">
-              <button type="button" class="rounded border border-slate-200 px-2 py-1 text-xs disabled:opacity-40 dark:border-slate-800" :disabled="busy || index === 0" aria-label="Move model up" @click="moveModelRoute(index, -1)">↑</button>
-              <button type="button" class="rounded border border-slate-200 px-2 py-1 text-xs disabled:opacity-40 dark:border-slate-800" :disabled="busy || index === modelRouteIds.length - 1" aria-label="Move model down" @click="moveModelRoute(index, 1)">↓</button>
-              <button type="button" class="rounded border border-red-200 px-2 py-1 text-xs text-red-700 dark:border-red-900 dark:text-red-300" :disabled="busy" @click="removeModelRoute(index)">{{ t('common.remove') }}</button>
-            </div>
-          </div>
-        </div>
-        <div v-else class="mt-4 rounded-md border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
-          Add a model to enable Generate, Synthesize, Chat, and AI-assisted learning.
-        </div>
-
-        <details class="mt-4 rounded-md border border-slate-200 dark:border-slate-800">
-          <summary class="cursor-pointer px-3 py-3 text-sm font-medium">Manage connections</summary>
-          <div class="grid gap-3 border-t border-slate-200 p-3 dark:border-slate-800">
-            <div v-for="provider in apiKeyProviderOptions" :key="provider.id" class="rounded-md border border-slate-200 p-3 dark:border-slate-800">
-              <div class="flex items-center justify-between gap-3">
-                <p class="text-sm font-medium">{{ provider.label }}</p>
-                <span class="text-xs" :class="providerApiKeyPresence[provider.id] ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'">
-                  {{ providerApiKeyPresence[provider.id] ? 'Connected' : 'Not connected' }}
-                </span>
-              </div>
-              <div class="mt-2 flex flex-wrap gap-2">
-                <input :value="providerApiKeyDraftValue(provider.id)" type="password" autocomplete="off" :placeholder="providerApiKeyPlaceholder(provider.id, provider.placeholder)" class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" @input="setProviderApiKeyDraft(provider.id, $event)" />
-                <button type="button" :class="providerApiKeyActionClass(provider.id)" :disabled="providerApiKeyActionDisabled(provider.id)" @click="onProviderApiKeyAction(provider.id)">{{ providerApiKeyActionText(provider.id) }}</button>
-              </div>
-            </div>
-
-            <div class="rounded-md border border-slate-200 p-3 dark:border-slate-800">
-              <div class="flex items-center justify-between gap-3"><p class="text-sm font-medium">GitHub Models</p><span class="text-xs text-slate-500 dark:text-slate-400">OAuth</span></div>
-              <button type="button" class="mt-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium dark:border-slate-800" :disabled="busy" @click="openGithubAuth">{{ githubModelsAuthState.status === 'authenticated' ? 'Reconnect' : t('common.authenticate') }}</button>
-            </div>
-
-            <details class="rounded-md border border-slate-200 p-3 dark:border-slate-800">
-              <summary class="cursor-pointer text-sm font-medium">OpenAI Compatible · Advanced</summary>
-              <div class="mt-3 grid gap-2">
-                <input v-model="openAiCompatBaseURL" type="url" autocomplete="off" placeholder="https://api.example.com/v1" class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" />
-                <input v-model="openAiCompatModelId" type="text" autocomplete="off" placeholder="model-id" class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" />
-                <div class="flex flex-wrap gap-2"><input v-model="openAiCompatKey" type="password" autocomplete="off" :placeholder="providerApiKeyPlaceholder('openai_compat', 'api-key')" class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" /><button type="button" :class="providerApiKeyActionClass('openai_compat')" :disabled="providerApiKeyActionDisabled('openai_compat')" @click="onProviderApiKeyAction('openai_compat')">{{ providerApiKeyActionText('openai_compat') }}</button></div>
-              </div>
-            </details>
-          </div>
-        </details>
-      </section>
-
-      <section
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        :aria-label="t('set.learn')"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-sm font-medium">{{ t('settings.learnHybrid') }}</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Adds AI-Generated question in the mix.</p>
-            <p v-if="!defaultModelId" class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              {{ t('settings.chooseModelFirst') }}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy || !defaultModelId"
-            @click="onToggleLearnHybrid"
-          >
-            {{ learnHybridEnabled ? t('common.on') : t('common.off') }}
-          </button>
-        </div>
-      </section>
-
-      <section
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        :aria-label="t('settings.smartReview')"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-sm font-medium">{{ t('settings.smartReview') }}</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {{ t('settings.smartReviewDescription') }}
-            </p>
-          </div>
-          <button
-            type="button"
-            class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy || localSettingsPending"
-            @click="onToggleSmartReview"
-          >
-            {{ smartReviewEnabled ? t('common.on') : t('common.off') }}
-          </button>
-        </div>
-      </section>
-
-      <section
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        aria-label="Page chat button"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-sm font-medium">Page chat button</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Shows the chat button on the bottom right.</p>
-          </div>
-
-          <button
-            type="button"
-            class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
-            @click="onToggleFloatingChat"
-          >
-            {{ floatingChatEnabled ? t('common.on') : t('common.off') }}
-          </button>
-        </div>
-      </section>
-
-      <section
-        v-if="false"
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        :aria-label="t('settings.providers')"
-      >
-        <h2 class="text-sm font-medium">{{ t('settings.providers') }}</h2>
-        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          {{ t('settings.providersDescription') }}
-        </p>
-
-        <div class="mt-4 grid gap-4">
-          <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <p class="text-sm font-medium text-slate-900 dark:text-slate-50">OpenAI (BYOK)</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.apiKey') }}</p>
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-              <input
-                v-model="openAiKey"
-                type="password"
-                autocomplete="off"
-                :placeholder="providerApiKeyPlaceholder('openai', 'sk-...')"
-                class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              />
-              <button
-                type="button"
-                :class="providerApiKeyActionClass('openai')"
-                :disabled="providerApiKeyActionDisabled('openai')"
-                @click="onProviderApiKeyAction('openai')"
-              >
-                {{ providerApiKeyActionText('openai') }}
-              </button>
-            </div>
-          </div>
-
-          <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Anthropic (BYOK)</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.apiKey') }}</p>
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-              <input
-                v-model="anthropicKey"
-                type="password"
-                autocomplete="off"
-                :placeholder="providerApiKeyPlaceholder('anthropic', 'sk-ant-...')"
-                class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              />
-              <button
-                type="button"
-                :class="providerApiKeyActionClass('anthropic')"
-                :disabled="providerApiKeyActionDisabled('anthropic')"
-                @click="onProviderApiKeyAction('anthropic')"
-              >
-                {{ providerApiKeyActionText('anthropic') }}
-              </button>
-            </div>
-          </div>
-
-          <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <p class="text-sm font-medium text-slate-900 dark:text-slate-50">Gemini (BYOK)</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.apiKey') }}</p>
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-              <input
-                v-model="geminiKey"
-                type="password"
-                autocomplete="off"
-                :placeholder="providerApiKeyPlaceholder('gemini', 'AIza...')"
-                class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              />
-              <button
-                type="button"
-                :class="providerApiKeyActionClass('gemini')"
-                :disabled="providerApiKeyActionDisabled('gemini')"
-                @click="onProviderApiKeyAction('gemini')"
-              >
-                {{ providerApiKeyActionText('gemini') }}
-              </button>
-            </div>
-          </div>
-
-          <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <p class="text-sm font-medium text-slate-900 dark:text-slate-50">OpenAI {{ t('settings.compatible') }} ({{ t('settings.advanced') }})</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.baseUrl') }}, {{ t('settings.defaultModel') }}, {{ t('settings.apiKey') }}</p>
-            <div class="mt-3 grid gap-2">
-              <input
-                v-model="openAiCompatBaseURL"
-                type="url"
-                autocomplete="off"
-                placeholder="https://api.example.com/v1"
-                class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              />
-              <input
-                v-model="openAiCompatModelId"
-                type="text"
-                autocomplete="off"
-                placeholder="model-id"
-                class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              />
-              <div class="flex flex-wrap items-center gap-2">
-                <input
-                  v-model="openAiCompatKey"
-                  type="password"
-                  autocomplete="off"
-                  :placeholder="providerApiKeyPlaceholder('openai_compat', 'api-key')"
-                  class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                />
                 <button
-                  type="button"
-                  :class="providerApiKeyActionClass('openai_compat')"
-                  :disabled="providerApiKeyActionDisabled('openai_compat')"
-                  @click="onProviderApiKeyAction('openai_compat')"
+                    type="button"
+                    class="shrink-0 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                    @click="dismissGateMessage"
                 >
-                  {{ providerApiKeyActionText('openai_compat') }}
+                    {{ t("common.dismiss") }}
                 </button>
-              </div>
-            </div>
-          </div>
-
-           <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-             <p class="text-sm font-medium text-slate-900 dark:text-slate-50">GitHub Models (OAuth)</p>
-             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.githubAuthenticate') }}</p>
-             <div class="mt-3">
-               <button
-                 type="button"
-                 class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                 :disabled="busy"
-                 @click="openGithubAuth"
-               >
-                 {{ t('common.authenticate') }}
-               </button>
-             </div>
-
-              <div class="mt-3 text-xs text-slate-600 dark:text-slate-300">
-                <span class="font-medium">{{ t('common.status') }}</span>
-                <span v-if="githubModelsAuthState.status === 'authenticated'" class="ml-1">{{ t('common.authenticated') }}</span>
-                <span v-else-if="githubModelsAuthState.status === 'invalid'" class="ml-1">{{ t('common.invalid') }}</span>
-                <span v-else-if="githubModelsAuthState.status === 'vault_locked'" class="ml-1">{{ t('common.locked') }}</span>
-                <span v-else class="ml-1">{{ t('common.notAuthenticated') }}</span>
-              </div>
             </div>
 
-        </div>
-      </section>
-
-      <section
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-        :aria-label="t('settings.startupLock')"
-        v-if="hasTauriInternals"
-      >
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <h2 class="text-sm font-medium">{{ t('settings.startupLock') }}</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {{ vaultMode === 'device_key' ? t('settings.deviceKeyVaultDescription') : t('settings.startupLockDescription') }}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy || vaultMode === 'device_key'"
-            @click="onToggleStartupLock"
-          >
-            {{ vaultMode === 'device_key' ? t('settings.deviceKeychain') : startupLockEnabled ? t('common.on') : t('common.off') }}
-          </button>
-        </div>
-
-        <div v-if="showPasswordPrompt" class="mt-4 space-y-3">
-          <label class="block text-sm font-medium" for="confirm-disable-lock">
-            {{ t('auth.confirmPassword') }}
-          </label>
-          <input
-            id="confirm-disable-lock"
-            v-model="password"
-            type="password"
-            autocomplete="current-password"
-            class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-          />
-
-          <p v-if="error" class="text-sm text-red-700 dark:text-red-300">{{ error }}</p>
-
-          <div class="flex gap-2">
-            <button
-              type="button"
-              class="rounded bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-              :disabled="busy"
-              @click="onConfirmDisable"
+            <section
+                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                :aria-label="t('settings.profile')"
             >
-              {{ t('common.confirm') }}
-            </button>
-            <button
-              type="button"
-              class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              :disabled="busy"
-              @click="onCancelDisable"
+                <div class="flex items-center gap-4">
+                    <div
+                        class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
+                        aria-hidden="true"
+                    >
+                        {{ avatarText }}
+                    </div>
+
+                    <LoadingSpinner v-if="localSettingsPending" size="sm" />
+                    <div v-else class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p
+                                class="truncate text-sm font-medium text-slate-900 dark:text-slate-50"
+                            >
+                                {{ profile?.name ?? t("common.user") }}
+                            </p>
+                            <span
+                                v-if="superAccount"
+                                class="relative top-0.5 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900 dark:border-amber-500/50 dark:bg-amber-400/20 dark:text-amber-200"
+                                title="Tracer developer"
+                            >
+                                <AppIcon
+                                    name="crown"
+                                    :size="15"
+                                    :stroke-width="2.4"
+                                />
+                                DEV
+                            </span>
+                        </div>
+                        <p
+                            class="truncate text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ profile?.email ?? "" }}
+                        </p>
+                        <p
+                            v-if="savedUsername"
+                            class="truncate text-sm text-slate-500 dark:text-slate-400"
+                        >
+                            @{{ savedUsername }}
+                        </p>
+                    </div>
+                    <button
+                        v-if="!isWebPreview && accountOnline && profileIdentityReady"
+                        type="button"
+                        class="ms-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
+                        aria-label="Edit profile"
+                        title="Edit profile"
+                        :aria-expanded="profileEditing"
+                        aria-controls="profile-details-form"
+                        :disabled="profileIdentityPending"
+                        @click="profileEditing ? cancelProfileEditing() : startProfileEditing()"
+                    >
+                        <AppIcon name="edit" :size="17" />
+                    </button>
+                </div>
+
+                <form
+                    v-if="
+                        !isWebPreview && accountOnline && profileIdentityReady && profileEditing
+                    "
+                    id="profile-details-form"
+                    class="mt-5 grid gap-4 border-t border-slate-200 pt-5 dark:border-slate-800 sm:grid-cols-2"
+                    @submit.prevent="onSaveProfileIdentity"
+                >
+                    <div
+                        class="flex items-center justify-between sm:col-span-2"
+                    >
+                        <p class="text-sm font-semibold">Profile details</p>
+                    </div>
+                    <label class="text-sm font-medium">
+                        Display name
+                        <input
+                            v-model="displayNameDraft"
+                            maxlength="80"
+                            autocomplete="name"
+                            :readonly="!profileEditing"
+                            class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 font-normal shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 read-only:cursor-default read-only:bg-slate-50 read-only:text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:read-only:bg-slate-900 dark:read-only:text-slate-300"
+                        />
+                        <span
+                            class="mt-1 block text-xs font-normal text-slate-500"
+                            >Shown to other people. It does not have to be
+                            unique.</span
+                        >
+                    </label>
+                    <label class="text-sm font-medium">
+                        Username
+                        <div
+                            class="mt-1 flex rounded-md border border-slate-300 shadow-sm focus-within:ring-2 focus-within:ring-orange-500"
+                            :class="
+                                profileEditing
+                                    ? 'bg-white dark:bg-slate-950'
+                                    : 'bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300'
+                            "
+                        >
+                            <span class="px-3 py-2 text-slate-500">@</span>
+                            <input
+                                v-model="usernameDraft"
+                                maxlength="30"
+                                autocomplete="username"
+                                autocapitalize="none"
+                                spellcheck="false"
+                                :readonly="!profileEditing"
+                                class="min-w-0 flex-1 bg-transparent py-2 pe-3 font-normal outline-none read-only:cursor-default"
+                                @input="
+                                    usernameDraft =
+                                        normalizeUsername(usernameDraft)
+                                "
+                            />
+                        </div>
+                        <span
+                            class="mt-1 block text-xs font-normal text-slate-500"
+                            >Unique, lowercase, 3–30 characters. Letters,
+                            numbers, and underscores only.</span
+                        >
+                    </label>
+                    <div
+                        class="sm:col-span-2 flex flex-wrap items-center gap-3"
+                    >
+                        <button
+                            type="submit"
+                            class="rounded-md px-4 py-2 text-sm font-semibold transition-colors"
+                            :class="
+                                profileCanSave
+                                    ? 'bg-slate-950 text-white shadow-sm hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200'
+                                    : 'cursor-not-allowed bg-slate-200 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
+                            "
+                            :disabled="!profileCanSave"
+                        >
+                            {{
+                                profileIdentityPending
+                                    ? "Saving…"
+                                    : t("common.save")
+                            }}
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
+                            :disabled="profileIdentityPending"
+                            @click="cancelProfileEditing"
+                        >
+                            {{ t('common.cancel') }}
+                        </button>
+                        <p
+                            v-if="profileIdentityError"
+                            role="alert"
+                            class="text-sm text-red-600 dark:text-red-300"
+                        >
+                            {{ profileIdentityError }}
+                        </p>
+                    </div>
+                </form>
+                <div
+                    v-else-if="!isWebPreview && accountOnline && !profileIdentityReady"
+                    class="mt-5 flex items-center gap-2 border-t border-slate-200 pt-5 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400"
+                >
+                    <LoadingSpinner size="sm" />
+                    <span>Loading profile…</span>
+                </div>
+            </section>
+
+            <section
+                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                :aria-label="t('settings.account')"
             >
-              {{ t('common.cancel') }}
-            </button>
-          </div>
-        </div>
-      </section>
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <p v-if="accountRole" class="mt-1 text-sm font-medium">
+                            {{ t("settings.accountType") }}:
+                            {{ accountRoleLabel }}
+                        </p>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ accountEmail || profile?.email }}
+                        </p>
+                        <LoadingSpinner
+                            v-if="accountConnectionPending"
+                            class="mt-1"
+                            size="sm"
+                            :show-label="false"
+                        />
+                        <p
+                            v-else
+                            class="mt-1 text-xs"
+                            :class="
+                                accountOnline
+                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    : 'text-slate-500 dark:text-slate-400'
+                            "
+                        >
+                            {{
+                                accountSignedOut
+                                    ? t("settings.accountSignedOut")
+                                    : accountOnline
+                                      ? t("settings.accountOnline")
+                                      : t("settings.accountOffline")
+                            }}
+                        </p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button
+                            type="button"
+                            class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900"
+                            :disabled="
+                                busy || accountConnectionPending || isWebPreview
+                            "
+                            @click="onReconnectAccount"
+                        >
+                            {{ t("settings.reconnect") }}
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-900"
+                            :disabled="
+                                busy ||
+                                accountConnectionPending ||
+                                isWebPreview ||
+                                accountSignedOut
+                            "
+                            @click="onAccountSignOut"
+                        >
+                            {{ t("common.signOut") }}
+                        </button>
+                    </div>
+                </div>
+            </section>
 
-      <section class="mt-6 rounded-lg border border-red-200 bg-white p-5 shadow-sm dark:border-red-900 dark:bg-slate-950" aria-label="Reset and account controls">
-        <p v-if="error" class="mt-3 text-sm text-red-700 dark:text-red-300">{{ error }}</p>
+            <AppUpdateSettings v-if="hasTauriInternals" />
 
-        <div class="mt-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-          <div>
-            <p class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ t('settings.resetTracer') }}</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.resetDescription') }}</p>
-          </div>
-          <button
-            type="button"
-            class="inline-flex shrink-0 items-center rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-800 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950 dark:focus-visible:ring-red-600 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
-            @click="openResetConfirmation"
-          >
-            {{ t('settings.resetTracer') }}
-          </button>
-        </div>
-
-        <div class="mt-5 flex flex-col items-start justify-between gap-3 border-t border-red-100 pt-5 sm:flex-row sm:items-center dark:border-red-950">
-          <div>
-            <p class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ t('settings.deleteAccount') }}</p>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('settings.deleteAccountDescription') }}</p>
-          </div>
-          <button
-            type="button"
-            class="inline-flex shrink-0 items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-600 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy || accountConnectionPending || !accountOnline || isWebPreview"
-            @click="openDeleteAccountConfirmation"
-          >
-            {{ t('settings.deleteAccount') }}
-          </button>
-        </div>
-      </section>
-
-      <ResetTracerDialog
-        :open="showResetConfirmation"
-        :busy="busy"
-        :error="resetError"
-        @cancel="closeResetConfirmation"
-        @confirm="onConfirmReset"
-      />
-
-      <DeleteAccountDialog
-        v-model:confirmation="deleteAccountConfirmation"
-        :open="showDeleteAccountConfirmation"
-        :busy="busy"
-        :error="deleteAccountError"
-        @cancel="closeDeleteAccountConfirmation"
-        @confirm="onConfirmDeleteAccount"
-      />
-
-      <BaseModal
-        :open="Boolean(isModelPickerOpen)"
-        :title="&quot;Add AI model&quot;"
-        panel-class="max-w-2xl"
-        :close-label="t('common.close')"
-        @close="closeModelPicker"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div class="min-w-0">
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Choose a provider, then select a model.
-            </p>
-            <p class="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-              ↑/↓ · Enter · Esc
-            </p>
-          </div>
-          <div class="shrink-0 flex gap-2">
-            <button
-              type="button"
-              class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              @click="closeModelPicker"
+            <section
+                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                :aria-label="t('settings.theme')"
             >
-              {{ t('common.cancel') }}
-            </button>
-            <button
-              type="button"
-              class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-              :disabled="modelPickerEnterDisabled"
-              @click="onModelPickerEnter"
-            >
-              {{ t('common.enter') }}
-            </button>
-          </div>
-        </div>
-        <div class="mt-4">
-          <label class="sr-only" for="model-picker-search">{{ t('nav.search') }}</label>
-          <input
-            id="model-picker-search"
-            ref="modelPickerSearchEl"
-            v-model="modelPickerQuery"
-            type="search"
-            autocomplete="off"
-            :placeholder="`${t('nav.search')} · ${modelPickerStep === 'providers' ? t('settings.providers') : t('settings.defaultModel')}`"
-            class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-          />
-        </div>
-        <div class="mt-4">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">
-              <span v-if="modelPickerStep === 'providers'">{{ t('settings.providers') }}</span>
-              <span v-else>{{ t('settings.models') }} · {{ activeProviderLabel }}</span>
-            </p>
-            <button
-              v-if="modelPickerStep === 'models'"
-              type="button"
-              class="text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-50"
-              @click="backToProviders"
-            >
-              ← {{ t('settings.backToProviders') }}
-            </button>
-          </div>
-          <ul
-            class="mt-3 max-h-72 overflow-auto rounded-md border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
-            :aria-label="modelPickerStep === 'providers' ? 'Providers' : 'Models'"
-          >
-            <li v-for="(item, idx) in modelPickerItems" :key="item.key">
-              <button
-                type="button"
-                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50 focus-visible:outline-none dark:hover:bg-slate-900"
-                :class="idx === modelPickerHighlightedIndex ? 'bg-slate-50 dark:bg-slate-900' : ''"
-                @click="onModelPickerClick(item)"
-                @mousemove="modelPickerHighlightedIndex = idx"
-              >
-                <span class="min-w-0">
-                  <span class="block truncate font-medium text-slate-900 dark:text-slate-50">
-                    {{ item.label }}
-                  </span>
-                  <span
-                    v-if="item.hint"
-                    class="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400"
-                  >
-                    {{ item.hint }}
-                  </span>
-                </span>
-                <span class="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  {{ item.actionLabel }}
-                </span>
-              </button>
-            </li>
-            <li
-              v-if="modelPickerItems.length === 0"
-              class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300"
-            >
-              {{ t('nav.noResults') }}
-            </li>
-          </ul>
-        </div>
-      </BaseModal>
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-medium">
+                            {{ t("settings.darkMode") }}
+                        </h2>
+                    </div>
 
-      <BaseModal
-        :open="Boolean(providerApiKeyClearTarget)"
-        :title="(t('settings.clearApiKey'))"
-        panel-class="max-w-lg"
-        :close-label="t('common.close')"
-        @close="closeProviderApiKeyClear"
-      >
-        <div class="min-w-0">
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            {{ providerApiKeyClearLabel }} · {{ t('settings.apiKey') }}
-          </p>
-        </div>
-        <div class="mt-4 flex flex-wrap justify-end gap-2">
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
-            @click="closeProviderApiKeyClear"
-          >
-            {{ t('common.cancel') }}
-          </button>
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
-            :disabled="busy"
-            @click="onConfirmProviderApiKeyClear"
-          >
-            {{ t('common.clear') }} {{ t('settings.apiKey') }}
-          </button>
-        </div>
-      </BaseModal>
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="busy || localSettingsPending"
+                        @click="onToggleDarkMode"
+                    >
+                        {{ darkMode ? t("common.on") : t("common.off") }}
+                    </button>
+                </div>
+            </section>
 
-       <BaseModal
-         :open="Boolean(isGithubAuthOpen)"
-         :title="&quot;GitHub Models&quot;"
-         panel-class="max-w-lg"
-         :close-label="t('common.close')"
-         @close="closeGithubAuth"
-       >
-         <div class="flex items-start justify-between gap-4">
-           <div>
-             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('common.authenticate') }} · <span class="font-mono">models:read</span></p>
-           </div>
-         </div>
-         <p v-if="githubAuthError" class="mt-3 text-sm text-red-700 dark:text-red-300">{{ githubAuthError }}</p>
-         <div v-if="githubModelsAuthState.status === 'authenticated'" class="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100">
-           <p class="font-medium">{{ t('common.authenticated') }}</p>
-           <p class="mt-1 text-xs">{{ t('settings.defaultModel') }} · {{ githubModelsAvailableModelIds.length }}</p>
-           <div class="mt-3 flex gap-2">
-             <button
-               type="button"
-               class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
-               :disabled="githubAuthBusy"
-               @click="onGithubAuthSignOut"
-             >
-               {{ t('common.signOut') }}
-             </button>
-           </div>
-         </div>
-         <div v-else class="mt-4 space-y-3">
-           <button
-             type="button"
-             class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-             :disabled="githubAuthBusy"
-             @click="onGithubAuthStart"
-           >
-             <LoadingSpinner v-if="githubAuthBusy" size="sm" />
-             <template v-else>{{ t('common.authenticate') }}</template>
-           </button>
-           <div
-             v-if="githubAuthStep === 'device_pending' && githubAuthVerificationUri && githubAuthUserCode"
-             class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-           >
-             <p class="font-medium">{{ t('settings.deviceCode') }}</p>
-             <p class="mt-2">
-               <span class="font-mono">{{ githubAuthVerificationUri }}</span>
-             </p>
-             <p class="mt-2 text-lg font-semibold tracking-widest">{{ githubAuthUserCode }}</p>
-             <div class="mt-3 flex flex-wrap gap-2">
-               <button
-                 type="button"
-                 class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                 @click="onGithubAuthCopyUrl"
-               >
-                 <AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }} URL
-               </button>
-               <button
-                 type="button"
-                 class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                 @click="onGithubAuthCopyCode"
-               >
-                 <AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }} {{ t('settings.deviceCode') }}
-               </button>
-             </div>
-           </div>
-           <LoadingSpinner
-             v-else-if="githubAuthStep === 'pkce_pending'"
-             centered
-           />
-         </div>
-       </BaseModal>
-    </div>
-  </main>
+            <section
+                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                :aria-label="t('settings.language')"
+            >
+                <div class="flex items-center justify-between gap-4">
+                    <h2 class="text-sm font-medium">
+                        {{ t("settings.language") }}
+                    </h2>
+
+                    <div ref="languageMenuRoot" class="relative shrink-0">
+                        <button
+                            type="button"
+                            class="inline-flex min-w-40 items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            :aria-expanded="languageMenuOpen"
+                            aria-haspopup="menu"
+                            @click="languageMenuOpen = !languageMenuOpen"
+                        >
+                            <span dir="auto">{{
+                                currentLanguageOption.nativeName
+                            }}</span>
+                            <span aria-hidden="true">⌄</span>
+                        </button>
+
+                        <div
+                            v-if="languageMenuOpen"
+                            class="absolute end-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                            role="menu"
+                            :aria-label="t('settings.chooseLanguage')"
+                        >
+                            <button
+                                v-for="option in languageOptions"
+                                :key="option.code"
+                                type="button"
+                                role="menuitemradio"
+                                :aria-checked="language === option.code"
+                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500"
+                                @click="onLanguageSelect(option.code)"
+                            >
+                                <span dir="auto">
+                                    {{ option.englishName
+                                    }}<template
+                                        v-if="
+                                            option.nativeName !==
+                                            option.englishName
+                                        "
+                                    >
+                                        · {{ option.nativeName }}</template
+                                    >
+                                </span>
+                                <span
+                                    v-if="language === option.code"
+                                    aria-hidden="true"
+                                    >✓</span
+                                >
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                aria-label="AI models"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-medium">AI models</h2>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            Models are tried from top to bottom when a provider
+                            is unavailable.
+                        </p>
+                        <p
+                            class="mt-2 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            Study content, files, and chat messages used with an
+                            AI feature are sent to the provider you choose. Do
+                            not send sensitive information unless you accept
+                            that provider’s handling of it.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="inline-flex shrink-0 items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                        :disabled="busy"
+                        @click="openModelPicker"
+                    >
+                        Add model
+                    </button>
+                </div>
+
+                <div
+                    v-if="modelRouteIds.length"
+                    class="mt-4 overflow-hidden rounded-md border border-slate-200 dark:border-slate-800"
+                >
+                    <div
+                        v-for="(modelId, index) in modelRouteIds"
+                        :key="modelId"
+                        class="flex items-center justify-between gap-3 border-b border-slate-200 px-3 py-3 last:border-b-0 dark:border-slate-800"
+                    >
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p
+                                    class="truncate text-sm font-medium text-slate-900 dark:text-slate-50"
+                                >
+                                    {{ modelLabel(modelId) }}
+                                </p>
+                                <span
+                                    class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-900 dark:text-slate-300"
+                                >
+                                    {{
+                                        index === 0
+                                            ? "Primary"
+                                            : `Fallback ${index}`
+                                    }}
+                                </span>
+                            </div>
+                            <LoadingSpinner
+                                v-if="modelConnectionPending(modelId)"
+                                class="mt-1"
+                                size="sm"
+                                :show-label="false"
+                            />
+                            <p
+                                v-else
+                                class="mt-1 text-xs"
+                                :class="
+                                    modelConnectionReady(modelId)
+                                        ? 'text-emerald-700 dark:text-emerald-300'
+                                        : 'text-amber-700 dark:text-amber-300'
+                                "
+                            >
+                                {{
+                                    modelConnectionReady(modelId)
+                                        ? "Ready"
+                                        : "Connection required"
+                                }}
+                            </p>
+                        </div>
+                        <div class="flex shrink-0 items-center gap-1">
+                            <button
+                                type="button"
+                                class="rounded border border-slate-200 px-2 py-1 text-xs disabled:opacity-40 dark:border-slate-800"
+                                :disabled="busy || index === 0"
+                                aria-label="Move model up"
+                                @click="moveModelRoute(index, -1)"
+                            >
+                                ↑
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded border border-slate-200 px-2 py-1 text-xs disabled:opacity-40 dark:border-slate-800"
+                                :disabled="
+                                    busy || index === modelRouteIds.length - 1
+                                "
+                                aria-label="Move model down"
+                                @click="moveModelRoute(index, 1)"
+                            >
+                                ↓
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded border border-red-200 px-2 py-1 text-xs text-red-700 dark:border-red-900 dark:text-red-300"
+                                :disabled="busy"
+                                @click="removeModelRoute(index)"
+                            >
+                                {{ t("common.remove") }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    v-else
+                    class="mt-4 rounded-md border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                >
+                    Add a model to enable Generate, Synthesize, Chat, and
+                    AI-assisted learning.
+                </div>
+
+                <details
+                    class="mt-4 rounded-md border border-slate-200 dark:border-slate-800"
+                >
+                    <summary
+                        class="cursor-pointer px-3 py-3 text-sm font-medium"
+                    >
+                        Manage connections
+                    </summary>
+                    <div
+                        class="grid gap-3 border-t border-slate-200 p-3 dark:border-slate-800"
+                    >
+                        <div
+                            v-for="provider in apiKeyProviderOptions"
+                            :key="provider.id"
+                            class="rounded-md border border-slate-200 p-3 dark:border-slate-800"
+                        >
+                            <div
+                                class="flex items-center justify-between gap-3"
+                            >
+                                <p class="text-sm font-medium">
+                                    {{ provider.label }}
+                                </p>
+                                <span
+                                    class="text-xs"
+                                    :class="
+                                        providerApiKeyPresence[provider.id]
+                                            ? 'text-emerald-700 dark:text-emerald-300'
+                                            : 'text-slate-500 dark:text-slate-400'
+                                    "
+                                >
+                                    {{
+                                        providerApiKeyPresence[provider.id]
+                                            ? "Connected"
+                                            : "Not connected"
+                                    }}
+                                </span>
+                            </div>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                <input
+                                    :value="
+                                        providerApiKeyDraftValue(provider.id)
+                                    "
+                                    type="password"
+                                    autocomplete="off"
+                                    :placeholder="
+                                        providerApiKeyPlaceholder(
+                                            provider.id,
+                                            provider.placeholder,
+                                        )
+                                    "
+                                    class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950"
+                                    @input="
+                                        setProviderApiKeyDraft(
+                                            provider.id,
+                                            $event,
+                                        )
+                                    "
+                                />
+                                <button
+                                    type="button"
+                                    :class="
+                                        providerApiKeyActionClass(provider.id)
+                                    "
+                                    :disabled="
+                                        providerApiKeyActionDisabled(
+                                            provider.id,
+                                        )
+                                    "
+                                    @click="onProviderApiKeyAction(provider.id)"
+                                >
+                                    {{ providerApiKeyActionText(provider.id) }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div
+                            class="rounded-md border border-slate-200 p-3 dark:border-slate-800"
+                        >
+                            <div
+                                class="flex items-center justify-between gap-3"
+                            >
+                                <p class="text-sm font-medium">GitHub Models</p>
+                                <span
+                                    class="text-xs text-slate-500 dark:text-slate-400"
+                                    >OAuth</span
+                                >
+                            </div>
+                            <button
+                                type="button"
+                                class="mt-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium dark:border-slate-800"
+                                :disabled="busy"
+                                @click="openGithubAuth"
+                            >
+                                {{
+                                    githubModelsAuthState.status ===
+                                    "authenticated"
+                                        ? "Reconnect"
+                                        : t("common.authenticate")
+                                }}
+                            </button>
+                        </div>
+
+                        <details
+                            class="rounded-md border border-slate-200 p-3 dark:border-slate-800"
+                        >
+                            <summary class="cursor-pointer text-sm font-medium">
+                                OpenAI Compatible · Advanced
+                            </summary>
+                            <div class="mt-3 grid gap-2">
+                                <input
+                                    v-model="openAiCompatBaseURL"
+                                    type="url"
+                                    autocomplete="off"
+                                    placeholder="https://api.example.com/v1"
+                                    class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950"
+                                />
+                                <input
+                                    v-model="openAiCompatModelId"
+                                    type="text"
+                                    autocomplete="off"
+                                    placeholder="model-id"
+                                    class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950"
+                                />
+                                <div class="flex flex-wrap gap-2">
+                                    <input
+                                        v-model="openAiCompatKey"
+                                        type="password"
+                                        autocomplete="off"
+                                        :placeholder="
+                                            providerApiKeyPlaceholder(
+                                                'openai_compat',
+                                                'api-key',
+                                            )
+                                        "
+                                        class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950"
+                                    /><button
+                                        type="button"
+                                        :class="
+                                            providerApiKeyActionClass(
+                                                'openai_compat',
+                                            )
+                                        "
+                                        :disabled="
+                                            providerApiKeyActionDisabled(
+                                                'openai_compat',
+                                            )
+                                        "
+                                        @click="
+                                            onProviderApiKeyAction(
+                                                'openai_compat',
+                                            )
+                                        "
+                                    >
+                                        {{
+                                            providerApiKeyActionText(
+                                                "openai_compat",
+                                            )
+                                        }}
+                                    </button>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </details>
+            </section>
+
+            <section
+                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                :aria-label="t('set.learn')"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-medium">
+                            {{ t("settings.learnHybrid") }}
+                        </h2>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            Adds AI-Generated question in the mix.
+                        </p>
+                        <p
+                            v-if="!defaultModelId"
+                            class="mt-2 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("settings.chooseModelFirst") }}
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="busy || !defaultModelId"
+                        @click="onToggleLearnHybrid"
+                    >
+                        {{
+                            learnHybridEnabled
+                                ? t("common.on")
+                                : t("common.off")
+                        }}
+                    </button>
+                </div>
+            </section>
+
+            <section
+                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                :aria-label="t('settings.smartReview')"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-medium">
+                            {{ t("settings.smartReview") }}
+                        </h2>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("settings.smartReviewDescription") }}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="busy || localSettingsPending"
+                        @click="onToggleSmartReview"
+                    >
+                        {{
+                            smartReviewEnabled
+                                ? t("common.on")
+                                : t("common.off")
+                        }}
+                    </button>
+                </div>
+            </section>
+
+            <section
+                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                aria-label="Page chat button"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-medium">Page chat button</h2>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            Shows the chat button on the bottom right.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="busy"
+                        @click="onToggleFloatingChat"
+                    >
+                        {{
+                            floatingChatEnabled
+                                ? t("common.on")
+                                : t("common.off")
+                        }}
+                    </button>
+                </div>
+            </section>
+
+            <section
+                v-if="false"
+                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                :aria-label="t('settings.providers')"
+            >
+                <h2 class="text-sm font-medium">
+                    {{ t("settings.providers") }}
+                </h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    {{ t("settings.providersDescription") }}
+                </p>
+
+                <div class="mt-4 grid gap-4">
+                    <div
+                        class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                    >
+                        <p
+                            class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                        >
+                            OpenAI (BYOK)
+                        </p>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("settings.apiKey") }}
+                        </p>
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                            <input
+                                v-model="openAiKey"
+                                type="password"
+                                autocomplete="off"
+                                :placeholder="
+                                    providerApiKeyPlaceholder(
+                                        'openai',
+                                        'sk-...',
+                                    )
+                                "
+                                class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            />
+                            <button
+                                type="button"
+                                :class="providerApiKeyActionClass('openai')"
+                                :disabled="
+                                    providerApiKeyActionDisabled('openai')
+                                "
+                                @click="onProviderApiKeyAction('openai')"
+                            >
+                                {{ providerApiKeyActionText("openai") }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                    >
+                        <p
+                            class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                        >
+                            Anthropic (BYOK)
+                        </p>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("settings.apiKey") }}
+                        </p>
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                            <input
+                                v-model="anthropicKey"
+                                type="password"
+                                autocomplete="off"
+                                :placeholder="
+                                    providerApiKeyPlaceholder(
+                                        'anthropic',
+                                        'sk-ant-...',
+                                    )
+                                "
+                                class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            />
+                            <button
+                                type="button"
+                                :class="providerApiKeyActionClass('anthropic')"
+                                :disabled="
+                                    providerApiKeyActionDisabled('anthropic')
+                                "
+                                @click="onProviderApiKeyAction('anthropic')"
+                            >
+                                {{ providerApiKeyActionText("anthropic") }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                    >
+                        <p
+                            class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                        >
+                            Gemini (BYOK)
+                        </p>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("settings.apiKey") }}
+                        </p>
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                            <input
+                                v-model="geminiKey"
+                                type="password"
+                                autocomplete="off"
+                                :placeholder="
+                                    providerApiKeyPlaceholder(
+                                        'gemini',
+                                        'AIza...',
+                                    )
+                                "
+                                class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            />
+                            <button
+                                type="button"
+                                :class="providerApiKeyActionClass('gemini')"
+                                :disabled="
+                                    providerApiKeyActionDisabled('gemini')
+                                "
+                                @click="onProviderApiKeyAction('gemini')"
+                            >
+                                {{ providerApiKeyActionText("gemini") }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                    >
+                        <p
+                            class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                        >
+                            OpenAI {{ t("settings.compatible") }} ({{
+                                t("settings.advanced")
+                            }})
+                        </p>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("settings.baseUrl") }},
+                            {{ t("settings.defaultModel") }},
+                            {{ t("settings.apiKey") }}
+                        </p>
+                        <div class="mt-3 grid gap-2">
+                            <input
+                                v-model="openAiCompatBaseURL"
+                                type="url"
+                                autocomplete="off"
+                                placeholder="https://api.example.com/v1"
+                                class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            />
+                            <input
+                                v-model="openAiCompatModelId"
+                                type="text"
+                                autocomplete="off"
+                                placeholder="model-id"
+                                class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            />
+                            <div class="flex flex-wrap items-center gap-2">
+                                <input
+                                    v-model="openAiCompatKey"
+                                    type="password"
+                                    autocomplete="off"
+                                    :placeholder="
+                                        providerApiKeyPlaceholder(
+                                            'openai_compat',
+                                            'api-key',
+                                        )
+                                    "
+                                    class="min-w-[240px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                />
+                                <button
+                                    type="button"
+                                    :class="
+                                        providerApiKeyActionClass(
+                                            'openai_compat',
+                                        )
+                                    "
+                                    :disabled="
+                                        providerApiKeyActionDisabled(
+                                            'openai_compat',
+                                        )
+                                    "
+                                    @click="
+                                        onProviderApiKeyAction('openai_compat')
+                                    "
+                                >
+                                    {{
+                                        providerApiKeyActionText(
+                                            "openai_compat",
+                                        )
+                                    }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                    >
+                        <p
+                            class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                        >
+                            GitHub Models (OAuth)
+                        </p>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("settings.githubAuthenticate") }}
+                        </p>
+                        <div class="mt-3">
+                            <button
+                                type="button"
+                                class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                :disabled="busy"
+                                @click="openGithubAuth"
+                            >
+                                {{ t("common.authenticate") }}
+                            </button>
+                        </div>
+
+                        <div
+                            class="mt-3 text-xs text-slate-600 dark:text-slate-300"
+                        >
+                            <span class="font-medium">{{
+                                t("common.status")
+                            }}</span>
+                            <span
+                                v-if="
+                                    githubModelsAuthState.status ===
+                                    'authenticated'
+                                "
+                                class="ml-1"
+                                >{{ t("common.authenticated") }}</span
+                            >
+                            <span
+                                v-else-if="
+                                    githubModelsAuthState.status === 'invalid'
+                                "
+                                class="ml-1"
+                                >{{ t("common.invalid") }}</span
+                            >
+                            <span
+                                v-else-if="
+                                    githubModelsAuthState.status ===
+                                    'vault_locked'
+                                "
+                                class="ml-1"
+                                >{{ t("common.locked") }}</span
+                            >
+                            <span v-else class="ml-1">{{
+                                t("common.notAuthenticated")
+                            }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                :aria-label="t('settings.startupLock')"
+                v-if="hasTauriInternals"
+            >
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-medium">
+                            {{ t("settings.startupLock") }}
+                        </h2>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{
+                                vaultMode === "device_key"
+                                    ? t("settings.deviceKeyVaultDescription")
+                                    : t("settings.startupLockDescription")
+                            }}
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="busy || vaultMode === 'device_key'"
+                        @click="onToggleStartupLock"
+                    >
+                        {{
+                            vaultMode === "device_key"
+                                ? t("settings.deviceKeychain")
+                                : startupLockEnabled
+                                  ? t("common.on")
+                                  : t("common.off")
+                        }}
+                    </button>
+                </div>
+
+                <div v-if="showPasswordPrompt" class="mt-4 space-y-3">
+                    <label
+                        class="block text-sm font-medium"
+                        for="confirm-disable-lock"
+                    >
+                        {{ t("auth.confirmPassword") }}
+                    </label>
+                    <input
+                        id="confirm-disable-lock"
+                        v-model="password"
+                        type="password"
+                        autocomplete="current-password"
+                        class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    />
+
+                    <p
+                        v-if="error"
+                        class="text-sm text-red-700 dark:text-red-300"
+                    >
+                        {{ error }}
+                    </p>
+
+                    <div class="flex gap-2">
+                        <button
+                            type="button"
+                            class="rounded bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                            :disabled="busy"
+                            @click="onConfirmDisable"
+                        >
+                            {{ t("common.confirm") }}
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            :disabled="busy"
+                            @click="onCancelDisable"
+                        >
+                            {{ t("common.cancel") }}
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="mt-6 rounded-lg border border-red-200 bg-white p-5 shadow-sm dark:border-red-900 dark:bg-slate-950"
+                aria-label="Reset and account controls"
+            >
+                <p
+                    v-if="error"
+                    class="mt-3 text-sm text-red-700 dark:text-red-300"
+                >
+                    {{ error }}
+                </p>
+
+                <div
+                    class="mt-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center"
+                >
+                    <div>
+                        <p
+                            class="text-sm font-medium text-slate-900 dark:text-slate-100"
+                        >
+                            {{ t("settings.resetTracer") }}
+                        </p>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("settings.resetDescription") }}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        class="inline-flex shrink-0 items-center rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-800 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950 dark:focus-visible:ring-red-600 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="busy"
+                        @click="openResetConfirmation"
+                    >
+                        {{ t("settings.resetTracer") }}
+                    </button>
+                </div>
+
+                <div
+                    class="mt-5 flex flex-col items-start justify-between gap-3 border-t border-red-100 pt-5 sm:flex-row sm:items-center dark:border-red-950"
+                >
+                    <div>
+                        <p
+                            class="text-sm font-medium text-slate-900 dark:text-slate-100"
+                        >
+                            {{ t("settings.deleteAccount") }}
+                        </p>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("settings.deleteAccountDescription") }}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        class="inline-flex shrink-0 items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-600 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="
+                            busy ||
+                            accountConnectionPending ||
+                            !accountOnline ||
+                            isWebPreview
+                        "
+                        @click="openDeleteAccountConfirmation"
+                    >
+                        {{ t("settings.deleteAccount") }}
+                    </button>
+                </div>
+            </section>
+
+            <ResetTracerDialog
+                :open="showResetConfirmation"
+                :busy="busy"
+                :error="resetError"
+                @cancel="closeResetConfirmation"
+                @confirm="onConfirmReset"
+            />
+
+            <DeleteAccountDialog
+                v-model:confirmation="deleteAccountConfirmation"
+                :open="showDeleteAccountConfirmation"
+                :busy="busy"
+                :error="deleteAccountError"
+                @cancel="closeDeleteAccountConfirmation"
+                @confirm="onConfirmDeleteAccount"
+            />
+
+            <BaseModal
+                :open="Boolean(isModelPickerOpen)"
+                :title="'Add AI model'"
+                panel-class="max-w-2xl"
+                :close-label="t('common.close')"
+                @close="closeModelPicker"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            Choose a provider, then select a model.
+                        </p>
+                        <p
+                            class="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400"
+                        >
+                            ↑/↓ · Enter · Esc
+                        </p>
+                    </div>
+                    <div class="shrink-0 flex gap-2">
+                        <button
+                            type="button"
+                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            @click="closeModelPicker"
+                        >
+                            {{ t("common.cancel") }}
+                        </button>
+                        <button
+                            type="button"
+                            class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            :disabled="modelPickerEnterDisabled"
+                            @click="onModelPickerEnter"
+                        >
+                            {{ t("common.enter") }}
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="sr-only" for="model-picker-search">{{
+                        t("nav.search")
+                    }}</label>
+                    <input
+                        id="model-picker-search"
+                        ref="modelPickerSearchEl"
+                        v-model="modelPickerQuery"
+                        type="search"
+                        autocomplete="off"
+                        :placeholder="`${t('nav.search')} · ${modelPickerStep === 'providers' ? t('settings.providers') : t('settings.defaultModel')}`"
+                        class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    />
+                </div>
+                <div class="mt-4">
+                    <div
+                        class="flex flex-wrap items-center justify-between gap-3"
+                    >
+                        <p
+                            class="text-xs font-medium text-slate-500 dark:text-slate-400"
+                        >
+                            <span v-if="modelPickerStep === 'providers'">{{
+                                t("settings.providers")
+                            }}</span>
+                            <span v-else
+                                >{{ t("settings.models") }} ·
+                                {{ activeProviderLabel }}</span
+                            >
+                        </p>
+                        <button
+                            v-if="modelPickerStep === 'models'"
+                            type="button"
+                            class="text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-50"
+                            @click="backToProviders"
+                        >
+                            ← {{ t("settings.backToProviders") }}
+                        </button>
+                    </div>
+                    <ul
+                        class="mt-3 max-h-72 overflow-auto rounded-md border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                        :aria-label="
+                            modelPickerStep === 'providers'
+                                ? 'Providers'
+                                : 'Models'
+                        "
+                    >
+                        <li
+                            v-for="(item, idx) in modelPickerItems"
+                            :key="item.key"
+                        >
+                            <button
+                                type="button"
+                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50 focus-visible:outline-none dark:hover:bg-slate-900"
+                                :class="
+                                    idx === modelPickerHighlightedIndex
+                                        ? 'bg-slate-50 dark:bg-slate-900'
+                                        : ''
+                                "
+                                @click="onModelPickerClick(item)"
+                                @mousemove="modelPickerHighlightedIndex = idx"
+                            >
+                                <span class="min-w-0">
+                                    <span
+                                        class="block truncate font-medium text-slate-900 dark:text-slate-50"
+                                    >
+                                        {{ item.label }}
+                                    </span>
+                                    <span
+                                        v-if="item.hint"
+                                        class="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400"
+                                    >
+                                        {{ item.hint }}
+                                    </span>
+                                </span>
+                                <span
+                                    class="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400"
+                                >
+                                    {{ item.actionLabel }}
+                                </span>
+                            </button>
+                        </li>
+                        <li
+                            v-if="modelPickerItems.length === 0"
+                            class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("nav.noResults") }}
+                        </li>
+                    </ul>
+                </div>
+            </BaseModal>
+
+            <BaseModal
+                :open="Boolean(providerApiKeyClearTarget)"
+                :title="t('settings.clearApiKey')"
+                panel-class="max-w-lg"
+                :close-label="t('common.close')"
+                @close="closeProviderApiKeyClear"
+            >
+                <div class="min-w-0">
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                        {{ providerApiKeyClearLabel }} ·
+                        {{ t("settings.apiKey") }}
+                    </p>
+                </div>
+                <div class="mt-4 flex flex-wrap justify-end gap-2">
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="busy"
+                        @click="closeProviderApiKeyClear"
+                    >
+                        {{ t("common.cancel") }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="busy"
+                        @click="onConfirmProviderApiKeyClear"
+                    >
+                        {{ t("common.clear") }} {{ t("settings.apiKey") }}
+                    </button>
+                </div>
+            </BaseModal>
+
+            <BaseModal
+                :open="Boolean(isGithubAuthOpen)"
+                :title="'GitHub Models'"
+                panel-class="max-w-lg"
+                :close-label="t('common.close')"
+                @close="closeGithubAuth"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("common.authenticate") }} ·
+                            <span class="font-mono">models:read</span>
+                        </p>
+                    </div>
+                </div>
+                <p
+                    v-if="githubAuthError"
+                    class="mt-3 text-sm text-red-700 dark:text-red-300"
+                >
+                    {{ githubAuthError }}
+                </p>
+                <div
+                    v-if="githubModelsAuthState.status === 'authenticated'"
+                    class="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100"
+                >
+                    <p class="font-medium">{{ t("common.authenticated") }}</p>
+                    <p class="mt-1 text-xs">
+                        {{ t("settings.defaultModel") }} ·
+                        {{ githubModelsAvailableModelIds.length }}
+                    </p>
+                    <div class="mt-3 flex gap-2">
+                        <button
+                            type="button"
+                            class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                            :disabled="githubAuthBusy"
+                            @click="onGithubAuthSignOut"
+                        >
+                            {{ t("common.signOut") }}
+                        </button>
+                    </div>
+                </div>
+                <div v-else class="mt-4 space-y-3">
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :disabled="githubAuthBusy"
+                        @click="onGithubAuthStart"
+                    >
+                        <LoadingSpinner v-if="githubAuthBusy" size="sm" />
+                        <template v-else>{{
+                            t("common.authenticate")
+                        }}</template>
+                    </button>
+                    <div
+                        v-if="
+                            githubAuthStep === 'device_pending' &&
+                            githubAuthVerificationUri &&
+                            githubAuthUserCode
+                        "
+                        class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    >
+                        <p class="font-medium">
+                            {{ t("settings.deviceCode") }}
+                        </p>
+                        <p class="mt-2">
+                            <span class="font-mono">{{
+                                githubAuthVerificationUri
+                            }}</span>
+                        </p>
+                        <p class="mt-2 text-lg font-semibold tracking-widest">
+                            {{ githubAuthUserCode }}
+                        </p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                @click="onGithubAuthCopyUrl"
+                            >
+                                <AppIcon
+                                    name="copy"
+                                    class="mr-1 inline-block align-middle"
+                                />{{ t("common.copy") }} URL
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                @click="onGithubAuthCopyCode"
+                            >
+                                <AppIcon
+                                    name="copy"
+                                    class="mr-1 inline-block align-middle"
+                                />{{ t("common.copy") }}
+                                {{ t("settings.deviceCode") }}
+                            </button>
+                        </div>
+                    </div>
+                    <LoadingSpinner
+                        v-else-if="githubAuthStep === 'pkce_pending'"
+                        centered
+                    />
+                </div>
+            </BaseModal>
+        </div>
+    </main>
 </template>
 
 <script setup lang="ts">
@@ -853,6 +1480,8 @@ import {
   floatingChatSetEnabled,
   useFloatingChatPreference
 } from '../src/composables/floating-chat'
+import AppUpdateSettings from '../components/AppUpdateSettings.vue'
+
 
 const router = useRouter()
 const route = useRoute()
@@ -1909,7 +2538,11 @@ async function onAccountSignOut() {
 </script>
 
 <style scoped>
-.tracer-page > section {
-  padding-block: 17px;
+.tracer-page > section:not(#app-updates) {
+    padding-block: 17px;
+}
+
+.tracer-page > #app-updates {
+    padding-top: 10px;
 }
 </style>

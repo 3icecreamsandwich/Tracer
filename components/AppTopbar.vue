@@ -113,6 +113,24 @@
             </div>
 
             <NuxtLink
+                v-if="
+                    updateStatus === 'downloading' || updateStatus === 'ready'
+                "
+                to="/settings#app-updates"
+                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-orange-600 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:text-orange-400 dark:hover:bg-orange-950/40"
+                :title="updateIndicatorLabel"
+                :aria-label="updateIndicatorLabel"
+            >
+                <Download
+                    v-if="updateStatus === 'downloading'"
+                    :size="20"
+                    class="motion-safe:animate-pulse"
+                    aria-hidden="true"
+                />
+                <RotateCw v-else :size="20" aria-hidden="true" />
+            </NuxtLink>
+
+            <NuxtLink
                 to="/settings"
                 :aria-label="t('nav.settings')"
                 class="inline-flex h-10 shrink-0 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 text-[15px] font-medium text-slate-950 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
@@ -120,7 +138,11 @@
                 <span
                     class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-950 text-[13px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
                 >
-                    <LoadingSpinner v-if="!avatarText" size="sm" :show-label="false" />
+                    <LoadingSpinner
+                        v-if="!avatarText"
+                        size="sm"
+                        :show-label="false"
+                    />
                     <template v-else>{{ avatarText }}</template>
                 </span>
                 <span class="hidden sm:block">{{ t("nav.settings") }}</span>
@@ -135,6 +157,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import {
     createSetsRepo,
@@ -154,6 +177,22 @@ import {
 } from "~/src/composables/search/topbar-search";
 import { useAppLanguage } from "~/src/composables/language";
 import Home from "@lucide/vue/dist/esm/icons/house.mjs";
+import Download from "@lucide/vue/dist/esm/icons/download.mjs";
+import RotateCw from "@lucide/vue/dist/esm/icons/rotate-cw.mjs";
+import { useAppUpdates } from "../src/composables/app-updates";
+
+const { status: updateStatus, downloadPercent: updateDownloadPercent } =
+    useAppUpdates();
+
+const updateIndicatorLabel = computed(() => {
+    if (updateStatus.value === "ready") {
+        return "Update downloaded: open Settings";
+    }
+
+    return updateDownloadPercent.value === null
+        ? "Downloading updated"
+        : `Downloading update: ${updateDownloadPercent.value}%`;
+});
 
 const { language, t, translateAppGeneratedText } = useAppLanguage();
 

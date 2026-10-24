@@ -19,6 +19,7 @@ export type Term = {
 }
 
 export type FlashcardSet = {
+  cloudRevision?: number
   id: Uuid
   folderId: Uuid | null
   title: string

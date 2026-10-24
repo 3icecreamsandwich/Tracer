@@ -1,7 +1,6 @@
 import { isWebPreviewRuntime } from '../platform/web'
 import { onScopeDispose, ref, shallowRef, type Ref } from 'vue'
 import type { AppLanguage } from '../db/types'
-import { resolveAiModel } from './registry'
 import { aiErrorForMissingDefaultModel, normalizeAiError, type AiErrorUx } from './ux-errors'
 import { takeNextChatRevealUnit } from './chat-reveal-unit'
 import {
@@ -79,6 +78,7 @@ export function useFactCheck(args: {
     const route = [modelId, ...args.fallbackModelIds.value]
     const cacheId = route.join('\n')
     if (cachedModel.value?.id === cacheId) return cachedModel.value.model
+    const { resolveAiModel } = await import('./registry')
     const model = await resolveAiModel(route)
     cachedModel.value = { id: cacheId, model }
     return model
@@ -129,7 +129,7 @@ export function useFactCheck(args: {
         return
       }
 
-      const result = streamFactCheckText({
+      const result = await streamFactCheckText({
         model: await getModel(modelId),
         system: buildFactCheckSystemPrompt(args.language.value),
         prompt: buildFactCheckUserPrompt(draft, args.language.value),

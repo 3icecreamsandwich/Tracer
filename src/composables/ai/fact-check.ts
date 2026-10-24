@@ -1,4 +1,3 @@
-import { streamText } from 'ai'
 import type { AppLanguage } from '../db/types'
 
 export type FactCheckCard = {
@@ -181,12 +180,13 @@ export function buildFactCheckUserPrompt(draft: FactCheckDraft, language: AppLan
   ].join('\n')
 }
 
-export function streamFactCheckText(args: {
+export async function streamFactCheckText(args: {
   model: any
   system: string
   prompt: string
   abortSignal?: AbortSignal
 }) {
+  const { streamText } = await import('ai')
   return streamText({
     model: args.model,
     system: args.system,

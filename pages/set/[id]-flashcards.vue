@@ -1,7 +1,8 @@
 <template>
-    <main class="flex flex-col h-8/9 bg-white dark:bg-slate-950">
+    <main class="tracer-fullscreen-study bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
         <div
+            data-tauri-drag-region
             class="border-b border-slate-200 bg-white px-3 py-4 dark:border-slate-800 dark:bg-slate-950 select-none sm:px-6"
         >
             <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
@@ -127,8 +128,7 @@
         </div>
 
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
-            <div aria-hidden="true" class="mb-6 h-[3.25rem]" />
+        <div class="tracer-fullscreen-content flex-1 flex flex-col items-center justify-center px-6 py-8">
             <div v-if="smartReviewEnabled" class="mb-6 text-center select-none">
                 <div v-if="smartReviewEnabled" class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
                     <button v-for="filter in reviewFilters" :key="filter.value" type="button"

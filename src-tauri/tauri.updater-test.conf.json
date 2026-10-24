@@ -1,0 +1,10 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/3icecreamsandwich/tracer/releases/download/v0.0.2-beta/latest.json"
+      ]
+    }
+  }
+}

@@ -3,7 +3,7 @@ import type { Update } from '@tauri-apps/plugin-updater'
 import { hasTauriRuntime } from './tauri'
 import { useAutomaticUpdates } from './automatic-updates'
 
-type UpdateStatus = 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'ready' | 'error'
+type UpdateStatus = 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'ready' | 'error' | 'installing' | 'installed' | 'restarting'
 
 const status = ref<UpdateStatus>('idle')
 const currentVersion = ref<string | null>(null)
@@ -17,7 +17,9 @@ let versionRequest: Promise<void> | null = null
 let startupStarted = false
 const startupError = ref<string | null>(null)
 
-const busy = computed(() => status.value === 'checking' || status.value === 'downloading')
+const busy = computed(() =>
+  ['checking', 'downloading', 'installing', 'restarting'].includes(status.value)
+)
 
 const downloadPercent = computed(() => {
   if (status.value === "ready") return 100
@@ -56,7 +58,14 @@ async function releasePendingUpdate(): Promise<void> {
 }
 
 async function checkUpdate(): Promise<boolean> {
-  if (!hasTauriRuntime() || busy.value || status.value == 'ready') return false
+  if (
+    !hasTauriRuntime() ||
+    busy.value ||
+    status.value === 'ready' ||
+    status.value === 'installed'
+  ) {
+    return false
+  }
 
   status.value = 'checking'
   error.value = null
@@ -101,7 +110,7 @@ async function downloadUpdate(): Promise<boolean> {
         const length = event.data.contentLength
         totalBytes.value = typeof length === "number" && length > 0 ? length : null
       } else if (event.event === "Progress") {
-        downloadedBytes.value = event.data.chunkLength
+        downloadedBytes.value += event.data.chunkLength
       }
     }, ({ timeout: 500_000 }))
 
@@ -116,7 +125,7 @@ async function downloadUpdate(): Promise<boolean> {
 
 async function startCheckUpdates(): Promise<void> {
   if (!hasTauriRuntime() || startupStarted) return
-  
+
   startupStarted = true
   startupError.value = null
 
@@ -138,6 +147,54 @@ async function startCheckUpdates(): Promise<void> {
   }
 }
 
+async function installAndRestart(): Promise<boolean> {
+  if (!hasTauriRuntime() || busy.value || !['ready', 'installed'].includes(status.value)) return false
+
+  const alreadyInstalled = status.value === 'installed'
+  if (!alreadyInstalled && !pendingUpdate) return false
+
+  status.value = alreadyInstalled ? 'restarting' : 'installing'
+  error.value = null
+
+  let installationCompleted = alreadyInstalled
+  let installationAttempted = false
+
+  try {
+    const { invoke } = await import('@tauri-apps/api/core')
+    const { relaunch } = await import('@tauri-apps/plugin-process')
+
+    const windows = await invoke<boolean>('updater_preflight')
+
+    if (!alreadyInstalled) {
+      installationAttempted = true
+
+      await pendingUpdate?.install({ restartAfterInstall: true })
+      installationCompleted = true
+      pendingUpdate = null
+
+      if (windows) return true
+    }
+
+    status.value = 'restarting'
+    await relaunch()
+    return true
+  } catch (e) {
+    error.value = errorMessage(e)
+
+    if (installationCompleted) {
+      status.value = 'installed'
+
+    } else if (installationAttempted) {
+      await releasePendingUpdate().catch(() => { })
+      status.value = 'error'
+    } else {
+      status.value = 'ready'
+    }
+
+    return false
+  }
+}
+
 export function useAppUpdates() {
   return {
     status: readonly(status),
@@ -146,10 +203,13 @@ export function useAppUpdates() {
     downloadedBytes: readonly(downloadedBytes),
     totalBytes: readonly(totalBytes),
     error: readonly(error),
+    startupError: readonly(startupError),
     busy,
     downloadPercent,
     initializeVersion,
     checkUpdate,
+    startAutomaticUpdates: startCheckUpdates,
     downloadUpdate,
+    installAndRestart,
   }
 }

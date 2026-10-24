@@ -3,10 +3,10 @@
     <div class="tracer-page mx-auto max-w-[1280px] px-8 pb-24 pt-10">
       <div class="grid items-stretch gap-7 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         <section
-          class="tracer-library flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          class="tracer-library flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white lg:min-h-0 lg:[contain:size]"
           aria-labelledby="home-sets"
         >
-          <div class="flex items-start justify-between gap-4">
+          <div class="flex shrink-0 items-start justify-between gap-4">
             <div>
               <h1 id="home-sets" class="text-3xl font-semibold">{{ t('home.sets') }}</h1>
             </div>
@@ -23,7 +23,7 @@
             </button>
           </div>
 
-          <div class="mt-7 grid w-full max-w-[410px] grid-cols-3 rounded-[14px] border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-950" role="tablist" :aria-label="t('home.libraryType')">
+          <div class="mt-7 grid w-full max-w-[410px] shrink-0 grid-cols-3 rounded-[14px] border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-950" role="tablist" :aria-label="t('home.libraryType')">
             <button
               v-for="tab in libraryTabs"
               :key="tab.value"
@@ -38,12 +38,13 @@
             </button>
           </div>
 
-          <div class="mt-7">
+          <div class="mt-7 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
             <p v-if="loadError" class="text-sm text-red-700 dark:text-red-300">
               {{ loadError }}
+              <button type="button" class="ms-2 underline" :disabled="busy" @click="loadHomeList">{{ t('common.retry') }}</button>
             </p>
 
-            <div v-else class="tracer-library-scroll max-h-[490px] overflow-y-auto overscroll-contain pe-1">
+            <div v-else ref="libraryScrollEl" class="tracer-library-scroll max-h-[490px] overflow-y-auto overscroll-contain pe-1 lg:min-h-0 lg:max-h-none lg:flex-1">
               <div
                 v-if="isWebPreviewRuntime()"
                 class="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
@@ -292,7 +293,7 @@
             </div>
           </div>
 
-          <div v-if="activeLibraryKind === 'class' && (accountRole === 'student' || accountRole === 'super')" class="mt-auto pt-7">
+          <div v-if="activeLibraryKind === 'class' && (accountRole === 'student' || accountRole === 'super')" class="mt-auto shrink-0 pt-7">
             <AppButton size="lg" variant="white" class="mx-auto flex w-1/3 !rounded-xl" @click="joinOpen = true">
               {{ t('classroom.addClass') }}
             </AppButton>
@@ -354,7 +355,7 @@
         </div>
       </div>
       <div class="mt-7">
-        <StudyStreakCard :preview-complete="accountRole === 'super'" />
+        <!-- <StudyStreakCard :preview-complete="accountRole === 'super'" /> -->
       </div>
     </div>
 
@@ -371,6 +372,7 @@
 <script setup lang="ts">
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 import { prefetchPublicCatalog } from '~/src/composables/published-sets'
+import { redactSensitiveText } from '~/src/composables/security/redact'
 import { syncPrivateSets } from '~/src/composables/private-set-sync'
 import { lockGetStatus } from '../src/composables/lock'
 import {
@@ -411,7 +413,6 @@ import {
 import {
   getCachedHomeDashboard,
   setCachedHomeDashboard,
-  hasSyncedPrivateSetsThisSession,
   markPrivateSetsSyncedThisSession,
   toHomeDashboardSetItem,
   type HomeDashboardItem,
@@ -754,6 +755,13 @@ function cacheCurrentHomeDashboard() {
   })
 }
 
+function reportLibraryLoadError(error: unknown) {
+  const message = error instanceof Error ? error.message
+    : typeof error === 'object' && error !== null && 'message' in error ? String(error.message)
+    : String(error)
+  console.error('[Tracer Dashboard] Library load failed:', redactSensitiveText(message))
+}
+
 async function loadHomeList() {
   busy.value = true
   loadError.value = null
@@ -767,10 +775,23 @@ async function loadHomeList() {
     const snapshot = await useTracerDb().then(fetchHomeDashboard)
     applyHomeDashboard(snapshot)
     cacheCurrentHomeDashboard()
-  } catch {
+  } catch (error) {
+    reportLibraryLoadError(error)
     if (!cached) loadError.value = 'Failed to load sets and study guides.'
   } finally {
     busy.value = false
+  }
+}
+
+async function reloadCloudDashboard() {
+  if (!unlockedThisSession.value) return
+  try {
+    const snapshot = await useTracerDb().then(fetchHomeDashboard)
+    applyHomeDashboard(snapshot)
+    cacheCurrentHomeDashboard()
+  } catch (error) {
+    reportLibraryLoadError(error)
+    // Keep the last readable snapshot if the refresh fails.
   }
 }
 
@@ -1146,6 +1167,7 @@ function onDocumentClick() {
 
 function onWindowKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
+    resetDragState()
     clearSetSelection()
     selectedFolderId.value = null
   }
@@ -1229,6 +1251,45 @@ function startPointerDrag(candidate: PointerCandidate) {
   dragState.active = true
   dragState.setIds = [...selectedSetIds.value]
   selectedFolderId.value = null
+  startDragAutoScroll()
+}
+
+const libraryScrollEl = ref<HTMLElement | null>(null)
+let dragScrollFrame: number | null = null
+let dragScrollTime: number | null = null
+
+function stopDragAutoScroll() {
+  if (dragScrollFrame !== null) window.cancelAnimationFrame(dragScrollFrame)
+  dragScrollFrame = null
+  dragScrollTime = null
+}
+
+function startDragAutoScroll() {
+  if (dragScrollFrame !== null) return
+  const tick = (now: number) => {
+    dragScrollFrame = null
+    if (!dragState.active) return
+    const elapsed = Math.min(32, dragScrollTime === null ? 16 : now - dragScrollTime)
+    dragScrollTime = now
+    const panel = libraryScrollEl.value
+    if (panel) {
+      const bounds = panel.getBoundingClientRect()
+      const top = Math.max(0, bounds.top)
+      const bottom = Math.min(window.innerHeight, bounds.bottom)
+      const edge = Math.min(56, (bottom - top) / 3)
+      const { x, y } = dragState
+      if (edge > 0 && x >= bounds.left && x <= bounds.right && y >= top - 24 && y <= bottom + 24) {
+        const speed = y < top + edge ? -Math.min(1, (top + edge - y) / edge)
+          : y > bottom - edge ? Math.min(1, (y - bottom + edge) / edge) : 0
+        const before = panel.scrollTop
+        panel.scrollTop += speed * 600 * elapsed / 1000
+        // Scrolling changes the target even while the pointer is stationary.
+        if (panel.scrollTop !== before) updateDropTarget(x, y)
+      }
+    }
+    dragScrollFrame = window.requestAnimationFrame(tick)
+  }
+  dragScrollFrame = window.requestAnimationFrame(tick)
 }
 
 function onWindowPointerMove(event: PointerEvent) {
@@ -1261,6 +1322,7 @@ function onWindowPointerMove(event: PointerEvent) {
 }
 
 function resetDragState() {
+  stopDragAutoScroll()
   clearDragHoverTimer()
   dragState.active = false
   dragState.setIds = []
@@ -1365,6 +1427,7 @@ watch(language, () => {
 })
 
 onMounted(async () => {
+  window.addEventListener('tracer:cloud-library-changed', reloadCloudDashboard)
   document.addEventListener('click', onDocumentClick)
   window.addEventListener('pointermove', onWindowPointerMove, { passive: false })
   window.addEventListener('pointerup', onWindowPointerUp)
@@ -1392,14 +1455,18 @@ onMounted(async () => {
       return
     }
 
-    // Private sets are pulled before the home list is read, so a set created
-    // on another device appears as soon as this account opens Tracer.
-    if (!hasSyncedPrivateSetsThisSession()) {
-      const synced = await syncPrivateSets().catch(() => false)
-      if (synced) markPrivateSetsSyncedThisSession()
+    const settings = await settingsPromise
+    if (settings.startupLockEnabled && status.requires_unlock && !unlockedThisSession.value) {
+      markLocked()
+      await router.replace('/unlock')
+      return
     }
     const localDashboardLoad = loadHomeList()
-    const settings = await settingsPromise
+    // Show persisted cloud summaries immediately; revalidate independently.
+    void localDashboardLoad.then(() => syncPrivateSets()).then(() => {
+      markPrivateSetsSyncedThisSession()
+      return reloadCloudDashboard()
+    }).catch(() => {})
 
     accountRole.value = getCachedAccountRole(profile.supabaseUserId)
 
@@ -1423,7 +1490,8 @@ onMounted(async () => {
 
     await localDashboardLoad
     await loadClassroomData()
-  } catch {
+  } catch (error) {
+    reportLibraryLoadError(error)
     loadError.value = 'Failed to load sets and study guides.'
     busy.value = false
   }
@@ -1431,6 +1499,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (!busy.value && !loadError.value) cacheCurrentHomeDashboard()
+  window.removeEventListener('tracer:cloud-library-changed', reloadCloudDashboard)
   document.removeEventListener('click', onDocumentClick)
   window.removeEventListener('pointermove', onWindowPointerMove)
   window.removeEventListener('pointerup', onWindowPointerUp)

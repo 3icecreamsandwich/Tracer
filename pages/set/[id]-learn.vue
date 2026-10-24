@@ -7,9 +7,10 @@
         @close="aiErrorOpen = false"
         @retry="retryPracticeWrittenAnswer"
     />
-    <main class="flex min-h-screen flex-col bg-white dark:bg-slate-950">
+    <main class="tracer-fullscreen-study tracer-fullscreen-study--upper bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
         <div
+            data-tauri-drag-region
             class="border-b border-slate-200 bg-white px-3 py-4 dark:border-slate-800 dark:bg-slate-950 sm:px-6"
         >
             <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
@@ -57,8 +58,7 @@
         </div>
 
         <!-- Main Content Area -->
-        <div class="relative flex flex-1 flex-col items-center justify-start px-6 py-8">
-            <div aria-hidden="true" class="mb-6 h-[3.25rem]" />
+        <div class="tracer-fullscreen-content relative flex flex-1 flex-col items-center justify-start px-6 py-8">
             <button
                 v-if="practiceSettingsOpen"
                 type="button"

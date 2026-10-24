@@ -1,3 +1,5 @@
+import { cloudLibraryEnabled } from '../../cloud-library/client'
+import { cloudGuidesRepo } from '../../cloud-library/repos'
 import type { DbClient, StudyGuide, StudyGuideSummary, Uuid } from '../types'
 import { nowIsoSql } from '../sql'
 import { invalidateCachedHomeDashboard } from '../../home-dashboard-cache'
@@ -12,6 +14,11 @@ type DbStudyGuideRow = {
 type DbStudyGuideSummaryRow = Omit<DbStudyGuideRow, 'markdown'>
 
 export function createStudyGuidesRepo(db: DbClient) {
+  return cloudLibraryEnabled() ? cloudGuidesRepo(db) : createLocalStudyGuidesRepo(db)
+}
+
+/** Legacy device data: used only for recovery/import when cloud storage is configured. */
+export function createLocalStudyGuidesRepo(db: DbClient) {
   return {
     async create(input: { id: Uuid; setId: Uuid; markdown: string }): Promise<StudyGuide> {
       await db.execute(

@@ -10,7 +10,7 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   use: {
     baseURL: remoteURL || `http://127.0.0.1:3101${basePath}`,
-    browserName: 'chromium',
+    browserName: process.env.TRACER_TEST_ENGINE === 'webkit' ? 'webkit' : 'chromium',
     launchOptions: process.env.TRACER_TEST_BROWSER ? { executablePath: process.env.TRACER_TEST_BROWSER } : undefined,
     screenshot: 'only-on-failure',
   },

@@ -1,0 +1,21 @@
+import { afterEach, expect, it, vi } from 'vitest'
+import { ref, computed } from 'vue'
+vi.mock('../../src/composables/platform/web', () => ({ browserStorageKey: (key: string) => key }))
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.resetModules() })
+it('survives denied storage and releases tracking resources after the final consumer leaves', async () => {
+  vi.useFakeTimers()
+  vi.stubGlobal('ref', ref); vi.stubGlobal('computed', computed)
+  const target = new EventTarget()
+  const remove = vi.spyOn(target, 'removeEventListener')
+  Object.assign(target, { localStorage: { getItem: () => { throw Error('denied') }, setItem: () => { throw Error('quota') } } })
+  vi.stubGlobal('window', target); vi.stubGlobal('document', { visibilityState: 'visible' })
+  const { startStudyStreakTracking, useStudyStreak } = await import('../../src/composables/study-streak')
+  const stop = startStudyStreakTracking(() => true)
+  const stopOther = startStudyStreakTracking(() => false)
+  await vi.advanceTimersByTimeAsync(15000)
+  expect(useStudyStreak().today.value).toBe(15)
+  stop(); expect(vi.getTimerCount()).toBe(1)
+  stopOther(); expect(vi.getTimerCount()).toBe(0)
+  expect(remove).toHaveBeenCalledTimes(3)
+  stopOther(); expect(remove).toHaveBeenCalledTimes(3)
+})

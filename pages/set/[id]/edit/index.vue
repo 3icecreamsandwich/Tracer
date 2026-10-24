@@ -26,6 +26,7 @@
             <template v-else>{{ t('factCheck.title') }}</template>
           </button>
           <button
+            v-if="!isPublishedEdit"
             type="button"
             class="inline-flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
             :disabled="busy || factCheckBusy || !setId"
@@ -45,6 +46,10 @@
         </div>
       </div>
 
+      <p v-if="draftRecovered" role="status" class="mt-4 text-sm text-amber-700 dark:text-amber-300">
+        Recovered an unsaved draft. Review it before saving.
+        <button type="button" class="underline" :disabled="busy" @click="discardRecoveredDraft">Discard draft</button>
+      </p>
       <section v-if="publication && !isWebPreview" class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-200 bg-orange-50/50 p-4 dark:border-orange-900 dark:bg-orange-950/20">
         <p class="flex-1 text-sm text-slate-600 dark:text-slate-300">{{ t('public.editHint') }}</p>
         <AppButton variant="white" :busy="busy" :disabled="factCheckBusy" @click="onUpdate(false, true)"><AppIcon name="publish" />{{ t('public.updateVersion') }}</AppButton>
@@ -57,12 +62,12 @@
       </p>
 
       <LoadingSpinner v-else-if="initialLoading" class="mt-6" />
-      <div v-else class="mt-6 space-y-4">
+      <fieldset v-else :disabled="busy || factCheckBusy" class="mt-6 min-w-0 space-y-4">
         <p
           v-if="isWebPreview"
           class="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100"
         >
-          Edit preview is not saved in web preview. Use the desktop app to update local sets.
+          Changes in this demo are not saved.
         </p>
 
         <div>
@@ -291,7 +296,7 @@
             </button>
           </div>
         </div>
-      </div>
+      </fieldset>
     </div>
 
     <BaseModal
@@ -302,7 +307,7 @@
       @close="closeDelete"
     >
       <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        This removes the set, starred terms, and linked study guide from the local database.
+        This deletes the set and its study guide from your account on all devices.
       </p>
       <div class="mt-4 flex flex-wrap justify-end gap-2">
         <button
@@ -343,6 +348,8 @@ import {
   type PublicationSettings,
 } from '~/src/composables/published-sets'
 
+import { readCache, writeCache } from '~/src/composables/cloud-library/cache'
+import { libraryOwner } from '~/src/composables/cloud-library/client'
 import { lockGetStatus } from '~/src/composables/lock'
 import { useLockSession } from '~/src/composables/lock-session'
 import { createProfileRepo, createSettingsRepo, createSetsRepo, useTracerDb } from '~/src/composables/db'
@@ -391,6 +398,11 @@ async function loadPublication() {
   try { publication.value = await getPublicationSettings(setId.value) }
   catch { publicationLookupFailed.value = true }
 }
+const cloudRevision = ref<number | undefined>()
+const draftRecovered = ref(false)
+let draftOwner: string | null = null
+let draftWrites = Promise.resolve()
+let savedDraft = ''
 const title = ref('')
 const description = ref('')
 const iconKey = ref<SetIconKey>('default')
@@ -438,7 +450,31 @@ async function onFactCheck() {
   })
 }
 
+function editorDraft() {
+  return JSON.parse(JSON.stringify({
+    title: title.value, description: description.value, iconKey: iconKey.value,
+    iconTone: iconTone.value, cards: cards.value, cloudRevision: cloudRevision.value,
+  }))
+}
+function draftFingerprint() {
+  const draft = editorDraft()
+  return JSON.stringify({ ...draft, cards: draft.cards.map(({ key, ...card }: DraftCardRow) => card) })
+}
+watch([title, description, iconKey, iconTone, cards], () => {
+  if (initialLoading.value || isWebPreview.value || isPublishedEdit.value || !draftOwner || !setId.value) return
+  const owner = draftOwner, key = `editor-draft:${setId.value}`
+  const draft = draftFingerprint() === savedDraft ? null : editorDraft()
+  draftWrites = draftWrites.then(() => writeCache(owner, key, draft)).catch(() => {})
+}, { deep: true })
+async function discardRecoveredDraft() {
+  if (!draftOwner || !setId.value) return
+  await draftWrites
+  await writeCache(draftOwner, `editor-draft:${setId.value}`, null)
+  window.location.reload()
+}
+
 function setDraftFromSet(s: FlashcardSet) {
+  cloudRevision.value = s.cloudRevision
   title.value = s.title
   description.value = s.description ?? ''
   iconKey.value = normalizeSetIconKey(s.iconKey)
@@ -644,6 +680,18 @@ async function loadSet() {
       return
     }
     setDraftFromSet(set)
+    savedDraft = draftFingerprint()
+    draftOwner = await libraryOwner(db).catch(() => null)
+    const draft = draftOwner ? await readCache<ReturnType<typeof editorDraft>>(draftOwner, `editor-draft:${id}`) : null
+    if (draft) {
+      title.value = draft.title
+      description.value = draft.description
+      iconKey.value = draft.iconKey
+      iconTone.value = draft.iconTone
+      cards.value = draft.cards
+      cloudRevision.value = draft.cloudRevision
+      draftRecovered.value = true
+    }
     initialLoading.value = false
     await nextTick()
     titleEl.value?.focus()
@@ -734,7 +782,14 @@ async function onUpdate(skipDuplicateReview = false, updatePublic = false) {
     }
     if (!isWebPreview.value) {
       const db = await useTracerDb()
-      await createSetsRepo(db).update(snapshot)
+      const saved = await createSetsRepo(db).update({ ...snapshot, cloudRevision: cloudRevision.value })
+      cloudRevision.value = saved.cloudRevision
+      savedDraft = draftFingerprint()
+      if (draftOwner) {
+        await draftWrites
+        await writeCache(draftOwner, `editor-draft:${id}`, null)
+      }
+      draftRecovered.value = false
       localSaved = true
     }
     notifySearchItemsChanged()

@@ -1,0 +1,34 @@
+diff --git a/v3/helpers/errorUtil.cjs b/v3/helpers/errorUtil.cjs
+index b51b6706001b936099a834e37cad22383389023a..1ea912fb214ef27a61c0f3380f770362c84bed3a 100644
+--- a/v3/helpers/errorUtil.cjs
++++ b/v3/helpers/errorUtil.cjs
+@@ -4,6 +4,10 @@ exports.errorUtil = void 0;
+ var errorUtil;
+ (function (errorUtil) {
+     errorUtil.errToObj = (message) => typeof message === "string" ? { message } : message || {};
+-    // biome-ignore lint:
+-    errorUtil.toString = (message) => typeof message === "string" ? message : message?.message;
++    Object.defineProperty(errorUtil, "toString", {
++        value: (message) => typeof message === "string" ? message : message?.message,
++        writable: true,
++        enumerable: true,
++        configurable: true,
++    });
+ })(errorUtil || (exports.errorUtil = errorUtil = {}));
+diff --git a/v3/helpers/errorUtil.js b/v3/helpers/errorUtil.js
+index e1640d1a4f696b5268518f3e15fa10ca5c8e61b8..78cebcf247be4a628de8c48a2aab5ced4f2f244b 100644
+--- a/v3/helpers/errorUtil.js
++++ b/v3/helpers/errorUtil.js
+@@ -1,6 +1,10 @@
+ export var errorUtil;
+ (function (errorUtil) {
+     errorUtil.errToObj = (message) => typeof message === "string" ? { message } : message || {};
+-    // biome-ignore lint:
+-    errorUtil.toString = (message) => typeof message === "string" ? message : message?.message;
++    Object.defineProperty(errorUtil, "toString", {
++        value: (message) => typeof message === "string" ? message : message?.message,
++        writable: true,
++        enumerable: true,
++        configurable: true,
++    });
+ })(errorUtil || (errorUtil = {}));

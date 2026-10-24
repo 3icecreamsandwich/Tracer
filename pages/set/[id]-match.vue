@@ -1,7 +1,8 @@
 <template>
-    <main class="flex flex-col h-8/9 bg-white dark:bg-slate-950">
+    <main class="tracer-fullscreen-study tracer-fullscreen-study--upper bg-white dark:bg-slate-950">
         <!-- Header with Back button and progress -->
         <div
+            data-tauri-drag-region
             class="border-b border-slate-200 bg-white px-3 py-4 dark:border-slate-800 dark:bg-slate-950 sm:px-6"
         >
             <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
@@ -16,8 +17,7 @@
         </div>
 
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
-            <div aria-hidden="true" class="mb-6 h-[3.25rem]" />
+        <div class="tracer-fullscreen-content flex-1 flex flex-col items-center justify-center px-6 py-8">
             <p v-if="matchError" class="text-sm text-red-700 dark:text-red-300">
                 {{ matchError }}
             </p>
@@ -79,35 +79,10 @@
                 v-else-if="!matchIsRunning"
                 class="w-full max-w-2xl text-center"
             >
-                <div
-                    class="rounded-lg border border-slate-200 bg-slate-50 p-8 dark:border-slate-800 dark:bg-slate-900"
-                >
-                    <p class="text-sm text-slate-700 dark:text-slate-200 mb-4">
-                        {{ t("set.matchInstructions") }}
-                    </p>
-
-                    <div class="flex flex-wrap justify-center gap-2 mb-4">
-                        <button
-                            type="button"
-                            class="inline-flex items-center rounded-md border border-orange-600 bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
-                            :disabled="!set || set.terms.length === 0"
-                            @click="startMatch"
-                        >
-                            {{ t("set.start") }}
-                        </button>
-                    </div>
-
-                    <!-- <div class="flex items-center justify-center">
-                        <button
-                            type="button"
-                            class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                            :class="{ 'bg-slate-100 dark:bg-slate-900': matchMemoryMode }"
-                            @click="matchMemoryMode = !matchMemoryMode"
-                        >
-                            {{ t('set.memory') }} {{ matchMemoryMode ? "✓" : "" }}
-                        </button>
-                    </div> -->
-                </div>
+                <MatchStartScreen
+                    :disabled="!set || set.terms.length === 0"
+                    @start="startMatch"
+                />
             </div>
 
             <!-- Game grid -->

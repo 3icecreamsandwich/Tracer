@@ -1,59 +1,45 @@
 import { beforeEach, expect, it, vi } from 'vitest'
-
-const mocks = vi.hoisted(() => ({
-  list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(),
-  getGuide: vi.fn(), createGuide: vi.fn(), updateGuide: vi.fn(),
-  upsert: vi.fn(), remote: [] as any[], publications: [] as any[], repair: vi.fn(),
+const mocks = vi.hoisted(() => ({ rpc: vi.fn(), refresh: vi.fn(), cache: new Map(), db: { select: vi.fn(), execute: vi.fn().mockResolvedValue({}) }, owner: 'owner' }))
+vi.mock('../../src/composables/db', () => ({ useTracerDb: async () => mocks.db }))
+vi.mock('../../src/composables/cloud-library/client', () => ({
+  libraryOwner: async () => mocks.owner,
+  authenticatedLibrary: async () => ({ rpc: mocks.rpc }),
+  refreshLibrary: mocks.refresh,
 }))
-vi.mock('../../src/composables/db', () => ({
-  useTracerDb: async () => ({}),
-  createSetsRepo: () => ({ list: mocks.list, get: mocks.get, create: mocks.create, update: mocks.update }),
-  createStudyGuidesRepo: () => ({ getBySetId: mocks.getGuide, create: mocks.createGuide, update: mocks.updateGuide }),
-}))
-vi.mock('../../src/composables/published-sets', () => ({ clearPublishedSetCache: vi.fn() }))
-vi.mock('../../src/composables/auth/client', () => ({
-  getSupabaseClient: () => ({
-    auth: { getUser: async () => ({ data: { user: { id: 'owner' } } }) },
-    from: (table: string) => table === 'private_sets' ? {
-      select: () => ({ eq: async () => ({ data: mocks.remote }) }),
-      upsert: mocks.upsert,
-    } : {
-      select: () => ({ eq: () => ({ is: async () => ({ data: mocks.publications }) }) }),
-      update: (payload: any) => {
-        mocks.repair(payload)
-        const chain = { eq: () => chain, is: async () => ({ error: null }) }
-        return chain
-      },
-    },
-  }),
+vi.mock('../../src/composables/cloud-library/preferences', () => ({ personalPreferences: (value: unknown) => value }))
+vi.mock('../../src/composables/db/repos/settings.repo', () => ({ createLocalSettingsRepo: () => ({ get: async () => ({ language: 'en' }) }) }))
+vi.mock('../../src/composables/cloud-library/cache', () => ({
+  readCache: async (owner: string, key: string) => mocks.cache.get(`${owner}:${key}`),
+  writeCache: async (owner: string, key: string, value: unknown) => { mocks.cache.set(`${owner}:${key}`, value) },
 }))
 import { syncPrivateSets } from '../../src/composables/private-set-sync'
-const local = { id: 'set', title: 'Java', terms: [], createdAt: '2026-01-01', updatedAt: '2026-01-01' }
 beforeEach(() => {
-  vi.clearAllMocks()
-  mocks.remote = []
-  mocks.publications = []
-  mocks.list.mockResolvedValue([local])
-  mocks.get.mockResolvedValue(local)
-  mocks.getGuide.mockResolvedValue(null)
-  mocks.upsert.mockResolvedValue({ error: null })
+  vi.clearAllMocks(); mocks.cache.clear(); mocks.owner = crypto.randomUUID()
+  mocks.rpc.mockResolvedValue({ error: null }); mocks.refresh.mockResolvedValue(undefined)
+  mocks.db.select.mockImplementation(async (sql: string) => sql.includes('flashcard_sets') ? [{ id: 'set', title: 'Legacy', terms_json: '[{"front":"A","back":"B"}]', hidden_from_library: 0 }] : [])
 })
-it('uploads existing guides and repairs older public snapshots', async () => {
-  mocks.getGuide.mockResolvedValue({ id: 'guide', markdown: '# Full guide' })
-  mocks.publications = [{ id: 'public', source_set_id: 'set' }]
-  await syncPrivateSets()
-  expect(mocks.upsert.mock.calls[0][0].study_guide_markdown).toBe('# Full guide')
-  expect(mocks.repair).toHaveBeenCalledWith({ study_guide_markdown: '# Full guide' })
+it('imports local content once, then refreshes without uploading unchanged sets', async () => {
+  await syncPrivateSets(); await syncPrivateSets()
+  expect(mocks.rpc).toHaveBeenCalledTimes(1)
+  expect(mocks.rpc).toHaveBeenCalledWith('import_cloud_library_items', { items: expect.arrayContaining([expect.objectContaining({ kind: 'set', payload: expect.objectContaining({ title: 'Legacy' }) })]) })
+  expect(mocks.refresh).toHaveBeenCalledTimes(2)
 })
-it('restores a cloud guide alongside a newly downloaded set', async () => {
-  mocks.list.mockResolvedValue([])
-  mocks.remote = [{ set_id: 'set', title: 'Java', terms: [], study_guide_markdown: '# Cloud guide' }]
+it('retries an incomplete import instead of marking it as migrated', async () => {
+  mocks.rpc.mockResolvedValueOnce({ error: { message: 'offline' } })
+  await expect(syncPrivateSets()).rejects.toThrow('preserve your device library')
+  expect(mocks.refresh).not.toHaveBeenCalled()
   await syncPrivateSets()
-  expect(mocks.createGuide).toHaveBeenCalledWith(expect.objectContaining({ setId: 'set', markdown: '# Cloud guide' }))
+  expect(mocks.rpc).toHaveBeenCalledTimes(2)
 })
-it('does not erase a cloud guide when this device has only its cards', async () => {
-  mocks.remote = [{ set_id: 'set', updated_at: '2026-01-01', study_guide_markdown: '# Surviving guide' }]
+it('imports in bounded batches and coalesces simultaneous imports', async () => {
+  mocks.db.select.mockImplementation(async (sql: string) => sql.includes('flashcard_sets') ? Array.from({ length: 205 }, (_, id) => ({ id: String(id), title: 'Legacy', terms_json: '[]' })) : [])
+  await Promise.all([syncPrivateSets(), syncPrivateSets()])
+  expect(mocks.rpc.mock.calls.map(call => call[1].items.length)).toEqual([100, 100, 6])
+})
+
+it('uses durable receipts after the disposable cache is cleared', async () => {
+  mocks.db.select.mockResolvedValue([{ owner_id: mocks.owner }])
   await syncPrivateSets()
-  expect(mocks.createGuide).toHaveBeenCalledWith(expect.objectContaining({ markdown: '# Surviving guide' }))
-  expect(mocks.upsert.mock.calls[0][0].study_guide_markdown).toBe('# Surviving guide')
+  expect(mocks.rpc).not.toHaveBeenCalled()
+  expect(mocks.refresh).toHaveBeenCalledOnce()
 })

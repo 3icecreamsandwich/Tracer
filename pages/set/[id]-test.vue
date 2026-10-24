@@ -7,8 +7,9 @@
         @close="aiErrorOpen = false"
         @retry="retrySubmitTest"
     />
-    <main class="min-h-screen bg-white text-slate-950 dark:bg-slate-950 dark:text-slate-50">
+    <main class="tracer-fullscreen-study bg-white text-slate-950 dark:bg-slate-950 dark:text-slate-50">
         <header
+            data-tauri-drag-region
             class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-3 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:px-6"
         >
             <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
@@ -50,7 +51,7 @@
             </div>
         </header>
 
-        <div class="tracer-page mx-auto w-full max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
+        <div class="tracer-fullscreen-content tracer-page mx-auto w-full max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
             <LoadingSpinner v-if="busy" screen label="Preparing your test…" />
 
             <div

@@ -227,3 +227,25 @@ html.dark .tracer-library-scroll::-webkit-scrollbar-thumb {
     line-height: var(--tracer-leading-4xl);
   }
 }
+
+/* Place each fullscreen study group slightly above center below its header. Rows grow with
+   long questions/results, so short windows can still scroll from the top. */
+.tracer-fullscreen-study {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-rows: auto 1fr;
+}
+.tracer-fullscreen-content {
+  align-self: center;
+  margin-block-end: 2.5rem;
+}
+
+/* Practice and Match place 30% of spare height above the content and 70% below. */
+.tracer-fullscreen-study--upper {
+  grid-template-rows: auto 3fr auto 7fr;
+}
+.tracer-fullscreen-study--upper > .tracer-fullscreen-content {
+  grid-row: 3;
+  align-self: start;
+  margin-block-end: 0;
+}

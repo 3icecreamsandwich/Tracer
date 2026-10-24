@@ -8,6 +8,8 @@
     "generate": "nuxt generate",
     "tauri:dev": "bun run tauri dev",
     "tauri:build": "bun run tauri build",
+    "tauri:dev:update-test": "bun run tauri dev --config src-tauri/tauri.updater-test.conf.json",
+    "tauri:build:update-test": "bun run tauri build --config src-tauri/tauri.updater-test.conf.json",
     "test:unit": "vitest run && cd src-tauri && cargo test",
     "test:e2e:desktop": "node ./tests/e2e/desktop/run.mjs",
     "test:e2e:web": "node ./tests/e2e/web/run.mjs",
@@ -48,7 +50,7 @@
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@playwright/test": "^1.63.0",
-    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/api": "~2.12.0",
     "@tauri-apps/cli": "^2.11.4",
     "@tauri-apps/plugin-sql": "^2.4.1",
     "@tauri-apps/plugin-stronghold": "^2.3.2",
@@ -67,5 +69,8 @@
   },
   "overrides": {
     "tar": "7.5.22"
+  },
+  "patchedDependencies": {
+    "zod@4.3.6": "patches/zod@4.3.6.patch"
   }
 }

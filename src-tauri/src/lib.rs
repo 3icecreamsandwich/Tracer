@@ -8,8 +8,8 @@ use commands::{
     github_oauth_pkce_finish, github_oauth_pkce_start, lock_first_run_set_device_key,
     lock_first_run_set_password, lock_get_status, lock_reset_tracer, lock_set_startup_lock_enabled,
     lock_unlock, oauth_callback_cancel, oauth_callback_finish, oauth_callback_start, open_external,
-    test_mode_confirm_exit, test_mode_set_active, OAuthCallbackState, TestModeExitState,
-    VaultKeyState,
+    test_mode_confirm_exit, test_mode_set_active, updater_preflight, OAuthCallbackState,
+    TestModeExitState, VaultKeyState,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -149,7 +149,7 @@ pub fn run() {
             description: "add automatic updates preference",
             sql: include_str!("../migrations/022_automatic_updates.sql"),
             kind: MigrationKind::Up,
-        }
+        },
     ];
 
     let app = tauri::Builder::default()
@@ -252,7 +252,8 @@ pub fn run() {
             oauth_callback_finish,
             oauth_callback_cancel,
             test_mode_set_active,
-            test_mode_confirm_exit
+            test_mode_confirm_exit,
+            updater_preflight,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

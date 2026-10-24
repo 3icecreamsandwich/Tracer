@@ -2076,22 +2076,12 @@
                                 >
                                     {{ matchTopline }}
                                 </p>
-                                <div
+                                <MatchStartScreen
                                     v-if="!matchIsRunning"
-                                    class="flex flex-1 flex-col items-center justify-center rounded-md border border-amber-200 bg-amber-50/20 p-4 text-center text-sm text-slate-700 dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-200"
-                                >
-                                    <p>{{ t("set.matchInstructions") }}</p>
-                                    <button
-                                        type="button"
-                                        class="mt-4 inline-flex items-center rounded-md border border-orange-600 bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-orange-500 dark:bg-orange-500 dark:hover:bg-orange-400"
-                                        :disabled="
-                                            !set || set.terms.length === 0
-                                        "
-                                        @click="startMatch"
-                                    >
-                                        {{ t("set.start") }}
-                                    </button>
-                                </div>
+                                    class="flex-1"
+                                    :disabled="!set || set.terms.length === 0"
+                                    @start="startMatch"
+                                />
 
                                 <div
                                     v-else
@@ -2711,11 +2701,10 @@ const router = useRouter();
 const { language, t, translateAppGeneratedText } = useAppLanguage();
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
 
+// Nuxt delays useRoute updates until page navigation finishes. The child outlet
+// must follow the router immediately so opening Edit never waits on its own outlet.
 const isNestedSetRoute = computed(() =>
-    route.matched.some(
-        (match) =>
-            match.name === "set-id-edit" || match.name === "set-id-results",
-    ),
+    router.currentRoute.value.matched.some(match => /\/(edit|results)(?:\/|$)/.test(match.path)),
 );
 const isWebPreview = computed(
     () =>
@@ -5311,7 +5300,21 @@ async function openSetPage() {
     }
 }
 
+async function onCloudSetChanged(event: Event) {
+    const detail = (event as CustomEvent<{ kind?: string; id?: string }>).detail;
+    if (isPublicSet.value || isNestedSetRoute.value || !set.value || detail?.kind !== "set") return;
+    if (detail.id && detail.id !== set.value.id) return;
+    try {
+        const current = await createSetsRepo(await useTracerDb()).get(set.value.id);
+        if (!current) {
+            set.value = null;
+            loadError.value = "This set is no longer available.";
+        } else if (current.cloudRevision !== set.value?.cloudRevision) set.value = current;
+    } catch { /* Continue studying the last readable cached version. */ }
+}
+
 onMounted(async () => {
+    window.addEventListener("tracer:cloud-library-changed", onCloudSetChanged);
     reviewClockTimer = setInterval(
         () => (reviewClock.value = Date.now()),
         30_000,
@@ -5432,6 +5435,7 @@ watch(
 );
 
 onBeforeUnmount(() => {
+    window.removeEventListener("tracer:cloud-library-changed", onCloudSetChanged);
     if (reviewClockTimer) clearInterval(reviewClockTimer);
     finishInlineAssignedMode();
     window.removeEventListener("pagehide", onAssignedPageHide);

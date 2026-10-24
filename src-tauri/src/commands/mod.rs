@@ -19,5 +19,5 @@ pub(crate) use lock::{
     lock_first_run_set_device_key, lock_first_run_set_password, lock_get_status, lock_reset_tracer,
     lock_set_startup_lock_enabled, lock_unlock,
 };
-pub(crate) use test_mode::{test_mode_confirm_exit, test_mode_set_active, TestModeExitState};
+pub(crate) use test_mode::{test_mode_confirm_exit, test_mode_set_active, TestModeExitState, updater_preflight};
 pub(crate) use vault::VaultKeyState;

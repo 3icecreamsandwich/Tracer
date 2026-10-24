@@ -76,8 +76,8 @@ describe('folders repo roundtrip (sqlite:tracer.db)', () => {
          VALUES ('set-1', 'Biology', '[]'), ('set-2', 'Chemistry', '[]');`
       )
 
-      const { createFoldersRepo } = await import('../../src/composables/db/repos/folders.repo')
-      const { createSetsRepo } = await import('../../src/composables/db/repos/sets.repo')
+      const { createLocalFoldersRepo: createFoldersRepo } = await import('../../src/composables/db/repos/folders.repo')
+      const { createLocalSetsRepo: createSetsRepo } = await import('../../src/composables/db/repos/sets.repo')
       const foldersRepo = createFoldersRepo(db)
       const setsRepo = createSetsRepo(db)
 

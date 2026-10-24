@@ -1,3 +1,4 @@
+import { installCloudLibraryFixture } from '../fixtures/cloud-library'
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 
 const basePath = process.env.TRACER_TEST_BASE_PATH || '/'
@@ -12,7 +13,7 @@ test.afterEach(({ page }) => {
   expect(runtimeErrors.get(page) ?? [], 'No uncaught browser errors').toEqual([])
 })
 
-async function signInFixture(context: BrowserContext, page: Page, userId = owner) {
+async function signInFixture(context: BrowserContext, page: Page, userId = owner, cloudRows?: Map<string, any>) {
   // No real accounts, provider keys, or cloud writes are used in this suite.
   const user = { id: userId, email: 'web-test@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: { provider: 'google', providers: ['google'] }, user_metadata: { full_name: 'Web Test' }, created_at: new Date().toISOString() }
   const expires = Math.floor(Date.now() / 1000) + 3600
@@ -32,8 +33,10 @@ async function signInFixture(context: BrowserContext, page: Page, userId = owner
   await context.route('**/auth/v1/**', route => route.fulfill({ json: user }))
   await context.route('**/rest/v1/**', route => route.fulfill({ json: route.request().url().includes('user_roles') ? [{ role: 'student' }] : [] }))
   await context.route('**/api/web/credentials', route => route.fulfill({ json: { openai: false, anthropic: false, gemini: false, ollama_cloud: false, openai_compat: false } }))
+  const cloud = await installCloudLibraryFixture(context, userId, cloudRows)
   await page.goto('first-run')
   await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
+  return cloud
 }
 
 async function createSet(page: Page) {
@@ -60,6 +63,54 @@ test('authentication defaults to sign in and skips browser profile editing', asy
   await signInFixture(context, page)
   await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
   await expect(page.getByLabel('Name', { exact: true })).toHaveCount(0)
+})
+
+test('creation pages stay open without a configured AI model', async ({ context, page }) => {
+  // Match Tauri's freezePrototype setting, including before lazy imports load.
+  await context.addInitScript(() => Object.freeze(Object.prototype))
+  await signInFixture(context, page)
+  for (const path of ['basic', 'generate', 'synthesize']) {
+    await page.locator(`a[href="${basePath}create/${path}"]`).click()
+    await expect(page.locator('main h1')).toBeVisible()
+    await expect(page).toHaveURL(new RegExp(`/create/${path}$`))
+    await page.goBack()
+    await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
+  }
+})
+
+test('creation navigation reports a failed module load and offers recovery', async ({ context, page }) => {
+  test.skip(process.env.TRACER_TEST_PRODUCTION === '1', 'Development module URLs only')
+  await signInFixture(context, page)
+  await context.route('**/pages/create/basic.vue*', route => route.abort('failed'))
+  await page.locator(`a[href="${basePath}create/basic"]`).click()
+  const alert = page.getByRole('alert').filter({ hasText: 'Could not open the creation page.' })
+  await expect(alert).toBeVisible()
+  await context.unroute('**/pages/create/basic.vue*')
+  await alert.getByRole('link', { name: 'Reload this page and try again' }).click()
+  await expect(page).toHaveURL(/\/create\/basic$/)
+  await expect(page.getByLabel('Title', { exact: true })).toBeVisible()
+})
+
+test('dragging a set near the library edges scrolls until the pointer moves away', async ({ context, page }) => {
+  const rows = new Map<string, any>()
+  for (let index = 0; index < 24; index++) {
+    const id = `scroll-set-${index}`
+    rows.set(`${owner}:set:${id}`, { owner_id: owner, kind: 'set', id, revision: 1, deleted: false,
+      payload: { id, title: `Scroll set ${index}`, terms: [], folderId: null, createdAt: '2026-01-01', updatedAt: '2026-01-01' } })
+  }
+  await signInFixture(context, page, owner, rows)
+  const panel = page.locator('.tracer-library-scroll')
+  await expect(panel.getByText('Scroll set 0', { exact: true })).toBeVisible()
+  const first = await panel.getByText('Scroll set 0', { exact: true }).boundingBox()
+  const bounds = await panel.boundingBox()
+  if (!first || !bounds) throw new Error('Missing library geometry')
+  await page.mouse.move(first.x + 15, first.y + first.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height - 5, { steps: 8 })
+  await expect.poll(() => panel.evaluate(el => el.scrollTop)).toBeGreaterThan(80)
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + 5, { steps: 4 })
+  await expect.poll(() => panel.evaluate(el => el.scrollTop)).toBe(0)
+  await page.mouse.up()
 })
 
 test('real browser library persists edits and progress across reloads and tabs', async ({ context, page }) => {
@@ -194,4 +245,36 @@ test('switching accounts does not expose another browser library', async ({ cont
   await page.reload()
   await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
   await expect(page.getByText('Persistent web set', { exact: true })).toHaveCount(0)
+})
+
+test('failed cloud saves preserve an editor draft across reloads', async ({ context, page }) => {
+  await signInFixture(context, page)
+  await createSet(page)
+  await page.getByRole('link', { name: 'Edit', exact: true }).click()
+  await page.getByLabel('Title', { exact: true }).fill('Draft survives failed save')
+  await context.route('**/rest/v1/rpc/save_cloud_library_item', route => route.fulfill({ status: 503, json: { message: 'Cloud unavailable' } }))
+  await page.getByRole('button', { name: 'Update', exact: true }).click()
+  await expect(page.getByText('Cloud unavailable', { exact: true })).toBeVisible()
+  await page.reload()
+  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Draft survives failed save')
+  await expect(page.getByText(/Recovered an unsaved draft/)).toBeVisible()
+})
+
+
+test('a fresh device opens and edits cloud sets without the original local database', async ({ browser, context, page }) => {
+  const cloud = await signInFixture(context, page)
+  const url = await createSet(page)
+  const otherContext = await browser.newContext()
+  try {
+    const otherPage = await otherContext.newPage()
+    await signInFixture(otherContext, otherPage, owner, cloud.rows)
+    await otherPage.goto(url)
+    await expect(otherPage.getByRole('heading', { name: 'Persistent web set', exact: true })).toBeVisible()
+    await otherPage.getByRole('link', { name: 'Edit', exact: true }).click()
+    await otherPage.getByLabel('Title', { exact: true }).fill('Edited on another device')
+    await otherPage.getByRole('button', { name: 'Update', exact: true }).click()
+    await expect(otherPage.getByRole('heading', { name: 'Edited on another device', exact: true })).toBeVisible()
+    await page.reload()
+    await expect(page.getByRole('heading', { name: 'Edited on another device', exact: true })).toBeVisible()
+  } finally { await otherContext.close() }
 })

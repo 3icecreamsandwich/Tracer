@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('../../src/composables/auth/client', () => ({ isSupabaseConfigured: () => false }))
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
@@ -91,8 +93,8 @@ describe('sets repo roundtrip (sqlite:tracer.db)', () => {
 
       const db = createSqliteCliDb(dbPath)
 
-      const { createSetsRepo } = await import('../../src/composables/db/repos/sets.repo')
-      const { createStudyGuidesRepo } = await import('../../src/composables/db/repos/study-guides.repo')
+      const { createLocalSetsRepo: createSetsRepo } = await import('../../src/composables/db/repos/sets.repo')
+      const { createLocalStudyGuidesRepo: createStudyGuidesRepo } = await import('../../src/composables/db/repos/study-guides.repo')
       const { restoreAssignmentStudyGuide } = await import('../../src/composables/classrooms')
       const repo = createSetsRepo(db)
 

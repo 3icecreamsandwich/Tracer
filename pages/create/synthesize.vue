@@ -232,10 +232,8 @@ import {
 import { syncPrivateSets } from '~/src/composables/private-set-sync'
 import { useLockSession } from '~/src/composables/lock-session'
 import { parseTermsDelimited, TsvParseError, normalizeTerms, TermsValidationError } from '~/src/composables/db/validators'
-import { resolveAiModel } from '~/src/composables/ai/registry'
 import { normalizeAiError, aiErrorForMissingDefaultModel, type AiErrorUx } from '~/src/composables/ai/ux-errors'
 import { hasTauriRuntime } from '~/src/composables/tauri'
-import { generateText } from 'ai'
 import { filterSetSearch } from '~/src/composables/search/set-search'
 import { useAppLanguage } from '~/src/composables/language'
 
@@ -434,6 +432,9 @@ async function onCreate() {
       return
     }
 
+    const [{ resolveAiModel }, { generateText }] = await Promise.all([
+      import('~/src/composables/ai/registry'), import('ai')
+    ])
     const modelPromise = resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
     const sourceSets = (await sourceSetsPromise).filter((s): s is FlashcardSet => !!s)
     if (sourceSets.length === 0) {
@@ -510,11 +511,6 @@ onMounted(async () => {
       }
     } else if (status.can_auto_unlock) {
       markUnlocked()
-    }
-
-    if (!settings.defaultModelId) {
-      await router.replace({ path: '/settings', query: { reason: 'missing-default-model', from: '/create/synthesize' } })
-      return
     }
 
     await loadSets()

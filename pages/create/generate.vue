@@ -243,7 +243,6 @@ import {
 } from '~/src/composables/db'
 import { syncPrivateSets } from '~/src/composables/private-set-sync'
 import { useLockSession } from '~/src/composables/lock-session'
-import { resolveAiModel } from '~/src/composables/ai/registry'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 import { normalizeAiError, aiErrorForMissingDefaultModel, type AiErrorUx } from '~/src/composables/ai/ux-errors'
 import { normalizeGenerateRequestError } from '~/src/composables/ai/generate-request'
@@ -256,13 +255,11 @@ import {
   type FailedGenerateSource,
   type GenerateSourceFile
 } from '~/src/composables/generate/source-extraction'
-import { createSetFromLinkedFolder } from '~/src/composables/generate/linked-folders/sync'
 import { useAppLanguage } from '~/src/composables/language'
 import { open } from '@tauri-apps/plugin-dialog'
 
 import { loadGeneratePlan, type GeneratePlan } from '~/src/composables/generate/subscription'
 import { GENERATE_PLAN_LIMITS } from '~/src/composables/generate/source-extraction/limits'
-import { generateLinkedFolderContent } from '~/src/composables/generate/linked-folders/generate'
 
 const plan = ref<GeneratePlan>('free')
 const sourceLimits = computed(() => GENERATE_PLAN_LIMITS[plan.value])
@@ -431,6 +428,7 @@ async function onLinkFolder() {
     if (!path) return
 
     linkBusy.value = true
+    const { createSetFromLinkedFolder } = await import('~/src/composables/generate/linked-folders/sync')
     const result = await createSetFromLinkedFolder({
       path,
       title: title.value,
@@ -526,6 +524,7 @@ async function prepareGenerateModelContext(): Promise<GenerateModelContext> {
   if (!settings.defaultModelId) {
     throw new Error('Choose a Default AI Model to use Generate.')
   }
+  const { resolveAiModel } = await import('~/src/composables/ai/registry')
   const model = await resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
   return {
     db,
@@ -552,6 +551,7 @@ async function saveGeneratedOutput(
       return
     }
 
+    const { generateLinkedFolderContent } = await import('~/src/composables/generate/linked-folders/generate')
     const generated = await generateLinkedFolderContent({
       model,
       resolveRepairModel,
@@ -691,7 +691,6 @@ onMounted(async () => {
     if (isWebPreview.value) {
       return
     }
-    plan.value = await loadGeneratePlan()
     const status = await lockGetStatus()
     const db = await useTracerDb()
 
@@ -714,10 +713,9 @@ onMounted(async () => {
       markUnlocked()
     }
 
-    if (!settings.defaultModelId) {
-      await router.replace({ path: '/settings', query: { reason: 'missing-default-model', from: '/create/generate' } })
-      return
-    }
+    // Opening the form does not require a network entitlement check or a model.
+    // Generation validates both again when the user submits.
+    void loadGeneratePlan().then(nextPlan => { plan.value = nextPlan })
 
     return
   } catch {

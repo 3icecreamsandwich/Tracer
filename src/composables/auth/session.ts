@@ -159,6 +159,8 @@ export async function restoreAuthSession(
 export async function clearAuthSession(options: { remote?: boolean } = {}): Promise<void> {
   const { clearCachedHomeDashboard } = await import('../home-dashboard-cache')
   clearCachedHomeDashboard()
+  const { clearCloudMemoryCache } = await import('../cloud-library/cache')
+  clearCloudMemoryCache()
   if (options.remote !== false) {
     // A deliberate sign-out must revoke the session at Supabase as well as on
     // this device. Keeping the default local-only leaves a valid refresh token
