@@ -79,7 +79,10 @@ test('creation pages stay open without a configured AI model', async ({ context,
 })
 
 test('creation navigation reports a failed module load and offers recovery', async ({ context, page }) => {
-  test.skip(process.env.TRACER_TEST_PRODUCTION === '1', 'Development module URLs only')
+  test.skip(
+    process.env.TRACER_TEST_PRODUCTION === '1' || process.env.TRACER_TEST_CLOUDFLARE === '1',
+    'Fault injection targets Vite development module URLs, not bundled production assets'
+  )
   await signInFixture(context, page)
   await context.route('**/pages/create/basic.vue*', route => route.abort('failed'))
   await page.locator(`a[href="${basePath}create/basic"]`).click()
