@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSetsRepo } from '../../src/composables/db/repos/sets.repo'
+import { createLocalSetsRepo } from '../../src/composables/db/repos/sets.repo'
 
 describe('SQL parameterization', () => {
   it('binds SQL-looking set content as data instead of inserting it into a query', async () => {
@@ -18,7 +18,7 @@ describe('SQL parameterization', () => {
         updated_at: '2026-01-01 00:00:00'
       }
     ])
-    const repo = createSetsRepo({ execute, select })
+    const repo = createLocalSetsRepo({ execute, select })
 
     await repo.create({
       id: '00000000-0000-4000-8000-000000000201',
