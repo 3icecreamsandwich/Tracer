@@ -1,6 +1,21 @@
 name: Build Desktop Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to rebuild
+        required: true
+        type: string
+      platform:
+        description: Platforms to rebuild
+        type: choice
+        options: [macos, all]
+        default: macos
+      published:
+        description: The existing release is already published
+        type: boolean
+        default: false
   push:
     tags:
       - "v*"
@@ -22,15 +37,10 @@ jobs:
       # Serialize uploads so latest.json updates cannot race.
       max-parallel: 1
       matrix:
-        include:
-          - os: macos-latest
-            args: --target universal-apple-darwin --bundles dmg
-          - os: windows-latest
-            args: --bundles nsis
-          - os: ubuntu-22.04
-            args: --bundles deb,appimage
+        os: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.platform == 'macos' && '["macos-latest"]' || '["macos-latest","windows-latest","ubuntu-22.04"]') }}
 
     env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
       VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
       VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
@@ -38,6 +48,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -88,9 +100,9 @@ jobs:
 
           const expectedTag = `v${config.version}`;
 
-          if (process.env.GITHUB_REF_NAME !== expectedTag) {
+          if (process.env.RELEASE_TAG !== expectedTag) {
             throw new Error(
-              `Tag must be ${expectedTag}, received ${process.env.GITHUB_REF_NAME}`
+              `Tag must be ${expectedTag}, received ${process.env.RELEASE_TAG}`
             );
           }
 
@@ -117,12 +129,35 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tauriScript: bun run tauri
-          args: ${{ matrix.args }}
-          tagName: ${{ github.ref_name }}
+          args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin --bundles app,dmg' || matrix.os == 'windows-latest' && '--bundles nsis' || '--bundles deb,appimage' }}
+          tagName: ${{ env.RELEASE_TAG }}
           releaseName: Tracer v__VERSION__
           releaseBody: Download the installer for your operating system.
-          releaseDraft: true
+          releaseDraft: ${{ github.event_name != 'workflow_dispatch' || !inputs.published }}
           prerelease: true
           uploadUpdaterJson: true
           uploadUpdaterSignatures: true
           updaterJsonPreferNsis: true
+
+      - name: Verify macOS updater manifest
+        if: runner.os == 'macOS'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern latest.json --dir "$RUNNER_TEMP/updater-manifest" --clobber
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const manifest = JSON.parse(fs.readFileSync(
+            path.join(process.env.RUNNER_TEMP, 'updater-manifest/latest.json'), 'utf8'
+          ));
+          for (const arch of ['aarch64', 'x86_64']) {
+            const entry = manifest.platforms?.[`darwin-${arch}-app`]
+              ?? manifest.platforms?.[`darwin-${arch}`];
+            if (!entry?.signature?.trim() || !entry?.url?.endsWith('.app.tar.gz')) {
+              throw new Error(`Missing signed macOS updater archive for ${arch}`);
+            }
+          }
+          console.log('Signed updater archives are listed for both Mac architectures.');
+          NODE

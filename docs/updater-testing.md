@@ -26,7 +26,7 @@ executable. Build version A with the test overlay before changing the source to
 version B. For example, on macOS:
 
 ```sh
-bun run tauri:build:update-test --bundles dmg
+bun run tauri:build:update-test --bundles app,dmg
 ```
 
 Supply the usual updater signing credentials when building. Install version A,
@@ -46,3 +46,16 @@ endpoint after installation. This setup tests a single A-to-B transition.
 
 If the destination tag has not been published or lacks `latest.json`, expect an
 update-check error. Creating this configuration does not publish a release.
+
+## Repair missing macOS updater assets
+
+A DMG is a manual installer, not the archive consumed by the updater. macOS
+release builds must include `--bundles app,dmg` to generate the signed
+`.app.tar.gz` archive. The universal archive must be listed for both
+`darwin-aarch64` and `darwin-x86_64` (or their `-app` variants) in `latest.json`.
+
+The Desktop Release workflow supports manual dispatch with an existing `tag`,
+`platform=macos`, and `published=true` for an already published release. It checks
+out that tag, rebuilds the universal app, merges the macOS manifest entries, and
+validates both architectures. Windows and Linux assets are retained. Leave
+`published=false` when rebuilding an existing draft release.
