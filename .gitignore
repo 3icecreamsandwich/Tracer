@@ -39,6 +39,7 @@ notes.md
 ./.agentinstruct/
 
 /tracer-screenshots
+/src-tauri/tauri.release.generated.json
 /test-results
 /.omo
 

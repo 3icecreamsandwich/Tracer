@@ -1,11 +1,12 @@
 # Testing beta desktop updates
 
-The normal app checks GitHub's latest stable release. The optional
+The current beta app checks the persistent `updater-beta/latest.json` release
+asset. The optional
 `src-tauri/tauri.updater-test.conf.json` overlay instead checks the explicit
 `v0.0.2-beta` release. It overrides only the endpoint; the base configuration's
 version, public signing key, identifier, and installer settings are retained.
 
-This is a fixed test destination, not automatic discovery of future betas.
+The test overlay is a fixed destination, not automatic discovery of future betas.
 Change the tag in the overlay when testing another release.
 
 ## Check and download
@@ -26,7 +27,7 @@ executable. Build version A with the test overlay before changing the source to
 version B. For example, on macOS:
 
 ```sh
-bun run tauri:build:update-test --bundles dmg
+bun run tauri:build:update-test --bundles app,dmg
 ```
 
 Supply the usual updater signing credentials when building. Install version A,
@@ -40,9 +41,51 @@ asset URLs must point to the published version B assets. In installed version A,
 check/download, cancel the restart once, then confirm and verify version B opens
 with existing data intact. Repeat on each supported platform.
 
-Normal `tauri:dev`, `tauri:build`, and the release workflow do not use this overlay.
-Consequently version B built by the normal workflow returns to the stable
-endpoint after installation. This setup tests a single A-to-B transition.
+Normal `tauri:dev`, `tauri:build`, and the release workflow do not use the test
+overlay. The release workflow embeds the beta feed for prerelease versions and
+GitHub's stable latest endpoint for stable versions. The feed publisher runs when
+a versioned prerelease is published, validates all platform assets, and copies its
+manifest to `updater-beta` without altering signed URLs or signatures. The channel
+release itself remains a prerelease, so stable clients never select it.
+
+The originally distributed `0.0.2-beta` used the stable endpoint. Its embedded URL
+cannot be changed remotely; install a build containing the beta-channel fix to
+continue beta updates. Do not reset local data to fix this network error.
+
+To seed or repair the channel after all assets are uploaded:
+
+```sh
+node scripts/releases/publish-beta-feed.mjs v0.0.2-beta
+```
+
+This requires authenticated GitHub CLI release-write access. It refuses drafts,
+incomplete manifests, and replacing a feed with an earlier publication date.
 
 If the destination tag has not been published or lacks `latest.json`, expect an
 update-check error. Creating this configuration does not publish a release.
+
+## Repair missing macOS updater assets
+
+A DMG is a manual installer, not the archive consumed by the updater. macOS
+release builds must include `--bundles app,dmg` to generate the signed
+`.app.tar.gz` archive. The universal archive must be listed for both
+`darwin-aarch64` and `darwin-x86_64` (or their `-app` variants) in `latest.json`.
+
+The Desktop Release workflow supports manual dispatch with an existing `tag`,
+`platform=macos`, and `published=true` for an already published release. It checks
+out that tag, rebuilds the universal app, merges the macOS manifest entries, and
+validates both architectures. Windows and Linux assets are retained. Leave
+`published=false` when rebuilding an existing draft release.
+
+Set `verify_only=true` to validate already uploaded macOS assets without compiling
+again. Validation resolves each manifest URL against release metadata, supporting
+both GitHub asset API URLs and direct browser download URLs.
+
+## macOS Keychain after updating
+
+Tracer reads its vault credential from the macOS login Keychain at startup.
+Ad-hoc signed builds can be treated as a different application after an update,
+causing macOS to request authorization again. A stable Developer ID signing
+identity and designated requirement should be used for distributed builds.
+Updater artifact signing is separate from Apple application signing. Do not
+delete Keychain entries or disable credential protection to suppress this prompt.
