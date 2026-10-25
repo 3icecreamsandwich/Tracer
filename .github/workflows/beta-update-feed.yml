@@ -1,0 +1,36 @@
+name: Publish beta update feed
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published prerelease tag to promote to the beta feed
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: beta-update-feed
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || (github.event.release.prerelease && github.event.release.tag_name != 'updater-beta')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Published historical tags may predate the feed publishing script.
+          ref: ${{ github.event_name == 'release' && github.event.repository.default_branch || github.ref_name }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Publish validated manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: node scripts/releases/publish-beta-feed.mjs "$RELEASE_TAG"
