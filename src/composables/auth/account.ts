@@ -45,14 +45,34 @@ export function validateUsername(value: string): string | null {
   return null
 }
 
+const profileIdentities = new Map<string, { value: AccountProfileIdentity; at: number }>()
+const profileIdentityRequests = new Map<string, Promise<AccountProfileIdentity>>()
+
 export async function loadAccountProfileIdentity(): Promise<AccountProfileIdentity | null> {
   const client = getSupabaseClient()
-  const { data: { user }, error: userError } = await client.auth.getUser()
-  if (userError) throw userError
-  if (!user) return null
-  const { data, error } = await client.from('profiles').select('display_name,username').eq('id', user.id).single()
-  if (error) throw error
-  return { displayName: data.display_name, username: data.username }
+  // This identity only selects display data. RLS authorizes the profile query.
+  const { data: { session }, error: sessionError } = await client.auth.getSession()
+  if (sessionError) throw sessionError
+  if (!session) return null
+  const owner = session.user.id
+  const cached = profileIdentities.get(owner)
+  if (cached && Date.now() - cached.at < 60_000) return { ...cached.value }
+  let request = profileIdentityRequests.get(owner)
+  if (!request) {
+    const previous = profileIdentities.get(owner)
+    request = (async () => {
+      const { data, error } = await client.from('profiles').select('display_name,username').eq('id', owner)
+        .single().abortSignal(AbortSignal.timeout(8_000))
+      if (error) throw error
+      const value = { displayName: data.display_name, username: data.username }
+      const latest = profileIdentities.get(owner)
+      if (latest !== previous && latest) return latest.value
+      profileIdentities.set(owner, { value, at: Date.now() })
+      return value
+    })().finally(() => profileIdentityRequests.delete(owner))
+    profileIdentityRequests.set(owner, request)
+  }
+  return { ...await request }
 }
 
 export async function updateAccountProfileIdentity(input: AccountProfileIdentity): Promise<AccountProfileIdentity> {
@@ -79,7 +99,9 @@ export async function updateAccountProfileIdentity(input: AccountProfileIdentity
     email: user.email,
     supabaseUserId: user.id,
   })
-  return { displayName: localProfile.name, username }
+  const value = { displayName: localProfile.name, username }
+  profileIdentities.set(user.id, { value, at: Date.now() })
+  return value
 }
 
 export async function signInWithGoogle(

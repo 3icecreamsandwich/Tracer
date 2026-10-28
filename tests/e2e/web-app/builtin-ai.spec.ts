@@ -1,0 +1,153 @@
+import { expect,test,type BrowserContext,type Page } from '@playwright/test'
+import { installCloudLibraryFixture } from '../fixtures/cloud-library'
+test.skip(process.env.TRACER_TEST_BUILTIN!=='1','Requires the isolated real-gateway/PGlite harness')
+const owner='00000000-0000-4000-8000-000000000001',setId='00000000-0000-4000-8000-000000000088'
+const basePath=process.env.TRACER_TEST_BASE_PATH||'/'
+async function fixture(context:BrowserContext,page:Page,scenario='recover') {
+ await fetch(`http://127.0.0.1:3203/fixture?reset=1&scenario=${scenario}`)
+ const user={id:owner,email:'fixture@example.invalid',aud:'authenticated',role:'authenticated',app_metadata:{provider:'google'},user_metadata:{full_name:'Builtin Test'},created_at:'2026-01-01'}
+ await context.addInitScript(({user,basePath})=>{
+  if(!localStorage.getItem('builtin-initialized')){
+   localStorage.setItem(`tracer:${basePath}:auth`,JSON.stringify({access_token:'fixture-token',refresh_token:'fixture-refresh',token_type:'bearer',expires_at:Math.floor(Date.now()/1000)+3600,expires_in:3600,user}))
+   localStorage.setItem('builtin-initialized','1')
+  }
+ },{user,basePath})
+ await context.route('**/auth/v1/**',route=>route.fulfill({ headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, POST, OPTIONS" },json:user}))
+ await context.route('**/rest/v1/**',route=>route.fulfill({ headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, POST, OPTIONS" },json:route.request().url().includes('user_roles')?[{role:'student'}]:[]}))
+ await context.route('**/api/web/credentials',route=>route.fulfill({ headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, POST, OPTIONS" },json:{openai:false,anthropic:false,gemini:false,ollama_cloud:false,openai_compat:false}}))
+ const rows=new Map<string,any>()
+ rows.set(`${owner}:preferences:app`,{owner_id:owner,kind:'preferences',id:'app',revision:1,deleted:false,payload:{aiMode:'builtin',defaultModelId:null,fallbackModelIds:[]}})
+ rows.set(`${owner}:set:${setId}`,{owner_id:owner,kind:'set',id:setId,revision:1,deleted:false,payload:{id:setId,title:'Built-in water fixture',description:'Water is H2O.',terms:[{id:'t1',front:'Water',back:'H2O'}],folderId:null,createdAt:'2026-01-01',updatedAt:'2026-01-01'}})
+ await installCloudLibraryFixture(context,owner,rows)
+ await page.goto('first-run');await expect(page.getByRole('heading',{name:'Sets',exact:true})).toBeVisible()
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message))
+ return {rows,errors}
+}
+async function usage(page:Page) {
+ return page.evaluate(async()=>{const response=await fetch('/api/ai/usage',{headers:{Authorization:'Bearer fixture-token'}});return response.json()})
+}
+function pdf() {
+ const stream='BT /F1 12 Tf 72 720 Td (Water is H2O. Water is a chemical substance composed of hydrogen and oxygen. Study its properties and molecular formula.) Tj ET'
+ const objects=['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>','<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>',`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>']
+ let raw='%PDF-1.4\n',offsets=[0]
+ objects.forEach((object,index)=>{offsets.push(Buffer.byteLength(raw));raw+=`${index+1} 0 obj\n${object}\nendobj\n`})
+ const xref=Buffer.byteLength(raw)
+ raw+=`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map(n=>String(n).padStart(10,'0')+' 00000 n ').join('\n')}\ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`
+ return Buffer.from(raw)
+}
+test('no-key chat and Fact Check use the real gateway and share one account balance',async({context,page})=>{
+ const {errors,rows}=await fixture(context,page)
+ await page.goto('settings')
+ await expect(page.getByRole('combobox',{name:'AI service'})).toHaveCount(0)
+ await page.getByRole('button',{name:'Configure AI',exact:true}).click()
+ await expect(page.getByRole('combobox',{name:'AI service'})).toHaveValue('builtin')
+ await page.getByRole('button',{name:'Close AI configuration',exact:true}).last().click()
+ await expect(page.getByRole('region',{name:'AI',exact:true})).toContainText('65 of 65')
+ await page.goto(`set/${setId}?mode=chat`)
+ await page.locator('#chat-input').fill('What is water?')
+ await page.getByRole('region',{name:'Chat',exact:true}).getByRole('button',{name:'Chat',exact:true}).click()
+ await expect(page.getByRole('log')).toContainText('Water is H2O.')
+ expect(await usage(page)).toMatchObject({used:1,remaining:64,reserved:0})
+ await page.goto(`set/${setId}/edit`);await page.getByRole('button',{name:'Fact Check',exact:true}).click()
+ await expect(page.getByText('No corrections suggested.',{exact:true})).toBeVisible()
+ expect(await usage(page)).toMatchObject({used:2,remaining:63})
+ expect(errors).toEqual([])
+})
+test('no-key generation and explicit Practice grading work while Save grades locally',async({context,page})=>{
+ const {errors,rows}=await fixture(context,page)
+ await page.goto('create/generate')
+ await page.locator('#gen-title').fill('Generated water fixture')
+ await page.locator('input[type=file]').setInputFiles({name:'water.pdf',mimeType:'application/pdf',buffer:pdf()})
+ await page.getByRole('button',{name:'Generate',exact:true}).click()
+ await expect.poll(() => errors, { timeout: 2000 }).toEqual([])
+ await expect(page.getByRole('heading',{name:'Generated water fixture',exact:true})).toBeVisible()
+ expect(await usage(page)).toMatchObject({used:1})
+ await page.goto(`set/${setId}-learn?seed=1`)
+ await page.getByRole('button',{name:'Practice settings'}).click()
+ for(const name of ['Multiple choice','True / false']) {
+  const button=page.getByRole('button',{name,exact:true});if(await button.count() && await button.getAttribute('aria-pressed')==='true')await button.click()
+ }
+ const written=page.getByRole('button',{name:'Written',exact:true});if(await written.getAttribute('aria-pressed')==='false')await written.click()
+ await page.getByRole('button',{name:/Restart practice/i}).click()
+ await page.locator('#fullscreen-written-answer').fill('H2O')
+ await page.getByRole('button',{name:'Save',exact:true}).click()
+ expect(await usage(page)).toMatchObject({used:1})
+ await page.getByRole('button',{name:'Grade with AI · 1 action',exact:true}).click()
+ await expect(page.getByText('Correct.',{exact:true})).toBeVisible()
+ expect(await usage(page)).toMatchObject({used:2})
+ expect(errors).toEqual([])
+})
+test('monthly exhaustion and interrupted output have explicit UI states',async({context,page})=>{
+ await fixture(context,page,'partial')
+ await page.goto(`set/${setId}?mode=chat`)
+ await page.locator('#chat-input').fill('Test interruption')
+ await page.getByRole('region',{name:'Chat',exact:true}).getByRole('button',{name:'Chat',exact:true}).click()
+ await expect(page.getByRole('dialog')).toBeVisible()
+ await page.getByRole('dialog').getByRole('button',{name:'Close',exact:true}).last().click()
+ await expect(page.getByRole('log')).toContainText('Water is H2O.')
+ expect(await usage(page)).toMatchObject({used:1})
+ await fetch('http://127.0.0.1:3203/fixture?scenario=quota')
+ await page.goto('settings')
+ await expect(page.getByRole('region',{name:'AI',exact:true})).toContainText('Monthly allowance used')
+ await page.goto(`set/${setId}?mode=chat`);await page.locator('#chat-input').fill('Another question')
+ await page.getByRole('region',{name:'Chat',exact:true}).getByRole('button',{name:'Chat',exact:true}).click()
+ await expect(page.getByRole('dialog')).toContainText('65 built-in AI actions')
+})
+
+test('AI settings keep configuration in a modal and persist an explicit mode switch on a phone',async({context,page})=>{
+ const {rows,errors}=await fixture(context,page)
+ await page.setViewportSize({width:390,height:844})
+ await page.goto('settings')
+ await expect(page.getByRole('region',{name:'AI',exact:true})).toContainText('Built-in AI')
+ await expect(page.getByRole('button',{name:'Add model',exact:true})).toHaveCount(0)
+ await expect(page.getByRole('combobox',{name:'AI service'})).toHaveCount(0)
+ const configure=page.getByRole('button',{name:'Configure AI',exact:true})
+ await configure.click()
+ const modal=page.getByRole('dialog',{name:'Configure AI',exact:true})
+ await expect(modal).toBeVisible()
+ await modal.getByText('Other settings',{exact:true}).click()
+ await expect(modal.getByText('Page chat button',{exact:true})).toBeVisible()
+ await expect(modal.getByText('Adds AI-generated questions when you start practice. Built-in AI uses one action per run.',{exact:true})).toBeVisible()
+ await modal.getByRole('combobox',{name:'AI service'}).selectOption('byok')
+ await expect(modal.getByRole('button',{name:'Add model',exact:true})).toBeVisible()
+ await expect(modal.getByText('Page chat button',{exact:true})).toHaveCount(1)
+ await expect(modal.getByText('Adds AI-generated questions when you start practice. Built-in AI uses one action per run.',{exact:true})).toHaveCount(1)
+ await expect.poll(()=>rows.get(`${owner}:preferences:app`)?.payload?.aiMode).toBe('byok')
+ await page.keyboard.press('Escape')
+ await expect(modal).toHaveCount(0)
+ await expect(configure).toBeFocused()
+ await expect(page.getByRole('region',{name:'AI',exact:true})).toContainText('My API keys')
+ await page.reload()
+ await expect(page.getByRole('region',{name:'AI',exact:true})).toContainText('My API keys')
+ await configure.click()
+ await modal.getByRole('combobox',{name:'AI service'}).selectOption('builtin')
+ await expect.poll(()=>rows.get(`${owner}:preferences:app`)?.payload?.aiMode).toBe('builtin')
+ await page.keyboard.press('Escape')
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true)
+ expect(errors).toEqual([])
+})
+
+test('shared Hybrid Practice preference generates questions in built-in mode on both practice surfaces',async({context,page})=>{
+ const {rows,errors}=await fixture(context,page)
+ await page.goto('settings');await page.getByRole('button',{name:'Configure AI',exact:true}).click()
+ const modal=page.getByRole('dialog',{name:'Configure AI',exact:true})
+ await modal.getByText('Other settings',{exact:true}).click()
+ const hybrid=modal.getByRole('region',{name:'Practice',exact:true})
+ await hybrid.getByRole('button',{name:'Off',exact:true}).click()
+ await expect.poll(()=>rows.get(`${owner}:preferences:app`)?.payload?.learnHybridEnabled).toBe(true)
+ await modal.getByRole('combobox',{name:'AI service'}).selectOption('byok')
+ await expect(hybrid.getByRole('button',{name:'On',exact:true})).toBeVisible()
+ await modal.getByRole('combobox',{name:'AI service'}).selectOption('builtin')
+ await expect(hybrid.getByRole('button',{name:'On',exact:true})).toBeVisible()
+ await expect.poll(()=>rows.get(`${owner}:preferences:app`)?.payload?.aiMode).toBe('builtin')
+ await expect(modal.getByRole('combobox',{name:'AI service'})).toBeEnabled()
+ await page.keyboard.press('Escape')
+ await page.goto(`set/${setId}-learn?seed=1`)
+ await expect(page.getByText('True or False: "Water" means "H2O".',{exact:false})).toBeVisible()
+ await expect.poll(()=>usage(page)).toMatchObject({used:1,reserved:0})
+ await page.goto(`set/${setId}?mode=learn`)
+ await expect(page.getByText('True or False: "Water" means "H2O".',{exact:false})).toBeVisible()
+ // The paired surface resumes the same run, without charging a second action.
+ await expect.poll(()=>usage(page)).toMatchObject({used:1,reserved:0})
+ expect(errors).toEqual([])
+})

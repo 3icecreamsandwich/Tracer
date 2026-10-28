@@ -66,4 +66,12 @@ describe('authenticated web AI forwarding', () => {
     }))
     expect(log.mock.calls.flat().join(' ')).not.toContain('server-secret')
   })
+  it.each([429, 503])('preserves retry timing for upstream %i without exposing its error body', async status => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('server-secret', { status, headers: { 'retry-after': '60' } })))
+    const result = await handler({ context: {} } as any)
+    expect(setResponseStatus).toHaveBeenCalledWith(expect.anything(), status)
+    expect(setHeader).toHaveBeenCalledWith(expect.anything(), 'Retry-After', '60')
+    expect(JSON.stringify(result)).not.toContain('server-secret')
+  })
+
 })

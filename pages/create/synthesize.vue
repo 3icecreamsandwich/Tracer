@@ -445,7 +445,9 @@ async function onCreate() {
     const prompt = buildPrompt({ theme: theme.value.trim() ? theme.value.trim() : null, inputTsv })
 
     const model = await modelPromise
-    const res = await generateText({ model, prompt })
+    const res = settings.defaultModelId === 'builtin:auto'
+      ? { text: await (await import('~/src/composables/ai/builtin/client')).builtinGenerate({ operation: 'synthesize', input: { inputTsv, theme: theme.value.trim() || undefined } }) }
+      : await generateText({ model, prompt })
     const text = (res.text ?? '').trim()
 
     rawOutput.value = res.text ?? ''

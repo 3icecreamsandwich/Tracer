@@ -60,6 +60,9 @@ export type SetFolder = {
 }
 
 export type AppSettings = {
+  aiMode?: 'builtin' | 'byok' | null
+  byokModelId?: string | null
+  byokFallbackModelIds?: string[]
   startupLockEnabled: boolean
   defaultModelId: string | null
   fallbackModelIds: string[]

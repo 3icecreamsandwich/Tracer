@@ -3,16 +3,15 @@ export function isRecord(v: unknown): v is Record<string, unknown> {
 }
 
 export function errorStatus(err: unknown): number | null {
-  const maybe: any = err
-  const status = maybe?.status
-  if (typeof status === 'number' && Number.isFinite(status)) return status
-
-  const responseStatus = maybe?.response?.status
-  if (typeof responseStatus === 'number' && Number.isFinite(responseStatus)) return responseStatus
-
-  const causeStatus = maybe?.cause?.status
-  if (typeof causeStatus === 'number' && Number.isFinite(causeStatus)) return causeStatus
-
+  const visited = new Set<unknown>()
+  let current: any = err
+  for (let depth = 0; current && depth < 6 && !visited.has(current); depth++) {
+    visited.add(current)
+    for (const status of [current.statusCode, current.status, current.response?.status]) {
+      if (typeof status === 'number' && Number.isFinite(status)) return status
+    }
+    current = current.lastError ?? current.cause
+  }
   return null
 }
 
@@ -33,7 +32,7 @@ export function isFetchOfflineError(err: unknown): boolean {
 export function isNetworkTransportError(err: unknown): boolean {
   if (!(err instanceof Error)) return false
   const msg = err.message.toLowerCase()
-  if (msg.includes('failed to fetch')) return true
+  if (msg.includes('failed to fetch') || msg === 'load failed' || msg.includes('error sending request for url')) return true
   if (msg.includes('networkerror')) return true
   if (msg.includes('network request failed')) return true
   return false

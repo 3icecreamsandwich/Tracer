@@ -1,3 +1,4 @@
+import { isBuiltinModel } from './builtin/types'
 export type WrittenAnswerGrade = {
   isCorrect: boolean
   explanation: string
@@ -47,18 +48,38 @@ export function parseWrittenAnswerGrade(raw: string): WrittenAnswerGrade {
   }
 }
 
+// Repair presentation only. Never infer a verdict from free prose or choose
+// between multiple grades. The strict parser remains the final contract.
+export function normalizeWrittenAnswerGradeFormat(raw: string): string {
+  let text=String(raw??'').trim()
+  const fence=/^```(?:text|markdown)?\s*\n([\s\S]*?)\n```$/i.exec(text)
+  if(fence) text=fence[1]!.trim()
+  text=text.replace(/^\*\*(Yes|No)\s*:\*\*\s*/i,'$1:')
+    .replace(/^\*\*(Yes|No)\*\*\s*:\s*/i,'$1:')
+    .replace(/^<(Yes|No)>\s*:\s*<([\s\S]*)>$/i,'$1:$2')
+    .replace(/^<(Yes|No)>\s*:\s*/i,'$1:')
+  const match=/^(Yes|No)\s*:\s*([\s\S]+)$/i.exec(text)
+  if(!match) return raw
+  if(/(?:^|\s)(?:\*\*|<)?(?:Yes|No)(?:\*\*|>)?\s*:/i.test(match[2]!)) throw new Error('The AI model returned an invalid written-answer grade.')
+  return `${match[1]}:${match[2]!.replace(/\s+/g,' ').trim()}`
+}
+
 export async function gradeWrittenAnswer(args: {
   model: any
   input: WrittenAnswerGradeInput
   abortSignal?: AbortSignal
 }) {
+  if (isBuiltinModel(args.model)) {
+    const { builtinGenerate } = await import('./builtin/client')
+    return parseWrittenAnswerGrade(await builtinGenerate({ operation: 'grade', input: { question: args.input.question, referenceAnswer: args.input.referenceAnswer, studentAnswer: args.input.studentAnswer } }, args.abortSignal))
+  }
   const { generateText } = await import('ai')
   const result = await generateText({
     model: args.model,
     prompt: buildWrittenAnswerGradingPrompt(args.input),
     abortSignal: args.abortSignal,
   })
-  return parseWrittenAnswerGrade(result.text)
+  return parseWrittenAnswerGrade(normalizeWrittenAnswerGradeFormat(result.text))
 }
 
 function normalizeForPreview(value: string) {

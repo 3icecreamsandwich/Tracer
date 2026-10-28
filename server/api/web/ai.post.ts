@@ -70,6 +70,8 @@ export default defineEventHandler(async (event) => {
   setResponseStatus(event, response.status)
   setHeader(event, 'Content-Type', response.headers.get('content-type') ?? 'application/json')
   setHeader(event, 'X-Accel-Buffering', 'no')
+  const retryAfter = response.headers.get('retry-after')
+  if (retryAfter && (response.status === 429 || response.status === 503)) setHeader(event, 'Retry-After', retryAfter)
   if (response.status >= 300 && response.status < 400) {
     setResponseStatus(event, 502)
     return { error: { message: 'The AI provider redirected unexpectedly. Try again later.' } }

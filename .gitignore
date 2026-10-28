@@ -48,7 +48,21 @@ notes.md
 .wrangler/
 .dev.vars*
 .nuxt-desktop-check/
+.nuxt-native-ai-test/
+.nuxt-native-builtin-test/
 
 /test-results
 
 /tracer-screenshots
+
+.nuxt-ai-staging/
+
+.output-ai-staging/
+
+.nuxt-native-ai-staging/
+
+.nuxt-ai-validation/
+
+.nuxt-ai-staging-cloudflare/
+
+.output-ai-staging-cloudflare/

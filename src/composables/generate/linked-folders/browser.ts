@@ -151,7 +151,7 @@ export async function createSetFromBrowserLinkedFolder(input: { title?: string; 
   }
 }
 
-export async function syncBrowserLinkedFolder(setId: Uuid): Promise<LinkedFolder | null> {
+export async function syncBrowserLinkedFolder(setId: Uuid, options: { explicit?: boolean } = {}): Promise<LinkedFolder | null> {
   const handle = await loadHandle(setId)
   if (!handle) throw new Error('Folder access is no longer available. Unlink this folder and link it again.')
   let permission = await handle.queryPermission?.({ mode: 'read' }) ?? 'prompt'
@@ -163,6 +163,7 @@ export async function syncBrowserLinkedFolder(setId: Uuid): Promise<LinkedFolder
   const known = await linkedFolders.listFiles(setId)
   const scan = await scanBrowserLinkedFolder(handle, new Map(known.map((file) => [file.relativePath, file])))
   if (!scan.sources.length) return linkedFolders.updateStatus(setId, 'synced', { scanned: true })
+  if (!options.explicit && (await createSettingsRepo(db).get()).defaultModelId === 'builtin:auto') return linkedFolders.updateStatus(setId, 'pending', { error: 'New content is ready. Select Sync to regenerate it using 1 AI action.', scanned: true })
   try {
     const result = await importScan(scan, { folderName: handle.name, incremental: true, setId })
     const extractedIds = new Set(result.extracted.extracted.map((source) => source.id))

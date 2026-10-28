@@ -150,6 +150,12 @@ pub fn run() {
             sql: include_str!("../migrations/022_automatic_updates.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 23,
+            description: "builtin_ai_mode",
+            sql: include_str!("../migrations/023_builtin_ai_mode.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     let app = tauri::Builder::default()

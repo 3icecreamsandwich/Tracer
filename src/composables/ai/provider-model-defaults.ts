@@ -52,8 +52,9 @@ export async function ensureProviderDefaultModels(
   const db = await useTracerDb()
   const repo = createSettingsRepo(db)
   const settings = await repo.get()
-  const currentRoute = settings.defaultModelId
-    ? [settings.defaultModelId, ...settings.fallbackModelIds]
+  const byokDefault = settings.byokModelId !== undefined ? settings.byokModelId : settings.defaultModelId
+  const currentRoute = byokDefault
+    ? [byokDefault, ...(settings.byokFallbackModelIds ?? settings.fallbackModelIds)]
     : []
   const nextRoute = addProviderDefaultsToModelRoute(currentRoute, uniqueProviderIds, {
     openAiCompatModelId,

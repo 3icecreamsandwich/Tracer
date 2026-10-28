@@ -28,7 +28,7 @@
             </div>
 
             <section
-                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                class="tracer-panel mt-6 p-5"
                 :aria-label="t('settings.profile')"
             >
                 <div class="flex items-center gap-4">
@@ -189,10 +189,14 @@
                     <LoadingSpinner size="sm" />
                     <span>Loading profile…</span>
                 </div>
+                <p v-if="profileIdentityError && !profileEditing" role="alert" class="mt-3 text-sm text-red-600 dark:text-red-300">
+                    {{ profileIdentityError }}
+                    <button type="button" class="ml-2 underline" :disabled="profileIdentityPending" @click="refreshProfileIdentity">Retry</button>
+                </p>
             </section>
 
             <section
-                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                class="tracer-panel mt-6 p-5"
                 :aria-label="t('settings.account')"
             >
                 <div class="flex flex-wrap items-center justify-between gap-4">
@@ -261,7 +265,7 @@
             <AppUpdateSettings v-if="hasTauriInternals" />
 
             <section
-                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                class="tracer-panel mt-6 p-5"
                 :aria-label="t('settings.theme')"
             >
                 <div class="flex items-center justify-between gap-4">
@@ -273,8 +277,9 @@
 
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="busy || localSettingsPending"
+                        class="tracer-button tracer-button--white tracer-button--sm shrink-0"
+                        :disabled="preferenceSaving.darkMode || localSettingsPending"
+                        :aria-busy="preferenceSaving.darkMode"
                         @click="onToggleDarkMode"
                     >
                         {{ darkMode ? t("common.on") : t("common.off") }}
@@ -283,7 +288,7 @@
             </section>
 
             <section
-                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                class="tracer-panel mt-6 p-5"
                 :aria-label="t('settings.language')"
             >
                 <div class="flex items-center justify-between gap-4">
@@ -342,10 +347,7 @@
                 </div>
             </section>
 
-            <section
-                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-                aria-label="AI models"
-            >
+            <BuiltinAiSettings @changed="applyAiServiceSettings">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <h2 class="text-sm font-medium">AI models</h2>
@@ -377,11 +379,14 @@
 
                 <div
                     v-if="modelRouteIds.length"
+                    role="list"
+                    aria-label="Model priority"
                     class="mt-4 overflow-hidden rounded-md border border-slate-200 dark:border-slate-800"
                 >
                     <div
                         v-for="(modelId, index) in modelRouteIds"
                         :key="modelId"
+                        role="listitem"
                         class="flex items-center justify-between gap-3 border-b border-slate-200 px-3 py-3 last:border-b-0 dark:border-slate-800"
                     >
                         <div class="min-w-0">
@@ -418,10 +423,15 @@
                             >
                                 {{
                                     modelConnectionReady(modelId)
-                                        ? "Ready"
+                                        ? "Configured"
                                         : "Connection required"
                                 }}
                             </p>
+                            <AiModelConnectionTest
+                                :model-id="modelId"
+                                :label="modelLabel(modelId)"
+                                :configured="modelConnectionReady(modelId) && !modelConnectionPending(modelId)"
+                            />
                         </div>
                         <div class="flex shrink-0 items-center gap-1">
                             <button
@@ -627,10 +637,9 @@
                         </details>
                     </div>
                 </details>
-            </section>
-
+                <template #options>
             <section
-                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                class="tracer-panel mt-6 p-5"
                 :aria-label="t('set.learn')"
             >
                 <div class="flex items-start justify-between gap-4">
@@ -641,7 +650,7 @@
                         <p
                             class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                         >
-                            Adds AI-Generated question in the mix.
+                            Adds AI-generated questions when you start practice. Built-in AI uses one action per run.
                         </p>
                         <p
                             v-if="!defaultModelId"
@@ -653,8 +662,9 @@
 
                     <button
                         type="button"
-                        class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="busy || !defaultModelId"
+                        class="tracer-button tracer-button--white tracer-button--sm shrink-0"
+                        :disabled="preferenceSaving.learnHybrid || localSettingsPending || !defaultModelId"
+                        :aria-busy="preferenceSaving.learnHybrid"
                         @click="onToggleLearnHybrid"
                     >
                         {{
@@ -667,7 +677,41 @@
             </section>
 
             <section
-                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                class="tracer-panel mt-6 p-5"
+                aria-label="Page chat button"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-medium">Page chat button</h2>
+                        <p
+                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                            Shows the chat button on the bottom right.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="tracer-button tracer-button--white tracer-button--sm shrink-0"
+                        :disabled="preferenceSaving.floatingChat || localSettingsPending"
+                        :aria-busy="preferenceSaving.floatingChat"
+                        @click="onToggleFloatingChat"
+                    >
+                        {{
+                            floatingChatEnabled
+                                ? t("common.on")
+                                : t("common.off")
+                        }}
+                    </button>
+                </div>
+            </section>
+                </template>
+            </BuiltinAiSettings>
+
+
+
+            <section
+                class="tracer-panel mt-6 p-5"
                 :aria-label="t('settings.smartReview')"
             >
                 <div class="flex items-start justify-between gap-4">
@@ -683,8 +727,9 @@
                     </div>
                     <button
                         type="button"
-                        class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="busy || localSettingsPending"
+                        class="tracer-button tracer-button--white tracer-button--sm shrink-0"
+                        :disabled="preferenceSaving.smartReview || localSettingsPending"
+                        :aria-busy="preferenceSaving.smartReview"
                         @click="onToggleSmartReview"
                     >
                         {{
@@ -696,38 +741,11 @@
                 </div>
             </section>
 
-            <section
-                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-                aria-label="Page chat button"
-            >
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h2 class="text-sm font-medium">Page chat button</h2>
-                        <p
-                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                        >
-                            Shows the chat button on the bottom right.
-                        </p>
-                    </div>
 
-                    <button
-                        type="button"
-                        class="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="busy"
-                        @click="onToggleFloatingChat"
-                    >
-                        {{
-                            floatingChatEnabled
-                                ? t("common.on")
-                                : t("common.off")
-                        }}
-                    </button>
-                </div>
-            </section>
 
             <section
                 v-if="false"
-                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                class="tracer-panel mt-6 p-5"
                 :aria-label="t('settings.providers')"
             >
                 <h2 class="text-sm font-medium">
@@ -988,7 +1006,7 @@
             </section>
 
             <section
-                class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                class="tracer-panel mt-6 p-5"
                 :aria-label="t('settings.startupLock')"
                 v-if="hasTauriInternals"
             >
@@ -1011,7 +1029,7 @@
                     <button
                         type="button"
                         class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        :disabled="busy || vaultMode === 'device_key'"
+                        :disabled="busy || vaultStatusPending || vaultMode === 'device_key'"
                         @click="onToggleStartupLock"
                     >
                         {{
@@ -1507,6 +1525,8 @@ const {
 
 const profile = ref<Profile | null>(null)
 const localSettingsPending = ref(true)
+const vaultStatusPending = ref(true)
+const preferenceSaving = reactive({ darkMode: false, smartReview: false, floatingChat: false, learnHybrid: false })
 const accountActionPending = ref(false)
 const accountConnectionPending = computed(() => cachedAccountConnectionPending.value || accountActionPending.value)
 const superAccount = ref(false)
@@ -1533,19 +1553,21 @@ function cancelProfileEditing() {
 }
 async function refreshProfileIdentity() {
   if (accountConnectionStatus.value !== 'online') return
+  const owner = accountIdentity.value?.id
   profileIdentityPending.value = true
   profileIdentityError.value = null
   try {
     const identity = await loadAccountProfileIdentity()
+    if (accountIdentity.value?.id !== owner || accountConnectionStatus.value !== 'online') return
     if (!identity) return
     displayNameDraft.value = identity.displayName
     usernameDraft.value = identity.username
     savedDisplayName.value = identity.displayName
     savedUsername.value = identity.username
   } catch (e: unknown) {
-    profileIdentityError.value = toSafeErrorMessage(e, 'Could not load your profile.')
+    if (accountIdentity.value?.id === owner) profileIdentityError.value = toSafeErrorMessage(e, 'Could not load your profile.')
   } finally {
-    profileIdentityPending.value = false
+    if (accountIdentity.value?.id === owner) profileIdentityPending.value = false
   }
 }
 async function onSaveProfileIdentity() {
@@ -1572,14 +1594,14 @@ watch(() => [accountIdentity.value?.id, accountConnectionStatus.value], async (_
   accountRole.value = null
   profileIdentityReady.value = false
   if (accountConnectionStatus.value !== 'online') return
+  const roleRequest = getAccountRole().catch(() => null)
   await refreshProfileIdentity()
   if (cancelled) return
   profileIdentityReady.value = true
-  const role = await getAccountRole().catch(() => null)
-  if (!cancelled) {
-    accountRole.value = role
-    superAccount.value = role === 'super'
-  }
+  const role = await roleRequest
+  if (cancelled) return
+  accountRole.value = role
+  superAccount.value = role === 'super'
 }, { immediate: true })
 const accountRoleLabel = computed(() => {
   if (accountRole.value === 'student') return t('settings.accountRoleStudent')
@@ -1872,12 +1894,18 @@ function providerLabel(providerId: string) {
 const defaultModelLabel = computed(() => {
   const raw = defaultModelId.value
   if (!raw) return null
+  if (raw === 'builtin:auto') return 'Built-in AI'
   const [provider, model] = raw.split(':')
   if (!provider || !model) return raw
   return `${providerLabel(provider)} · ${model === 'configured' ? t('settings.configured') : model}`
 })
 
-const modelRouteIds = computed(() => defaultModelId.value
+function applyAiServiceSettings(settings: { defaultModelId: string | null; fallbackModelIds: string[] }) {
+  defaultModelId.value = settings.defaultModelId
+  fallbackModelIds.value = settings.fallbackModelIds
+}
+
+const modelRouteIds = computed(() => defaultModelId.value && defaultModelId.value !== 'builtin:auto'
   ? [defaultModelId.value, ...fallbackModelIds.value.filter((id) => id !== defaultModelId.value)]
   : [])
 
@@ -2216,26 +2244,29 @@ onMounted(() => {
       floatingChatEnabled.value = true
       void initializeConnectionStatuses()
       localSettingsPending.value = false
+      vaultStatusPending.value = false
       return
     }
     try {
-      const { status, db, profile: p, settings } = await loadSettingsPageData()
+      const { status, db, profile: p, settings } = await loadSettingsPageData(({ profile: p, settings }) => {
+        profile.value = p
+        darkMode.value = settings.darkMode
+        defaultModelId.value = settings.defaultModelId
+        fallbackModelIds.value = settings.fallbackModelIds
+        learnHybridEnabled.value = settings.learnHybridEnabled
+        smartReviewEnabled.value = settings.smartReviewEnabled
+        saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, studyStorageOwner(p))
+        floatingChatEnabled.value = settings.floatingChatEnabled
+        localSettingsPending.value = false
+      })
+      vaultStatusPending.value = false
       vaultMode.value = status.vault_mode
       if (!p || !status.has_verifier) {
         markLocked()
         await router.replace('/first-run')
         return
       }
-      profile.value = p
-
       startupLockEnabled.value = status.vault_mode === 'device_key' ? false : settings.startupLockEnabled
-      darkMode.value = settings.darkMode
-      defaultModelId.value = settings.defaultModelId
-      fallbackModelIds.value = settings.fallbackModelIds
-      learnHybridEnabled.value = settings.learnHybridEnabled
-      smartReviewEnabled.value = settings.smartReviewEnabled
-      saveGlobalSmartReviewEnabled(settings.smartReviewEnabled, studyStorageOwner(p))
-      floatingChatEnabled.value = settings.floatingChatEnabled
 
       if (settings.startupLockEnabled && status.requires_unlock) {
         if (!unlockedThisSession.value) {
@@ -2272,8 +2303,9 @@ onBeforeUnmount(() => {
 })
 
 async function onToggleDarkMode() {
+  if (preferenceSaving.darkMode) return
   error.value = null
-  busy.value = true
+  preferenceSaving.darkMode = true
   try {
     const next = !darkMode.value
     if (isWebPreview.value) {
@@ -2285,7 +2317,7 @@ async function onToggleDarkMode() {
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to update dark mode')
   } finally {
-    busy.value = false
+    preferenceSaving.darkMode = false
   }
 }
 
@@ -2295,8 +2327,9 @@ async function onToggleLearnHybrid() {
     learnHybridEnabled.value = !learnHybridEnabled.value
     return
   }
+  if (preferenceSaving.learnHybrid) return
   error.value = null
-  busy.value = true
+  preferenceSaving.learnHybrid = true
   try {
     const next = !learnHybridEnabled.value
     const db = await useTracerDb()
@@ -2306,13 +2339,14 @@ async function onToggleLearnHybrid() {
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to update Practice settings')
   } finally {
-    busy.value = false
+    preferenceSaving.learnHybrid = false
   }
 }
 
 async function onToggleSmartReview() {
+  if (preferenceSaving.smartReview) return
   error.value = null
-  busy.value = true
+  preferenceSaving.smartReview = true
   try {
     const next = !smartReviewEnabled.value
     if (isWebPreview.value) {
@@ -2328,19 +2362,20 @@ async function onToggleSmartReview() {
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to update Smart Review settings')
   } finally {
-    busy.value = false
+    preferenceSaving.smartReview = false
   }
 }
 
 async function onToggleFloatingChat() {
+  if (preferenceSaving.floatingChat) return
   error.value = null
-  busy.value = true
+  preferenceSaving.floatingChat = true
   try {
     await floatingChatSetEnabled(!floatingChatEnabled.value)
   } catch (e: unknown) {
     error.value = toSafeErrorMessage(e, 'Failed to update the page chat button setting')
   } finally {
-    busy.value = false
+    preferenceSaving.floatingChat = false
   }
 }
 

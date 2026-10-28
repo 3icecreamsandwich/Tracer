@@ -1,0 +1,6 @@
+{
+  "identifier": "com.tracer.ai-reliability-test",
+  "productName": "Tracer AI Reliability Test",
+  "build": { "beforeDevCommand": "", "devUrl": "http://127.0.0.1:3102" },
+  "app": { "windows": [{ "title": "Tracer AI Reliability Test", "width": 1130, "height": 850 }] }
+}

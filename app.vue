@@ -1,6 +1,6 @@
 <template>
   <AppShell>
-    <NuxtPage />
+    <NuxtPage :transition="{ name: 'page' }" />
   </AppShell>
 </template>
 

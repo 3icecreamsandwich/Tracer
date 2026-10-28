@@ -1,4 +1,5 @@
 import { curatedModelsByProvider } from '../catalog'
+import { errorStatus } from '../ux-errors/predicates'
 import {
   AiRegistryError,
   AiVaultLockedError,
@@ -67,8 +68,8 @@ export async function requireSecret(providerId: AiProviderId, kind: AiCredential
 
 export async function markInvalidIfUnauthorized(providerId: AiProviderId, e: unknown): Promise<void> {
   if (providerId !== 'github') return
-  const status = (e as any)?.status
-  if (status !== 401 && status !== 403) return
+  // A 403 may be a model permission problem; do not erase a valid credential.
+  if (errorStatus(e) !== 401) return
   try {
     await aiSecretsSet('github_models_token', '')
     setGithubConnectionState({ status: 'invalid' })

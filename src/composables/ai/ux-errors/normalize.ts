@@ -1,3 +1,4 @@
+import { BuiltinAiError } from '../builtin/types'
 import { AiRegistryError, MissingAiCredentialError } from '../errors'
 import { GenerateContractParseError } from '../generate-contract'
 import { GenerateTextRequestFormatError } from '../generate-request'
@@ -5,8 +6,17 @@ import { TermsValidationError, TsvParseError } from '../../db/validators'
 import { redactSensitiveText } from '../../security/redact'
 import type { AiErrorUx } from './types'
 import { errorStatus, isFetchOfflineError, isNetworkTransportError, isRateLimitError } from './predicates'
+import { EmptyAiResponseError, InterruptedAiResponseError } from '../registry/route'
 
 export function normalizeAiError(err: unknown): AiErrorUx {
+  if (err instanceof BuiltinAiError) {
+    const titles: Record<string,string> = {sign_in_required:'Sign in required',monthly_limit:'Monthly AI allowance used',throttled:'Built-in AI is busy',concurrent:'An AI action is already running',interrupted:'AI response interrupted',unavailable:'Built-in AI unavailable'}
+    return {key:'provider_error',title:titles[err.code] ?? 'AI request failed',message:err.message,showGoToSettings:false}
+  }
+  if (err instanceof Error && err.name === 'TimeoutError') {
+    return { key: 'provider_error', title: 'AI response timed out',
+      message: 'The AI provider stopped responding. Try again or choose another model in Settings.', showGoToSettings: false }
+  }
   if (err instanceof TsvParseError || err instanceof TermsValidationError || err instanceof GenerateContractParseError) {
     return {
       key: 'parse_error_tsv',
@@ -113,6 +123,7 @@ export function normalizeAiError(err: unknown): AiErrorUx {
 }
 
 export function isAiErrorCandidate(err: unknown): boolean {
+  if (err instanceof EmptyAiResponseError || err instanceof InterruptedAiResponseError || (err instanceof Error && err.name === 'TimeoutError')) return true
   if (err instanceof TsvParseError) return true
   if (err instanceof TermsValidationError) return true
   if (err instanceof GenerateContractParseError) return true

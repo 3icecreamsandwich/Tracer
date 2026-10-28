@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import type { ReviewRating } from './spaced-repetition'
 import type { Uuid } from '../db/types'
 import { createRandomSeed, createSeededRandom, shuffleWith } from '../random'
 
@@ -40,7 +41,7 @@ type FlashcardRunOptions = {
   getCurrentTermId: () => Uuid | null
   getBaseSeed: () => number | null
   getStarredStudyCount: () => number
-  onAnswer: (answer: FlashcardAnswer, termId: Uuid) => void
+  onAnswer: (answer: FlashcardAnswer, termId: Uuid, rating?: ReviewRating) => void
   onRestart?: () => void
   focusViewer: () => void
 }
@@ -151,12 +152,12 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     return null
   }
 
-  function commitAnswer(answer: FlashcardAnswer) {
+  function commitAnswer(answer: FlashcardAnswer, rating?: ReviewRating) {
     const id = options.getCurrentTermId()
     if (!id) return
     state.answerAttemptsCount.value += 1
     if (answer === 'correct') state.correctAttemptsCount.value += 1
-    options.onAnswer(answer, id)
+    options.onAnswer(answer, id, rating)
     state.answersByTermId.value = {
       ...state.answersByTermId.value,
       [id]: answer
@@ -187,7 +188,7 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     options.focusViewer()
   }
 
-  async function markAnswer(answer: FlashcardAnswer) {
+  async function markAnswer(answer: FlashcardAnswer, rating?: ReviewRating) {
     if (!options.getCurrentTermId() || state.answerBusy.value) return
     const transitionId = ++state.answerTransitionId.value
     state.answerFeedback.value = answer
@@ -201,7 +202,7 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     await new Promise<void>((resolve) => setTimeout(resolve, 250))
     if (transitionId !== state.answerTransitionId.value) return
 
-    commitAnswer(answer)
+    commitAnswer(answer, rating)
     state.isNavigating.value = null
     state.answerFeedback.value = null
     state.answerBusy.value = false
@@ -214,6 +215,7 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     resumeIncorrect,
     toggleStarredOnly,
     cancelFlashcardAnswerFeedback: cancelAnswerFeedback,
+    markRating: (rating: ReviewRating) => void markAnswer(rating >= 3 ? 'correct' : 'incorrect', rating),
     markCorrect: () => void markAnswer('correct'),
     markIncorrect: () => void markAnswer('incorrect')
   }

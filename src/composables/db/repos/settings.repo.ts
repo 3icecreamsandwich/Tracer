@@ -1,7 +1,9 @@
+import { effectiveAiSettings } from '../../ai/builtin/settings'
 import { cloudPreferencesRepo } from '../../cloud-library/preferences'
 import type { AppLanguage, AppSettings, DbClient } from '../types'
 
 type DbSettingsRow = {
+  ai_mode: 'builtin' | 'byok' | null
   startup_lock_enabled: number
   default_model_id: string | null
   fallback_model_ids: string
@@ -40,14 +42,24 @@ function toLanguage(value: unknown): AppLanguage {
 }
 
 export function createSettingsRepo(db: DbClient) {
-  return cloudPreferencesRepo(db, createLocalSettingsRepo(db))
+  const repo = cloudPreferencesRepo(db, createLocalSettingsRepo(db))
+  return {
+    async get() { return effectiveAiSettings(await repo.get()) },
+    async set(patch: Partial<AppSettings>) {
+      const { byokModelId, byokFallbackModelIds, ...stored } = patch
+      if (stored.defaultModelId === 'builtin:auto') delete stored.defaultModelId
+      return effectiveAiSettings(await repo.set(stored))
+    },
+  }
 }
+
+const localWrites = new WeakMap<DbClient, Promise<unknown>>()
 
 export function createLocalSettingsRepo(db: DbClient) {
   return {
     async get(): Promise<AppSettings> {
       const rows = await db.select<DbSettingsRow>(
-        `SELECT startup_lock_enabled, default_model_id, fallback_model_ids, dark_mode, learn_hybrid_enabled,
+        `SELECT ai_mode, startup_lock_enabled, default_model_id, fallback_model_ids, dark_mode, learn_hybrid_enabled,
                 smart_review_enabled, flashcards_definition_first, floating_chat_enabled, language, text_scale,
                 automatic_updates_enabled
          FROM app_settings WHERE id = 1 LIMIT 1;`
@@ -55,6 +67,7 @@ export function createLocalSettingsRepo(db: DbClient) {
       const row = rows[0]
       if (!row) {
         return {
+          aiMode: null,
           startupLockEnabled: true,
           defaultModelId: null,
           fallbackModelIds: [],
@@ -70,6 +83,7 @@ export function createLocalSettingsRepo(db: DbClient) {
       }
 
       return {
+        aiMode: row.ai_mode,
         startupLockEnabled: toBool(row.startup_lock_enabled),
         defaultModelId: row.default_model_id ?? null,
         fallbackModelIds: toModelIds(row.fallback_model_ids),
@@ -85,55 +99,65 @@ export function createLocalSettingsRepo(db: DbClient) {
     },
 
     async set(patch: Partial<AppSettings>): Promise<AppSettings> {
-      const current = await this.get()
-      const next: AppSettings = {
-        startupLockEnabled: patch.startupLockEnabled ?? current.startupLockEnabled,
-        defaultModelId:
-          patch.defaultModelId === undefined ? current.defaultModelId : patch.defaultModelId,
-        fallbackModelIds:
-          patch.fallbackModelIds === undefined ? current.fallbackModelIds : patch.fallbackModelIds,
-        darkMode: patch.darkMode ?? current.darkMode,
-        learnHybridEnabled: patch.learnHybridEnabled ?? current.learnHybridEnabled,
-        smartReviewEnabled: patch.smartReviewEnabled ?? current.smartReviewEnabled,
-        flashcardsDefinitionFirst:
-          patch.flashcardsDefinitionFirst ?? current.flashcardsDefinitionFirst,
-        floatingChatEnabled: patch.floatingChatEnabled ?? current.floatingChatEnabled,
-        language: patch.language ?? current.language,
-        textScale: patch.textScale ?? current.textScale,
-        automaticUpdatesEnabled:
-          patch.automaticUpdatesEnabled ?? current.automaticUpdatesEnabled,
+      const previous = localWrites.get(db) ?? Promise.resolve()
+      const request = previous.catch(() => {}).then(async () => {
+        const current = await this.get()
+        const next: AppSettings = {
+          aiMode: patch.aiMode === undefined ? current.aiMode : patch.aiMode,
+          startupLockEnabled: patch.startupLockEnabled ?? current.startupLockEnabled,
+          defaultModelId:
+            patch.defaultModelId === undefined ? current.defaultModelId : patch.defaultModelId,
+          fallbackModelIds:
+            patch.fallbackModelIds === undefined ? current.fallbackModelIds : patch.fallbackModelIds,
+          darkMode: patch.darkMode ?? current.darkMode,
+          learnHybridEnabled: patch.learnHybridEnabled ?? current.learnHybridEnabled,
+          smartReviewEnabled: patch.smartReviewEnabled ?? current.smartReviewEnabled,
+          flashcardsDefinitionFirst:
+            patch.flashcardsDefinitionFirst ?? current.flashcardsDefinitionFirst,
+          floatingChatEnabled: patch.floatingChatEnabled ?? current.floatingChatEnabled,
+          language: patch.language ?? current.language,
+          textScale: patch.textScale ?? current.textScale,
+          automaticUpdatesEnabled:
+            patch.automaticUpdatesEnabled ?? current.automaticUpdatesEnabled,
+        }
+
+        await db.execute(
+          `UPDATE app_settings
+           SET ai_mode = ?,
+               startup_lock_enabled = ?,
+               default_model_id = ?,
+               fallback_model_ids = ?,
+               dark_mode = ?,
+               learn_hybrid_enabled = ?,
+               flashcards_definition_first = ?,
+               smart_review_enabled = ?,
+               floating_chat_enabled = ?,
+               language = ?,
+               text_scale = ?,
+               automatic_updates_enabled = ?
+           WHERE id = 1;`,
+          [
+            next.aiMode ?? null,
+            next.startupLockEnabled ? 1 : 0,
+            next.defaultModelId,
+            JSON.stringify(next.fallbackModelIds),
+            next.darkMode ? 1 : 0,
+            next.learnHybridEnabled ? 1 : 0,
+            next.flashcardsDefinitionFirst ? 1 : 0,
+            next.smartReviewEnabled ? 1 : 0,
+            next.floatingChatEnabled ? 1 : 0,
+            next.language,
+            next.textScale,
+            next.automaticUpdatesEnabled ? 1 : 0,
+          ]
+        )
+
+        return next
+      })
+      localWrites.set(db, request)
+      try { return await request } finally {
+        if (localWrites.get(db) === request) localWrites.delete(db)
       }
-
-      await db.execute(
-        `UPDATE app_settings
-         SET startup_lock_enabled = ?,
-             default_model_id = ?,
-             fallback_model_ids = ?,
-             dark_mode = ?,
-             learn_hybrid_enabled = ?,
-             flashcards_definition_first = ?,
-             smart_review_enabled = ?,
-             floating_chat_enabled = ?,
-             language = ?,
-             text_scale = ?,
-             automatic_updates_enabled = ?
-         WHERE id = 1;`,
-        [
-          next.startupLockEnabled ? 1 : 0,
-          next.defaultModelId,
-          JSON.stringify(next.fallbackModelIds),
-          next.darkMode ? 1 : 0,
-          next.learnHybridEnabled ? 1 : 0,
-          next.flashcardsDefinitionFirst ? 1 : 0,
-          next.smartReviewEnabled ? 1 : 0,
-          next.floatingChatEnabled ? 1 : 0,
-          next.language,
-          next.textScale,
-          next.automaticUpdatesEnabled ? 1 : 0,
-        ]
-      )
-
-      return next
     }
   }
 }

@@ -1,0 +1,38 @@
+{
+  "identifier": "com.tracer.ai-staging-test",
+  "productName": "Tracer AI Staging Test",
+  "build": {
+    "beforeDevCommand": "",
+    "devUrl": "http://127.0.0.1:3112"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Tracer AI Staging Test",
+        "width": 1130,
+        "height": 850
+      }
+    ],
+    "security": {
+      "capabilities": [
+        "default",
+        {
+          "identifier": "staging-test-local-http",
+          "windows": [
+            "main"
+          ],
+          "permissions": [
+            {
+              "identifier": "http:default",
+              "allow": [
+                {
+                  "url": "http://127.0.0.1:3111/**"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

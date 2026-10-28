@@ -15,7 +15,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: remoteURL ? undefined : {
-    command: cloudflare ? 'bun run preview:cloudflare' : production ? 'node .output/server/index.mjs' : 'bun --bun node_modules/nuxt/bin/nuxt.mjs dev --host 127.0.0.1 --port 3101',
+    command: process.env.TRACER_TEST_BUILTIN === '1' ? 'bun --bun tests/e2e/fixtures/builtin-gateway.ts' : cloudflare ? 'bun run preview:cloudflare' : production ? 'node .output/server/index.mjs' : 'bun --bun node_modules/nuxt/bin/nuxt.mjs dev --host 127.0.0.1 --port 3101',
     url: `http://127.0.0.1:3101${basePath}`,
     env: { PORT: '3101', HOST: '127.0.0.1', TRACER_BUILD_DIR: '.nuxt-web-test', NUXT_APP_BASE_URL: basePath, VITE_TRACER_WEB_PREVIEW: '0', VITE_TRACER_FORCE_WEB: '1' },
     reuseExistingServer: false,

@@ -131,6 +131,7 @@ export function useFactCheck(args: {
 
       const result = await streamFactCheckText({
         model: await getModel(modelId),
+        draft, language: args.language.value,
         system: buildFactCheckSystemPrompt(args.language.value),
         prompt: buildFactCheckUserPrompt(draft, args.language.value),
         abortSignal: controller.signal

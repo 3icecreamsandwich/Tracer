@@ -676,7 +676,7 @@ async function submitTest(force = false) {
 
         let model: any = null
         if (answeredWrittenQuestions.length > 0 && !isWebPreview.value) {
-            if (defaultModelId.value) {
+            if (defaultModelId.value && defaultModelId.value !== "builtin:auto") {
                 try {
                     model = await getWrittenModel(defaultModelId.value)
                 } catch {

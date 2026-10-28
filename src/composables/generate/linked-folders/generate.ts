@@ -1,3 +1,4 @@
+import { isBuiltinModel } from '../../ai/builtin/types'
 import { generateText } from 'ai'
 import type { Term } from '../../db'
 import {
@@ -187,6 +188,13 @@ export async function generateLinkedFolderContent(input: {
   incremental?: boolean
   onRawOutput?: (raw: string) => void
 }): Promise<LinkedFolderGeneratedContent> {
+  if (isBuiltinModel(input.model)) {
+    const { builtinGenerate } = await import('../../ai/builtin/client')
+    const raw = await builtinGenerate({ operation: 'generate', input: { sources: input.sources, instructions: input.instructions, incremental: input.incremental } })
+    const parsed = parseBatchOutput(raw)
+    input.onRawOutput?.(raw)
+    return { ...parsed, rawOutput: raw }
+  }
   const batches = batchGenerateSources(input.sources)
   const rawBatches = new Array<string>(batches.length)
   // Linked folders often create several batches at once. Keep provider calls

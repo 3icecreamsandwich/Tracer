@@ -48,3 +48,18 @@ it('reads fresh settings on each visit and preserves failures for the lock redir
   mocks.lockGetStatus.mockRejectedValueOnce(new Error('keychain unavailable'))
   await expect(loadSettingsPageData()).rejects.toThrow('keychain unavailable')
 })
+
+
+it('publishes usable local settings before a slow keychain finishes', async () => {
+  let finishLock!: (value: unknown) => void
+  mocks.lockGetStatus.mockReturnValue(new Promise(resolve => { finishLock = resolve }))
+  mocks.profileGet.mockResolvedValue({ id: 'profile' })
+  mocks.settingsGet.mockResolvedValue({ smartReviewEnabled: true })
+  const ready = vi.fn()
+  const request = loadSettingsPageData(ready)
+  await vi.waitFor(() => expect(ready).toHaveBeenCalledWith(expect.objectContaining({
+    profile: { id: 'profile' }, settings: { smartReviewEnabled: true },
+  })))
+  finishLock({ requires_unlock: false })
+  await request
+})

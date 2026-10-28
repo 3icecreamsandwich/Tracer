@@ -1871,4 +1871,24 @@ for (const language of Object.keys(captchaMessages) as AppLanguage[]) {
   Object.assign(messageTargets[language], captchaMessages[language])
 }
 
+const recallLabels: Record<AppLanguage, string[]> = {
+  en: ['Rate your recall', '1 = Missed completely · 5 = Mastered', 'Missed', 'Hard', 'Okay', 'Easy', 'Mastered'],
+  es: ['Valora tu recuerdo', '1 = No lo recordé · 5 = Dominado', 'Olvidado', 'Difícil', 'Regular', 'Fácil', 'Dominado'],
+  fr: ['Évaluez votre rappel', '1 = Tout oublié · 5 = Maîtrisé', 'Oublié', 'Difficile', 'Moyen', 'Facile', 'Maîtrisé'],
+  'zh-CN': ['评价记忆程度', '1 = 完全忘记 · 5 = 完全掌握', '忘记', '困难', '一般', '简单', '掌握'],
+  hi: ['याद करने का आकलन', '1 = बिल्कुल याद नहीं · 5 = पूरी तरह याद', 'भूला', 'कठिन', 'ठीक', 'आसान', 'महारत'],
+  ar: ['قيّم تذكّرك', '1 = نسيت تمامًا · 5 = أتقنت', 'نسيت', 'صعب', 'مقبول', 'سهل', 'أتقنت'],
+  de: ['Erinnerung bewerten', '1 = Ganz vergessen · 5 = Beherrscht', 'Vergessen', 'Schwer', 'Okay', 'Leicht', 'Beherrscht'],
+  ru: ['Оцените, как вы помните', '1 = Совсем забыл · 5 = Освоено', 'Забыл', 'Трудно', 'Нормально', 'Легко', 'Освоено'],
+  ja: ['記憶度を評価', '1 = 全く覚えていない · 5 = 完全に習得', '忘れた', '難しい', '普通', '簡単', '習得'],
+  ko: ['기억 정도 평가', '1 = 전혀 기억 안 남 · 5 = 완전히 익힘', '잊음', '어려움', '보통', '쉬움', '익힘'],
+}
+for (const language of Object.keys(recallLabels) as AppLanguage[]) {
+  const [group, hint, ...grades] = recallLabels[language]
+  Object.assign(messageTargets[language], {
+    'set.recallRating': group, 'set.recallHint': hint,
+    ...Object.fromEntries(grades.map((label, index) => [`set.recallGrade${index + 1}`, label])),
+  })
+}
+
 export const messages: Record<AppLanguage, Messages> = messageTargets

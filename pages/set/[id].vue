@@ -308,7 +308,7 @@
                                 </div>
 
                                 <div class="flex items-center gap-2">
-                                    <details class="group relative">
+                                    <details class="group relative" @click="closeFlashcardDisclosure">
                                         <summary
                                             class="inline-flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
                                             :aria-label="
@@ -620,7 +620,8 @@
                                     </div>
                                 </button>
 
-                                <div class="mt-3 grid grid-cols-5 gap-2">
+                                <SmartReviewRating v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" :starred="isCurrentStarred" :star-disabled="!currentTerm || starBusy" @star="toggleStar" @rate="markRating" />
+                                <div v-else class="mt-3 grid grid-cols-5 gap-2">
                                     <button
                                         type="button"
                                         class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
@@ -1091,8 +1092,10 @@
                                     </div>
                                 </button>
 
+                                <SmartReviewRating v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" :starred="isCurrentStarred" :star-disabled="!currentTerm || starBusy" @star="toggleStar" @rate="markRating" />
                                 <div
-                                    class="mt-4 flex flex-wrap items-center justify-between gap-3"
+                                    v-else
+                    class="mt-4 flex flex-wrap items-center justify-between gap-3"
                                 >
                                     <div
                                         class="flex flex-wrap items-center gap-2"
@@ -1703,7 +1706,7 @@
                                         <form
                                             v-else
                                             class="grid gap-2"
-                                            @submit.prevent="answerLearnWritten"
+                                            @submit.prevent="answerLearnWritten()"
                                         >
                                             <label
                                                 for="practice-written-answer"
@@ -1750,6 +1753,8 @@
                                                         >Save</template
                                                     >
                                                 </button>
+                                                <button v-if="defaultModelId === 'builtin:auto'" type="button" class="rounded border border-amber-400 px-3 py-2 text-xs disabled:opacity-50" :disabled="practiceAnswerBusy || !practiceWrittenAnswer.trim()" @click="answerLearnWritten(true)">Grade with AI · 1 action</button>
+
                                             </div>
                                         </form>
                                     </div>
@@ -2562,6 +2567,7 @@
 </template>
 
 <script setup lang="ts">
+import { generatePracticeQuestionsText, mixPracticeQuestions } from "~/src/composables/ai/practice";
 import { studyStorageOwner } from "~/src/composables/platform/web";
 
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
@@ -3329,7 +3335,7 @@ async function syncLinkedFolderNow() {
     if (!setId || linkedFolderBusy.value) return;
     linkedFolderBusy.value = true;
     try {
-        await syncLinkedFolder(setId);
+        await syncLinkedFolder(setId, { explicit: true });
         await loadSet(setId);
     } catch {
     } finally {
@@ -3400,7 +3406,7 @@ async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
     busy.value = false;
     isFlipped.value = false;
     flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
-    reviewOwnerId.value = "web-preview";
+    reviewOwnerId.value = studyStorageOwner({ id: "web-preview" }) ?? "web-preview";
     await loadStars(set.value.id);
     const savedProgress = await loadSavedFlashcardProgress(set.value.id);
     savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
@@ -4069,7 +4075,7 @@ function answerLearnMultipleChoice(selectedIndex: number) {
     void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
 }
 
-async function answerLearnWritten() {
+async function answerLearnWritten(useAi = false) {
     const q = learnCurrentQuestion.value;
     if (
         !q ||
@@ -4084,6 +4090,10 @@ async function answerLearnWritten() {
         referenceAnswer: q.answer,
         studentAnswer: practiceWrittenAnswer.value.trim(),
     };
+    if (defaultModelId.value === 'builtin:auto' && !useAi) {
+        practiceWrittenFeedback.value = { questionId: input.questionId, ...gradeWebPreviewWrittenAnswer(input) };
+        return;
+    }
     lastPracticeWrittenInput.value = input;
     await runPracticeWrittenGrade(input);
 }
@@ -4176,40 +4186,6 @@ async function continueAfterWrittenFeedback() {
     learnIsNavigating.value = false;
 }
 
-function buildLearnAugmentPrompt(args: {
-    title: string;
-    description: string | null;
-    terms: { front: string; back: string }[];
-    count: number;
-}) {
-    const descLine = args.description?.trim()
-        ? `Description: ${args.description.trim()}\n`
-        : "";
-    const tsvLines = args.terms
-        .map(
-            (t) =>
-                `${String(t.front).replace(/\t/g, " ").replace(/\r?\n/g, " ").trim()}\t${String(t.back).replace(/\t/g, " ").replace(/\r?\n/g, " ").trim()}`,
-        )
-        .join("\n");
-
-    return [
-        "You are generating extra study questions for a flashcard deck.",
-        "Return ONLY JSON (no markdown, no prose).",
-        "",
-        "Schema:",
-        '{"questions":[{"kind":"true_false","term":"...","definition":"...","answer":true}|{"kind":"multiple_choice","term":"...","choices":["...","...","...","..."],"answerIndex":0}]}',
-        "",
-        `Count: ${args.count}`,
-        "",
-        `Set title: ${args.title}`,
-        descLine.trimEnd(),
-        "",
-        "Deck (TSV: term<TAB>definition):",
-        tsvLines,
-    ]
-        .filter((x) => x.length > 0)
-        .join("\n");
-}
 
 function parseLearnAugmentJson(raw: string): LearnQuestion[] {
     if (typeof raw !== "string") return [];
@@ -4287,24 +4263,22 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
 
     learnBusy.value = true;
     try {
-        const { generateText } = await import("ai");
         const { resolveAiModel } =
             await import("~/src/composables/ai/registry");
         const model = await resolveAiModel([
             defaultModelId.value,
             ...fallbackModelIds.value,
         ]);
-        const prompt = buildLearnAugmentPrompt({
+        const generated = await generatePracticeQuestionsText(model, {
             title: s.title,
             description: s.description,
             terms: s.terms.map((t) => ({ front: t.front, back: t.back })),
             count: 10,
         });
-        const res = await generateText({ model, prompt });
-        const extra = parseLearnAugmentJson(res.text ?? "").filter((question) =>
+        const extra = parseLearnAugmentJson(generated).filter((question) =>
             selectedTypes.includes(question.kind),
         );
-        return [...baseline, ...extra].slice(
+        return mixPracticeQuestions(baseline, extra).slice(
             0,
             Math.min(practiceQuestionCount.value, practiceQuestionLimit.value),
         );
@@ -4445,6 +4419,7 @@ const {
     resumeIncorrect,
     toggleStarredOnly,
     cancelFlashcardAnswerFeedback,
+    markRating,
     markCorrect,
     markIncorrect,
 } = createFlashcardRun({
@@ -4470,7 +4445,7 @@ const {
     getCurrentTermId: () => (currentTerm.value?.id as Uuid | undefined) ?? null,
     getBaseSeed: () => baseSeed.value,
     getStarredStudyCount: () => starredStudyCount.value,
-    onAnswer: (answer, termId) => {
+    onAnswer: (answer, termId, rating) => {
         masteryByTermId.value = {
             ...masteryByTermId.value,
             [termId]: updateFlashcardMastery(
@@ -4486,7 +4461,7 @@ const {
                 [termId]: recordCardReview(
                     setId,
                     termId,
-                    answer === "correct",
+                    rating ?? (answer === "correct"),
                     reviewOwnerId.value,
                 ),
             };
@@ -4553,6 +4528,12 @@ function restartAllFlashcards() {
     reviewFilter.value = "all";
     reviewRunSnapshots.value = {};
     restartConfiguredRun();
+}
+
+function closeFlashcardDisclosure(event: MouseEvent) {
+    if (event.target instanceof Element && event.target.closest('button')) {
+        (event.currentTarget as HTMLDetailsElement).open = false;
+    }
 }
 
 function toggleSmartReview() {
@@ -4718,13 +4699,20 @@ function onKeydown(e: KeyboardEvent) {
     if (shouldIgnoreKey(e)) return;
     if (isExportOpen.value) return;
     if (termsFilterMenuOpen.value || flashcardSettingsOpen.value) return;
-    if (mode.value !== "flashcards") return;
+    if (mode.value !== "flashcards" || isFinished.value) return;
 
     if (e.key === " " || e.code === "Space") {
         e.preventDefault();
         toggleFlip();
         return;
     }
+    if (smartReviewEnabled.value && /^[1-5]$/.test(e.key) && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (e.repeat) return;
+        e.preventDefault();
+        markRating(Number(e.key) as 1 | 2 | 3 | 4 | 5);
+        return;
+    }
+    if (smartReviewEnabled.value && (e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
     if (e.key === "ArrowLeft") {
         e.preventDefault();
         goPrev();
@@ -5085,6 +5073,8 @@ async function sendChat() {
             model,
             system,
             messages: prior,
+            builtinContext: { context: JSON.stringify({ title: s.title, description: s.description, terms: s.terms.map(({ front, back }) => ({ front, back })) }), title: s.title },
+            sessionId: activeSavedChatId.value ?? undefined,
             abortSignal: controller.signal,
         });
 
@@ -5096,6 +5086,11 @@ async function sendChat() {
         await persistActiveSavedChat();
     } catch (err) {
         if (controller.signal.aborted) return;
+        finishChatRevealStream(assistantMsg.id);
+        // Keep partial output, but do not persist an empty assistant bubble.
+        if (!chatMessages.value.find(message => message.id === assistantMsg.id)?.fullContent?.trim()) {
+            chatMessages.value = chatMessages.value.filter(message => message.id !== assistantMsg.id);
+        }
         await initialSavePromise;
         await persistActiveSavedChat();
         if (isAiErrorCandidate(err)) {

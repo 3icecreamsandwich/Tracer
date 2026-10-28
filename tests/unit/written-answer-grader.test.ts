@@ -47,3 +47,16 @@ describe('written answer grader', () => {
     ).toThrow('invalid written-answer grade')
   })
 })
+
+it('repairs harmless grade presentation without guessing a verdict',async()=>{
+ const {normalizeWrittenAnswerGradeFormat:normalize}=await import('../../src/composables/ai/written-answer-grader')
+ for(const raw of ['Yes:Correct.\nIt matches the reference.','**Yes:** Correct. It matches the reference.','```text\nYes:Correct. It matches the reference.\n```','<Yes>:<Correct. It matches the reference.>','<Yes>:Correct. It matches the reference.']) {
+  expect(parseWrittenAnswerGrade(normalize(raw))).toEqual({isCorrect:true,explanation:'Correct. It matches the reference.'})
+ }
+})
+it('rejects conflicting judgments, free prose, empty explanations and undecided labels after repair',async()=>{
+ const {normalizeWrittenAnswerGradeFormat:normalize}=await import('../../src/composables/ai/written-answer-grader')
+ for(const raw of ['Yes:Correct.\nNo:Incorrect.','Yes:Correct. No:Incorrect.','Yes:Correct.\n**No**:Incorrect.','The answer is correct.','Yes:','<Yes/No>:<Explanation>']) {
+  expect(()=>parseWrittenAnswerGrade(normalize(raw))).toThrow('invalid written-answer grade')
+ }
+})

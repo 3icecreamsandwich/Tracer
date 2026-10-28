@@ -75,6 +75,26 @@ describe('cloud-authoritative library', () => {
     const local = { get: vi.fn().mockResolvedValue({ startupLockEnabled: false, defaultModelId: 'local-model' }), set: vi.fn() }
     expect(await cloudPreferencesRepo(db, local).get()).toMatchObject({ defaultModelId: 'local-model', startupLockEnabled: false })
   })
+  it('merges simultaneous preference changes across repository instances', async () => {
+    let settings = { darkMode: false, smartReviewEnabled: false }
+    const local = {
+      get: async () => ({ ...settings }) as any,
+      set: async (patch: any) => { settings = { ...settings, ...patch }; return { ...settings } as any },
+    }
+    const first = cloudPreferencesRepo(db, local)
+    const second = cloudPreferencesRepo(db, local)
+    await Promise.all([first.set({ darkMode: true }), second.set({ smartReviewEnabled: true })])
+    expect(settings).toMatchObject({ darkMode: true, smartReviewEnabled: true })
+    expect(state.rows.get(`${state.owner}:preferences:app`).payload).toMatchObject(settings)
+  })
+  it('allows another preference save after a failed write', async () => {
+    const local = { get: async () => ({ darkMode: false }) as any, set: async (patch: any) => patch }
+    const repo = cloudPreferencesRepo(db, local)
+    state.online = false
+    await expect(repo.set({ darkMode: true })).rejects.toThrow()
+    state.online = true
+    await expect(repo.set({ smartReviewEnabled: true })).resolves.toMatchObject({ smartReviewEnabled: true })
+  })
   it('reads an empty home order from the collection cache without a detail request', async () => {
     const repo = cloudFoldersRepo(db)
     expect(await repo.listHomeOrder()).toEqual([])

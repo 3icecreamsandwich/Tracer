@@ -15,16 +15,16 @@ export async function installCloudLibraryFixture(context: BrowserContext, owner:
         const key = `${owner}:${item.kind}:${item.id}`
         if (!rows.has(key)) rows.set(key, { ...item, owner_id: owner, revision: 1, deleted: false })
       }
-      return route.fulfill({ json: null })
+      return route.fulfill({ headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, POST, OPTIONS" }, json: null })
     }
     if (url.pathname.endsWith('/rpc/save_cloud_library_item')) {
-      if (rejectWrites) return route.fulfill({ status: 503, json: { message: 'Cloud unavailable' } })
+      if (rejectWrites) return route.fulfill({ headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, POST, OPTIONS" }, status: 503, json: { message: 'Cloud unavailable' } })
       const key = `${owner}:${input.item_kind}:${input.item_id}`
       const current = rows.get(key)
-      if ((current?.revision ?? 0) !== input.expected_revision) return route.fulfill({ status: 409, json: { code: '40001', message: 'Revision conflict' } })
+      if ((current?.revision ?? 0) !== input.expected_revision) return route.fulfill({ headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, POST, OPTIONS" }, status: 409, json: { code: '40001', message: 'Revision conflict' } })
       const saved = { owner_id: owner, kind: input.item_kind, id: input.item_id, payload: input.item_payload, revision: (current?.revision ?? 0) + 1, deleted: input.item_deleted }
       rows.set(key, saved)
-      return route.fulfill({ json: saved })
+      return route.fulfill({ headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, POST, OPTIONS" }, json: saved })
     }
     const kind = url.searchParams.get('kind')?.replace(/^eq\./, '')
     const id = url.searchParams.get('id')?.replace(/^eq\./, '')
@@ -35,9 +35,9 @@ export async function installCloudLibraryFixture(context: BrowserContext, owner:
         if (row.kind === 'set') { row.payload.cardCount = row.payload.terms.length; delete row.payload.terms }
         if (row.kind === 'guide') delete row.payload.markdown
       }
-      return route.fulfill({ json: data })
+      return route.fulfill({ headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, POST, OPTIONS" }, json: data })
     }
-    return route.fulfill({ json: data[0] ?? null })
+    return route.fulfill({ headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, POST, OPTIONS" }, json: data[0] ?? null })
   })
   return { rows, requests, failWrites: (fail: boolean) => { rejectWrites = fail } }
 }

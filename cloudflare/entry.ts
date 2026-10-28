@@ -1,9 +1,19 @@
+import { createClient } from '@supabase/supabase-js'
 // Nitro's installed adapter buffers request bodies; enforce limits before it runs.
 import nitro from '../.output-cloudflare/server/index.mjs'
 import { BodyTooLarge, readBoundedBody } from './bounded-body'
 import { applySecurityHeaders } from './security-headers'
 
 export default {
+  async scheduled(_event: ScheduledController, env: Cloudflare.Env, context: ExecutionContext) {
+    const secret = (env as any).SUPABASE_SERVICE_ROLE_KEY
+    if (!secret || !env.NUXT_SUPABASE_URL) return
+    context.waitUntil((async () => {
+      const client = createClient(env.NUXT_SUPABASE_URL, secret, { auth: { persistSession: false, autoRefreshToken: false } })
+      const { error } = await client.rpc('tracer_ai_gateway', { p_action: 'maintenance', p_args: {} })
+      if (error) console.error(JSON.stringify({ event: 'ai_maintenance_failed' }))
+    })())
+  },
   async fetch(request: Request, env: Cloudflare.Env, context: ExecutionContext): Promise<Response> {
     const url = new URL(request.url)
     const api = url.pathname.startsWith('/api/')
@@ -13,7 +23,7 @@ export default {
       if (env.TRACER_MAINTENANCE === '1') {
         response = new Response('Tracer is temporarily unavailable. Please try again shortly.', { status: 503, headers: { 'Retry-After': '300', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } })
       } else if (request.body) {
-        const limit = url.pathname === '/api/web/ai' ? 5 * 1024 * 1024 : 64 * 1024
+        const limit = (url.pathname === '/api/web/ai' || url.pathname === '/api/ai/requests') ? 5 * 1024 * 1024 : 64 * 1024
         if (Number(request.headers.get('content-length')) > limit) throw new BodyTooLarge()
         const bytes = await readBoundedBody(request.body, limit)
         request = new Request(request, { body: bytes })

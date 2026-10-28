@@ -79,11 +79,12 @@ async function applyMigrations(dbPath: string) {
     , '020_smart_review_setting.sql'
     , '021_linked_folder_file_metadata.sql'
     , '022_automatic_updates.sql'
+    , '023_builtin_ai_mode.sql'
   ]
   const migrations = await Promise.all(
     names.map((name) => readFile(path.resolve(process.cwd(), 'src-tauri', 'migrations', name), 'utf8'))
   )
-  const result = await runSqlite(dbPath, migrations.join('\n'))
+  const result = await runSqlite(dbPath, migrations.join('\n;\n'))
   if (result.code !== 0) throw new Error(result.stderr || 'sqlite3 migrations failed')
 }
 

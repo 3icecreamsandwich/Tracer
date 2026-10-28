@@ -170,6 +170,9 @@ import { createChatRevealQueue } from "~/src/composables/ai/chat-reveal";
 import { createSettingsRepo, useTracerDb } from "~/src/composables/db";
 import { useFloatingChatPreference } from "~/src/composables/floating-chat";
 import { hasTauriRuntime } from "~/src/composables/tauri";
+import { normalizeAiError } from "~/src/composables/ai/ux-errors";
+
+const builtinChatSessionId = crypto.randomUUID();
 
 type FloatingMessage = ChatMessage & { id: string; fullContent?: string };
 
@@ -410,6 +413,8 @@ async function sendMessage() {
             model,
             system,
             messages: prior,
+            builtinContext: { route: route.fullPath, title: pageTitle(), context: pageContextSnapshot() },
+            sessionId: builtinChatSessionId,
             abortSignal: controller.signal,
         });
 
@@ -422,12 +427,13 @@ async function sendMessage() {
             cancelReveal(assistantMessage.id);
             return;
         }
-        cancelReveal(assistantMessage.id);
-        messages.value = messages.value.filter(
-            (message) => message.id !== assistantMessage.id,
-        );
-        error.value =
-            cause instanceof Error ? cause.message : "Failed to send message.";
+        const partial = messages.value.find(message => message.id === assistantMessage.id)?.fullContent?.trim();
+        if (partial) finishReveal(assistantMessage.id);
+        else {
+            cancelReveal(assistantMessage.id);
+            messages.value = messages.value.filter(message => message.id !== assistantMessage.id);
+        }
+        error.value = `${partial ? 'Response interrupted. ' : ''}${normalizeAiError(cause).message}`;
     } finally {
         if (activeRequest.value === controller) activeRequest.value = null;
         if (!controller.signal.aborted) busy.value = false;

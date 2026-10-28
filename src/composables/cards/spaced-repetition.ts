@@ -1,8 +1,11 @@
 import type { Uuid } from '../db/types'
 
+export type ReviewRating = 1 | 2 | 3 | 4 | 5
+
 export type ReviewBucket = 'learning' | 'strong' | 'due'
 
 export type CardReview = {
+  rating?: ReviewRating
   schedulerVersion: 3
   lastReviewAt: number
   nextReviewAt: number
@@ -37,6 +40,7 @@ function normalizeReview(value: unknown): CardReview | null {
   if (!Number.isFinite(lastReviewAt) || !Number.isFinite(nextReviewAt)) return null
   return {
     schedulerVersion: 3,
+    ...(Number.isInteger(card.rating) && card.rating! >= 1 && card.rating! <= 5 ? { rating: card.rating } : {}),
     lastReviewAt,
     nextReviewAt,
     difficulty: clamp(Number(card.difficulty ?? 5), 1, 10),
@@ -54,7 +58,9 @@ function readReviews(setId: Uuid, userId?: Uuid | null): Record<Uuid, CardReview
       const card = normalizeReview(value)
       return card ? [[id, card]] : []
     }))
-    localStorage.setItem(reviewKey(setId, userId), JSON.stringify(normalized))
+    if (Object.values(raw).some(value => !value || (value as Partial<CardReview>).schedulerVersion !== 3)) {
+      try { localStorage.setItem(reviewKey(setId, userId), JSON.stringify(normalized)) } catch {}
+    }
     return normalized
   } catch { return {} }
 }
@@ -119,8 +125,9 @@ export function getCardReviews(setId: Uuid, userId?: Uuid | null) {
 }
 
 // FSRS-style scheduling: update difficulty and memory stability from the
-// estimated retrievability. Got It maps to Good; Missed maps to Again.
-export function recordCardReview(setId: Uuid, termId: Uuid, correct: boolean, userId?: Uuid | null) {
+// estimated retrievability. Boolean answers remain supported for older callers.
+export function recordCardReview(setId: Uuid, termId: Uuid, answer: boolean | ReviewRating, userId?: Uuid | null) {
+  const correct = typeof answer === "boolean" ? answer : answer >= 3
   const reviews = readReviews(setId, userId)
   const now = Date.now()
   const current = reviews[termId] || { schedulerVersion: 3 as const, lastReviewAt: 0, nextReviewAt: now, difficulty: 5, stability: 0.4, repetitions: 0, lapses: 0 }
@@ -151,13 +158,22 @@ export function recordCardReview(setId: Uuid, termId: Uuid, correct: boolean, us
     stability = clamp(current.stability * (1 + Math.exp(3.2) * Math.pow(11 - difficulty, 0.3) * Math.pow(Math.max(0.05, 1 - retrievability), 0.8) * 0.025), 0.04, 36_500)
     intervalDays = clamp(stability * (Math.pow(TARGET_RETENTION, -1) - 1) * 9, 10 / 1_440, 36_500)
   }
+  if (typeof answer === 'number') {
+    // Each grade has a distinct learning step. Successful later reviews grow
+    // with memory stability; low confidence brings the card back promptly.
+    const initialDays = { 1: 1 / 1_440, 2: 10 / 1_440, 3: 1, 4: 3, 5: 7 }[answer]
+    const growth = { 1: 0, 2: 0, 3: 1.3, 4: 2, 5: 3 }[answer]
+    intervalDays = answer <= 2 ? initialDays : clamp(Math.max(initialDays, current.stability * growth * (1 + (1 - retrievability) * 0.5)), initialDays, 36_500)
+    stability = intervalDays
+  }
   const next: CardReview = {
     schedulerVersion: 3,
     lastReviewAt: now,
     nextReviewAt: now + intervalDays * DAY_MS,
-    difficulty,
+    difficulty: typeof answer === "number" ? clamp(current.difficulty + (3 - answer) * 0.6, 1, 10) : difficulty,
     stability,
-    repetitions: correct ? current.repetitions + 1 : 0,
+    ...(typeof answer === "number" ? { rating: answer } : {}),
+    repetitions: correct ? (typeof answer === "number" ? Math.max(3, current.repetitions + 1) : current.repetitions + 1) : 0,
     lapses: current.lapses + (correct ? 0 : 1),
   }
   reviews[termId] = next

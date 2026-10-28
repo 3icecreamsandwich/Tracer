@@ -1,4 +1,6 @@
+import { isBuiltinModel } from './builtin/types'
 import type { AppLanguage } from '../db/types'
+import { checkedAiText } from './stream'
 
 export type FactCheckCard = {
   front: string
@@ -185,14 +187,25 @@ export async function streamFactCheckText(args: {
   system: string
   prompt: string
   abortSignal?: AbortSignal
+  draft?: FactCheckDraft
+  language?: AppLanguage
 }) {
+  if (isBuiltinModel(args.model)) {
+    const { builtinText } = await import('./builtin/client')
+    if (!args.draft) throw new Error('Fact Check content could not be loaded.')
+    return { textStream: builtinText({ operation: 'fact-check', input: { draft: args.draft, language: args.language ?? 'en' } }, args.abortSignal) }
+  }
   const { streamText } = await import('ai')
-  return streamText({
+  const result = streamText({
     model: args.model,
     system: args.system,
     prompt: args.prompt,
-    abortSignal: args.abortSignal
+    abortSignal: args.abortSignal,
+    maxRetries: 0,
+    onError: () => {},
+    timeout: { totalMs: 180_000 },
   })
+  return { textStream: checkedAiText(result.fullStream, args.abortSignal) }
 }
 
 export async function* streamWebPreviewMockFactCheckAnswer(args: {

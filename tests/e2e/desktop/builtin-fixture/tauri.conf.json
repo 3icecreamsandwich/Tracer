@@ -1,0 +1,38 @@
+{
+  "identifier": "com.tracer.builtin-ai-test",
+  "productName": "Tracer Builtin AI Test",
+  "build": {
+    "beforeDevCommand": "",
+    "devUrl": "http://127.0.0.1:3102"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Tracer Builtin AI Test",
+        "width": 1130,
+        "height": 850
+      }
+    ],
+    "security": {
+      "capabilities": [
+        "default",
+        {
+          "identifier": "builtin-test-local-http",
+          "windows": [
+            "main"
+          ],
+          "permissions": [
+            {
+              "identifier": "http:default",
+              "allow": [
+                {
+                  "url": "http://127.0.0.1:3101/**"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

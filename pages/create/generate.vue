@@ -152,7 +152,7 @@
                 class="sr-only"
                 type="file"
                 multiple
-                accept="application/pdf,image/*"
+                accept=".pdf,application/pdf,image/*"
                 @change="onPicked"
               />
 
@@ -422,9 +422,31 @@ const generateDisabled = computed(() => {
   return false
 })
 
-function openPicker() {
+async function openPicker() {
+  if (operationBusy.value || ingestBusy.value || isWebPreview.value) return
   formError.value = null
-  fileInputEl.value?.click()
+  if (!hasTauriInternals) { fileInputEl.value?.click(); return }
+  ingestBusy.value = true
+  try {
+    const [{ open }, { readFile }] = await Promise.all([
+      import('@tauri-apps/plugin-dialog'), import('@tauri-apps/plugin-fs'),
+    ])
+    const selected = await open({ multiple: true, directory: false, filters: [
+      { name: 'PDF and images', extensions: ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff', 'avif', 'heic'] },
+    ] })
+    if (!selected) return
+    const paths = Array.isArray(selected) ? selected : [selected]
+    const files: File[] = []
+    for (const path of paths) {
+      const filename = path.split(/[\\/]/).at(-1) || 'source'
+      const extension = filename.split('.').at(-1)?.toLowerCase()
+      const mime = extension === 'pdf' ? 'application/pdf' : extension === 'jpg' ? 'image/jpeg' : `image/${extension}`
+      files.push(new File([await readFile(path)], filename, { type: mime }))
+    }
+    await ingestPickedFiles(files)
+  } catch (error) {
+    formError.value = toErrorMessage(error, 'Could not read the selected files.')
+  } finally { ingestBusy.value = false }
 }
 
 async function onLinkFolder() {
@@ -444,7 +466,8 @@ async function onLinkFolder() {
       if (!result) return
       rawOutput.value = result.rawOutput
       if (result.warning) formError.value = result.warning
-      await router.replace(`/set/${result.setId}`)
+      completedGenerationNavigation = true
+    await router.replace(`/set/${result.setId}`)
       return
     }
 
@@ -466,6 +489,7 @@ async function onLinkFolder() {
     })
     rawOutput.value = result.rawOutput
     if (result.warning) formError.value = result.warning
+    completedGenerationNavigation = true
     await router.replace(`/set/${result.setId}`)
   } catch (error) {
     showAiError(normalizeGenerateRequestError(error))
@@ -498,8 +522,11 @@ async function onPicked(e: Event) {
 
   const files = Array.from(list)
   input.value = ''
-  if (files.length === 0) return
+  await ingestPickedFiles(files)
+}
 
+async function ingestPickedFiles(files: File[]) {
+  if (!files.length) return
   ingestBusy.value = true
   try {
     plan.value = await loadGeneratePlan()
@@ -616,6 +643,7 @@ async function saveGeneratedOutput(
 
     void syncPrivateSets().catch(() => false)
 
+    completedGenerationNavigation = true
     await router.replace(`/set/${setId}`)
   } catch (e: unknown) {
     showAiError(normalizeGenerateRequestError(e))
@@ -653,6 +681,7 @@ function validateGenerateInput() {
 }
 
 async function onGenerate() {
+  completedGenerationNavigation = false
   formError.value = null
   rawMessage.value = null
   rawOutput.value = null
@@ -721,7 +750,10 @@ function abortParseFailures() {
   clearParseFailureState()
 }
 
+let completedGenerationNavigation = false
+
 function confirmLeaveWhileGenerating() {
+  if (completedGenerationNavigation) return true
   if (!operationBusy.value || typeof window === 'undefined') return true
   return window.confirm('Generation is still running. Leave this page? It will keep running in the background.')
 }

@@ -282,7 +282,9 @@
                 </div>
 
                 <!-- Controls -->
-                <div
+                <SmartReviewRating class="hidden sm:block w-[75vw]" v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" :starred="isCurrentStarred" :star-disabled="!currentTerm || starBusy" @star="toggleStar" @rate="markRating" />
+                                <div
+                    v-else
                     class="mt-6 hidden w-[75vw] flex-wrap items-center justify-between gap-3 sm:flex"
                 >
                     <div class="flex flex-wrap gap-3">
@@ -347,7 +349,9 @@
                     </div>
                 </div>
 
-                <div class="mt-4 grid w-[calc(100%-2rem)] grid-cols-5 gap-2 sm:hidden">
+                <SmartReviewRating class="sm:hidden w-[calc(100%-2rem)]" v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" :starred="isCurrentStarred" :star-disabled="!currentTerm || starBusy" @star="toggleStar" @rate="markRating" />
+                                <div v-else
+                    class="mt-4 grid w-[calc(100%-2rem)] grid-cols-5 gap-2 sm:hidden">
                     <button
                         type="button"
                         class="mobile-fullscreen-action text-slate-700 dark:text-slate-200"
@@ -809,6 +813,7 @@ const {
     resumeIncorrect,
     toggleStarredOnly,
     cancelFlashcardAnswerFeedback,
+    markRating,
     markCorrect,
     markIncorrect,
 } = createFlashcardRun({
@@ -834,7 +839,7 @@ const {
     getCurrentTermId: () => (currentTerm.value?.id as Uuid | undefined) ?? null,
     getBaseSeed: () => baseSeed.value,
     getStarredStudyCount: () => starredStudyCount.value,
-    onAnswer: (answer, termId) => {
+    onAnswer: (answer, termId, rating) => {
         masteryByTermId.value = {
             ...masteryByTermId.value,
             [termId]: updateFlashcardMastery(masteryByTermId.value[termId], answer),
@@ -843,7 +848,7 @@ const {
         if (answer === "correct") assignedSessionCorrect.value += 1;
         const setId = set.value?.id as Uuid | undefined;
         if (setId && termId && smartReviewEnabled.value) {
-            cardReviews.value = { ...cardReviews.value, [termId]: recordCardReview(setId, termId, answer === 'correct', reviewOwnerId.value) };
+            cardReviews.value = { ...cardReviews.value, [termId]: recordCardReview(setId, termId, rating ?? (answer === 'correct'), reviewOwnerId.value) };
         }
     },
     onRestart: beginClassroomFlashcards,
@@ -1050,6 +1055,13 @@ function onKeydown(e: KeyboardEvent) {
         toggleFlip();
         return;
     }
+    if (smartReviewEnabled.value && /^[1-5]$/.test(e.key) && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (e.repeat) return;
+        e.preventDefault();
+        markRating(Number(e.key) as 1 | 2 | 3 | 4 | 5);
+        return;
+    }
+    if (smartReviewEnabled.value && (e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
     if (e.key === "ArrowLeft") {
         e.preventDefault();
         goPrev();
@@ -1118,7 +1130,7 @@ onMounted(async () => {
             set.value = publishedSetToStudySet(await getPublishedSet(idParam));
             busy.value = false;
             flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
-            reviewOwnerId.value = "web-preview";
+            reviewOwnerId.value = studyStorageOwner({ id: "web-preview" }) ?? "web-preview";
             await loadStars(set.value.id);
             await restoreSavedFlashcardRun(set.value.id);
             await nextTick();
@@ -1135,7 +1147,7 @@ onMounted(async () => {
             set.value = createWebPreviewDemoSet(t);
             busy.value = false;
             flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
-            reviewOwnerId.value = "web-preview";
+            reviewOwnerId.value = studyStorageOwner({ id: "web-preview" }) ?? "web-preview";
             await loadStars(set.value.id);
             await restoreSavedFlashcardRun(set.value.id);
             await nextTick();

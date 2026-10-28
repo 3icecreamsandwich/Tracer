@@ -34,6 +34,22 @@ function createRun(onAnswer = (_answer: FlashcardAnswer) => {}) {
 }
 
 describe('flashcard run', () => {
+  it('commits a grade once even when pressed repeatedly during feedback', async () => {
+    vi.useFakeTimers()
+    try {
+      const answered = vi.fn()
+      const { state, run } = createRun(answered)
+      run.markRating(2)
+      run.markRating(5)
+      await vi.advanceTimersByTimeAsync(700)
+      expect(answered).toHaveBeenCalledExactlyOnceWith('incorrect', 'a', 2)
+      expect(state.cursorIndex.value).toBe(1)
+      expect(state.retryTermIds.value.has('a')).toBe(true)
+      run.markRating(5)
+      await vi.advanceTimersByTimeAsync(700)
+      expect(answered).toHaveBeenLastCalledWith('correct', 'b', 5)
+    } finally { vi.useRealTimers() }
+  })
   it('keeps pass progress tied to the frozen session order', () => {
     const order = ['a', 'b', 'c']
     expect(flashcardPassProgress(order, { a: 'correct' })).toEqual({ completed: 1, total: 3 })

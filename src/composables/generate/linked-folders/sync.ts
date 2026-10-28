@@ -194,7 +194,7 @@ export async function createSetFromLinkedFolder(input: LinkFolderInput): Promise
   }
 }
 
-async function performLinkedFolderSync(setId: Uuid, changedPaths: Set<string> | null): Promise<LinkedFolder | null> {
+async function performLinkedFolderSync(setId: Uuid, changedPaths: Set<string> | null, explicit = false): Promise<LinkedFolder | null> {
   const db = await useTracerDb()
   const linkedFoldersRepo = createLinkedFoldersRepo(db)
   const linkedFolder = await linkedFoldersRepo.getBySetId(setId)
@@ -233,6 +233,9 @@ async function performLinkedFolderSync(setId: Uuid, changedPaths: Set<string> | 
     })
   }
 
+  if (!explicit && (await createSettingsRepo(db).get()).defaultModelId === 'builtin:auto') {
+    return updateStatus(setId, 'pending', { error: 'New file content is ready. Select Sync to regenerate it using 1 AI action.', scanned: true })
+  }
   const modelRequest = resolveDefaultModel().catch((error: unknown) => ({ error }))
   const processing = await loadLinkedFolderProcessing()
   await processing.assertGenerateFileLimits(scan.sources)
@@ -323,9 +326,9 @@ function isBrowserLinkedFolderRuntime() {
   return !hasTauriRuntime() && typeof indexedDB !== 'undefined'
 }
 
-export function syncLinkedFolder(setId: Uuid): Promise<LinkedFolder | null> {
+export function syncLinkedFolder(setId: Uuid, options: { explicit?: boolean } = {}): Promise<LinkedFolder | null> {
   if (isBrowserLinkedFolderRuntime()) {
-    return import('./browser').then(({ syncBrowserLinkedFolder }) => syncBrowserLinkedFolder(setId))
+    return import('./browser').then(({ syncBrowserLinkedFolder }) => syncBrowserLinkedFolder(setId, options))
   }
   const current = syncBySet.get(setId)
   if (current) return current
@@ -336,7 +339,7 @@ export function syncLinkedFolder(setId: Uuid): Promise<LinkedFolder | null> {
     while (pendingChanges.has(setId)) {
       const paths = pendingChanges.get(setId) ?? null
       pendingChanges.delete(setId)
-      result = await performLinkedFolderSync(setId, paths)
+      result = await performLinkedFolderSync(setId, paths, options.explicit)
     }
     return result
   })()

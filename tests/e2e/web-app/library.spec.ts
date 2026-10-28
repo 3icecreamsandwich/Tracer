@@ -281,3 +281,55 @@ test('a fresh device opens and edits cloud sets without the original local datab
     await expect(page.getByRole('heading', { name: 'Edited on another device', exact: true })).toBeVisible()
   } finally { await otherContext.close() }
 })
+
+test('settings stay usable during slow profile reads and preference saves', async ({ context, page }) => {
+  await signInFixture(context, page)
+  let releaseProfile!: () => void
+  const profileGate = new Promise<void>(resolve => { releaseProfile = resolve })
+  let profileRequests = 0
+  await context.route('**/rest/v1/profiles*', async route => {
+    profileRequests++
+    await profileGate
+    await route.fulfill({ headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' }, json: { display_name: 'Web Test', username: 'web_test' } })
+  })
+  let releaseSave!: () => void
+  const saveGate = new Promise<void>(resolve => { releaseSave = resolve })
+  let saving = false
+  await context.route('**/rest/v1/rpc/save_cloud_library_item', async route => {
+    if (route.request().postDataJSON()?.item_payload?.smartReviewEnabled === true) {
+      saving = true
+      await saveGate
+    }
+    await route.fallback()
+  })
+  try {
+    await page.goto('settings')
+    await expect.poll(() => profileRequests).toBe(1)
+    const smart = page.getByRole('region', { name: 'Flashcards · Smart Review', exact: true }).getByRole('button')
+    const chat = page.getByRole('region', { name: 'Page chat button', exact: true }).getByRole('button')
+    await expect(smart).toBeEnabled()
+    await smart.click()
+    await expect.poll(() => saving).toBe(true)
+    await expect(smart).toHaveAttribute('aria-busy', 'true')
+    releaseProfile()
+    await page.getByRole('button', { name: 'Configure AI', exact: true }).click()
+    await page.getByText('Other settings', { exact: true }).click()
+    await expect(chat).toBeEnabled()
+    await chat.click()
+    await expect(chat).toHaveText('Off')
+    await expect(chat).toBeEnabled()
+    await page.getByRole('button', { name: 'Close AI configuration', exact: true }).last().click()
+    releaseSave()
+    await expect(smart).toHaveText('On')
+    await expect(smart).toBeEnabled()
+    releaseProfile()
+    await expect(page.getByText('@web_test', { exact: true })).toBeVisible()
+    await page.getByRole('link', { name: 'Home', exact: true }).click()
+    await page.getByRole('link', { name: 'Settings', exact: true }).click()
+    await expect(page.getByText('@web_test', { exact: true })).toBeVisible()
+    expect(profileRequests).toBe(1)
+  } finally {
+    releaseSave()
+    releaseProfile()
+  }
+})

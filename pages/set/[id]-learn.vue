@@ -392,7 +392,7 @@
                         <form
                             v-else
                             class="grid gap-2"
-                            @submit.prevent="answerLearnWritten"
+                            @submit.prevent="answerLearnWritten()"
                         >
                             <label
                                 for="fullscreen-written-answer"
@@ -425,6 +425,8 @@
                                     <LoadingSpinner v-if="practiceAnswerBusy" size="sm" label="Checking…" />
                                     <template v-else>Save</template>
                                 </button>
+                                                <button v-if="defaultModelId === 'builtin:auto'" type="button" class="rounded border border-amber-400 px-3 py-2 text-xs disabled:opacity-50" :disabled="practiceAnswerBusy || !practiceWrittenAnswer.trim()" @click="answerLearnWritten(true)">Grade with AI · 1 action</button>
+
                             </div>
                         </form>
                     </div>
@@ -466,6 +468,7 @@
 </template>
 
 <script setup lang="ts">
+import { generatePracticeQuestionsText, mixPracticeQuestions } from "~/src/composables/ai/practice";
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 definePageMeta({ hideNavbar: true });
 
@@ -851,7 +854,7 @@ async function getWrittenModel(modelId: string) {
     return model;
 }
 
-async function answerLearnWritten() {
+async function answerLearnWritten(useAi = false) {
     const q = learnCurrentQuestion.value;
     if (
         !q ||
@@ -866,6 +869,10 @@ async function answerLearnWritten() {
         referenceAnswer: q.answer,
         studentAnswer: practiceWrittenAnswer.value.trim(),
     };
+    if (defaultModelId.value === 'builtin:auto' && !useAi) {
+        practiceWrittenFeedback.value = { questionId: input.questionId, ...gradeWebPreviewWrittenAnswer(input) };
+        return;
+    }
     lastPracticeWrittenInput.value = input;
     await runPracticeWrittenGrade(input);
 }
@@ -1017,40 +1024,6 @@ function parseLearnAugmentJson(raw: string): LearnQuestion[] {
     return out;
 }
 
-function buildLearnAugmentPrompt(args: {
-    title: string;
-    description: string | null;
-    terms: { front: string; back: string }[];
-    count: number;
-}) {
-    const descLine = args.description?.trim()
-        ? `Description: ${args.description.trim()}\n`
-        : "";
-    const tsvLines = args.terms
-        .map(
-            (t) =>
-                `${String(t.front).replace(/\t/g, " ").replace(/\r?\n/g, " ").trim()}\t${String(t.back).replace(/\t/g, " ").replace(/\r?\n/g, " ").trim()}`,
-        )
-        .join("\n");
-
-    return [
-        "You are generating extra study questions for a flashcard deck.",
-        "Return ONLY JSON (no markdown, no prose).",
-        "",
-        "Schema:",
-        '{"questions":[{"kind":"true_false","term":"...","definition":"...","answer":true}|{"kind":"multiple_choice","term":"...","choices":["...","...","...","..."],"answerIndex":0}]}',
-        "",
-        `Count: ${args.count}`,
-        "",
-        `Set title: ${args.title}`,
-        descLine.trimEnd(),
-        "",
-        "Deck (TSV: term<TAB>definition):",
-        tsvLines,
-    ]
-        .filter((x) => x.length > 0)
-        .join("\n");
-}
 
 async function buildLearnQuestionsForSet(s: FlashcardSet) {
     const seed = learnSeed();
@@ -1075,17 +1048,16 @@ async function buildLearnQuestionsForSet(s: FlashcardSet) {
             import("ai"),
         ]);
         const model = await resolveAiModel([defaultModelId.value, ...fallbackModelIds.value]);
-        const prompt = buildLearnAugmentPrompt({
+        const generated = await generatePracticeQuestionsText(model, {
             title: s.title,
             description: s.description,
             terms: s.terms.map((t) => ({ front: t.front, back: t.back })),
             count: 10,
         });
-        const res = await generateText({ model, prompt });
-        const extra = parseLearnAugmentJson(res.text ?? "").filter((question) =>
+        const extra = parseLearnAugmentJson(generated).filter((question) =>
             selectedTypes.includes(question.kind),
         );
-        return [...baseline, ...extra].slice(
+        return mixPracticeQuestions(baseline, extra).slice(
             0,
             Math.min(practiceQuestionCount.value, practiceQuestionLimit.value),
         );

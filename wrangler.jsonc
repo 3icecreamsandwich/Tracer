@@ -96,7 +96,23 @@
             "period": 60
           }
         }
-      ]
+      ],
+      "triggers": {
+        "crons": [
+          "* * * * *"
+        ]
+      },
+      "ai": {
+        "binding": "AI"
+      }
     }
+  },
+  "triggers": {
+    "crons": [
+      "* * * * *"
+    ]
+  },
+  "ai": {
+    "binding": "AI"
   }
 }
