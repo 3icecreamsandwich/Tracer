@@ -116,6 +116,7 @@ const en: Messages = {
   'set.studyGuideHint': 'Markdown',
   'set.terms': 'Terms',
   'set.learning': 'Learning',
+  'set.gettingBetter': 'Getting better',
   'set.mastered': 'Mastered',
   'set.resumeIncorrect': 'Resume missed cards',
   'set.shuffle': 'Shuffle',
