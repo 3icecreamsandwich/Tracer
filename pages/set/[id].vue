@@ -2694,7 +2694,6 @@ import {
     flashcardStudyGroup,
     isFlashcardGettingBetter,
     updateFlashcardMastery,
-    sortTermsByFlashcardMastery,
     type FlashcardMasteryByTermId,
     type FlashcardStudyFilter,
 } from "~/src/composables/cards/flashcard-mastery";
@@ -3071,9 +3070,11 @@ const termsFilterOptions: Array<{
 
 const filteredTerms = computed(() => {
     const terms = set.value?.terms ?? [];
-    const sorted = sortTermsByFlashcardMastery(
-        terms.map((term) => ({ ...term, id: term.id as Uuid })),
-        masteryByTermId.value,
+    const rank = { learning: 0, gettingBetter: 1, mastered: 2 };
+    const sorted = [...terms].sort(
+        (left, right) =>
+            rank[termStudyGroup(left.id as Uuid)] -
+            rank[termStudyGroup(right.id as Uuid)],
     );
     if (termsFilter.value === "all") return sorted;
     if (termsFilter.value === "learning")
@@ -3097,6 +3098,14 @@ function isTermGettingBetter(termId: Uuid) {
 }
 
 function termStudyGroup(termId: Uuid) {
+    const currentAnswer = answersByTermId.value[termId];
+    if (currentAnswer === "incorrect") return "learning";
+    if (
+        currentAnswer === "correct" &&
+        !isTermMastered(termId)
+    ) {
+        return "gettingBetter";
+    }
     return flashcardStudyGroup(masteryByTermId.value[termId]);
 }
 

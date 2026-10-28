@@ -57,9 +57,13 @@ export function sanitizeFlashcardMastery(value: unknown): FlashcardMasteryByTerm
       correctCount: Math.max(0, Math.floor(Number(item.correctCount) || 0)),
       masteredMissCount: Math.max(0, Math.floor(Number(item.masteredMissCount) || 0)),
       mastered: item.mastered === true,
+      // Older saved runs did not store the last answer. Preserve the progress
+      // users already earned by treating a prior correct streak as improving.
       lastAnswer: item.lastAnswer === 'correct' || item.lastAnswer === 'incorrect'
         ? item.lastAnswer
-        : undefined
+        : item.mastered === true || Number(item.correctCount) > 0
+          ? 'correct'
+          : undefined
     }
   }
   return result
