@@ -2319,6 +2319,40 @@
                             </div>
 
                             <div
+                                v-if="set.terms.length > 0"
+                                class="mt-3 grid grid-cols-3 gap-2"
+                                aria-label="Flashcard study progress"
+                            >
+                                <button
+                                    type="button"
+                                    class="rounded-md border px-2 py-2 text-left text-xs font-medium transition-colors"
+                                    :class="termsFilter === 'learning' ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100' : 'border-slate-200 text-slate-700 hover:border-amber-300 dark:border-slate-800 dark:text-slate-200'"
+                                    @click="selectTermsFilter('learning')"
+                                >
+                                    <span class="block uppercase tracking-wide">{{ t("set.learning") }}</span>
+                                    <span class="mt-1 block text-base">{{ termStudyGroupCounts.learning }}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="rounded-md border px-2 py-2 text-left text-xs font-medium transition-colors"
+                                    :class="termsFilter === 'gettingBetter' ? 'border-sky-500 bg-sky-50 text-sky-900 dark:bg-sky-950/30 dark:text-sky-100' : 'border-slate-200 text-slate-700 hover:border-sky-300 dark:border-slate-800 dark:text-slate-200'"
+                                    @click="selectTermsFilter('gettingBetter')"
+                                >
+                                    <span class="block uppercase tracking-wide">{{ t("set.gettingBetter") }}</span>
+                                    <span class="mt-1 block text-base">{{ termStudyGroupCounts.gettingBetter }}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="rounded-md border px-2 py-2 text-left text-xs font-medium transition-colors"
+                                    :class="termsFilter === 'mastered' ? 'border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100' : 'border-slate-200 text-slate-700 hover:border-emerald-300 dark:border-slate-800 dark:text-slate-200'"
+                                    @click="selectTermsFilter('mastered')"
+                                >
+                                    <span class="block uppercase tracking-wide">{{ t("set.mastered") }}</span>
+                                    <span class="mt-1 block text-base">{{ termStudyGroupCounts.mastered }}</span>
+                                </button>
+                            </div>
+
+                            <div
                                 v-if="filteredTerms.length === 0"
                                 class="mt-3 text-sm text-slate-700 dark:text-slate-200"
                             >
@@ -2692,7 +2726,6 @@ import {
 import {
     DEFAULT_FLASHCARD_STUDY_FILTER,
     flashcardStudyGroup,
-    isFlashcardGettingBetter,
     updateFlashcardMastery,
     type FlashcardMasteryByTermId,
     type FlashcardStudyFilter,
@@ -3078,11 +3111,17 @@ const filteredTerms = computed(() => {
     );
     if (termsFilter.value === "all") return sorted;
     if (termsFilter.value === "learning")
-        return sorted.filter((term) => !isTermGettingBetter(term.id as Uuid));
+        return sorted.filter(
+            (term) => termStudyGroup(term.id as Uuid) === "learning",
+        );
     if (termsFilter.value === "gettingBetter")
-        return sorted.filter((term) => isTermGettingBetter(term.id as Uuid));
+        return sorted.filter(
+            (term) => termStudyGroup(term.id as Uuid) === "gettingBetter",
+        );
     if (termsFilter.value === "mastered")
-        return sorted.filter((term) => isTermMastered(term.id as Uuid));
+        return sorted.filter(
+            (term) => termStudyGroup(term.id as Uuid) === "mastered",
+        );
     const showStarred = termsFilter.value === "starred";
     return sorted.filter(
         (term) => starredTermIds.value.has(term.id as Uuid) === showStarred,
@@ -3091,10 +3130,6 @@ const filteredTerms = computed(() => {
 
 function isTermMastered(termId: Uuid) {
     return masteryByTermId.value[termId]?.mastered === true;
-}
-
-function isTermGettingBetter(termId: Uuid) {
-    return isFlashcardGettingBetter(masteryByTermId.value[termId]);
 }
 
 function termStudyGroup(termId: Uuid) {
@@ -3108,6 +3143,14 @@ function termStudyGroup(termId: Uuid) {
     }
     return flashcardStudyGroup(masteryByTermId.value[termId]);
 }
+
+const termStudyGroupCounts = computed(() => {
+    const counts = { learning: 0, gettingBetter: 0, mastered: 0 };
+    for (const term of set.value?.terms ?? []) {
+        counts[termStudyGroup(term.id as Uuid)] += 1;
+    }
+    return counts;
+});
 
 function selectTermsFilter(filter: TermsFilter) {
     termsFilter.value = filter;

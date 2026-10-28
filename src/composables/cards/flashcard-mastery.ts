@@ -70,7 +70,10 @@ export function sanitizeFlashcardMastery(value: unknown): FlashcardMasteryByTerm
 }
 
 export function isFlashcardGettingBetter(mastery: FlashcardMastery | undefined) {
-  return mastery?.mastered !== true && mastery?.lastAnswer === 'correct'
+  return mastery?.mastered !== true && (
+    mastery?.lastAnswer === 'correct' ||
+    (mastery?.lastAnswer === undefined && (mastery?.correctCount ?? 0) > 0)
+  )
 }
 
 export function flashcardStudyGroup(mastery: FlashcardMastery | undefined) {
