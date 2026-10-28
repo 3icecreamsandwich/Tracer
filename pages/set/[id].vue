@@ -2333,31 +2333,37 @@
                                     <h3
                                         v-if="
                                             idx === 0 ||
-                                            isTermMastered(
+                                            termStudyGroup(
                                                 filteredTerms[idx - 1]!
                                                     .id as Uuid,
                                             ) !==
-                                                isTermMastered(term.id as Uuid)
+                                                termStudyGroup(term.id as Uuid)
                                         "
                                         class="mb-2 text-xs font-semibold uppercase tracking-wide"
                                         :class="
-                                            isTermMastered(term.id as Uuid)
+                                            termStudyGroup(term.id as Uuid) === 'mastered'
                                                 ? 'text-emerald-700 dark:text-emerald-300'
-                                                : 'text-amber-700 dark:text-amber-300'
+                                                : termStudyGroup(term.id as Uuid) === 'gettingBetter'
+                                                  ? 'text-sky-700 dark:text-sky-300'
+                                                  : 'text-amber-700 dark:text-amber-300'
                                         "
                                     >
                                         {{
-                                            isTermMastered(term.id as Uuid)
+                                            termStudyGroup(term.id as Uuid) === 'mastered'
                                                 ? t("set.mastered")
-                                                : t("set.learning")
+                                                : termStudyGroup(term.id as Uuid) === 'gettingBetter'
+                                                  ? t("set.gettingBetter")
+                                                  : t("set.learning")
                                         }}
                                     </h3>
                                     <div
                                         class="relative rounded-md border p-4 shadow-sm"
                                         :class="
-                                            isTermMastered(term.id as Uuid)
+                                            termStudyGroup(term.id as Uuid) === 'mastered'
                                                 ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/25'
-                                                : 'border-amber-500/70 bg-amber-50/20 dark:border-amber-600/45 dark:bg-amber-950/5'
+                                                : termStudyGroup(term.id as Uuid) === 'gettingBetter'
+                                                  ? 'border-sky-200 bg-sky-50/70 dark:border-sky-900 dark:bg-sky-950/25'
+                                                  : 'border-amber-500/70 bg-amber-50/20 dark:border-amber-600/45 dark:bg-amber-950/5'
                                         "
                                     >
                                         <button
@@ -2685,6 +2691,8 @@ import {
 } from "~/src/composables/cards/spaced-repetition";
 import {
     DEFAULT_FLASHCARD_STUDY_FILTER,
+    flashcardStudyGroup,
+    isFlashcardGettingBetter,
     updateFlashcardMastery,
     sortTermsByFlashcardMastery,
     type FlashcardMasteryByTermId,
@@ -3044,7 +3052,7 @@ function onDocumentFlashcardSettingsPointerDown(event: PointerEvent) {
     flashcardSettingsOpen.value = false;
 }
 
-type TermsFilter = "all" | "starred" | "unstarred" | "learning" | "mastered";
+type TermsFilter = "all" | "starred" | "unstarred" | "learning" | "gettingBetter" | "mastered";
 const termsFilter = ref<TermsFilter>("all");
 const termsFilterMenuOpen = ref(false);
 const termsFilterMenuRoot = ref<HTMLElement | null>(null);
@@ -3057,6 +3065,7 @@ const termsFilterOptions: Array<{
     { value: "starred", labelKey: "set.filterStarred" },
     { value: "unstarred", labelKey: "set.filterUnstarred" },
     { value: "learning", labelKey: "set.learning" },
+    { value: "gettingBetter", labelKey: "set.gettingBetter" },
     { value: "mastered", labelKey: "set.mastered" },
 ];
 
@@ -3068,7 +3077,9 @@ const filteredTerms = computed(() => {
     );
     if (termsFilter.value === "all") return sorted;
     if (termsFilter.value === "learning")
-        return sorted.filter((term) => !isTermMastered(term.id as Uuid));
+        return sorted.filter((term) => !isTermGettingBetter(term.id as Uuid));
+    if (termsFilter.value === "gettingBetter")
+        return sorted.filter((term) => isTermGettingBetter(term.id as Uuid));
     if (termsFilter.value === "mastered")
         return sorted.filter((term) => isTermMastered(term.id as Uuid));
     const showStarred = termsFilter.value === "starred";
@@ -3079,6 +3090,14 @@ const filteredTerms = computed(() => {
 
 function isTermMastered(termId: Uuid) {
     return masteryByTermId.value[termId]?.mastered === true;
+}
+
+function isTermGettingBetter(termId: Uuid) {
+    return isFlashcardGettingBetter(masteryByTermId.value[termId]);
+}
+
+function termStudyGroup(termId: Uuid) {
+    return flashcardStudyGroup(masteryByTermId.value[termId]);
 }
 
 function selectTermsFilter(filter: TermsFilter) {
