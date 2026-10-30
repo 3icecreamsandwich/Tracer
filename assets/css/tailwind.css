@@ -34,6 +34,7 @@
 .tracer-library-scroll {
   scrollbar-color: #334155 transparent;
   scrollbar-width: thin;
+  scrollbar-gutter: stable;
 }
 
 .tracer-library-scroll::-webkit-scrollbar {
@@ -265,18 +266,23 @@ html.dark .tracer-library-scroll::-webkit-scrollbar-thumb {
   button, a.tracer-button, summary {
     transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease, scale 120ms ease;
   }
-  button:enabled:active, a.tracer-button:active, summary:active { scale: .98; }
+  button:enabled:active:not(.tracer-folder-toggle), a.tracer-button:active, summary:active { scale: .98; }
 }
 @layer components {
   .smart-review-rating { @apply mx-auto mt-4 w-full max-w-lg; }
   .smart-review-rating__button { @apply min-h-14 min-w-0 flex-col gap-0.5 px-1 py-2; }
 }
-.page-enter-active { transition: opacity 140ms ease-out, translate 140ms ease-out; }
-.page-leave-active { transition: opacity 90ms ease-in; }
-.page-enter-from { opacity: 0; translate: 0 4px; }
-.page-leave-to { opacity: 0; }
+.page-enter-active { transition: opacity 210ms ease-out, translate 210ms ease-out; }
+.page-leave-active { transition: opacity 140ms ease-in, translate 140ms ease-in; }
+.page-enter-from { opacity: 0; translate: 0 6px; }
+.page-leave-to { opacity: 0; translate: 0 -3px; }
 @media (prefers-reduced-motion: reduce) {
   button, a.tracer-button, summary, .page-enter-active, .page-leave-active { transition: none !important; }
   button:enabled:active, a.tracer-button:active, summary:active { scale: none; }
-  .page-enter-from { translate: none; }
+  .page-enter-from, .page-leave-to { translate: none; }
 }
+
+@layer components {
+  .smart-review-rating__button { @apply hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md; transition: translate 160ms ease, border-color 160ms ease, box-shadow 160ms ease, scale 120ms ease; }
+}
+@media (prefers-reduced-motion: reduce) { .smart-review-rating__button { transition: none; } .smart-review-rating__button:hover { translate: none; } }

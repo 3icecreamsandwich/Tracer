@@ -210,25 +210,23 @@ watch(selectedClassId, async (classId) => {
   progressRows.value = []
   assignmentOpenError.value = null
   if (!classId) return
-  try {
-    const [overview, progress, nextAssignments] = await Promise.all([
-      getClassroomOverview(classId),
-      listClassroomProgress(classId),
-      listClassroomAssignments(classId),
-    ])
-    if (requestId !== overviewRequestId) return
-    memberCount.value = overview.memberCount
-    assignmentCount.value = overview.assignmentCount
-    assignments.value = nextAssignments
-    progressRows.value = progress
-  } catch (error) {
-    if (requestId !== overviewRequestId) return
-    memberCount.value = 0
-    assignmentCount.value = 0
-    assignments.value = []
-    progressRows.value = []
-    assignmentOpenError.value = t(classroomErrorKey(error))
+  const reportError = (error: unknown) => {
+    if (requestId === overviewRequestId) assignmentOpenError.value = t(classroomErrorKey(error))
   }
+  // Render each section as soon as its own request finishes.
+  await Promise.allSettled([
+    getClassroomOverview(classId).then((overview) => {
+      if (requestId !== overviewRequestId) return
+      memberCount.value = overview.memberCount
+      assignmentCount.value = overview.assignmentCount
+    }).catch(reportError),
+    listClassroomProgress(classId).then((progress) => {
+      if (requestId === overviewRequestId) progressRows.value = progress
+    }).catch(reportError),
+    listClassroomAssignments(classId).then((nextAssignments) => {
+      if (requestId === overviewRequestId) assignments.value = nextAssignments
+    }).catch(reportError),
+  ])
 })
 
 onMounted(loadDashboard)

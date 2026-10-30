@@ -113,22 +113,22 @@ describe('flashcard autosave persistence (sqlite:tracer.db)', () => {
       await progressRepo.save('set-1', {
         currentTermId: 'term-1',
         correctTermIds: ['term-0'],
-        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 0, mastered: true } }
+        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 0, mastered: true, lastAnswer: 'correct' } }
       })
       expect(await progressRepo.get('set-1')).toEqual({
         currentTermId: 'term-1',
         correctTermIds: ['term-0'],
-        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 0, mastered: true } }
+        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 0, mastered: true, lastAnswer: 'correct' } }
       })
       await progressRepo.save('set-1', {
         currentTermId: 'term-2',
         correctTermIds: ['term-0', 'term-1'],
-        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 1, mastered: true } }
+        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 1, mastered: true, lastAnswer: 'correct' } }
       })
       expect(await progressRepo.get('set-1')).toEqual({
         currentTermId: 'term-2',
         correctTermIds: ['term-0', 'term-1'],
-        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 1, mastered: true } }
+        masteryByTermId: { 'term-0': { correctCount: 3, masteredMissCount: 1, mastered: true, lastAnswer: 'correct' } }
       })
 
       expect((await settingsRepo.get()).flashcardsDefinitionFirst).toBe(false)

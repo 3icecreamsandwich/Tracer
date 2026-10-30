@@ -86,6 +86,7 @@
           <label class="block text-sm font-medium" for="set-description">{{ t('create.description') }}</label>
           <textarea
             id="set-description"
+            ref="descriptionEl"
             v-model="description"
             rows="2"
             class="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
@@ -405,6 +406,19 @@ let draftWrites = Promise.resolve()
 let savedDraft = ''
 const title = ref('')
 const description = ref('')
+const descriptionEl = ref<HTMLTextAreaElement | null>(null)
+function resizeDescription() {
+  const el = descriptionEl.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`
+}
+watch(description, () => nextTick(resizeDescription), { flush: 'post' })
+onMounted(() => {
+  nextTick(resizeDescription)
+  window.addEventListener('resize', resizeDescription)
+})
+onBeforeUnmount(() => window.removeEventListener('resize', resizeDescription))
 const iconKey = ref<SetIconKey>('default')
 const iconTone = ref<SetIconTone>('original')
 const cards = ref<DraftCardRow[]>([{ key: crypto.randomUUID(), front: '', back: '' }])

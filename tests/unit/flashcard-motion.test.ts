@@ -70,6 +70,23 @@ describe('flashcard motion', () => {
     expect(navigated).toHaveBeenCalledTimes(1)
   })
 
+  it('finishes only on forward navigation at the last card', () => {
+    let cursor = 1
+    const finished = vi.fn()
+    const motion = createFlashcardMotion({
+      getFlipCardCount: () => 2, getNavigationCardCount: () => 2,
+      getCursorIndex: () => cursor, setCursorIndex: value => { cursor = value },
+      getFlipped: () => false, setFlipped: () => {}, getFlipping: () => false,
+      setFlipping: () => {}, setNavigating: () => {}, isBusy: () => false,
+      onFinish: finished,
+    })
+    motion.goNext()
+    expect(finished).toHaveBeenCalledOnce()
+    cursor = 0
+    motion.goPrev()
+    expect(finished).toHaveBeenCalledOnce()
+  })
+
   it('navigates on a horizontal touch without flipping the card', () => {
     const goPrev = vi.fn()
     const goNext = vi.fn()

@@ -278,7 +278,7 @@ describe('teacher classroom routes', () => {
     expect(classroomComposableSource).toContain(".select('set_version_id')")
     expect(homePageSource).toContain('listClassroomAssignmentSetVersionIds()')
     expect(homePageSource).toContain('hideManyFromLibrary(assignedSetVersionIds as Uuid[])')
-    expect(homePageSource).toMatch(/const localDashboardLoad = loadHomeList\(\)[\s\S]*await localDashboardLoad[\s\S]*await loadClassroomData\(\)/)
+    expect(homePageSource).toContain('await Promise.all([localDashboardLoad, loadClassroomData()])')
   })
 
   it('uses single-request nested reads for roster and assignment details', () => {

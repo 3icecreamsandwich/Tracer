@@ -1892,4 +1892,10 @@ for (const language of Object.keys(recallLabels) as AppLanguage[]) {
   })
 }
 
+for (const target of Object.values(messageTargets)) {
+  target['set.gettingBetter'] ??= en['set.gettingBetter']
+  target['settings.smartReview'] ??= en['settings.smartReview']
+  target['settings.smartReviewDescription'] ??= en['settings.smartReviewDescription']
+}
+
 export const messages: Record<AppLanguage, Messages> = messageTargets

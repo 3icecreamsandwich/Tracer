@@ -557,10 +557,11 @@
                                 {{ t("set.noCards") }}
                             </div>
                             <template v-else>
-                                <button
+                                <div class="relative mt-5 min-h-0 flex-1">
+<button
                                     ref="mobileViewerButtonEl"
                                     type="button"
-                                    class="mobile-flashcard-card relative mt-5 flex min-h-0 flex-1 touch-pan-y flex-col items-center justify-center overflow-hidden rounded-2xl px-5 py-10 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+                                    class="mobile-flashcard-card relative flex h-full w-full min-h-0 touch-pan-y flex-col items-center justify-center overflow-hidden rounded-2xl px-5 py-10 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
                                     :class="[
                                         flashcardSurfaceClass,
                                         {
@@ -619,15 +620,17 @@
                                         </div>
                                     </div>
                                 </button>
+<FlashcardStar :starred="isCurrentStarred" :disabled="!currentTerm || starBusy" @toggle="toggleStar" />
+</div>
 
-                                <SmartReviewRating v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" :starred="isCurrentStarred" :star-disabled="!currentTerm || starBusy" @star="toggleStar" @rate="markRating" />
-                                <div v-else class="mt-3 grid grid-cols-5 gap-2">
+                                <SmartReviewRating v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" @rate="markRating" />
+                                <div v-else class="mt-3 grid grid-cols-4 gap-2">
                                     <button
                                         type="button"
                                         class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
                                         :disabled="
                                             cursorIndex === 0 ||
-                                            flashcardAnswerBusy
+                                            (flashcardAnswerBusy || !!isNavigating || isFlipping)
                                         "
                                         :aria-label="t('set.previous')"
                                         @click="goPrev"
@@ -638,27 +641,12 @@
                                         type="button"
                                         class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
                                         :disabled="
-                                            cursorIndex >= order.length - 1 ||
-                                            flashcardAnswerBusy
+                                            (flashcardAnswerBusy || !!isNavigating || isFlipping)
                                         "
                                         :aria-label="t('set.next')"
                                         @click="goNext"
                                     >
                                         <span aria-hidden="true">→</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="mobile-flashcard-action border-amber-400 text-amber-500"
-                                        :disabled="!currentTerm || starBusy"
-                                        :aria-pressed="isCurrentStarred"
-                                        :aria-label="
-                                            isCurrentStarred
-                                                ? 'Unstar card'
-                                                : 'Star card'
-                                        "
-                                        @click="toggleStar"
-                                    >
-                                        <StarGlyph :active="isCurrentStarred" />
                                     </button>
                                     <button
                                         type="button"
@@ -1026,10 +1014,11 @@
                             </div>
 
                             <div v-else>
-                                <button
+                                <div class="relative mt-3">
+<button
                                     ref="viewerButtonEl"
                                     type="button"
-                                    class="relative mt-3 flex min-h-[clamp(16rem,34vh,24rem)] w-full touch-pan-y items-center justify-center rounded-lg p-6 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2"
+                                    class="relative flex min-h-[clamp(16rem,34vh,24rem)] w-full touch-pan-y items-center justify-center rounded-lg p-6 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2"
                                     :class="[
                                         flashcardSurfaceClass,
                                         {
@@ -1091,8 +1080,10 @@
                                         </div>
                                     </div>
                                 </button>
+<FlashcardStar :starred="isCurrentStarred" :disabled="!currentTerm || starBusy" @toggle="toggleStar" />
+</div>
 
-                                <SmartReviewRating v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" :starred="isCurrentStarred" :star-disabled="!currentTerm || starBusy" @star="toggleStar" @rate="markRating" />
+                                <SmartReviewRating v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" @rate="markRating" />
                                 <div
                                     v-else
                     class="mt-4 flex flex-wrap items-center justify-between gap-3"
@@ -1106,7 +1097,7 @@
                                             :disabled="
                                                 totalCount === 0 ||
                                                 cursorIndex === 0 ||
-                                                flashcardAnswerBusy
+                                                (flashcardAnswerBusy || !!isNavigating || isFlipping)
                                             "
                                             @click="goPrev"
                                         >
@@ -1118,9 +1109,7 @@
                                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                             :disabled="
                                                 totalCount === 0 ||
-                                                cursorIndex >=
-                                                    order.length - 1 ||
-                                                flashcardAnswerBusy
+                                                (flashcardAnswerBusy || !!isNavigating || isFlipping)
                                             "
                                             @click="goNext"
                                         >
@@ -1131,22 +1120,6 @@
                                     <div
                                         class="flex flex-wrap items-center gap-2"
                                     >
-                                        <button
-                                            type="button"
-                                            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-amber-500 bg-white p-0 text-sm font-medium text-amber-500 shadow-sm hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-amber-400 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
-                                            :disabled="!currentTerm || starBusy"
-                                            :aria-pressed="isCurrentStarred"
-                                            :aria-label="
-                                                isCurrentStarred
-                                                    ? 'Unstar card'
-                                                    : 'Star card'
-                                            "
-                                            @click="toggleStar"
-                                        >
-                                            <StarGlyph
-                                                :active="isCurrentStarred"
-                                            />
-                                        </button>
                                         <button
                                             type="button"
                                             class="inline-flex h-10 items-center justify-center rounded-md border border-[#C14D4D] bg-white px-3 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
@@ -2714,7 +2687,6 @@ import {
 import { createFlashcardMotion, createFlashcardSwipe } from "~/src/composables/cards/flashcard-motion";
 import {
     createFlashcardRun,
-    flashcardPassProgress,
 } from "~/src/composables/cards/flashcard-run";
 import {
     getCardReviews,
@@ -3645,18 +3617,10 @@ const isFinished = computed(
         order.value.every((id) => completedTermIds.value.has(id)),
 );
 const hasIncorrectCards = computed(() => retryTermIds.value.size > 0);
-const currentPassProgress = computed(() =>
-    flashcardPassProgress(
-        order.value,
-        answersByTermId.value,
-        completedTermIds.value,
-    ),
-);
-
 const ratioText = computed(() => {
     const total = totalCount.value;
     if (total === 0) return "0/0";
-    return `${currentPassProgress.value.completed}/${total}`;
+    return `${isFinished.value ? total : Math.min(cursorIndex.value + 1, total)}/${total}`;
 });
 
 const currentTerm = computed(() => {
@@ -3733,10 +3697,15 @@ const {
     getFlipping: () => isFlipping.value,
     setFlipping: (flipping) => (isFlipping.value = flipping),
     setNavigating: (direction) => (isNavigating.value = direction),
-    onNavigate: () => {
+    onNavigate: (direction) => {
+        if (direction !== "next") return;
         const id = order.value[cursorIndex.value];
         if (id)
             completedTermIds.value = new Set(completedTermIds.value).add(id);
+    },
+    onFinish: () => {
+        const id = order.value[cursorIndex.value];
+        if (id && !smartReviewEnabled.value) completedTermIds.value = new Set(order.value);
     },
     isBusy: () => flashcardAnswerBusy.value,
 });
@@ -4771,6 +4740,8 @@ function onKeydown(e: KeyboardEvent) {
     if (isExportOpen.value) return;
     if (termsFilterMenuOpen.value || flashcardSettingsOpen.value) return;
     if (mode.value !== "flashcards" || isFinished.value) return;
+
+    if ((e.key === " " || e.code === "Space") && e.target instanceof HTMLButtonElement && e.target !== viewerButtonEl.value && e.target !== mobileViewerButtonEl.value) return;
 
     if (e.key === " " || e.code === "Space") {
         e.preventDefault();

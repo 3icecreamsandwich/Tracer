@@ -133,6 +133,7 @@
                       :data-folder-drop-id="folder.id"
                       class="flex min-h-12 w-full min-w-0 items-center gap-1 overflow-hidden rounded-md border border-slate-200 px-2 py-2 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:gap-3 sm:px-3 dark:border-slate-800 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                       :class="folderRowClass(folder.id)"
+                      @click="onFolderRowClick(folder.id, $event)"
                     >
                       <button
                         type="button"
@@ -148,10 +149,12 @@
                       <button
                         v-if="editingFolderId !== folder.id"
                         type="button"
-                        class="flex min-w-0 flex-1 items-center gap-1 rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                        data-folder-toggle
+                        class="tracer-folder-toggle flex min-w-0 flex-1 items-center gap-1 rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
                         :aria-label="`Select folder ${folder.name}`"
-                        @click="selectFolder(folder.id, $event)"
-                        @dblclick="handleFolderDoubleClick(folder.id)"
+                        :aria-expanded="folderIsOpen(folder.id)"
+                        :aria-controls="`folder-contents-${folder.id}`"
+                        @mousedown.prevent
                       >
                         <svg aria-hidden="true" viewBox="0 0 24 24" class="h-5 w-6 shrink-0 text-slate-500 sm:h-6 sm:w-7 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8">
                           <path d="M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-15v-13.5Z" />
@@ -196,11 +199,12 @@
                       </button>
                       <button
                         type="button"
-                        class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded text-slate-500 transition hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
                         :aria-label="folderIsOpen(folder.id) ? `Collapse folder ${folder.name}` : `Expand folder ${folder.name}`"
                         :aria-expanded="folderIsOpen(folder.id)"
                         :aria-controls="`folder-contents-${folder.id}`"
-                        @click.stop="toggleFolder(folder.id)"
+                        data-folder-toggle
+                        class="tracer-folder-toggle inline-flex h-8 w-8 shrink-0 items-center justify-center rounded text-slate-500 transition hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
+                        @mousedown.prevent
                         @dblclick.stop
                       >
                         <svg aria-hidden="true" viewBox="0 0 20 20" class="h-6 w-6 transition-transform" :class="{ 'rotate-90': folderIsOpen(folder.id) }" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 4 6 6-6 6" /></svg>
@@ -506,8 +510,6 @@ const rootDropTarget = ref<RootDropTarget | null>(null)
 let suppressNextSetClickId: Uuid | null = null
 let dragHoverFolderId: Uuid | null = null
 let dragHoverTimer: number | null = null
-let folderCollapsedByClickId: Uuid | null = null
-let folderCollapsedByClickTimer: number | null = null
 
 const query = computed(() => (typeof route.query.q === 'string' ? route.query.q : ''))
 const normalizedQuery = computed(() => query.value.trim().toLowerCase())
@@ -884,36 +886,15 @@ function folderRowClass(folderId: Uuid) {
   return 'bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900'
 }
 
-function selectFolder(folderId: Uuid, event?: MouseEvent) {
-  selectedFolderId.value = folderId
-  selectedSetIds.value = new Set()
-  selectionAnchorId.value = null
-  const currentTarget = event?.currentTarget
-  if (currentTarget instanceof HTMLElement) currentTarget.focus()
-
-  if (event?.detail === 1 && folderIsOpen(folderId)) {
-    const next = new Set(expandedFolderIds.value)
-    next.delete(folderId)
-    replaceExpandedFolders(next)
-    folderCollapsedByClickId = folderId
-    if (folderCollapsedByClickTimer !== null) {
-      window.clearTimeout(folderCollapsedByClickTimer)
-    }
-    folderCollapsedByClickTimer = window.setTimeout(() => {
-      if (folderCollapsedByClickId === folderId) folderCollapsedByClickId = null
-      folderCollapsedByClickTimer = null
-    }, 500)
-  }
-}
-
-function handleFolderDoubleClick(folderId: Uuid) {
-  if (folderCollapsedByClickId === folderId) {
-    folderCollapsedByClickId = null
-    if (folderCollapsedByClickTimer !== null) {
-      window.clearTimeout(folderCollapsedByClickTimer)
-      folderCollapsedByClickTimer = null
-    }
-    return
+function onFolderRowClick(folderId: Uuid, event: MouseEvent) {
+  const target = event.target
+  if (!(target instanceof Element)) return
+  const button = target.closest('button')
+  if (button && !button.hasAttribute('data-folder-toggle')) return
+  if (target.closest('input, a')) return
+  if (button?.getAttribute('aria-label')?.startsWith('Select folder ')) {
+    selectedSetIds.value = new Set()
+    selectionAnchorId.value = null
   }
   toggleFolder(folderId)
 }
@@ -1470,26 +1451,9 @@ onMounted(async () => {
 
     accountRole.value = getCachedAccountRole(profile.supabaseUserId)
 
-    if (settings.startupLockEnabled && status.requires_unlock) {
-      if (unlockedThisSession.value) {
-        await localDashboardLoad
-        await loadClassroomData()
-        return
-      }
-      markLocked()
-      await router.replace('/unlock')
-      return
-    }
-
-    if (status.can_auto_unlock) {
-      markUnlocked()
-      await localDashboardLoad
-      await loadClassroomData()
-      return
-    }
-
-    await localDashboardLoad
-    await loadClassroomData()
+    if (status.can_auto_unlock) markUnlocked()
+    // Classrooms and the local library are independent after the lock gate.
+    await Promise.all([localDashboardLoad, loadClassroomData()])
   } catch (error) {
     reportLibraryLoadError(error)
     loadError.value = 'Failed to load sets and study guides.'
@@ -1505,9 +1469,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('pointerup', onWindowPointerUp)
   window.removeEventListener('pointercancel', onWindowPointerCancel)
   window.removeEventListener('keydown', onWindowKeyDown)
-  if (folderCollapsedByClickTimer !== null) {
-    window.clearTimeout(folderCollapsedByClickTimer)
-  }
   resetDragState()
 })
 </script>

@@ -249,7 +249,7 @@ async function loadOnlineSession(): Promise<Session> {
   const current = await client.auth.getSession()
   if (current.data.session) return current.data.session
 
-  const restored = await restoreAuthSession()
+  const restored = await restoreAuthSession({ waitForProviderKeySync: false })
   if (!restored) throw new ClassroomError('signed_out', 'Account session is unavailable')
   if (!restored.online) throw new ClassroomError('offline', 'Cloud account is offline')
 
@@ -514,10 +514,10 @@ export async function listClassroomMembers(classId: string): Promise<ClassroomMe
   })
 }
 
-export async function listClassroomAssignments(classId: string): Promise<ClassroomAssignment[]> {
+async function classroomAssignmentsWithCount(classId: string): Promise<{ rows: ClassroomAssignment[]; count: number }> {
   const session = await requireOnlineSession()
   return classroomRequests.get(userCacheKey(session.user.id, `assignments:${classId}`), async () => {
-    const { data, error } = await getSupabaseClient()
+    const { data, error, count } = await getSupabaseClient()
       .from('assignments')
       .select(`
         id,title,status,set_version_id,settings,created_at,
@@ -525,13 +525,13 @@ export async function listClassroomAssignments(classId: string): Promise<Classro
           set_id,
           set:sets!set_versions_set_id_fkey(title,description,local_source_id)
         )
-      `)
+      `, { count: 'exact' })
       .eq('class_id', classId)
       .eq('status', 'published')
       .order('created_at', { ascending: false })
     if (error) throw errorFromPostgrest(error)
 
-    return (data ?? []).map((rawAssignment) => {
+    const rows = (data ?? []).map((rawAssignment) => {
       const assignment = rawAssignment as unknown as AssignmentWithSetRow
       const version = singleRelation(assignment.set_version)
       const set = singleRelation(version?.set ?? null)
@@ -547,7 +547,12 @@ export async function listClassroomAssignments(classId: string): Promise<Classro
         createdAt: assignment.created_at,
       }
     })
+    return { rows, count: count ?? rows.length }
   })
+}
+
+export async function listClassroomAssignments(classId: string): Promise<ClassroomAssignment[]> {
+  return (await classroomAssignmentsWithCount(classId)).rows
 }
 
 export async function listClassroomAssignmentSetVersionIds(): Promise<string[]> {
@@ -780,18 +785,10 @@ export async function getClassroomOverview(classId: string): Promise<{ memberCou
         .eq('class_id', classId)
         .eq('role', 'student')
         .eq('status', 'active'),
-      client
-        .from('assignments')
-        .select('id', { count: 'exact', head: true })
-        .eq('class_id', classId)
-        .eq('status', 'published'),
+      classroomAssignmentsWithCount(classId),
     ])
     if (members.error) throw errorFromPostgrest(members.error)
-    if (assignments.error) throw errorFromPostgrest(assignments.error)
-    return {
-      memberCount: members.count ?? 0,
-      assignmentCount: assignments.count ?? 0,
-    }
+    return { memberCount: members.count ?? 0, assignmentCount: assignments.count }
   })
 }
 

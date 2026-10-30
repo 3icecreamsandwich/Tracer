@@ -18,6 +18,7 @@ beforeAll(async()=>{
   insert into auth.users values('${owner}'),('${other}');`)
   await db.exec(readFileSync(new URL('../../supabase/migrations/20261027040922_builtin_ai_gateway.sql',import.meta.url),'utf8'))
   await db.exec(readFileSync(new URL('../../supabase/migrations/20261028041453_builtin_ai_safe_capacity_sync.sql',import.meta.url),'utf8'))
+  await db.exec(readFileSync(new URL('../../supabase/migrations/20261030044144_ai_relax_admission_limits.sql',import.meta.url),'utf8'))
 },30000)
 afterAll(async()=>{await db?.close()})
 beforeEach(async()=>{
@@ -25,6 +26,14 @@ beforeEach(async()=>{
   await call('sync',{candidates:[{...capacity,id:'GROQ_KEY_0'},{...capacity,id:'GROQ_KEY_1'}]})
 })
 describe('built-in AI PostgreSQL accounting',()=>{
+  it('allows eight actions per minute normally and four under pressure',async()=>{
+    for(let i=0;i<8;i++) { const r=await reserve(); expect(r.result.ok).toBe(true); await call('finish',{requestId:r.requestId,charge:false,success:false}) }
+    expect((await reserve()).result.error).toBe('throttled')
+    await db.exec("truncate ai_private.requests; update ai_private.groups set day_requests=(config->>'rpd')::int * 9 / 10")
+    for(let i=0;i<4;i++) { const r=await reserve(); expect(r.result.ok).toBe(true); await call('finish',{requestId:r.requestId,charge:false,success:false}) }
+    expect((await reserve()).result.error).toBe('throttled')
+    expect(await call('usage')).toMatchObject({remaining:65,throttled:true})
+  })
   it('reserves, charges once and expires private recovery results',async()=>{
     const {requestId}=await reserve()
     expect(await call('usage')).toMatchObject({remaining:64,reserved:1,used:0})

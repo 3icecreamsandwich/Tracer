@@ -13,7 +13,7 @@ test.afterEach(({ page }) => {
   expect(runtimeErrors.get(page) ?? [], 'No uncaught browser errors').toEqual([])
 })
 
-async function signInFixture(context: BrowserContext, page: Page, userId = owner, cloudRows?: Map<string, any>) {
+async function signInFixture(context: BrowserContext, page: Page, userId = owner, cloudRows?: Map<string, any>, beforeHome?: () => Promise<void>) {
   // No real accounts, provider keys, or cloud writes are used in this suite.
   const user = { id: userId, email: 'web-test@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: { provider: 'google', providers: ['google'] }, user_metadata: { full_name: 'Web Test' }, created_at: new Date().toISOString() }
   const expires = Math.floor(Date.now() / 1000) + 3600
@@ -34,6 +34,7 @@ async function signInFixture(context: BrowserContext, page: Page, userId = owner
   await context.route('**/rest/v1/**', route => route.fulfill({ json: route.request().url().includes('user_roles') ? [{ role: 'student' }] : [] }))
   await context.route('**/api/web/credentials', route => route.fulfill({ json: { openai: false, anthropic: false, gemini: false, ollama_cloud: false, openai_compat: false } }))
   const cloud = await installCloudLibraryFixture(context, userId, cloudRows)
+  await beforeHome?.()
   await page.goto('first-run')
   await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
   return cloud
@@ -332,4 +333,44 @@ test('settings stay usable during slow profile reads and preference saves', asyn
     releaseSave()
     releaseProfile()
   }
+})
+
+
+test('a single folder click and keyboard activation toggle its contents', async ({ context, page }) => {
+  await signInFixture(context, page)
+  await page.getByRole('button', { name: 'Add Folder', exact: true }).click()
+  const name = page.getByRole('textbox', { name: 'Folder name', exact: true })
+  await name.fill('Single click folder')
+  await name.press('Enter')
+  const folder = page.getByRole('button', { name: 'Select folder Single click folder', exact: true })
+  await expect(folder).toHaveAttribute('aria-expanded', 'true')
+  await folder.click()
+  await expect(folder).toHaveAttribute('aria-expanded', 'false')
+  await folder.click()
+  await expect(folder).toHaveAttribute('aria-expanded', 'true')
+  await folder.press('Enter')
+  await expect(folder).toHaveAttribute('aria-expanded', 'false')
+})
+
+
+test('classroom loading starts while the first library read is delayed', async ({ context, page }) => {
+  let releaseLibrary!: () => void
+  const gate = new Promise<void>(resolve => { releaseLibrary = resolve })
+  let libraryPending = false
+  let classesRequested = false
+  try {
+    await signInFixture(context, page, owner, undefined, async () => {
+      await context.route('**/rest/v1/cloud_library_summaries**', async route => {
+        libraryPending = true
+        await gate
+        await route.fallback()
+      })
+      await context.route('**/rest/v1/classes**', async route => {
+        classesRequested = true
+        await route.fallback()
+      })
+    })
+    await expect.poll(() => libraryPending).toBe(true)
+    await expect.poll(() => classesRequested).toBe(true)
+  } finally { releaseLibrary() }
 })

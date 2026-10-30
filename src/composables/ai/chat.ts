@@ -155,23 +155,25 @@ export async function streamGroundedChatText(args: {
   builtinContext?: { context: string; title?: string; route?: string }
   sessionId?: string
 }) {
+  const timeout = AbortSignal.timeout(60_000)
+  const signal = args.abortSignal ? AbortSignal.any([args.abortSignal, timeout]) : timeout
   if (isBuiltinModel(args.model)) {
     const { builtinText } = await import('./builtin/client')
     if (!args.builtinContext) throw new Error('The chat context could not be loaded. Reload the page and try again.')
-    return { textStream: builtinText({ operation: 'chat', input: { ...args.builtinContext, messages: args.messages } }, args.abortSignal, args.sessionId) }
+    return { textStream: builtinText({ operation: 'chat', input: { ...args.builtinContext, messages: args.messages } }, signal, args.sessionId) }
   }
   const { streamText } = await import('ai')
   const result = streamText({
     model: args.model,
     system: args.system,
     messages: args.messages,
-    abortSignal: args.abortSignal,
+    abortSignal: signal,
     maxRetries: 0,
     // Surface stream errors through the iterator below, not just the console.
     onError: () => {},
-    timeout: { totalMs: 180_000 },
+    timeout: { totalMs: 60_000 },
   })
-  return { textStream: checkedAiText(result.fullStream, args.abortSignal) }
+  return { textStream: checkedAiText(result.fullStream, signal) }
 }
 
 function sleep(ms: number) {

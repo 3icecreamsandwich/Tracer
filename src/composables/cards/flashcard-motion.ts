@@ -12,6 +12,7 @@ type FlashcardMotionOptions = {
   setFlipping: (flipping: boolean) => void
   setNavigating: (direction: 'prev' | 'next' | null) => void
   onNavigate?: (direction: 'prev' | 'next') => void
+  onFinish?: () => void
   isBusy: () => boolean
 }
 
@@ -42,7 +43,10 @@ export function createFlashcardMotion(options: FlashcardMotionOptions) {
     const offset = direction === 'prev' ? -1 : 1
     const current = options.getCursorIndex()
     const next = Math.min(Math.max(current + offset, 0), count - 1)
-    if (next === current) return
+    if (next === current) {
+      if (direction === 'next') options.onFinish?.()
+      return
+    }
 
     options.onNavigate?.(direction)
     options.setNavigating(direction)

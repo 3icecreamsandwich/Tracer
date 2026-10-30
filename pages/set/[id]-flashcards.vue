@@ -213,10 +213,11 @@
 
             <!-- Card -->
             <div v-else class="w-full flex flex-col items-center">
-                <button
+                <div class="relative w-[calc(100%-2rem)] sm:w-[75vw]">
+<button
                     ref="viewerButtonEl"
                     type="button"
-                    class="relative flex touch-pan-y flex-col items-center justify-center w-[calc(100%-2rem)] sm:w-[75vw] min-h-64 h-[55dvh] sm:h-[60vh] rounded-lg px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                    class="relative flex touch-pan-y flex-col items-center justify-center w-full min-h-64 h-[55dvh] sm:h-[60vh] rounded-lg px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
                     :class="[
                         flashcardSurfaceClass,
                         {
@@ -273,6 +274,8 @@
                         </div>
                     </div>
                 </button>
+<FlashcardStar :starred="isCurrentStarred" :disabled="!currentTerm || starBusy" @toggle="toggleStar" />
+</div>
 
                 <div
                     v-if="isStarredOnlyEmpty"
@@ -282,7 +285,7 @@
                 </div>
 
                 <!-- Controls -->
-                <SmartReviewRating class="hidden sm:block w-[75vw]" v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" :starred="isCurrentStarred" :star-disabled="!currentTerm || starBusy" @star="toggleStar" @rate="markRating" />
+                <SmartReviewRating class="hidden sm:block w-[75vw]" v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" @rate="markRating" />
                                 <div
                     v-else
                     class="mt-6 hidden w-[75vw] flex-wrap items-center justify-between gap-3 sm:flex"
@@ -294,7 +297,7 @@
                             :disabled="
                                 totalCount === 0 ||
                                 cursorIndex === 0 ||
-                                flashcardAnswerBusy
+                                (flashcardAnswerBusy || !!isNavigating || isFlipping)
                             "
                             @click="goPrev"
                         >
@@ -306,8 +309,7 @@
                             class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :disabled="
                                 totalCount === 0 ||
-                                cursorIndex >= order.length - 1 ||
-                                flashcardAnswerBusy
+                                (flashcardAnswerBusy || !!isNavigating || isFlipping)
                             "
                             @click="goNext"
                         >
@@ -316,18 +318,6 @@
                     </div>
 
                     <div class="flex flex-wrap gap-3">
-                        <button
-                            type="button"
-                            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-amber-500 bg-white p-0 text-sm font-medium text-amber-500 shadow-sm hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-amber-400 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
-                            :disabled="!currentTerm || starBusy"
-                            :aria-pressed="isCurrentStarred"
-                            :aria-label="
-                                isCurrentStarred ? 'Unstar card' : 'Star card'
-                            "
-                            @click="toggleStar"
-                        >
-                            {{ isCurrentStarred ? "★" : "☆" }}
-                        </button>
 
                         <button
                             type="button"
@@ -349,13 +339,13 @@
                     </div>
                 </div>
 
-                <SmartReviewRating class="sm:hidden w-[calc(100%-2rem)]" v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" :starred="isCurrentStarred" :star-disabled="!currentTerm || starBusy" @star="toggleStar" @rate="markRating" />
+                <SmartReviewRating class="sm:hidden w-[calc(100%-2rem)]" v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" @rate="markRating" />
                                 <div v-else
-                    class="mt-4 grid w-[calc(100%-2rem)] grid-cols-5 gap-2 sm:hidden">
+                    class="mt-4 grid w-[calc(100%-2rem)] grid-cols-4 gap-2 sm:hidden">
                     <button
                         type="button"
                         class="mobile-fullscreen-action text-slate-700 dark:text-slate-200"
-                        :disabled="totalCount === 0 || cursorIndex === 0 || flashcardAnswerBusy"
+                        :disabled="totalCount === 0 || cursorIndex === 0 || (flashcardAnswerBusy || !!isNavigating || isFlipping)"
                         :aria-label="t('set.previous')"
                         :title="t('set.previous')"
                         @click="goPrev"
@@ -365,22 +355,12 @@
                     <button
                         type="button"
                         class="mobile-fullscreen-action text-slate-700 dark:text-slate-200"
-                        :disabled="totalCount === 0 || cursorIndex >= order.length - 1 || flashcardAnswerBusy"
+                        :disabled="totalCount === 0 || (flashcardAnswerBusy || !!isNavigating || isFlipping)"
                         :aria-label="t('set.next')"
                         :title="t('set.next')"
                         @click="goNext"
                     >
                         <span aria-hidden="true">→</span>
-                    </button>
-                    <button
-                        type="button"
-                        class="mobile-fullscreen-action border-amber-400 text-amber-500"
-                        :disabled="!currentTerm || starBusy"
-                        :aria-pressed="isCurrentStarred"
-                        :aria-label="isCurrentStarred ? 'Unstar card' : 'Star card'"
-                        @click="toggleStar"
-                    >
-                        <span aria-hidden="true">{{ isCurrentStarred ? "★" : "☆" }}</span>
                     </button>
                     <button
                         type="button"
@@ -447,7 +427,7 @@ import {
     type SavedFlashcardProgress,
 } from "~/src/composables/cards/web-flashcard-state";
 import { createFlashcardMotion, createFlashcardSwipe } from "~/src/composables/cards/flashcard-motion";
-import { createFlashcardRun, flashcardPassProgress } from "~/src/composables/cards/flashcard-run";
+import { createFlashcardRun } from "~/src/composables/cards/flashcard-run";
 import { getCardReviews, getGlobalSmartReviewEnabled, isFlashcardShuffleEnabled, recordCardReview, resolveSmartReviewEnabled, reviewBucket, saveFlashcardShuffleEnabled, saveGlobalSmartReviewEnabled, saveSmartReviewEnabled, type CardReview, type ReviewBucket } from "~/src/composables/cards/spaced-repetition";
 import {
     DEFAULT_FLASHCARD_STUDY_FILTER,
@@ -737,14 +717,10 @@ const isFinished = computed(() =>
     order.value.length > 0 && order.value.every((id) => completedTermIds.value.has(id)),
 );
 const hasIncorrectCards = computed(() => retryTermIds.value.size > 0);
-const currentPassProgress = computed(() =>
-    flashcardPassProgress(order.value, answersByTermId.value, completedTermIds.value),
-);
-
 const ratioText = computed(() => {
     const total = totalCount.value;
     if (total === 0) return "0/0";
-    return `${currentPassProgress.value.completed}/${total}`;
+    return `${isFinished.value ? total : Math.min(cursorIndex.value + 1, total)}/${total}`;
 });
 
 const currentTerm = computed(() => {
@@ -972,9 +948,14 @@ const {
     getFlipping: () => isFlipping.value,
     setFlipping: (flipping) => (isFlipping.value = flipping),
     setNavigating: (direction) => (isNavigating.value = direction),
-    onNavigate: () => {
+    onNavigate: (direction) => {
+        if (direction !== "next") return;
         const id = order.value[cursorIndex.value];
         if (id) completedTermIds.value = new Set(completedTermIds.value).add(id);
+    },
+    onFinish: () => {
+        const id = order.value[cursorIndex.value];
+        if (id && !smartReviewEnabled.value) completedTermIds.value = new Set(order.value);
     },
     isBusy: () => flashcardAnswerBusy.value,
 });
@@ -1049,6 +1030,8 @@ function onKeydown(e: KeyboardEvent) {
     if (shouldIgnoreKey(e)) return;
     if (flashcardSettingsOpen.value) return;
     if (isFinished.value) return;
+
+    if ((e.key === " " || e.code === "Space") && e.target instanceof HTMLButtonElement && e.target !== viewerButtonEl.value) return;
 
     if (e.key === " " || e.code === "Space") {
         e.preventDefault();
