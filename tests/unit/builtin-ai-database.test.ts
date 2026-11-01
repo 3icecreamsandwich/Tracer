@@ -19,6 +19,7 @@ beforeAll(async()=>{
   await db.exec(readFileSync(new URL('../../supabase/migrations/20261027040922_builtin_ai_gateway.sql',import.meta.url),'utf8'))
   await db.exec(readFileSync(new URL('../../supabase/migrations/20261028041453_builtin_ai_safe_capacity_sync.sql',import.meta.url),'utf8'))
   await db.exec(readFileSync(new URL('../../supabase/migrations/20261030044144_ai_relax_admission_limits.sql',import.meta.url),'utf8'))
+  await db.exec(readFileSync(new URL('../../supabase/migrations/20261101044013_ai_reliability_admission.sql',import.meta.url),'utf8'))
 },30000)
 afterAll(async()=>{await db?.close()})
 beforeEach(async()=>{
@@ -26,13 +27,10 @@ beforeEach(async()=>{
   await call('sync',{candidates:[{...capacity,id:'GROQ_KEY_0'},{...capacity,id:'GROQ_KEY_1'}]})
 })
 describe('built-in AI PostgreSQL accounting',()=>{
-  it('allows eight actions per minute normally and four under pressure',async()=>{
-    for(let i=0;i<8;i++) { const r=await reserve(); expect(r.result.ok).toBe(true); await call('finish',{requestId:r.requestId,charge:false,success:false}) }
-    expect((await reserve()).result.error).toBe('throttled')
-    await db.exec("truncate ai_private.requests; update ai_private.groups set day_requests=(config->>'rpd')::int * 9 / 10")
-    for(let i=0;i<4;i++) { const r=await reserve(); expect(r.result.ok).toBe(true); await call('finish',{requestId:r.requestId,charge:false,success:false}) }
-    expect((await reserve()).result.error).toBe('throttled')
-    expect(await call('usage')).toMatchObject({remaining:65,throttled:true})
+  it('admits bursts without account rate limits while preserving monthly reservations',async()=>{
+    for(let i=0;i<12;i++) { const r=await reserve(); expect(r.result.ok).toBe(true); await call('finish',{requestId:r.requestId,charge:false,success:false}) }
+    const a=await reserve(),b=await reserve();expect(a.result.ok).toBe(true);expect(b.result.ok).toBe(true)
+    expect(await call('usage')).toMatchObject({remaining:63,reserved:2})
   })
   it('reserves, charges once and expires private recovery results',async()=>{
     const {requestId}=await reserve()
@@ -49,8 +47,8 @@ describe('built-in AI PostgreSQL accounting',()=>{
     const submissions=await Promise.all(Array.from({length:10},()=>reserve(id)))
     expect(submissions.filter(x=>x.result.ok)).toHaveLength(1)
     expect(submissions.filter(x=>x.result.error==='duplicate')).toHaveLength(9)
-    expect((await reserve()).result.error).toBe('concurrent')
-    expect(await call('usage')).toMatchObject({reserved:1,used:0})
+    expect((await reserve()).result.ok).toBe(true)
+    expect(await call('usage')).toMatchObject({reserved:2,used:0})
   })
   it('refunds failed requests and recovers expired leases',async()=>{
     const first=await reserve(); await call('finish',{requestId:first.requestId,charge:false,success:false})

@@ -124,7 +124,7 @@ export async function saveRow<T>(db: DbClient, kind: Kind, id: string, payload: 
     item_kind: kind, item_id: id, item_payload: payload, expected_revision: revision, item_deleted: deleted,
   })
   if (error) {
-    if (error.code === '40001') throw new Error('This item changed on another device. Reopen it before saving; your draft is still here.')
+    if (['40001','PT409'].includes(error.code)) throw new Error('This item changed on another device. Reopen it before saving; your draft is still here.')
     throw new Error(error.message || 'Could not save to the cloud. Your changes have not been saved.')
   }
   const row = data as CloudRow<T>

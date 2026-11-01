@@ -49,7 +49,7 @@ vi.mock('../../src/composables/auth/client', () => ({
       if (!state.online) throw new Error('offline')
       const key = `${state.sessionOwner}:${args.item_kind}:${args.item_id}`
       const current = state.rows.get(key)
-      if (state.conflict || (current?.revision ?? 0) !== args.expected_revision) return { error: { code: '40001' } }
+      if (state.conflict || (current?.revision ?? 0) !== args.expected_revision) return { error: { code: 'PT409' } }
       const row = { owner_id: state.sessionOwner, kind: args.item_kind, id: args.item_id, payload: args.item_payload, revision: (current?.revision ?? 0) + 1, deleted: args.item_deleted }
       state.rows.set(key, structuredClone(row))
       return { data: row }

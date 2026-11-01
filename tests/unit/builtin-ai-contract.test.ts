@@ -97,3 +97,13 @@ it('pins a generative free model rather than a router that can choose safety cla
   expect(gatewayConfig({...configured,BUILTIN_AI_CAPACITY:JSON.stringify([{...capacity,model}])},'user').candidates).toEqual([])
  }
 })
+
+it('cancels a stalled event reader promptly on abort',async()=>{
+ const controller=new AbortController()
+ let cancelled=false
+ const response=new Response(new ReadableStream({cancel(){cancelled=true}}))
+ const pending=(async()=>{for await(const _ of readBuiltinEvents(response,controller.signal)) {}})()
+ controller.abort(new DOMException('Timed out','TimeoutError'))
+ await expect(pending).rejects.toMatchObject({name:'TimeoutError'})
+ expect(cancelled).toBe(true)
+})

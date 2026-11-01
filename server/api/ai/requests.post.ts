@@ -18,6 +18,12 @@ export default defineEventHandler(async event=>{
     upstream?.addEventListener('abort',()=>controller.abort(),{once:true})
     event.node?.res?.once('close',()=>controller.abort())
     const iterator=runBuiltin(request,context,controller.signal)
+    // Aborting a signal alone cannot close a generator suspended at a yield.
+    // Explicitly finalize it so the durable reservation is released promptly.
+    controller.signal.addEventListener('abort',()=>{
+      const cleanup=iterator.return().catch(()=>{})
+      event.context.cloudflare?.context?.waitUntil?.(cleanup)
+    },{once:true})
     // Start admission before sending headers, so quota failures have proper
     // HTTP status codes. Later interruptions travel as typed stream events.
     const first=await iterator.next()

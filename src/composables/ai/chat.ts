@@ -155,7 +155,7 @@ export async function streamGroundedChatText(args: {
   builtinContext?: { context: string; title?: string; route?: string }
   sessionId?: string
 }) {
-  const timeout = AbortSignal.timeout(60_000)
+  const timeout = AbortSignal.timeout(180_000)
   const signal = args.abortSignal ? AbortSignal.any([args.abortSignal, timeout]) : timeout
   if (isBuiltinModel(args.model)) {
     const { builtinText } = await import('./builtin/client')
@@ -171,7 +171,7 @@ export async function streamGroundedChatText(args: {
     maxRetries: 0,
     // Surface stream errors through the iterator below, not just the console.
     onError: () => {},
-    timeout: { totalMs: 60_000 },
+    timeout: { totalMs: 180_000 },
   })
   return { textStream: checkedAiText(result.fullStream, signal) }
 }

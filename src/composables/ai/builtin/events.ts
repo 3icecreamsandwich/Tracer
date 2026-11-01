@@ -3,6 +3,8 @@ import { BuiltinAiError,type BuiltinEvent } from './types'
 export async function* readBuiltinEvents(response:Response,signal?:AbortSignal):AsyncGenerator<BuiltinEvent> {
   if(!response.body) throw new BuiltinAiError('empty_response','Built-in AI returned no answer.')
   const reader=response.body.getReader(), decoder=new TextDecoder()
+  const cancel=()=>{void reader.cancel().catch(()=>{})}
+  signal?.addEventListener('abort',cancel,{once:true})
   let pending='',hasText=false
   const interrupted=()=>new BuiltinAiError('interrupted',hasText?'The AI response was interrupted. Any partial answer has been kept.':'The AI connection ended before an answer arrived. Try again.')
   try {
@@ -36,5 +38,5 @@ export async function* readBuiltinEvents(response:Response,signal?:AbortSignal):
     signal?.throwIfAborted()
     if(error instanceof BuiltinAiError) throw error
     throw interrupted()
-  } finally {void reader.cancel().catch(()=>{}); reader.releaseLock()}
+  } finally {signal?.removeEventListener('abort',cancel);void reader.cancel().catch(()=>{}); reader.releaseLock()}
 }

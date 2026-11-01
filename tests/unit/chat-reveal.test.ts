@@ -27,7 +27,8 @@ describe('chat reveal queue', () => {
     expect(messages[0]?.content).toBe('One two ')
 
     queue.finish('answer')
-    vi.advanceTimersByTime(10)
+    // A completed provider response must not wait behind artificial animation.
+    expect(vi.getTimerCount()).toBe(0)
     expect(messages[0]?.content).toBe('One two three')
   })
 

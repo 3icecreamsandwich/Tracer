@@ -3,8 +3,10 @@ import type { H3Event } from 'h3'
 import { webRuntimeConfig, webBindings } from '../web-config'
 import { BuiltinAiError, type BuiltinUsage } from '../../../src/composables/ai/builtin/types'
 import { gatewayConfig, gatewayUnavailable, type Candidate } from './config'
+import { revalidateFreeCapacity } from './free-capacity'
 
 export type GatewayStore = { call(action: string, args?: Record<string, unknown>): Promise<any> }
+const capacitySyncs=new Map<string,{until:number,promise:Promise<unknown>}>()
 export function accountingError(code: string): never {
   const errors: Record<string, [number,string,number]> = {
     monthly_limit: [429,'Your 65 built-in AI actions have been used for this month. Wait for the reset or switch to your own keys in Settings.',0],
@@ -21,9 +23,13 @@ export function accountingError(code: string): never {
 }
 export async function gatewayContext(event: H3Event, owner: string) {
   const runtime = webRuntimeConfig(event)
-  const env: Record<string, any> = webBindings(event) || process.env
-  const config = gatewayConfig(env,owner)
+  let env: Record<string, any> = webBindings(event) || process.env
+  let config = gatewayConfig(env,owner)
   if (!config.enabled) throw new BuiltinAiError('not_enabled', 'Built-in AI has not been enabled for this account. Use your own API keys in Configure AI while the service is being set up.', 503)
+  if(!config.candidates.length) {
+    env=await revalidateFreeCapacity(env)
+    config=gatewayConfig(env,owner)
+  }
   if (!config.candidates.length) throw new BuiltinAiError('capacity_unconfigured', 'Built-in AI has no verified provider capacity configured. The service administrator must finish setup; adding API keys alone does not enable it.', 503)
   const secret = env.SUPABASE_SERVICE_ROLE_KEY
   if (!runtime.supabaseUrl || !secret) throw new BuiltinAiError('configuration', 'Built-in AI accounting has not been configured on this server. Use your own API keys in Configure AI while setup is completed.', 503)
@@ -42,7 +48,18 @@ export async function gatewayContext(event: H3Event, owner: string) {
   } }
   // Only non-secret capacity metadata enters PostgreSQL.
   // A disabled preview sharing a database must not clear an active deployment's capacity.
-  if (env.BUILTIN_AI_ENABLED === '1') await store.call('sync',{ candidates: config.candidates.map(({key,...metadata})=>metadata) })
+  if (env.BUILTIN_AI_ENABLED === '1') {
+    const candidates=config.candidates.map(({key,...metadata})=>metadata)
+    const id=JSON.stringify([runtime.supabaseUrl,candidates])
+    let entry=capacitySyncs.get(id)
+    if(!entry || entry.until<=Date.now()) {
+      if(capacitySyncs.size>=64) capacitySyncs.clear()
+      entry={until:Date.now()+60_000,promise:store.call('sync',{candidates})}
+      capacitySyncs.set(id,entry)
+      entry.promise.catch(()=>{if(capacitySyncs.get(id)===entry)capacitySyncs.delete(id)})
+    }
+    await entry.promise
+  }
   return { ...config,store,env }
 }
 export async function usage(store: GatewayStore, enabled: boolean): Promise<BuiltinUsage> {

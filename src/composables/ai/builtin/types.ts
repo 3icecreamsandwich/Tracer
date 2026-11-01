@@ -18,7 +18,7 @@ export type BuiltinUsage = {
   limit: number; used: number; reserved: number; remaining: number; resetsAt: string
   available: boolean; throttled: boolean; retryAfter: number
 }
-export type BuiltinEvent = { type: 'delta'; text: string } | { type: 'result'; text: string } |
+export type BuiltinEvent = { type: 'accepted' } | { type: 'delta'; text: string } | { type: 'result'; text: string } |
   { type: 'done'; usage: BuiltinUsage } | { type: 'error'; code: string; message: string; retryAfter?: number }
 export class BuiltinAiError extends Error {
   constructor(public code: string, message: string, public statusCode = 503, public retryAfter = 0) {

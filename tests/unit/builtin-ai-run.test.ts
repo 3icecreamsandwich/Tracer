@@ -92,3 +92,12 @@ it('normalizes the observed angle-bracket grade without spending a repair attemp
  expect(ctx.store.call.mock.calls.filter(c=>c[0]==='reserve')).toHaveLength(1)
  expect(ctx.store.call.mock.calls.filter(c=>c[0]==='charge')).toHaveLength(1)
 })
+
+it('acknowledges admission before provider I/O and releases a cancelled acknowledgement',async()=>{
+ const fetch=vi.fn();vi.stubGlobal('fetch',fetch)
+ const ctx=context(),iterator=runBuiltin(chat,ctx,new AbortController().signal)
+ expect((await iterator.next()).value).toEqual({type:'accepted'})
+ expect(fetch).not.toHaveBeenCalled()
+ await iterator.return()
+ expect(ctx.store.call).toHaveBeenCalledWith('finish',expect.objectContaining({success:false,charge:false}))
+})

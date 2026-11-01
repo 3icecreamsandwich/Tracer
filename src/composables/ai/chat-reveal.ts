@@ -73,9 +73,12 @@ export function createChatRevealQueue<T extends ChatRevealMessage>(
   function finish(messageId: string) {
     const job = jobs.get(messageId)
     if (!job) return
-    job.complete = true
-    if (!job.pending) stop(messageId, job)
-    else start(messageId, job)
+    if(job.pending) {
+      const pending=job.pending
+      options.updateMessage(messageId,message=>({...message,content:message.content+pending}))
+      options.onReveal?.()
+    }
+    stop(messageId,job)
   }
 
   function flush() {

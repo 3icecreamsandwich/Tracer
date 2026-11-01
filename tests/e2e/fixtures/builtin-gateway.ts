@@ -7,6 +7,7 @@ const db=new PGlite()
 await db.exec(`create schema auth; create table auth.users(id uuid primary key); create role anon; create role authenticated; create role service_role; insert into auth.users values('${owner}');`)
 await db.exec(await readFile(new URL('../../../supabase/migrations/20261027040922_builtin_ai_gateway.sql',import.meta.url),'utf8'))
 await db.exec(await readFile(new URL('../../../supabase/migrations/20261028041453_builtin_ai_safe_capacity_sync.sql',import.meta.url),'utf8'))
+await db.exec(await readFile(new URL('../../../supabase/migrations/20261101044013_ai_reliability_admission.sql',import.meta.url),'utf8'))
 let scenario='recover'
 const guide='```study_guide_md\n# Water\nWater is H2O.\n```\n\n```flashcards_tsv\nWater\tH2O\n```'
 function answer(body:any) {
@@ -42,6 +43,7 @@ const fixtureServer=Bun.serve({hostname:'127.0.0.1',port:3203,async fetch(reques
  if(url.pathname==='/fixture') {
   scenario=url.searchParams.get('scenario')||'recover'
   if(url.searchParams.has('reset'))await db.exec('truncate ai_private.requests,ai_private.months,ai_private.groups,ai_private.keys,ai_private.sessions; update ai_private.state set pressure=false,recovery_at=null;')
+  if(url.searchParams.has('reset')) process.env.BUILTIN_AI_CAPACITY=JSON.stringify(JSON.parse(process.env.BUILTIN_AI_CAPACITY!).map((entry:any)=>({...entry,verifiedUntil:new Date(Date.UTC(2099,0,1)+Date.now()).toISOString()})))
   if(scenario==='quota')await db.exec(`insert into ai_private.months(owner,month,used)values('${owner}',date_trunc('month',now())::date,65)on conflict(owner,month)do update set used=65;`)
   return Response.json({scenario})
  }

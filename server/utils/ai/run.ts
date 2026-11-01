@@ -19,6 +19,8 @@ export async function* runBuiltin(request:BuiltinRequest, context:Context, signa
   const deadline=AbortSignal.any([signal,AbortSignal.timeout(180_000)])
   let prompt=builtinPrompt(request)
   try {
+    // Complete HTTP admission immediately, before waiting for provider tokens.
+    yield {type:'accepted'}
     for(let attempt=0;attempt<3;attempt++) {
       attempts=attempt+1
       deadline.throwIfAborted()
@@ -27,7 +29,7 @@ export async function* runBuiltin(request:BuiltinRequest, context:Context, signa
       const candidate=candidates.find(c=>c.id===claimed.keyId)
       if(!candidate) gatewayUnavailable()
       const observation:ProviderObservations={}
-      const model=createRoutedModel([candidate.id],async()=>providerModel(candidate,env,observation))
+      const model=createRoutedModel([candidate.id],async()=>providerModel(candidate,env,observation),{totalMs:180_000,firstTextMs:30_000,idleMs:30_000})
       try {
         if(request.operation==='chat' || request.operation==='fact-check') {
           const stream=streamText({model,...prompt,maxOutputTokens:outputLimit(request.operation),maxRetries:0,abortSignal:deadline,onError:()=>{}})
@@ -61,6 +63,7 @@ export async function* runBuiltin(request:BuiltinRequest, context:Context, signa
         success=true
         break
       } catch(error) {
+        if(deadline.aborted) throw error
         const status=errorStatus(error) ?? observation.status ?? 0
         await store.call('report',{...ids,status:status>=400?status:503,retryAfter:observation.retryAfter||60,remainingDayRequests:observation.remainingDayRequests,remainingMinuteTokens:observation.remainingMinuteTokens})
         if(charged || deadline.aborted || error instanceof BuiltinAiError || (status>=400 && ![401,403,404,408,429].includes(status) && status<500)) throw error
