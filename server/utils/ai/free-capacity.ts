@@ -17,13 +17,15 @@ export async function revalidateFreeCapacity(env:Record<string,any>,now=Date.now
     if(checks.size>=64) checks.clear()
     const promise=(async()=>{
      const [catalog,quota]=await Promise.all([
-      fetch('https://openrouter.ai/api/v1/models',{redirect:'error',signal:AbortSignal.timeout(6000)}),
-      fetch('https://openrouter.ai/api/v1/key',{headers:{Authorization:`Bearer ${key}`},redirect:'error',signal:AbortSignal.timeout(6000)})])
-     if(!catalog.ok||!quota.ok)return false
+      fetch('https://openrouter.ai/api/v1/models',{redirect:'manual',signal:AbortSignal.timeout(6000)}),
+      fetch('https://openrouter.ai/api/v1/key',{headers:{Authorization:`Bearer ${key}`},redirect:'manual',signal:AbortSignal.timeout(6000)})])
+     if(!catalog.ok||!quota.ok){console.warn(JSON.stringify({event:'ai_free_capacity_check',catalogStatus:catalog.status,quotaStatus:quota.status}));return false}
      const models=await catalog.json() as any, limits=await quota.json() as any
      const found=models.data?.find((v:any)=>v.id===model)
-     return !!found && found.context_length>=entry.context && found.pricing?.prompt!=null && found.pricing?.completion!=null && Number(found.pricing.prompt)===0 && Number(found.pricing.completion)===0 && Number(found.pricing.request||0)===0 && Number(limits.data?.free_model_daily_requests?.remaining)>0
-    })().catch(()=>false)
+     const eligible=!!found && found.context_length>=entry.context && found.pricing?.prompt!=null && found.pricing?.completion!=null && Number(found.pricing.prompt)===0 && Number(found.pricing.completion)===0 && Number(found.pricing.request||0)===0 && Number(limits.data?.free_model_daily_requests?.remaining)>0
+     if(!eligible)console.warn(JSON.stringify({event:'ai_free_capacity_check',modelFound:!!found,contextSufficient:!!found&&found.context_length>=entry.context,freeRequestsRemaining:limits.data?.free_model_daily_requests?.remaining??null,zeroPrice:!!found&&Number(found.pricing?.prompt)===0&&Number(found.pricing?.completion)===0}))
+     return eligible
+    })().catch((error)=>{console.warn(JSON.stringify({event:'ai_free_capacity_check',transportFailed:true,errorName:error instanceof Error?error.name:'unknown',reason:error instanceof Error?error.message.replaceAll(key,'[redacted]').slice(0,200):'unknown'}));return false})
     check={until:now+60_000,promise};checks.set(key,check)
    }
    if(await check.promise) return {...entry,model,verifiedUntil:new Date(check.until).toISOString()}
