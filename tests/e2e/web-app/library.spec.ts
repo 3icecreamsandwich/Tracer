@@ -95,6 +95,32 @@ test('creation navigation reports a failed module load and offers recovery', asy
   await expect(page.getByLabel('Title', { exact: true })).toBeVisible()
 })
 
+test('dropping on the top, middle, or bottom of a folder moves the set into it', async ({ context, page }) => {
+  const rows = new Map<string, any>()
+  const folderId = 'drop-folder'
+  rows.set(`${owner}:folder:${folderId}`, { owner_id: owner, kind: 'folder', id: folderId, revision: 1, deleted: false,
+    payload: { id: folderId, name: 'Drop target', sortOrder: 0, createdAt: '2026-01-01', updatedAt: '2026-01-01' } })
+  for (let index = 0; index < 3; index++) {
+    const id = `drop-set-${index}`
+    rows.set(`${owner}:set:${id}`, { owner_id: owner, kind: 'set', id, revision: 1, deleted: false,
+      payload: { id, title: `Drop set ${index}`, terms: [], folderId: null, createdAt: '2026-01-01', updatedAt: '2026-01-01' } })
+  }
+  await signInFixture(context, page, owner, rows)
+  const folder = page.locator('[data-root-entry-kind="folder"]').filter({ hasText: 'Drop target' }).locator('[data-root-entry-hit]')
+  for (const [index, fraction] of [0.1, 0.5, 0.9].entries()) {
+    const source = page.getByText(`Drop set ${index}`, { exact: true })
+    const sourceBox = await source.boundingBox()
+    const folderBox = await folder.boundingBox()
+    if (!sourceBox || !folderBox) throw new Error('Missing drag geometry')
+    await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(folderBox.x + folderBox.width / 2, folderBox.y + folderBox.height * fraction, { steps: 10 })
+    await page.mouse.up()
+    await expect.poll(() => rows.get(`${owner}:set:drop-set-${index}`)?.payload.folderId).toBe(folderId)
+    await expect(page.locator(`#folder-contents-${folderId}`).getByText(`Drop set ${index}`, { exact: true })).toBeVisible()
+  }
+})
+
 test('dragging a set near the library edges scrolls until the pointer moves away', async ({ context, page }) => {
   const rows = new Map<string, any>()
   for (let index = 0; index < 24; index++) {

@@ -1773,14 +1773,16 @@
                         <section
                             v-else-if="mode === 'chat'"
                             aria-label="Chat"
-                            class="study-panel study-panel--chat flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+                            class="study-panel study-panel--chat flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <div
                                 class="flex flex-wrap items-center justify-between gap-3"
                             >
-                                <div>
+                                <div class="flex min-w-0 items-center gap-3">
+                                    <img :src="chatModeIcon" alt="" aria-hidden="true" class="h-10 w-10 shrink-0 rounded-xl bg-amber-50 p-1.5 object-contain dark:bg-amber-950/40" />
+                                    <div>
                                     <p
-                                        class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                                        class="text-base font-semibold text-slate-900 dark:text-slate-50"
                                     >
                                         {{ t("set.chat") }}
                                     </p>
@@ -1789,11 +1791,12 @@
                                     >
                                         {{ t("set.chatHint") }}
                                     </p>
+                                    </div>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <button
                                         type="button"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :disabled="
                                             chatBusy ||
                                             chatSaveBusy ||
@@ -1806,7 +1809,7 @@
                                     </button>
                                     <button
                                         type="button"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :disabled="
                                             chatBusy ||
                                             chatSaveBusy ||
@@ -1818,7 +1821,7 @@
                                     </button>
                                     <button
                                         type="button"
-                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-lg font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :disabled="
                                             chatBusy || chatSaveBusy || !set
                                         "
@@ -1833,7 +1836,7 @@
 
                             <div
                                 ref="chatLogEl"
-                                class="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-md border border-amber-200 bg-amber-50/20 p-3 text-sm text-slate-900 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-50"
+                                class="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-xl bg-slate-50 p-4 text-sm text-slate-900 dark:bg-slate-900/60 dark:text-slate-50"
                                 role="log"
                                 aria-live="polite"
                             >
@@ -1861,15 +1864,15 @@
                                     "
                                 >
                                     <div
-                                        class="max-w-[85%] rounded-lg px-3 py-2"
+                                        class="max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed"
                                         :class="
                                             m.role === 'assistant' &&
                                             chatBusy &&
                                             !m.content
                                                 ? ''
                                                 : m.role === 'user'
-                                                  ? 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
-                                                  : 'border border-slate-200 bg-slate-50 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50'
+                                                  ? 'bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-50'
+                                                  : 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
                                         "
                                     >
                                         <LoadingSpinner
@@ -1890,7 +1893,7 @@
                                 </div>
                             </div>
 
-                            <div class="mt-3 flex gap-2">
+                            <div class="relative mt-3">
                                 <label class="sr-only" for="chat-input">{{
                                     t("set.chat")
                                 }}</label>
@@ -1901,13 +1904,14 @@
                                     rows="2"
                                     autocomplete="off"
                                     :placeholder="t('set.chatHint')"
-                                    class="w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    class="block min-h-[76px] w-full resize-y rounded-xl border border-slate-200 bg-white px-4 pb-12 pt-2.5 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                     :disabled="chatBusy || chatSaveBusy || !set"
                                     @keydown="onChatInputKeydown"
                                 />
                                 <button
                                     type="button"
-                                    class="inline-flex shrink-0 items-center rounded-md border border-amber-500 bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
+                                    aria-label="Send message"
+                                    class="absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                                     :disabled="
                                         chatBusy ||
                                         chatSaveBusy ||
@@ -1916,11 +1920,7 @@
                                     "
                                     @click="sendChat"
                                 >
-                                    {{
-                                        chatBusy
-                                            ? `${t("set.chat")}…`
-                                            : t("set.chat")
-                                    }}
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
                                 </button>
                             </div>
 

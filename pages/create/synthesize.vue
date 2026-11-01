@@ -1,15 +1,16 @@
 <template>
   <main>
     <AiErrorModal :open="aiErrorOpen" :error="aiError" from="/create/synthesize" @close="closeAiError" />
-    <div class="tracer-page mx-auto max-w-5xl p-8">
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <h1 class="text-3xl font-semibold">{{ t('create.synthesizeTitle') }}</h1>
+    <div class="tracer-page mx-auto max-w-5xl px-5 py-8 sm:px-8">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex min-w-0 items-center gap-4">
+          <CreateModeIcon name="synthesize" class="h-14 w-14 shrink-0" />
+          <h1 class="text-3xl font-semibold">{{ t('home.synthesize') }}</h1>
         </div>
 
         <button
           type="button"
-          class="inline-flex items-center rounded-md border border-slate-950 bg-slate-950 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-950"
+          class="inline-flex items-center rounded-xl border border-slate-950 bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-950"
           :disabled="createDisabled"
           @click="onCreate"
         >
@@ -29,7 +30,7 @@
 
       <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <section
-          class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
           aria-label="Choose source sets"
         >
           <div class="flex items-start justify-between gap-3">
@@ -56,7 +57,7 @@
             />
           </div>
 
-          <div class="mt-4">
+          <div class="tracer-library-scroll mt-4 max-h-[490px] overflow-y-auto overscroll-contain pe-1" tabindex="0" :aria-label="t('create.sourceSets')">
             <p v-if="loadError" class="text-sm text-red-700 dark:text-red-300">
               {{ loadError }}
             </p>
@@ -78,9 +79,9 @@
               {{ t('nav.noResults') }}
             </div>
 
-            <ul v-else class="mt-3 space-y-3">
+            <ul v-else class="space-y-3">
               <li v-for="s in filteredSets" :key="s.id">
-                <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                       <p class="truncate text-sm font-medium text-slate-900 dark:text-slate-50">
@@ -93,7 +94,7 @@
 
                     <button
                       type="button"
-                      class="shrink-0 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      class="shrink-0 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                       :disabled="busy || isWebPreview"
                       @click="toggleSelected(s.id)"
                     >
@@ -108,7 +109,7 @@
 
         <aside class="space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-auto">
           <section
-            class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+            class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             aria-label="Theme"
           >
             <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('create.theme') }} ({{ t('common.optional') }})</h2>
@@ -127,7 +128,7 @@
           </section>
 
           <section
-            class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+            class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             aria-label="Selected sets"
           >
             <div class="flex items-center justify-between gap-3">
@@ -179,7 +180,7 @@
           <div class="shrink-0 flex flex-wrap gap-2">
             <button
               type="button"
-              class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               :disabled="!rawOutput"
               @click="copyRaw"
             >
@@ -187,7 +188,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               :disabled="!rawOutput"
               @click="selectAllRaw"
             >

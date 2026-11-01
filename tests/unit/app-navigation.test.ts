@@ -50,7 +50,7 @@ describe('app navigation', () => {
     expect(hasInAppBackEntry({ back: 'https://example.com' })).toBe(false)
   })
 
-  it('resolves global and create shortcuts', () => {
+  it('resolves global shortcuts and leaves create mode digits unhandled', () => {
     expect(shortcut({ key: '[' })).toEqual({ type: 'back' })
     expect(shortcut({ key: 'ArrowLeft' })).toEqual({ type: 'back' })
     expect(shortcut({ key: ']' })).toEqual({ type: 'forward' })
@@ -59,18 +59,10 @@ describe('app navigation', () => {
     expect(shortcut({ key: 'l' })).toEqual({ type: 'focus-search' })
     expect(shortcut({ key: 'r' })).toEqual({ type: 'reload' })
     expect(shortcut({ ctrlKey: true, key: 'R', metaKey: false })).toEqual({ type: 'reload' })
-    expect(shortcut({ code: 'Digit1', key: '1' })).toEqual({
-      type: 'navigate',
-      to: '/create/basic',
-    })
-    expect(shortcut({ code: 'Digit2', key: '2' })).toEqual({
-      type: 'navigate',
-      to: '/create/synthesize',
-    })
-    expect(shortcut({ code: 'Digit3', key: '3' })).toEqual({
-      type: 'navigate',
-      to: '/create/generate',
-    })
+    for (const digit of ['1', '2', '3']) {
+      expect(shortcut({ code: `Digit${digit}`, key: digit })).toBeNull()
+      expect(shortcut({ code: `Digit${digit}`, key: digit, ctrlKey: true, metaKey: false })).toBeNull()
+    }
     expect(shortcut({ code: 'Digit3', key: '#', shiftKey: true })).toBeNull()
   })
 

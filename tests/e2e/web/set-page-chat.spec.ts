@@ -8,7 +8,7 @@ test('set page chat: streams mock response and resets on navigation', async ({ p
 
   const log = page.getByRole('log')
   const input = page.locator('#chat-input')
-  const send = page.getByRole('button', { name: 'Send' })
+  const send = page.getByRole('button', { name: 'Send message' })
 
   await input.fill('What is Term 1?')
   await send.click()
@@ -31,7 +31,7 @@ test('set page chat: shows offline AI error modal in web preview', async ({ page
   await page.locator('#chat-input').fill('Hello')
 
   await page.context().setOffline(true)
-  await page.getByRole('button', { name: 'Send' }).click()
+  await page.getByRole('button', { name: 'Send message' }).click()
 
   await expect(page.getByRole('dialog', { name: 'AI error' })).toContainText('You are offline')
   await page.getByRole('button', { name: 'Close', exact: true }).click()

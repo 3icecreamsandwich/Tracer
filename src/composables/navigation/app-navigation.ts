@@ -112,11 +112,6 @@ export function resolveAppShortcut(
     return setId ? { type: 'navigate', to: `/set/${setId}/edit` } : null
   }
 
-  if (!event.altKey && !event.shiftKey) {
-    if (event.code === 'Digit1') return { type: 'navigate', to: '/create/basic' }
-    if (event.code === 'Digit2') return { type: 'navigate', to: '/create/synthesize' }
-    if (event.code === 'Digit3') return { type: 'navigate', to: '/create/generate' }
-  }
 
   return null
 }

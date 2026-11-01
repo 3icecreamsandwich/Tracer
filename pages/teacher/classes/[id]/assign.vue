@@ -39,40 +39,59 @@
               </button>
             </div>
 
-            <p v-if="visibleItems.length === 0" class="mt-7 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-              {{ t('classroom.noAssignableItems') }}
-            </p>
-            <ul v-else class="mt-7 space-y-3">
-              <li v-for="item in visibleItems" :key="itemKey(item)">
-                <button
-                  type="button"
-                  :disabled="isAlreadyAssigned(item)"
-                  class="group flex min-h-[82px] w-full items-center gap-5 rounded-lg border p-4 text-left shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-                  :class="isAlreadyAssigned(item)
-                    ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60 dark:border-slate-800 dark:bg-slate-900'
-                    : selectedKey === itemKey(item)
-                    ? 'border-slate-950 bg-slate-100 ring-1 ring-slate-950 dark:border-white dark:bg-slate-900 dark:ring-white'
-                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900'"
-                  :aria-pressed="selectedKey === itemKey(item)"
-                  @click="selectItem(item)"
-                >
-                  <SetIcon :name="item.iconKey" :tone="item.iconTone" class="h-14 w-14" />
-                  <span class="min-w-0 flex-1">
-                    <span class="block truncate font-medium">{{ item.title }}</span>
-                    <span class="mt-1 block truncate text-sm text-slate-600 dark:text-slate-300">
-                      {{ item.kind === 'set' ? t('classroom.cardCount', { count: item.cardCount }) : t('home.studyGuide') }}
-                      <span aria-hidden="true"> · </span>{{ formatDate(item.createdAt) }}
+            <div class="tracer-library-scroll mt-7 max-h-[490px] overflow-y-auto overscroll-contain pe-1" tabindex="0" :aria-label="t('classroom.chooseAssignment')">
+              <p v-if="visibleItems.length === 0 && folders.length === 0" class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+                {{ t('classroom.noAssignableItems') }}
+              </p>
+              <div v-else class="space-y-3">
+                <div v-for="group in assignmentGroups" :key="group.folder?.id ?? 'root'">
+                  <button
+                    v-if="group.folder"
+                    type="button"
+                    class="flex min-h-12 w-full items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-left shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:hover:bg-slate-900"
+                    :aria-expanded="expandedFolderIds.has(group.folder.id)"
+                    :aria-controls="`assign-folder-${group.folder.id}`"
+                    @click="toggleFolder(group.folder.id)"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24" class="h-6 w-7 shrink-0 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-15v-13.5Z" /><path d="M3.5 8.5v-2a2 2 0 0 1 2-2h3l2 2" /></svg>
+                    <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ group.folder.name }}</span>
+                    <span class="text-sm text-slate-500 dark:text-slate-400">{{ group.items.length }}</span>
+                    <svg aria-hidden="true" viewBox="0 0 20 20" class="h-6 w-6 shrink-0 text-slate-500 transition-transform" :class="{ 'rotate-90': expandedFolderIds.has(group.folder.id) }" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 4 6 6-6 6" /></svg>
+                  </button>
+                  <ul v-if="!group.folder || expandedFolderIds.has(group.folder.id)" :id="group.folder ? `assign-folder-${group.folder.id}` : undefined" class="space-y-3" :class="group.folder ? 'ms-6 mt-2 border-s border-slate-200 ps-3 dark:border-slate-800' : ''">
+                <li v-for="item in group.items" :key="itemKey(item)">
+                  <button
+                    type="button"
+                    :disabled="isAlreadyAssigned(item)"
+                    class="group flex min-h-[82px] w-full items-center gap-5 rounded-lg border p-4 text-left shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                    :class="isAlreadyAssigned(item)
+                      ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60 dark:border-slate-800 dark:bg-slate-900'
+                      : selectedKey === itemKey(item)
+                      ? 'border-slate-950 bg-slate-100 ring-1 ring-slate-950 dark:border-white dark:bg-slate-900 dark:ring-white'
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900'"
+                    :aria-pressed="selectedKey === itemKey(item)"
+                    @click="selectItem(item)"
+                  >
+                    <SetIcon :name="item.iconKey" :tone="item.iconTone" class="h-14 w-14" />
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate font-medium">{{ item.title }}</span>
+                      <span class="mt-1 block truncate text-sm text-slate-600 dark:text-slate-300">
+                        {{ item.kind === 'set' ? t('classroom.cardCount', { count: item.cardCount }) : t('home.studyGuide') }}
+                        <span aria-hidden="true"> · </span>{{ formatDate(item.createdAt) }}
+                      </span>
                     </span>
-                  </span>
-                  <span v-if="isAlreadyAssigned(item)" class="shrink-0 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                    {{ t('classroom.alreadyAssigned') }}
-                  </span>
-                  <span class="flex h-6 w-6 items-center justify-center rounded-full border" :class="selectedKey === itemKey(item) ? 'border-slate-950 bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-950' : 'border-slate-300 dark:border-slate-700'" aria-hidden="true">
-                    <svg v-if="selectedKey === itemKey(item)" viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 10 3 3 7-7" /></svg>
-                  </span>
-                </button>
-              </li>
-            </ul>
+                    <span v-if="isAlreadyAssigned(item)" class="shrink-0 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                      {{ t('classroom.alreadyAssigned') }}
+                    </span>
+                    <span class="flex h-6 w-6 items-center justify-center rounded-full border" :class="selectedKey === itemKey(item) ? 'border-slate-950 bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-950' : 'border-slate-300 dark:border-slate-700'" aria-hidden="true">
+                      <svg v-if="selectedKey === itemKey(item)" viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 10 3 3 7-7" /></svg>
+                    </span>
+                  </button>
+                </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </section>
 
           <section class="rounded-xl border border-slate-200 bg-white p-[26px] shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="assign-create-title">
@@ -108,8 +127,8 @@ import {
   listClassroomAssignments,
   type Classroom,
 } from '~/src/composables/classrooms'
-import { createSetsRepo, createStudyGuidesRepo, useTracerDb } from '~/src/composables/db'
-import type { FlashcardSetListItem, Uuid } from '~/src/composables/db/types'
+import { createFoldersRepo, createSetsRepo, createStudyGuidesRepo, useTracerDb } from '~/src/composables/db'
+import type { FlashcardSetListItem, SetFolder, Uuid } from '~/src/composables/db/types'
 import { useAppLanguage } from '~/src/composables/language'
 import { hasTauriRuntime } from '~/src/composables/tauri'
 
@@ -117,6 +136,7 @@ type AssignmentPickerItem = {
   kind: 'set' | 'study-guide'
   id: Uuid
   setId: Uuid
+  folderId: Uuid | null
   title: string
   iconKey: string | null
   iconTone: string | null
@@ -131,6 +151,8 @@ const loading = ref(true)
 const loadError = ref<string | null>(null)
 const classroom = ref<Classroom | null>(null)
 const items = ref<AssignmentPickerItem[]>([])
+const folders = ref<SetFolder[]>([])
+const expandedFolderIds = ref<Set<Uuid>>(new Set())
 const assignedSourceKeys = ref<Set<string>>(new Set())
 const activeKind = ref<'set' | 'study-guide'>('set')
 const selectedItem = ref<AssignmentPickerItem | null>(null)
@@ -142,6 +164,19 @@ const successMessage = ref<string | null>(null)
 const classId = computed(() => String(route.params.id ?? ''))
 const selectedKey = computed(() => selectedItem.value ? itemKey(selectedItem.value) : '')
 const visibleItems = computed(() => items.value.filter((item) => item.kind === activeKind.value))
+const assignmentGroups = computed(() => {
+  const folderIds = new Set(folders.value.map((folder) => folder.id))
+  return [
+    ...folders.value.map((folder) => ({ folder, items: visibleItems.value.filter((item) => item.folderId === folder.id) })),
+    { folder: null, items: visibleItems.value.filter((item) => !item.folderId || !folderIds.has(item.folderId)) },
+  ]
+})
+function toggleFolder(id: Uuid) {
+  const next = new Set(expandedFolderIds.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  expandedFolderIds.value = next
+}
 const libraryTabs = [
   { value: 'set' as const, label: 'home.flashcards' },
   { value: 'study-guide' as const, label: 'home.studyGuides' },
@@ -196,9 +231,10 @@ async function loadPage() {
     ])
     const setsRepo = createSetsRepo(db)
     const guidesRepo = createStudyGuidesRepo(db)
-    const [sets, guides] = await Promise.all([
+    const [sets, guides, nextFolders] = await Promise.all([
       setsRepo.list(),
       guidesRepo.listSummaries(),
+      createFoldersRepo(db).list(),
     ])
     const nextItems: AssignmentPickerItem[] = []
     const guideBySetId = new Map(guides.map((guide) => [guide.setId, guide]))
@@ -210,6 +246,7 @@ async function loadPage() {
           kind: 'study-guide',
           id: guide.id,
           setId: set.id,
+          folderId: set.folderId,
           title: `${t('home.studyGuide')} · ${set.title}`,
           iconKey: set.iconKey ?? null,
           iconTone: set.iconTone ?? null,
@@ -220,6 +257,7 @@ async function loadPage() {
     }
     classroom.value = nextClassroom
     items.value = nextItems
+    folders.value = nextFolders
     assignedSourceKeys.value = new Set(assignments
       .filter((assignment) => assignment.localSetId)
       .map((assignment) => `${assignment.kind}:${assignment.localSetId}`))
@@ -241,6 +279,7 @@ function toSetItem(set: FlashcardSetListItem): AssignmentPickerItem {
     kind: 'set',
     id: set.id,
     setId: set.id,
+    folderId: set.folderId,
     title: set.title,
     iconKey: set.iconKey ?? null,
     iconTone: set.iconTone ?? null,

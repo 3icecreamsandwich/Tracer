@@ -1,6 +1,6 @@
 <template>
   <main>
-    <div class="tracer-page mx-auto max-w-[1280px] px-8 pb-24 pt-10">
+    <div class="tracer-page mx-auto max-w-[1280px] px-8 pb-24 pt-12 lg:pt-[max(3rem,calc((100vh-4rem-650px)/2))]">
       <div class="grid items-stretch gap-7 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         <section
           class="tracer-library flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white lg:min-h-0 lg:[contain:size]"
@@ -317,7 +317,7 @@
 
         <div class="tracer-home-actions grid content-start gap-7">
           <section
-            class="rounded-xl border border-slate-200 bg-white p-[26px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            class="rounded-xl border border-slate-200 bg-white p-[26px] pb-[38px] text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white"
             aria-labelledby="home-create"
           >
             <h2 id="home-create" class="text-3xl font-semibold">{{ t('home.create') }}</h2>
@@ -1189,11 +1189,7 @@ function scheduleFolderExpansion(folderId: Uuid) {
 function updateDropTarget(clientX: number, clientY: number) {
   const elements = document.elementsFromPoint(clientX, clientY)
   const rootHit = rootHitAt(clientX, clientY)
-  const rootInsertion = rootHit && (
-    rootHit.key.kind === 'set' ||
-    rootHit.edgeRatio <= 0.28 ||
-    rootHit.edgeRatio >= 0.72
-  )
+  const rootInsertion = rootHit?.key.kind === 'set'
   if (rootInsertion) {
     clearDragHoverTimer()
     dragState.dropFolderId = null
@@ -1360,6 +1356,7 @@ function onWindowPointerUp(event: PointerEvent) {
   const candidate = pointerCandidate
   if (!candidate || event.pointerId !== candidate.pointerId) return
   const wasDragging = dragState.active
+  if (wasDragging) updateDropTarget(event.clientX, event.clientY)
   const draggedSetIds = [...dragState.setIds]
   const dropFolderId = dragState.dropFolderId
   const overRoot = dragState.overRoot

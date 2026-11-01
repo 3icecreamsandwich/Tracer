@@ -3,22 +3,22 @@
         <section
             v-if="panelOpen"
             ref="panelEl"
-            class="tracer-chat-panel fixed bottom-24 right-6 z-[70] flex h-[min(34rem,calc(100vh-8rem))] w-[min(26rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg shadow-slate-900/15 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/40"
+            class="tracer-chat-panel fixed bottom-24 right-6 z-[70] flex h-[min(34rem,calc(100vh-8rem))] w-[min(26rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/15 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/40"
             role="dialog"
             aria-label="Chat with Tracer"
         >
             <header
-                class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800"
+                class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800"
             >
                 <div class="flex min-w-0 items-center gap-2.5">
                     <img
                         :src="chatIconUrl"
                         alt=""
-                        class="h-7 w-7 object-contain"
+                        class="h-10 w-10 rounded-xl bg-amber-50 p-1.5 object-contain dark:bg-amber-950/40"
                         aria-hidden="true"
                     />
                     <h2
-                        class="truncate text-sm font-semibold text-slate-900 dark:text-slate-50"
+                        class="truncate text-base font-semibold text-slate-900 dark:text-slate-50"
                     >
                         Chat with Tracer
                     </h2>
@@ -26,7 +26,7 @@
                 <div class="flex shrink-0 items-center gap-1">
                     <button
                         type="button"
-                        class="inline-flex h-8 items-center justify-center rounded-md px-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
+                        class="inline-flex h-8 items-center justify-center rounded-lg px-3 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
                         :disabled="messages.length === 0 && !error && !busy"
                         @click="clearChat"
                     >
@@ -34,7 +34,7 @@
                     </button>
                     <button
                         type="button"
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
                         aria-label="Close chat"
                         @click="closePanel"
                     >
@@ -57,7 +57,7 @@
 
             <div
                 ref="messagesEl"
-                class="m-3 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-md border border-amber-200 bg-amber-50/20 p-3 text-sm text-slate-900 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-50"
+                class="m-3 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-xl bg-slate-50 p-4 text-sm text-slate-900 dark:bg-slate-900/60 dark:text-slate-50"
                 aria-live="polite"
             >
                 <div
@@ -78,13 +78,13 @@
                     "
                 >
                     <div
-                        class="max-w-[85%] rounded-lg px-3 py-2 text-sm"
+                        class="max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
                         :class="
                             message.role === 'assistant' && !message.content
                                 ? ''
                                 : message.role === 'user'
-                                ? 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
-                                : 'border border-slate-200 bg-slate-50 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50'
+                                ? 'bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-50'
+                                : 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
                         "
                     >
                         <LoadingSpinner
@@ -119,15 +119,15 @@
             </div>
 
             <form
-                class="border-t border-slate-200 p-3 dark:border-slate-800"
+                class="border-t border-slate-200 p-4 dark:border-slate-800"
                 @submit.prevent="sendMessage"
             >
-                <div class="flex items-end gap-2 pb-2">
+                <div class="relative">
                     <textarea
                         ref="inputEl"
                         v-model="input"
                         rows="2"
-                        class="max-h-28 min-h-11 flex-1 resize-none rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="block max-h-28 min-h-[76px] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 pb-12 pt-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         placeholder="Ask about this page…"
                         aria-label="Chat message"
                         :disabled="busy"
@@ -135,10 +135,11 @@
                     />
                     <button
                         type="submit"
-                        class="inline-flex h-11 shrink-0 items-center justify-center rounded-md border border-slate-950 bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-950"
+                        aria-label="Send message"
+                        class="absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-950"
                         :disabled="busy || !input.trim()"
                     >
-                        Send
+                        <svg aria-hidden="true" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
                     </button>
                 </div>
             </form>
