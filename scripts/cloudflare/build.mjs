@@ -20,5 +20,9 @@ Object.assign(config.vars, vars)
 Object.assign(config.env.production.vars, vars)
 mkdirSync('.wrangler', { recursive: true })
 writeFileSync('.wrangler/tracer.json', JSON.stringify(config, null, 2))
+// Workers AI requires a remote proxy; browser fixtures do not call that binding.
+const testConfig = { ...config }
+delete testConfig.ai
+writeFileSync('.wrangler/tracer-test.json', JSON.stringify(testConfig, null, 2))
 
 appendFileSync('.output-cloudflare/public/_headers', '\n/*\n  X-Robots-Tag: noindex, nofollow\n  X-Content-Type-Options: nosniff\n')
