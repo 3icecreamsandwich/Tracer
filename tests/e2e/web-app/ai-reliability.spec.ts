@@ -103,7 +103,7 @@ test('interrupted answers remain visible without mixing in a fallback in both ch
   await expect(page.getByRole('log')).toContainText('Partial answer preserved.')
   await page.getByRole('button', { name: 'Chat with Tracer', exact: true }).click()
   await page.getByRole('textbox', { name: 'Chat message' }).fill('Test another interrupted response')
-  await page.getByRole('button', { name: 'Send message', exact: true }).click()
+  await page.getByRole('dialog', { name: 'Chat with Tracer' }).getByRole('button', { name: 'Send message', exact: true }).click()
   await expect(page.getByText(/Response interrupted\./)).toBeVisible()
   await expect(page.getByText('Partial answer preserved.', { exact: true })).toHaveCount(2)
   expect(calls).toHaveLength(2)
