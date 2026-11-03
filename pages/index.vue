@@ -353,6 +353,7 @@
           </section>
 
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <HomeDestinationLink to="/insights" icon="insights" title="Insights" :class="(accountRole === 'teacher' || accountRole === 'super') ? 'sm:col-span-2' : ''" />
             <HomeDestinationLink to="/public-sets" icon="publish" :title="t('public.browse')" @pointerenter="prefetchPublicCatalog" @focusin="prefetchPublicCatalog" />
             <HomeDestinationLink v-if="(accountRole === 'teacher' || accountRole === 'super')" to="/teacher" icon="dashboard" :title="t('classroom.dashboard')" />
           </div>

@@ -15,8 +15,9 @@ import Share2 from '@lucide/vue/dist/esm/icons/share-2.mjs'
 import FolderPlus from '@lucide/vue/dist/esm/icons/folder-plus.mjs'
 import Settings from '@lucide/vue/dist/esm/icons/settings.mjs'
 import Crown from '@lucide/vue/dist/esm/icons/crown.mjs'
+import Lightbulb from '@lucide/vue/dist/esm/icons/lightbulb.mjs'
 withDefaults(defineProps<{
-  name: 'close' | 'copy' | 'download' | 'select' | 'publish' | 'filter' | 'dashboard' | 'edit' | 'share' | 'add-folder' | 'settings' | 'crown'
+  name: 'close' | 'copy' | 'download' | 'select' | 'publish' | 'filter' | 'dashboard' | 'insights' | 'edit' | 'share' | 'add-folder' | 'settings' | 'crown'
   size?: number
   strokeWidth?: number
 }>(), {
@@ -31,6 +32,7 @@ const icons = {
   publish: LibraryBig,
   filter: ListFilter,
   dashboard: LayoutGrid,
+  insights: Lightbulb,
   edit: Pencil,
   share: Share2,
   'add-folder': FolderPlus,

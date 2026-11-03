@@ -29,7 +29,7 @@
                     </p>
                     <button
                         type="button"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :disabled="practiceAnswerBusy"
                         :aria-expanded="practiceSettingsOpen"
                         aria-label="Practice settings"
@@ -270,7 +270,7 @@
                 class="w-full max-w-2xl select-none"
             >
                 <div
-                    class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900"
+                    class="tracer-result-surface p-8 text-center"
                 >
                     <h2
                         class="text-2xl font-semibold text-slate-900 dark:text-slate-50"
@@ -296,7 +296,7 @@
                         <NuxtLink
                             v-if="set"
                             :to="backToSetPath"
-                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
                             {{ t("set.backToSet") }}
                         </NuxtLink>
@@ -314,7 +314,7 @@
 
             <div v-else class="w-full max-w-2xl">
                 <div
-                    class="rounded-lg border p-8"
+                    class="tracer-practice-card p-6 sm:p-8"
                     :class="[
                         practiceQuestionSurfaceClass(),
                         {
@@ -349,7 +349,7 @@
                         >
                             <button
                                 type="button"
-                                class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                                class="tracer-practice-choice text-base"
                                 :class="practiceTrueFalseChoiceClass(true)"
                                 :disabled="learnBusy || practiceAnswerBusy"
                                 @click="answerLearnTrueFalse(true)"
@@ -358,7 +358,7 @@
                             </button>
                             <button
                                 type="button"
-                                class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                                class="tracer-practice-choice text-base"
                                 :class="practiceTrueFalseChoiceClass(false)"
                                 :disabled="learnBusy || practiceAnswerBusy"
                                 @click="answerLearnTrueFalse(false)"
@@ -378,7 +378,7 @@
                                 ) in learnCurrentQuestion.options"
                                 :key="`${learnCurrentQuestion.id}:${idx}`"
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-md border px-4 py-3 text-sm font-medium shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                                class="tracer-practice-choice"
                                 :class="practiceMultipleChoiceClass(idx)"
                                 :disabled="learnBusy || practiceAnswerBusy"
                                 @click="answerLearnMultipleChoice(idx)"
@@ -468,6 +468,7 @@
 </template>
 
 <script setup lang="ts">
+import { recordStudySession } from '~/src/composables/study-insights';
 import { generatePracticeQuestionsText, mixPracticeQuestions } from "~/src/composables/ai/practice";
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 definePageMeta({ hideNavbar: true });
@@ -564,6 +565,8 @@ const assignedSessionAttempted = ref(0);
 function finishClassroomPractice() {
     if (assignedSessionFinished || !set.value) return;
     assignedSessionFinished = true;
+    void recordStudySession({ setId: set.value.id, mode: 'practice', startedAt: insightStartedAt,
+        correct: assignedSessionCorrect.value, attempted: assignedSessionAttempted.value }).catch(() => {});
     void completeAssignedAttempt({
         assignmentId: assignedAssignmentId.value,
         setId: set.value.id,
@@ -572,6 +575,8 @@ function finishClassroomPractice() {
         scorePossible: assignedSessionAttempted.value,
     });
 }
+
+const insightStartedAt = new Date().toISOString();
 
 function onPageHide() {
     finishClassroomPractice();

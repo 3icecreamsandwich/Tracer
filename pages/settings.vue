@@ -20,7 +20,7 @@
 
                 <button
                     type="button"
-                    class="shrink-0 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                    class="shrink-0 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
                     @click="dismissGateMessage"
                 >
                     {{ t("common.dismiss") }}
@@ -75,7 +75,7 @@
                     <button
                         v-if="!isWebPreview && accountOnline && profileIdentityReady"
                         type="button"
-                        class="ms-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
+                        class="ms-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
                         aria-label="Edit profile"
                         title="Edit profile"
                         :aria-expanded="profileEditing"
@@ -299,7 +299,7 @@
                     <div ref="languageMenuRoot" class="relative shrink-0">
                         <button
                             type="button"
-                            class="inline-flex min-w-40 items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex min-w-40 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :aria-expanded="languageMenuOpen"
                             aria-haspopup="menu"
                             @click="languageMenuOpen = !languageMenuOpen"
@@ -369,7 +369,7 @@
 
                     <button
                         type="button"
-                        class="inline-flex shrink-0 items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                        class="inline-flex shrink-0 items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                         :disabled="busy"
                         @click="openModelPicker"
                     >
@@ -960,7 +960,7 @@
                         <div class="mt-3">
                             <button
                                 type="button"
-                                class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 :disabled="busy"
                                 @click="openGithubAuth"
                             >
@@ -1028,7 +1028,7 @@
 
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :disabled="busy || vaultStatusPending || vaultMode === 'device_key'"
                         @click="onToggleStartupLock"
                     >
@@ -1075,7 +1075,7 @@
                         </button>
                         <button
                             type="button"
-                            class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :disabled="busy"
                             @click="onCancelDisable"
                         >
@@ -1113,7 +1113,7 @@
                     </div>
                     <button
                         type="button"
-                        class="inline-flex shrink-0 items-center rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-800 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950 dark:focus-visible:ring-red-600 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex shrink-0 items-center rounded-xl border border-red-300 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-800 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950 dark:focus-visible:ring-red-600 dark:focus-visible:ring-offset-slate-950"
                         :disabled="busy"
                         @click="openResetConfirmation"
                     >
@@ -1138,7 +1138,7 @@
                     </div>
                     <button
                         type="button"
-                        class="inline-flex shrink-0 items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-600 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex shrink-0 items-center rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-600 dark:focus-visible:ring-offset-slate-950"
                         :disabled="
                             busy ||
                             accountConnectionPending ||
@@ -1192,14 +1192,14 @@
                     <div class="shrink-0 flex gap-2">
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="tracer-button tracer-button--white tracer-button--md"
                             @click="closeModelPicker"
                         >
                             {{ t("common.cancel") }}
                         </button>
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :disabled="modelPickerEnterDisabled"
                             @click="onModelPickerEnter"
                         >
@@ -1314,7 +1314,7 @@
                 <div class="mt-4 flex flex-wrap justify-end gap-2">
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="tracer-button tracer-button--white tracer-button--md"
                         :disabled="busy"
                         @click="closeProviderApiKeyClear"
                     >
@@ -1322,7 +1322,7 @@
                     </button>
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex items-center rounded-xl border border-red-600 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
                         :disabled="busy"
                         @click="onConfirmProviderApiKeyClear"
                     >
@@ -1366,7 +1366,7 @@
                     <div class="mt-3 flex gap-2">
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
                             :disabled="githubAuthBusy"
                             @click="onGithubAuthSignOut"
                         >
@@ -1377,7 +1377,7 @@
                 <div v-else class="mt-4 space-y-3">
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :disabled="githubAuthBusy"
                         @click="onGithubAuthStart"
                     >
@@ -1408,7 +1408,7 @@
                         <div class="mt-3 flex flex-wrap gap-2">
                             <button
                                 type="button"
-                                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 @click="onGithubAuthCopyUrl"
                             >
                                 <AppIcon
@@ -1418,7 +1418,7 @@
                             </button>
                             <button
                                 type="button"
-                                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 @click="onGithubAuthCopyCode"
                             >
                                 <AppIcon
@@ -2306,8 +2306,10 @@ async function onToggleDarkMode() {
   if (preferenceSaving.darkMode) return
   error.value = null
   preferenceSaving.darkMode = true
+  const previous = darkMode.value
+  const next = !previous
+  darkMode.value = next
   try {
-    const next = !darkMode.value
     if (isWebPreview.value) {
       document.documentElement.classList.toggle('dark', next)
     } else {
@@ -2315,6 +2317,7 @@ async function onToggleDarkMode() {
     }
     darkMode.value = next
   } catch (e: unknown) {
+    darkMode.value = previous
     error.value = toSafeErrorMessage(e, 'Failed to update dark mode')
   } finally {
     preferenceSaving.darkMode = false
@@ -2330,13 +2333,16 @@ async function onToggleLearnHybrid() {
   if (preferenceSaving.learnHybrid) return
   error.value = null
   preferenceSaving.learnHybrid = true
+  const previous = learnHybridEnabled.value
+  const next = !previous
+  learnHybridEnabled.value = next
   try {
-    const next = !learnHybridEnabled.value
     const db = await useTracerDb()
     const repo = createSettingsRepo(db)
     const updated = await repo.set({ learnHybridEnabled: next })
     learnHybridEnabled.value = updated.learnHybridEnabled
   } catch (e: unknown) {
+    learnHybridEnabled.value = previous
     error.value = toSafeErrorMessage(e, 'Failed to update Practice settings')
   } finally {
     preferenceSaving.learnHybrid = false
@@ -2347,8 +2353,10 @@ async function onToggleSmartReview() {
   if (preferenceSaving.smartReview) return
   error.value = null
   preferenceSaving.smartReview = true
+  const previous = smartReviewEnabled.value
+  const next = !previous
+  smartReviewEnabled.value = next
   try {
-    const next = !smartReviewEnabled.value
     if (isWebPreview.value) {
       smartReviewEnabled.value = next
       applyGlobalSmartReviewEnabled(next, studyStorageOwner(profile.value))
@@ -2360,6 +2368,7 @@ async function onToggleSmartReview() {
     smartReviewEnabled.value = updated.smartReviewEnabled
     applyGlobalSmartReviewEnabled(updated.smartReviewEnabled, studyStorageOwner(profile.value))
   } catch (e: unknown) {
+    smartReviewEnabled.value = previous
     error.value = toSafeErrorMessage(e, 'Failed to update Smart Review settings')
   } finally {
     preferenceSaving.smartReview = false

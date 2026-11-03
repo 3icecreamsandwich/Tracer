@@ -18,7 +18,7 @@
         <div class="flex shrink-0 flex-wrap items-center gap-2">
           <button
             type="button"
-            class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+            class="tracer-button tracer-button--white tracer-button--md"
             :disabled="busy || factCheckBusy"
             @click="onFactCheck"
           >
@@ -27,7 +27,7 @@
           </button>
           <button
             type="button"
-            class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+            class="tracer-button tracer-button--white tracer-button--md"
             :disabled="busy || factCheckBusy"
             @click="openImport"
           >
@@ -35,7 +35,7 @@
           </button>
           <button
             type="button"
-            class="inline-flex items-center rounded-xl border border-slate-950 bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-950"
+            class="tracer-button tracer-button--dark tracer-button--md"
             :disabled="busy || factCheckBusy"
             @click="onCreate"
           >
@@ -94,7 +94,7 @@
             <button
               v-if="cards.length > 1"
               type="button"
-              class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="rounded-xl border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               :disabled="busy"
               @click="removeCard(idx)"
             >
@@ -109,7 +109,7 @@
                 <button
                   v-if="!card.frontImage"
                   type="button"
-                  class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                  class="tracer-button tracer-button--white tracer-button--md"
                   :disabled="busy"
                   :aria-label="`Add image to term for card ${idx + 1}`"
                   @click="openImagePicker(card.key, 'frontImage')"
@@ -157,7 +157,7 @@
                 <button
                   v-if="!card.backImage"
                   type="button"
-                  class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                  class="tracer-button tracer-button--white tracer-button--md"
                   :disabled="busy"
                   :aria-label="`Add image to definition for card ${idx + 1}`"
                   @click="openImagePicker(card.key, 'backImage')"

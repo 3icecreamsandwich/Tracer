@@ -156,6 +156,12 @@ pub fn run() {
             sql: include_str!("../migrations/023_builtin_ai_mode.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 24,
+            description: "study_insight_sessions",
+            sql: include_str!("../migrations/024_study_insight_sessions.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     let app = tauri::Builder::default()

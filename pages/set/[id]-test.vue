@@ -64,7 +64,7 @@
             <template v-else>
                 <section
                     v-if="testSubmitted"
-                    class="mb-10 rounded-2xl border border-amber-200 bg-amber-50/30 p-6 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/10 sm:p-8"
+                    class="tracer-result-surface mb-10 p-6 sm:p-8"
                     aria-labelledby="test-results-title"
                 >
                     <div class="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
@@ -92,14 +92,14 @@
                         <div class="flex flex-col gap-2 sm:min-w-52">
                             <button
                                 type="button"
-                                class="rounded-lg border border-orange-600 bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                                class="tracer-button tracer-button--dark tracer-button--lg"
                                 @click="restartTest"
                             >
                                 Restart test
                             </button>
                             <button
                                 type="button"
-                                class="rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                                class="tracer-button tracer-button--white tracer-button--lg"
                                 @click="scrollToAnswerResults"
                             >
                                 See what you got wrong ↓
@@ -161,7 +161,7 @@
                                 v-for="choice in [true, false]"
                                 :key="String(choice)"
                                 type="button"
-                                class="min-h-14 rounded-lg border px-4 py-3 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-default dark:focus-visible:ring-offset-slate-950"
+                                class="min-h-14 rounded-xl border px-4 py-3 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-default dark:focus-visible:ring-offset-slate-950"
                                 :class="choiceClass(question, choice)"
                                 :disabled="testSubmitted"
                                 :aria-pressed="responseFor(question.id) === choice"
@@ -179,7 +179,7 @@
                                 v-for="(option, optionIndex) in question.options"
                                 :key="`${question.id}:${optionIndex}`"
                                 type="button"
-                                class="min-h-14 rounded-lg border px-4 py-3 text-left text-sm font-medium shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-default dark:focus-visible:ring-offset-slate-950"
+                                class="min-h-14 rounded-xl border px-4 py-3 text-left text-sm font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-default dark:focus-visible:ring-offset-slate-950"
                                 :class="choiceClass(question, optionIndex)"
                                 :disabled="testSubmitted"
                                 :aria-pressed="responseFor(question.id) === optionIndex"
@@ -201,7 +201,7 @@
                                     :id="`test-written-${index}`"
                                     :value="writtenDraftFor(question.id)"
                                     rows="1"
-                                    class="h-12 w-full resize-none rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-default disabled:opacity-70 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
+                                    class="h-12 w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-default disabled:opacity-70 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
                                     :class="writtenAnswerClass(question)"
                                     :disabled="testSubmitted || testGradingBusy"
                                     placeholder="Type your answer…"
@@ -209,7 +209,7 @@
                                 />
                                 <button
                                     type="button"
-                                    class="inline-flex h-12 shrink-0 items-center rounded-lg border border-amber-500 bg-amber-400 px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                                    class="inline-flex h-12 shrink-0 items-center rounded-xl border border-amber-500 bg-amber-400 px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
                                     :disabled="
                                         testSubmitted ||
                                         testGradingBusy ||
@@ -291,14 +291,14 @@
           <div class="mt-5 flex flex-wrap justify-end gap-2">
               <button
                   type="button"
-                  class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                  class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
                   @click="quitTestOpen = false"
               >
                   {{ t("common.cancel") }}
               </button>
               <button
                   type="button"
-                  class="inline-flex items-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-offset-slate-950"
+                  class="inline-flex items-center rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-offset-slate-950"
                   @click="confirmQuitTest"
               >
                   Quit test
@@ -309,6 +309,7 @@
 </template>
 
 <script setup lang="ts">
+import { recordStudySession } from '~/src/composables/study-insights'
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 definePageMeta({ hideNavbar: true })
 
@@ -625,6 +626,8 @@ function buildTest() {
 function finishClassroomTest() {
     if (assignedSessionFinished || !set.value) return
     assignedSessionFinished = true
+    void recordStudySession({ setId: set.value.id, mode: 'test', startedAt: insightStartedAt,
+        correct: correctCount.value, attempted: answeredCount.value }).catch(() => {})
     void completeAssignedAttempt({
         assignmentId: assignedAssignmentId.value,
         setId: set.value.id,
@@ -633,6 +636,8 @@ function finishClassroomTest() {
         scorePossible: assignedPriorAttempted.value + answeredCount.value,
     })
 }
+
+const insightStartedAt = new Date().toISOString()
 
 function onPageHide() {
     finishClassroomTest()

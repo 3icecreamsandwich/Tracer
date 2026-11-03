@@ -31,11 +31,17 @@ async function setEnabled(value: boolean): Promise<void> {
 
   await initialize()
 
-  const db = await useTracerDb()
-  const settings = await createSettingsRepo(db).set({ automaticUpdatesEnabled: value })
-  
-  enabled.value = settings.automaticUpdatesEnabled
-  clearAppSettingsRequest()
+  const previous = enabled.value
+  enabled.value = value
+  try {
+    const db = await useTracerDb()
+    const settings = await createSettingsRepo(db).set({ automaticUpdatesEnabled: value })
+    enabled.value = settings.automaticUpdatesEnabled
+    clearAppSettingsRequest()
+  } catch (error) {
+    enabled.value = previous
+    throw error
+  }
 }
 
 export function useAutomaticUpdates() {

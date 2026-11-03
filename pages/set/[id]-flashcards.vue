@@ -18,7 +18,7 @@
                         <button
                             ref="flashcardSettingsButtonEl"
                             type="button"
-                            class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :aria-label="t('set.flashcardSettings')"
                             :title="t('set.flashcardSettings')"
                             :aria-expanded="flashcardSettingsOpen"
@@ -149,7 +149,7 @@
             <!-- Results -->
             <div v-if="isFinished" class="w-full max-w-2xl select-none">
                 <div
-                    class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900 select-none"
+                    class="tracer-result-surface p-8 text-center select-none"
                 >
                     <h2
                         class="text-2xl font-semibold text-slate-900 dark:text-slate-50"
@@ -173,14 +173,14 @@
                         <button
                             v-if="hasIncorrectCards"
                             type="button"
-                            class="inline-flex items-center rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+                            class="inline-flex items-center rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
                             @click="resumeIncorrect"
                         >
                             {{ t("set.resumeIncorrect") }}
                         </button>
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :disabled="allStudyTermIds.length === 0"
                             @click="restartAllFlashcards"
                         >
@@ -189,7 +189,7 @@
                         <NuxtLink
                             v-if="set"
                             :to="backToSetPath"
-                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
                             {{ t("set.backToSet") }}
                         </NuxtLink>
@@ -293,7 +293,7 @@
                     <div class="flex flex-wrap gap-3">
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-amber-600 shadow-sm hover:border-amber-200 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-amber-600 shadow-sm hover:border-amber-200 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
                             :disabled="
                                 totalCount === 0 ||
                                 cursorIndex === 0 ||
@@ -306,7 +306,7 @@
 
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :disabled="
                                 totalCount === 0 ||
                                 (flashcardAnswerBusy || !!isNavigating || isFlipping)
@@ -321,7 +321,7 @@
 
                         <button
                             type="button"
-                            class="inline-flex h-10 items-center justify-center rounded-md border border-[#C14D4D] bg-white px-3 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                            class="inline-flex h-10 items-center justify-center rounded-xl border border-[#C14D4D] bg-white px-3 text-sm font-semibold text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                             :disabled="!currentTerm || flashcardAnswerBusy"
                             @click="markIncorrect"
                         >
@@ -330,7 +330,7 @@
 
                         <button
                             type="button"
-                            class="inline-flex h-10 items-center justify-center rounded-md border border-[#2D8210] bg-white px-3 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                            class="inline-flex h-10 items-center justify-center rounded-xl border border-[#2D8210] bg-white px-3 text-sm font-semibold text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                             :disabled="!currentTerm || flashcardAnswerBusy"
                             @click="markCorrect"
                         >
@@ -389,6 +389,7 @@
 </template>
 
 <script setup lang="ts">
+import { recordStudySession } from '~/src/composables/study-insights';
 import { studyStorageOwner } from '~/src/composables/platform/web'
 
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
@@ -479,6 +480,8 @@ const assignedSessionAttempted = ref(0);
 function finishClassroomFlashcards() {
     if (assignedSessionFinished || !set.value) return;
     assignedSessionFinished = true;
+    void recordStudySession({ setId: set.value.id, mode: 'flashcards', startedAt: insightStartedAt,
+        correct: assignedSessionCorrect.value, attempted: assignedSessionAttempted.value }).catch(() => {});
     void completeAssignedAttempt({
         assignmentId: assignedAssignmentId.value,
         setId: set.value.id,
@@ -487,6 +490,8 @@ function finishClassroomFlashcards() {
         scorePossible: assignedSessionAttempted.value,
     });
 }
+
+const insightStartedAt = new Date().toISOString();
 
 function onPageHide() {
     finishClassroomFlashcards();

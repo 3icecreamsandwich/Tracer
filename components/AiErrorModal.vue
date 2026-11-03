@@ -4,7 +4,7 @@
         <NuxtLink
           v-if="settingsHref"
           :to="settingsHref"
-          class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          class="tracer-button tracer-button--dark tracer-button--md"
           @click="$emit('close')"
         >
           {{ t('nav.settings') }}
@@ -13,7 +13,7 @@
         <button
           v-if="showRetry"
           type="button"
-          class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          class="tracer-button tracer-button--white tracer-button--md"
           @click="$emit('retry')"
         >
           {{ t('common.retry') }}

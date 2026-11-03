@@ -25,7 +25,7 @@
             <!-- Results -->
             <div v-if="matchIsFinished" class="w-full max-w-2xl select-none">
                 <div
-                    class="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900"
+                    class="tracer-result-surface p-8 text-center"
                 >
                     <h2
                         class="text-2xl font-semibold text-slate-900 dark:text-slate-50"
@@ -49,7 +49,7 @@
                     <div class="mt-6 flex flex-wrap justify-center gap-2">
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-orange-600 bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                            class="inline-flex items-center rounded-xl border border-orange-600 bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                             :disabled="!set || set.terms.length === 0"
                             @click="restartMatchRun"
                         >
@@ -58,7 +58,7 @@
                         <NuxtLink
                             v-if="set"
                             :to="backToSetPath"
-                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
                             {{ t("set.backToSet") }}
                         </NuxtLink>
@@ -114,7 +114,7 @@
                 <div class="flex justify-center">
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :disabled="!set || set.terms.length === 0"
                         @click="restartMatchRun"
                     >
@@ -127,6 +127,7 @@
 </template>
 
 <script setup lang="ts">
+import { recordStudySession } from '~/src/composables/study-insights';
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
 definePageMeta({ hideNavbar: true });
 
@@ -209,6 +210,7 @@ const matchLeaderboard = ref<AssignedMatchLeaderboardEntry[]>([]);
 const matchLeaderboardLoading = ref(false);
 const matchLeaderboardError = ref(false);
 let assignedMatchActive = false;
+let insightMatchFinished = false;
 const matchMemoryMode = ref(false);
 
 function beginClassroomMatch() {
@@ -239,8 +241,13 @@ async function loadMatchLeaderboard() {
 }
 
 async function finishClassroomMatch(completed = false) {
-    if (!assignedMatchActive || !set.value) return;
+    if (!set.value || insightMatchFinished) return;
+    insightMatchFinished = true;
+    const wasAssigned = assignedMatchActive;
     assignedMatchActive = false;
+    void recordStudySession({ setId: set.value.id, mode: 'match', startedAt: insightStartedAt,
+        correct: matchCorrectAttemptsCount.value, attempted: matchAttemptsCount.value }).catch(() => {});
+    if (!wasAssigned) return;
     const durationMs = matchStartedAtMs.value === null
         ? matchElapsedTimeMs.value
         : Math.max(0, Date.now() - matchStartedAtMs.value);
@@ -255,6 +262,8 @@ async function finishClassroomMatch(completed = false) {
     });
     if (completed) await loadMatchLeaderboard();
 }
+
+let insightStartedAt = new Date().toISOString();
 
 function onPageHide() {
     finishClassroomMatch();
@@ -342,6 +351,8 @@ function startMatch() {
     const s = set.value;
     if (!s) return;
     resetMatchStateForRun();
+    insightMatchFinished = false;
+    insightStartedAt = new Date().toISOString();
     matchPrepareTiles(s);
     if (matchTiles.value.length === 0) {
         matchError.value = "No cards available.";

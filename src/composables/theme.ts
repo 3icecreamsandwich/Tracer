@@ -54,9 +54,16 @@ export async function themeInitFromDb() {
 }
 
 export async function themeSetDarkMode(enabled: boolean) {
+  const previous = document.documentElement.classList.contains('dark')
   applyDarkClass(enabled)
   cacheDarkMode(enabled)
-  const db = await useTracerDb()
-  const repo = createSettingsRepo(db)
-  await repo.set({ darkMode: enabled })
+  try {
+    const db = await useTracerDb()
+    const repo = createSettingsRepo(db)
+    await repo.set({ darkMode: enabled })
+  } catch (error) {
+    applyDarkClass(previous)
+    cacheDarkMode(previous)
+    throw error
+  }
 }

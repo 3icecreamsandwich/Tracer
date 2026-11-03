@@ -23,13 +23,18 @@ export async function floatingChatInitFromDb() {
 }
 
 export async function floatingChatSetEnabled(enabled: boolean) {
-  if (!isWebPreviewRuntime()) {
-    const db = await useTracerDb()
-    const settings = await createSettingsRepo(db).set({ floatingChatEnabled: enabled })
-    floatingChatEnabled.value = settings.floatingChatEnabled
-  } else {
-    floatingChatEnabled.value = enabled
-  }
+  const previous = floatingChatEnabled.value
+  floatingChatEnabled.value = enabled
   floatingChatReady.value = true
-  return floatingChatEnabled.value
+  try {
+    if (!isWebPreviewRuntime()) {
+      const db = await useTracerDb()
+      const settings = await createSettingsRepo(db).set({ floatingChatEnabled: enabled })
+      floatingChatEnabled.value = settings.floatingChatEnabled
+    }
+    return floatingChatEnabled.value
+  } catch (error) {
+    floatingChatEnabled.value = previous
+    throw error
+  }
 }

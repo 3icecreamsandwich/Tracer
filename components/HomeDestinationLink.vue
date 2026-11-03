@@ -8,6 +8,8 @@
       :class="
         icon === 'publish'
           ? 'bg-orange-200 text-orange-600 dark:bg-orange-800 dark:text-orange-200'
+          : icon === 'insights'
+          ? 'bg-amber-100 text-amber-600 dark:bg-amber-300 dark:text-amber-600'
           : 'bg-indigo-200 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-200'
       "
       ><AppIcon :name="icon" :size="28"
@@ -16,5 +18,5 @@
   </NuxtLink>
 </template>
 <script setup lang="ts">
-defineProps<{ to: string; title: string; icon: 'publish' | 'dashboard' }>()
+defineProps<{ to: string; title: string; icon: 'publish' | 'dashboard' | 'insights' }>()
 </script>

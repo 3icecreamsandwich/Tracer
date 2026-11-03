@@ -13,7 +13,7 @@ test.afterEach(({ page }) => {
   expect(runtimeErrors.get(page) ?? [], 'No uncaught browser errors').toEqual([])
 })
 
-async function signInFixture(context: BrowserContext, page: Page, userId = owner, cloudRows?: Map<string, any>, beforeHome?: () => Promise<void>) {
+async function signInFixture(context: BrowserContext, page: Page, userId = owner, cloudRows?: Map<string, any>, beforeHome?: () => Promise<void>, role: 'student' | 'teacher' | 'super' = 'student') {
   // No real accounts, provider keys, or cloud writes are used in this suite.
   const user = { id: userId, email: 'web-test@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: { provider: 'google', providers: ['google'] }, user_metadata: { full_name: 'Web Test' }, created_at: new Date().toISOString() }
   const expires = Math.floor(Date.now() / 1000) + 3600
@@ -31,7 +31,7 @@ async function signInFixture(context: BrowserContext, page: Page, userId = owner
     }, { user, token, expires, basePath })
   }
   await context.route('**/auth/v1/**', route => route.fulfill({ json: user }))
-  await context.route('**/rest/v1/**', route => route.fulfill({ json: route.request().url().includes('user_roles') ? [{ role: 'student' }] : [] }))
+  await context.route('**/rest/v1/**', route => route.fulfill({ json: route.request().url().includes('user_roles') ? [{ role }] : [] }))
   await context.route('**/api/web/credentials', route => route.fulfill({ json: { openai: false, anthropic: false, gemini: false, ollama_cloud: false, openai_compat: false } }))
   const cloud = await installCloudLibraryFixture(context, userId, cloudRows)
   await beforeHome?.()
@@ -55,6 +55,55 @@ async function createSet(page: Page) {
   return page.url()
 }
 
+test('inline study updates Insights and manual tips refresh returns new suggestions', async ({ context, page }) => {
+  await signInFixture(context, page)
+  await createSet(page)
+  await page.getByRole('button', { name: 'Got it', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Got it', exact: true })).toBeEnabled()
+  await page.getByRole('link', { name: 'Home', exact: true }).click()
+  await page.getByRole('link', { name: 'Insights', exact: true }).click()
+  await expect(page.locator('article').filter({ hasText: 'Questions answered' })).toContainText('1')
+  await expect(page.locator('article').filter({ hasText: 'Accuracy' }).first()).toContainText('100%')
+  await expect(page.locator('article').filter({ hasText: 'Sessions' })).toContainText('1')
+  await expect(page.getByRole('heading', { name: 'Recent study' })).toBeVisible()
+
+  await context.route('**/api/ai/requests', route => route.fulfill({
+    contentType: 'text/event-stream',
+    body: 'data: {"type":"result","text":"Review the Browser card.\\nTake a short practice quiz.\\nReturn tomorrow for spaced review."}\n\ndata: {"type":"done","usage":{}}\n\n',
+  }))
+  await page.getByRole('button', { name: 'Refresh tips' }).click()
+  await expect(page.getByText('Review the Browser card.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('status')).toContainText('refreshed just now')
+})
+
+test('Super accounts show the three destinations without wrapping their labels', async ({ context, page }) => {
+  await signInFixture(context, page, owner, undefined, undefined, 'super')
+  await page.setViewportSize({ width: 830, height: 900 })
+  const insights = page.getByRole('link', { name: 'Insights', exact: true })
+  const publicSets = page.getByRole('link', { name: 'Public sets', exact: true })
+  const dashboard = page.getByRole('link', { name: 'Dashboard', exact: true })
+  await expect(insights).toBeVisible()
+  await expect(dashboard).toBeVisible()
+  const [insightsBox, publicBox, dashboardBox] = await Promise.all([insights.boundingBox(), publicSets.boundingBox(), dashboard.boundingBox()])
+  expect(insightsBox!.width).toBeGreaterThan(publicBox!.width * 1.8)
+  expect(publicBox!.y).toBe(dashboardBox!.y)
+  const title = publicSets.locator('span').last()
+  expect(await title.evaluate(element => element.getBoundingClientRect().height)).toBeLessThan(30)
+})
+
+test('Insights can refresh AI tips before the first study session', async ({ context, page }) => {
+  await signInFixture(context, page)
+  await context.route('**/api/ai/requests', route => route.fulfill({
+    contentType: 'text/event-stream',
+    body: 'data: {"type":"result","text":"Start with a short flashcard session.\\nTest yourself after review.\\nReturn tomorrow to reinforce recall."}\n\ndata: {"type":"done","usage":{}}\n\n',
+  }))
+  await page.getByRole('link', { name: 'Insights', exact: true }).click()
+  await expect(page.locator('article').filter({ hasText: 'Sessions' })).toContainText('0')
+  await page.getByRole('button', { name: 'Refresh tips' }).click()
+  await expect(page.getByText('Start with a short flashcard session.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('status')).toContainText('refreshed just now')
+})
+
 test('authentication defaults to sign in and skips browser profile editing', async ({ context, page }) => {
   await page.goto('first-run')
   await expect(page.getByRole('button', { name: 'Sign in with email', exact: true })).toBeVisible()
@@ -77,6 +126,22 @@ test('creation pages stay open without a configured AI model', async ({ context,
     await page.goBack()
     await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
   }
+})
+
+test('creation and set actions use shared primary buttons', async ({ context, page }) => {
+  await signInFixture(context, page)
+  for (const [path, label] of [['basic', 'Create'], ['synthesize', 'Create'], ['generate', 'Generate']]) {
+    await page.goto(`create/${path}`)
+    const action = page.getByRole('button', { name: label, exact: true }).first()
+    await expect(action).toHaveClass(/tracer-button--dark/)
+    await expect(action).toHaveCSS('background-color', 'rgb(2, 6, 23)')
+  }
+  const setPath = await createSet(page)
+  await page.goto(setPath)
+  await expect(page.getByRole('link', { name: 'Edit', exact: true })).toHaveClass(/tracer-button--white/)
+  await expect(page.getByRole('button', { name: 'Share', exact: true })).toHaveClass(/tracer-button--dark/)
+  await page.getByRole('link', { name: 'Edit', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Update', exact: true })).toHaveClass(/tracer-button--dark/)
 })
 
 test('creation navigation reports a failed module load and offers recovery', async ({ context, page }) => {
@@ -159,6 +224,23 @@ test('real browser library persists edits and progress across reloads and tabs',
   await expect(second.getByRole('region', { name: 'Flashcards' }).getByText('1/2', { exact: true })).toBeVisible()
   await second.reload()
   await expect(second.getByRole('region', { name: 'Flashcards' }).getByText('1/2', { exact: true })).toBeVisible()
+})
+
+test('practice and results remain usable at desktop and phone widths', async ({ context, page }) => {
+  await signInFixture(context, page)
+  const setPath = new URL(await createSet(page)).pathname
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport)
+    for (const path of [`${setPath}?mode=learn&seed=1`, `${setPath}-learn?seed=1`]) {
+      await page.goto(path)
+      await expect(page.locator('.tracer-practice-card')).toBeVisible()
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    }
+    await page.goto(`${setPath}/results?mode=learn&correct=1&attempted=2`)
+    await expect(page.locator('.tracer-result-surface')).toContainText('50%')
+    await expect(page.getByRole('link', { name: 'Restart Practice' })).toBeVisible()
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  }
 })
 
 test('local practice settings open a generated fullscreen test', async ({ context, page }) => {
@@ -338,6 +420,7 @@ test('settings stay usable during slow profile reads and preference saves', asyn
     await smart.click()
     await expect.poll(() => saving).toBe(true)
     await expect(smart).toHaveAttribute('aria-busy', 'true')
+    await expect(smart).toHaveText('On')
     releaseProfile()
     await page.getByRole('button', { name: 'Configure AI', exact: true }).click()
     await page.getByText('Other settings', { exact: true }).click()
@@ -361,6 +444,17 @@ test('settings stay usable during slow profile reads and preference saves', asyn
   }
 })
 
+
+test('failed preference saves restore the previous toggle state', async ({ context, page }) => {
+  const cloud = await signInFixture(context, page)
+  await page.goto('settings')
+  const smart = page.getByRole('region', { name: 'Flashcards · Smart Review', exact: true }).getByRole('button')
+  await expect(smart).toHaveText('Off')
+  cloud.failWrites(true)
+  await smart.click()
+  await expect(smart).toHaveText('Off')
+  await expect(smart).toBeEnabled()
+})
 
 test('a single folder click and keyboard activation toggle its contents', async ({ context, page }) => {
   await signInFixture(context, page)

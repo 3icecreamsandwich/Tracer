@@ -2,6 +2,7 @@ import type { Ref } from 'vue'
 import type { ReviewRating } from './spaced-repetition'
 import type { Uuid } from '../db/types'
 import { createRandomSeed, createSeededRandom, shuffleWith } from '../random'
+import { FLASHCARD_NAVIGATION_DURATION_MS } from './flashcard-motion'
 
 export type FlashcardAnswer = 'correct' | 'incorrect'
 
@@ -199,10 +200,12 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     if (transitionId !== state.answerTransitionId.value) return
 
     state.isNavigating.value = 'next'
-    await new Promise<void>((resolve) => setTimeout(resolve, 250))
+    await new Promise<void>((resolve) => setTimeout(resolve, FLASHCARD_NAVIGATION_DURATION_MS / 2))
     if (transitionId !== state.answerTransitionId.value) return
 
     commitAnswer(answer, rating)
+    await new Promise<void>((resolve) => setTimeout(resolve, FLASHCARD_NAVIGATION_DURATION_MS / 2))
+    if (transitionId !== state.answerTransitionId.value) return
     state.isNavigating.value = null
     state.answerFeedback.value = null
     state.answerBusy.value = false

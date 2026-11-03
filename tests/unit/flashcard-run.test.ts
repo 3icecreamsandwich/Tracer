@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import { createFlashcardRun, flashcardPassProgress, type FlashcardAnswer } from '../../src/composables/cards/flashcard-run'
+import { FLASHCARD_NAVIGATION_DURATION_MS } from '../../src/composables/cards/flashcard-motion'
 
 function createRun(onAnswer = (_answer: FlashcardAnswer) => {}) {
   const state = {
@@ -34,6 +35,22 @@ function createRun(onAnswer = (_answer: FlashcardAnswer) => {}) {
 }
 
 describe('flashcard run', () => {
+  it('changes cards at the swipe midpoint and finishes after the return motion', async () => {
+    vi.useFakeTimers()
+    try {
+      const { state, run } = createRun()
+      run.markRating(4)
+      await vi.advanceTimersByTimeAsync(450)
+      expect(state.isNavigating.value).toBe('next')
+      expect(state.cursorIndex.value).toBe(0)
+      await vi.advanceTimersByTimeAsync(FLASHCARD_NAVIGATION_DURATION_MS / 2)
+      expect(state.cursorIndex.value).toBe(1)
+      expect(state.isNavigating.value).toBe('next')
+      await vi.advanceTimersByTimeAsync(FLASHCARD_NAVIGATION_DURATION_MS / 2)
+      expect(state.isNavigating.value).toBeNull()
+      expect(state.answerBusy.value).toBe(false)
+    } finally { vi.useRealTimers() }
+  })
   it('commits a grade once even when pressed repeatedly during feedback', async () => {
     vi.useFakeTimers()
     try {

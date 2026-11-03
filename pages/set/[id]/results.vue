@@ -1,8 +1,8 @@
 <template>
   <main>
-    <div class="tracer-page mx-auto max-w-2xl p-8">
-      <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">{{ t('common.results') }}</h1>
+    <div class="tracer-page mx-auto max-w-2xl px-5 py-10 sm:px-8">
+      <div class="tracer-result-surface p-6 sm:p-8">
+        <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-50">{{ t('common.results') }}</h1>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
           {{ modeLabel }} · {{ t('set.accuracy') }} <span class="font-medium">{{ accuracyText }}</span>
         </p>
@@ -12,41 +12,22 @@
         </p>
 
         <div class="mt-6 flex flex-wrap gap-2">
-          <NuxtLink
-            :to="restartHref"
-            class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-          >
+          <AppButton :to="restartHref">
             {{ t('common.restart') }} {{ modeLabel }}
-          </NuxtLink>
+          </AppButton>
 
-          <NuxtLink
-            replace
-            :to="`/set/${setId}?mode=flashcards`"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-          >
+          <AppButton replace :to="`/set/${setId}?mode=flashcards`" variant="white">
             {{ t('set.flashcards') }}
-          </NuxtLink>
-          <NuxtLink
-            replace
-            :to="`/set/${setId}?mode=learn`"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-          >
+          </AppButton>
+          <AppButton replace :to="`/set/${setId}?mode=learn`" variant="white">
             {{ t('set.learn') }}
-          </NuxtLink>
-          <NuxtLink
-            replace
-            :to="`/set/${setId}?mode=match`"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-          >
+          </AppButton>
+          <AppButton replace :to="`/set/${setId}?mode=match`" variant="white">
             {{ t('set.match') }}
-          </NuxtLink>
-          <NuxtLink
-            replace
-            :to="`/set/${setId}?mode=chat`"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-          >
+          </AppButton>
+          <AppButton replace :to="`/set/${setId}?mode=chat`" variant="white">
             {{ t('set.chat') }}
-          </NuxtLink>
+          </AppButton>
         </div>
       </div>
     </div>

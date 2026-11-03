@@ -30,7 +30,7 @@
                         <NuxtLink
                             v-if="set && !isPublicSet"
                             :to="`/set/${set.id}/edit`"
-                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
+                            class="tracer-button tracer-button--white tracer-button--md"
                         >
                             <AppIcon name="edit" class="sm:hidden" />
                             <span class="sr-only sm:not-sr-only">{{
@@ -40,20 +40,20 @@
                         <NuxtLink
                             v-else-if="set && canEditPublishedSet"
                             :to="`/set/${set.id}/edit?published=1`"
-                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
+                            class="tracer-button tracer-button--white tracer-button--md"
                         >
                             Edit
                         </NuxtLink>
                         <NuxtLink
                             v-if="set && isPublicSet && publicSetReportable"
                             :to="`/report?set=${encodeURIComponent(set.id)}`"
-                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900"
+                            class="tracer-button tracer-button--white tracer-button--md"
                         >
                             Report
                         </NuxtLink>
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-slate-800 bg-black px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-60 dark:border-slate-200 dark:bg-white dark:text-black dark:hover:bg-slate-300"
+                            class="tracer-button tracer-button--dark tracer-button--md"
                             :disabled="busy || !set"
                             @click="openExport"
                         >
@@ -186,7 +186,7 @@
                                     <NuxtLink
                                         v-if="set"
                                         :to="`/set/${set.id}-flashcards`"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         title="Open fullscreen"
                                     >
                                         ⛶
@@ -196,7 +196,7 @@
                                 <NuxtLink
                                     v-if="studyGuideSetId"
                                     :to="studyGuideUrl"
-                                    class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    class="group rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
@@ -232,7 +232,7 @@
                                     <NuxtLink
                                         v-if="set"
                                         :to="`/set/${set.id}-learn`"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         title="Open fullscreen"
                                     >
                                         ⛶
@@ -261,7 +261,7 @@
                                     <NuxtLink
                                         v-if="set"
                                         :to="`/set/${set.id}-match`"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         title="Open fullscreen"
                                     >
                                         ⛶
@@ -270,7 +270,7 @@
                                 <NuxtLink
                                     replace
                                     :to="setModePath('chat')"
-                                    class="group rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    class="group rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                 >
                                     <p
                                         class="text-sm font-medium text-slate-900 dark:text-slate-50"
@@ -708,7 +708,7 @@
                                         <button
                                             ref="flashcardSettingsButtonEl"
                                             type="button"
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                             :aria-label="
                                                 t('set.flashcardSettings')
                                             "
@@ -949,14 +949,14 @@
                                     <button
                                         v-if="hasIncorrectCards"
                                         type="button"
-                                        class="inline-flex items-center rounded-md bg-orange-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+                                        class="inline-flex items-center rounded-xl bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
                                         @click="resumeIncorrect"
                                     >
                                         {{ t("set.resumeIncorrect") }}
                                     </button>
                                     <button
                                         type="button"
-                                        class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                                        class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                                         :disabled="allStudyTermIds.length === 0"
                                         @click="restartAllFlashcards"
                                     >
@@ -964,28 +964,28 @@
                                     </button>
                                     <!-- <NuxtLink
                     :to="`/set/${set.id}/results?mode=flashcards&correct=${correctCount}&attempted=${attemptedCount}`"
-                    class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    class="tracer-button tracer-button--dark tracer-button--md"
                   >
                     Open results page
                   </NuxtLink>  -->
                                     <NuxtLink
                                         replace
                                         :to="setModePath('chat')"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                     >
                                         {{ t("set.chat") }}
                                     </NuxtLink>
                                     <NuxtLink
                                         replace
                                         :to="setModePath('learn')"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                     >
                                         {{ t("set.learn") }}
                                     </NuxtLink>
                                     <NuxtLink
                                         replace
                                         :to="setModePath('match')"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                     >
                                         {{ t("set.match") }}
                                     </NuxtLink>
@@ -1093,7 +1093,7 @@
                                     >
                                         <button
                                             type="button"
-                                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                             :disabled="
                                                 totalCount === 0 ||
                                                 cursorIndex === 0 ||
@@ -1106,7 +1106,7 @@
 
                                         <button
                                             type="button"
-                                            class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                             :disabled="
                                                 totalCount === 0 ||
                                                 (flashcardAnswerBusy || !!isNavigating || isFlipping)
@@ -1122,7 +1122,7 @@
                                     >
                                         <button
                                             type="button"
-                                            class="inline-flex h-10 items-center justify-center rounded-md border border-[#C14D4D] bg-white px-3 text-sm font-medium text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                                            class="inline-flex h-10 items-center justify-center rounded-xl border border-[#C14D4D] bg-white px-3 text-sm font-semibold text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                                             :disabled="
                                                 !currentTerm ||
                                                 flashcardAnswerBusy
@@ -1133,7 +1133,7 @@
                                         </button>
                                         <button
                                             type="button"
-                                            class="inline-flex h-10 items-center justify-center rounded-md border border-[#2D8210] bg-white px-3 text-sm font-medium text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                                            class="inline-flex h-10 items-center justify-center rounded-xl border border-[#2D8210] bg-white px-3 text-sm font-semibold text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                                             :disabled="
                                                 !currentTerm ||
                                                 flashcardAnswerBusy
@@ -1175,7 +1175,7 @@
                                     </p>
                                     <button
                                         type="button"
-                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                         :disabled="practiceAnswerBusy"
                                         :aria-expanded="practiceSettingsOpen"
                                         aria-label="Practice settings"
@@ -1202,7 +1202,7 @@
                                     <NuxtLink
                                         v-if="set"
                                         :to="fullscreenModePath('learn')"
-                                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
                                         :aria-label="t('set.fullscreen')"
                                         :title="t('set.fullscreen')"
                                     >
@@ -1483,7 +1483,7 @@
 
                             <div
                                 v-else-if="learnIsFinished"
-                                class="mt-4 select-none"
+                                class="tracer-result-surface mt-4 select-none p-5"
                             >
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
@@ -1518,7 +1518,7 @@
                                     <button
                                         v-if="set"
                                         type="button"
-                                        class="inline-flex items-center rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 shadow-sm hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
+                                        class="inline-flex items-center rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900 shadow-sm hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
                                         @click="
                                             initializePracticeRun({
                                                 forceNew: true,
@@ -1531,7 +1531,7 @@
                                         v-if="set"
                                         replace
                                         :to="setModePath('flashcards')"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                     >
                                         {{ t("set.flashcards") }}
                                     </NuxtLink>
@@ -1539,7 +1539,7 @@
                                         v-if="set"
                                         replace
                                         :to="setModePath('chat')"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                     >
                                         {{ t("set.chat") }}
                                     </NuxtLink>
@@ -1547,7 +1547,7 @@
                                         v-if="set"
                                         replace
                                         :to="setModePath('match')"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                     >
                                         {{ t("set.match") }}
                                     </NuxtLink>
@@ -1564,7 +1564,7 @@
 
                                 <div
                                     v-else
-                                    class="flex flex-1 flex-col rounded-md border p-5 shadow-sm"
+                                    class="tracer-practice-card flex flex-1 flex-col p-5"
                                     :class="[
                                         practiceQuestionSurfaceClass(),
                                         {
@@ -1606,7 +1606,7 @@
                                         >
                                             <button
                                                 type="button"
-                                                class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                                                class="tracer-practice-choice text-base"
                                                 :class="
                                                     practiceTrueFalseChoiceClass(
                                                         true,
@@ -1624,7 +1624,7 @@
                                             </button>
                                             <button
                                                 type="button"
-                                                class="inline-flex min-h-12 items-center justify-center rounded-lg border px-4 py-2.5 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                                                class="tracer-practice-choice text-base"
                                                 :class="
                                                     practiceTrueFalseChoiceClass(
                                                         false,
@@ -1654,7 +1654,7 @@
                                                 ) in learnCurrentQuestion.options"
                                                 :key="`${learnCurrentQuestion.id}:${idx}`"
                                                 type="button"
-                                                class="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                                                class="tracer-practice-choice"
                                                 :class="
                                                     practiceMultipleChoiceClass(
                                                         idx,
@@ -1796,7 +1796,7 @@
                                 <div class="flex flex-wrap items-center gap-2">
                                     <button
                                         type="button"
-                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                         :disabled="
                                             chatBusy ||
                                             chatSaveBusy ||
@@ -1809,7 +1809,7 @@
                                     </button>
                                     <button
                                         type="button"
-                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                         :disabled="
                                             chatBusy ||
                                             chatSaveBusy ||
@@ -1954,7 +1954,7 @@
                                 <NuxtLink
                                     v-if="set"
                                     :to="fullscreenModePath('match')"
-                                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
                                     :aria-label="t('set.fullscreen')"
                                     :title="t('set.fullscreen')"
                                 >
@@ -1971,7 +1971,7 @@
 
                             <div
                                 v-if="matchIsFinished"
-                                class="mt-4 select-none"
+                                class="tracer-result-surface mt-4 select-none p-5"
                             >
                                 <h2
                                     class="text-lg font-semibold text-slate-900 dark:text-slate-50"
@@ -2005,7 +2005,7 @@
                                 <div class="mt-4 flex flex-wrap gap-2">
                                     <button
                                         type="button"
-                                        class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--dark tracer-button--md"
                                         :disabled="
                                             !set || set.terms.length === 0
                                         "
@@ -2017,7 +2017,7 @@
                                         v-if="set"
                                         replace
                                         :to="setModePath('flashcards')"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                     >
                                         {{ t("set.flashcards") }}
                                     </NuxtLink>
@@ -2025,7 +2025,7 @@
                                         v-if="set"
                                         replace
                                         :to="setModePath('learn')"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                     >
                                         {{ t("set.learn") }}
                                     </NuxtLink>
@@ -2033,7 +2033,7 @@
                                         v-if="set"
                                         replace
                                         :to="setModePath('chat')"
-                                        class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                        class="tracer-button tracer-button--white tracer-button--md"
                                     >
                                         Chat
                                     </NuxtLink>
@@ -2113,7 +2113,7 @@
                                 <NuxtLink
                                     replace
                                     :to="setModePath('flashcards')"
-                                    class="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                    class="tracer-button tracer-button--dark tracer-button--md"
                                 >
                                     {{ t("common.continue") }} ·
                                     {{ t("set.flashcards") }}
@@ -2228,7 +2228,7 @@
                                         <button
                                             ref="termsFilterButtonEl"
                                             type="button"
-                                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                                             :aria-label="t('set.filterTerms')"
                                             :title="t('set.filterTerms')"
                                             :aria-expanded="termsFilterMenuOpen"
@@ -2487,7 +2487,7 @@
                     >
                         <button
                             type="button"
-                            class="w-full rounded-md border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :disabled="chatHistoryBusy || chatDeleteBusy"
                             @click="openSavedChat(savedChat.id)"
                         >
@@ -2552,7 +2552,7 @@
             <div class="mt-5 flex justify-end gap-2">
                 <button
                     type="button"
-                    class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    class="tracer-button tracer-button--white tracer-button--md"
                     :disabled="chatDeleteBusy"
                     @click="cancelDeleteChat"
                 >
@@ -2560,7 +2560,7 @@
                 </button>
                 <button
                     type="button"
-                    class="inline-flex items-center rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
+                    class="inline-flex items-center rounded-xl border border-red-600 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
                     :disabled="chatDeleteBusy"
                     @click="confirmDeleteChat"
                 >
@@ -2685,6 +2685,7 @@ import {
     type SavedFlashcardProgress,
 } from "~/src/composables/cards/web-flashcard-state";
 import { createFlashcardMotion, createFlashcardSwipe } from "~/src/composables/cards/flashcard-motion";
+import { recordStudySession } from "~/src/composables/study-insights";
 import {
     createFlashcardRun,
 } from "~/src/composables/cards/flashcard-run";
@@ -2839,6 +2840,7 @@ const assignedScores = reactive<
     match: { correct: 0, attempted: 0 },
 });
 let activeAssignedMode: TrackedSetMode | null = null;
+let inlineInsightStartedAt = "";
 const matchLeaderboard = ref<AssignedMatchLeaderboardEntry[]>([]);
 const matchLeaderboardLoading = ref(false);
 const matchLeaderboardError = ref(false);
@@ -2870,6 +2872,17 @@ async function finishInlineAssignedMode(
     const active = activeAssignedMode;
     activeAssignedMode = null;
     const score = assignedScores[active];
+    const startedAt = inlineInsightStartedAt;
+    inlineInsightStartedAt = "";
+    if (startedAt) {
+        void recordStudySession({
+            setId: set.value.id,
+            mode: active === "learn" ? "practice" : active,
+            startedAt,
+            correct: score.correct,
+            attempted: score.attempted,
+        }).catch((error) => console.warn("Could not save study session", error));
+    }
     await completeAssignedAttempt({
         assignmentId: assignedAssignmentId.value,
         setId: set.value.id,
@@ -2883,12 +2896,13 @@ async function finishInlineAssignedMode(
 }
 
 function beginInlineAssignedMode(nextMode: SetMode) {
-    if (!assignedAssignmentId.value || !set.value || nextMode === "chat")
+    if (!set.value || nextMode === "chat")
         return;
     if (nextMode === "match" && matchStartedAtMs.value === null) return;
     const trackedMode = nextMode as TrackedSetMode;
     assignedScores[trackedMode] = { correct: 0, attempted: 0 };
     activeAssignedMode = trackedMode;
+    inlineInsightStartedAt = new Date().toISOString();
     beginAssignedAttempt({
         assignmentId: assignedAssignmentId.value,
         setId: set.value.id,
