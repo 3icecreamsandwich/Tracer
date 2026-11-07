@@ -1,27 +1,28 @@
 <template>
   <main>
+    <CreateModeSwitcher />
     <AiErrorModal :open="aiErrorOpen" :error="aiError" from="/create/synthesize" @close="closeAiError" />
-    <div class="tracer-page mx-auto max-w-5xl px-5 py-8 sm:px-8">
+    <div class="tracer-page mx-auto max-w-5xl px-5 pb-28 pt-4 sm:px-8">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex min-w-0 items-center gap-4">
-          <CreateModeIcon name="synthesize" class="h-14 w-14 shrink-0" />
-          <h1 class="text-3xl font-semibold">{{ t('home.synthesize') }}</h1>
+          <CreateModeIcon name="synthesize" class="h-10 w-10 shrink-0" />
+          <h1 class="text-2xl font-semibold">{{ t('home.synthesize') }}</h1>
         </div>
 
-        <button
+        <UButton color="primary" variant="solid"
           type="button"
-          class="tracer-button tracer-button--dark tracer-button--md"
+
           :disabled="createDisabled"
           @click="onCreate"
-        >
+         size="md">
           <LoadingSpinner v-if="busy" size="sm" />
           <template v-else>{{ t('common.create') }}</template>
-        </button>
+        </UButton>
       </div>
 
       <div
         v-if="isWebPreview"
-        class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
+        class="mt-4 rounded-[var(--tracer-radius-surface)] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
         role="status"
         aria-live="polite"
       >
@@ -30,7 +31,7 @@
 
       <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <section
-          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+          class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
           aria-label="Choose source sets"
         >
           <div class="flex items-start justify-between gap-3">
@@ -47,13 +48,13 @@
 
           <div class="mt-4">
             <label class="sr-only" for="synth-search">{{ t('nav.search') }}</label>
-            <input
+            <UInput
               id="synth-search"
               v-model="query"
               type="search"
               autocomplete="off"
               :placeholder="t('create.searchSetsPlaceholder')"
-              class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="w-full"
             />
           </div>
 
@@ -66,7 +67,7 @@
 
             <div
               v-else-if="sets.length === 0"
-              class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+              class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             >
               No sets yet. Create one first.
               <NuxtLink class="ml-1 font-medium underline" to="/create/basic">{{ t('create.basicTitle') }}</NuxtLink>
@@ -74,14 +75,14 @@
 
             <div
               v-else-if="filteredSets.length === 0"
-              class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+              class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             >
               {{ t('nav.noResults') }}
             </div>
 
             <ul v-else class="space-y-3">
               <li v-for="s in filteredSets" :key="s.id">
-                <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <div class="synth-source-row rounded-[var(--tracer-radius-surface)] bg-white p-4 dark:bg-slate-950">
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                       <p class="truncate text-sm font-medium text-slate-900 dark:text-slate-50">
@@ -92,14 +93,14 @@
                       </p>
                     </div>
 
-                    <button
+                    <UButton color="primary" variant="soft"
                       type="button"
-                      class="shrink-0 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      class="shrink-0 rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                       :disabled="busy || isWebPreview"
                       @click="toggleSelected(s.id)"
                     >
                       {{ isSelected(s.id) ? t('common.remove') : '+' }}
-                    </button>
+                    </UButton>
                   </div>
                 </div>
               </li>
@@ -109,26 +110,26 @@
 
         <aside class="space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-auto">
           <section
-            class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+            class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             aria-label="Theme"
           >
             <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('create.theme') }} ({{ t('common.optional') }})</h2>
 
             <div class="mt-3">
               <label class="sr-only" for="synth-theme">{{ t('create.theme') }}</label>
-              <input
+              <UInput
                 id="synth-theme"
                 v-model="theme"
                 type="text"
                 autocomplete="off"
                 :placeholder="t('create.themePlaceholder')"
-                class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                class="w-full"
               />
             </div>
           </section>
 
           <section
-            class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+            class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             aria-label="Selected sets"
           >
             <div class="flex items-center justify-between gap-3">
@@ -146,18 +147,18 @@
 
             <ul v-else class="mt-3 space-y-2">
               <li v-for="s in selectedSets" :key="s.id">
-                <div class="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <div class="flex items-center justify-between gap-3 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-950">
                   <p class="min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-50">
                     {{ s.title }}
                   </p>
-                  <button
+                  <UButton color="primary" variant="soft"
                     type="button"
                     class="shrink-0 text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-50"
                     :disabled="busy || isWebPreview"
                     @click="removeSelected(s.id)"
                   >
                     {{ t('common.remove') }}
-                  </button>
+                  </UButton>
                 </div>
               </li>
             </ul>
@@ -171,29 +172,29 @@
 
       <section
         v-if="rawOutput"
-        class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+        class="mt-6 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         aria-label="AI output"
       >
         <div class="flex items-start justify-between gap-4">
           <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('create.aiOutput') }}</h2>
 
           <div class="shrink-0 flex flex-wrap gap-2">
-            <button
+            <UButton color="primary" variant="soft"
               type="button"
-              class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               :disabled="!rawOutput"
               @click="copyRaw"
             >
               <AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }}
-            </button>
-            <button
+            </UButton>
+            <UButton color="primary" variant="soft"
               type="button"
-              class="tracer-button tracer-button--white tracer-button--md"
+
               :disabled="!rawOutput"
               @click="selectAllRaw"
-            >
+             size="md">
               {{ t('common.selectAll') }}
-            </button>
+            </UButton>
           </div>
         </div>
 
@@ -203,12 +204,12 @@
 
         <div class="mt-4">
           <label class="sr-only" for="ai-raw-output">{{ t('create.rawOutput') }}</label>
-          <textarea
+          <UTextarea
             id="ai-raw-output"
             ref="rawTextareaEl"
             readonly
-            rows="10"
-            class="w-full resize-y rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :rows="10"
+            class="w-full"
             :value="rawOutput"
             @focus="selectAllRaw"
           />
@@ -259,7 +260,7 @@ const formError = ref<string | null>(null)
 
 const rawOutput = ref<string | null>(null)
 const rawMessage = ref<string | null>(null)
-const rawTextareaEl = ref<HTMLTextAreaElement | null>(null)
+const rawTextareaEl = ref<{ textareaRef: HTMLTextAreaElement } | null>(null)
 
 const aiError = ref<AiErrorUx | null>(null)
 const aiErrorOpen = ref(false)
@@ -482,7 +483,7 @@ async function onCreate() {
   } finally {
     busy.value = false
     await nextTick()
-    if (rawOutput.value) rawTextareaEl.value?.focus()
+    if (rawOutput.value) rawTextareaEl.value?.textareaRef?.focus()
   }
 }
 

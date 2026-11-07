@@ -1,5 +1,5 @@
 <template>
-  <section aria-label="AI" class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+  <section aria-label="AI" class="tracer-panel mt-6 p-5">
     <div class="flex items-center justify-between gap-4">
       <div class="min-w-0">
         <h2 class="text-sm font-medium">AI</h2>
@@ -8,21 +8,25 @@
         <p v-if="mode === 'builtin' && allowance?.remaining && !allowance.available" class="mt-1 text-xs text-slate-500">Temporarily unavailable.</p>
         <p v-else-if="mode === 'builtin' && allowance?.remaining && allowance.throttled" class="mt-1 text-xs text-slate-500">Busy · please wait a minute between actions.</p>
       </div>
-      <button type="button" class="shrink-0 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900" :disabled="loading" ref="configureButton" @click="openConfigure">Configure AI</button>
+      <UButton color="primary" variant="soft" type="button" class="shrink-0" :disabled="loading" ref="configureButton" @click="openConfigure">Configure AI</UButton>
+    </div>
+    <div v-if="mode === 'builtin'" class="mt-4 space-y-2">
+      <div class="flex items-center justify-between gap-3 text-xs text-muted"><span>Monthly allowance</span><span>{{ allowance ? `${allowance.remaining} / ${allowance.limit} left` : 'Unavailable' }}</span></div>
+      <UProgress :get-value-label="() => 'Built-in AI actions remaining'" :get-value-text="() => allowance ? `${allowance.remaining} of ${allowance.limit} actions remaining` : 'Allowance unavailable'" :model-value="allowance?.remaining ?? 0" :max="allowance?.limit || 65" color="primary" size="sm" :class="{ 'opacity-40': !allowance }" />
     </div>
     <p v-if="saveError" role="alert" class="mt-2 text-sm text-red-700">{{ saveError }}</p>
   </section>
   <BaseModal :open="configureOpen" title="Configure AI" panel-class="max-w-2xl" close-label="Close AI configuration" :busy="saving" @close="configureOpen=false">
     <label class="block text-sm font-medium">AI service
-      <select aria-label="AI service" :value="mode" :disabled="saving || loading" class="mt-2 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" @change="changeMode(($event.target as HTMLSelectElement).value)">
+      <TracerSelect aria-label="AI service" :value="mode" :disabled="saving || loading" class="mt-2 block w-full rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" @change="changeMode(($event.target as HTMLSelectElement).value)">
         <option value="builtin">Built-in AI</option><option value="byok">My API keys</option>
-      </select>
+      </TracerSelect>
     </label>
     <div v-if="mode === 'builtin'" class="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
       <p>65 shared AI actions each month for chat, generation, Fact Check, and optional AI grading. No API keys needed.</p>
       <p>{{ message || summary }}</p>
       <p>Local grading and file scanning use no AI actions. Internal retries count as part of one action.</p>
-      <button type="button" class="rounded-md border border-slate-300 px-3 py-2 text-xs dark:border-slate-700 disabled:opacity-50" :disabled="refreshing" @click="refresh">{{ refreshing ? 'Checking…' : 'Refresh allowance' }}</button>
+      <UButton color="primary" variant="soft" type="button" class="rounded-[var(--tracer-radius-control)] border border-slate-300 px-3 py-2 text-xs dark:border-slate-700 disabled:opacity-50" :disabled="refreshing" @click="refresh">{{ refreshing ? 'Checking…' : 'Refresh allowance' }}</UButton>
     </div>
     <section v-else aria-label="AI models" class="mt-5"><slot /></section>
     <details class="mt-5 border-t border-slate-200 pt-4 dark:border-slate-800">
@@ -39,11 +43,11 @@ import { createSettingsRepo,useTracerDb,type AppSettings } from '~/src/composabl
 import type { AiMode,BuiltinUsage } from '~/src/composables/ai/builtin/types'
 const emit=defineEmits<{changed:[settings:AppSettings]}>()
 const configureOpen=ref(false)
-const configureButton=ref<HTMLButtonElement|null>(null)
+const configureButton=ref<{ $el: HTMLButtonElement }|null>(null)
 function openConfigure() {
   // Safari does not focus buttons on pointer activation. Give the modal a
   // stable return target for keyboard and assistive-technology users.
-  configureButton.value?.focus()
+  configureButton.value?.$el?.focus()
   configureOpen.value=true
 }
 const mode=ref<AiMode>('builtin'),loading=ref(true),saving=ref(false),refreshing=ref(false)

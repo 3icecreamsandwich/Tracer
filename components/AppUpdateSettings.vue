@@ -8,29 +8,29 @@
     @close="restartDialogOpen = false"
   >
     <div class="flex justify-end gap-3">
-      <button
+      <UButton color="primary" variant="soft"
         type="button"
-        class="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700"
+        class="rounded-[var(--tracer-radius-control)] border border-slate-300 px-3 py-2 text-sm dark:border-slate-700"
         :disabled="actionPending || busy"
         @click="restartDialogOpen = false"
       >
         Cancel
-      </button>
+      </UButton>
 
-      <button
+      <UButton color="primary" variant="soft"
         type="button"
-        class="rounded-md bg-orange-600 px-3 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-60"
+        class="rounded-[var(--tracer-radius-control)] bg-orange-600 px-3 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-60"
         :disabled="actionPending || busy || savingPreference"
         @click="confirmRestart"
       >
         {{ actionPending ? "Updating…" : "Restart now" }}
-      </button>
+      </UButton>
     </div>
   </AppDialog>
   <section
     v-if="desktop"
     id="app-updates"
-    class="mt-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
+    class="mt-6 overflow-hidden rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
     aria-labelledby="app-updates-title"
   >
     <div class="px-5 pt-3">
@@ -38,7 +38,7 @@
         <h2 id="app-updates-title" class="text-sm font-medium">App version</h2>
 
         <span
-          class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+          class="rounded-[var(--tracer-radius-control)] bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
           aria-label="Current version"
         >
           {{ currentVersion ? `v${currentVersion}` : "Loading…" }}
@@ -52,27 +52,10 @@
           <p id="automatic-updates-label" class="text-sm font-medium">
             Automatic updates
           </p>
-          <p
-            id="automatic-updates-description"
-            class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400"
-          >
-            Download new versions in the background.
-          </p>
+
         </div>
 
-        <button
-          type="button"
-          role="switch"
-          :aria-checked="enabled"
-          aria-labelledby="automatic-updates-label"
-          aria-describedby="automatic-updates-description"
-          :aria-busy="savingPreference"
-          :class="{ 'opacity-60': !ready }"
-          class="inline-flex min-w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-          @click="changePreference"
-        >
-          {{ enabled ? "On" : "Off" }}
-        </button>
+        <USwitch :model-value="enabled" aria-labelledby="automatic-updates-label" :disabled="savingPreference || !ready" @update:model-value="changePreference" />
       </div>
     </div>
 
@@ -89,14 +72,14 @@
           {{ statusText }}
         </p>
 
-        <button
+        <UButton color="primary" variant="soft"
           type="button"
-          class="inline-flex shrink-0 items-center justify-center self-start rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800"
+          class="inline-flex shrink-0 items-center justify-center self-start rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800"
           :disabled="busy || savingPreference || actionPending"
           @click="runAction"
         >
           {{ actionText }}
-        </button>
+        </UButton>
       </div>
 
       <div

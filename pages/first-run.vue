@@ -8,53 +8,53 @@
 
         <div
           v-if="mode === 'signup'"
-          class="mt-4 grid h-10 grid-cols-2 rounded-[10px] border border-neutral-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+          class="mt-4 grid h-10 grid-cols-2 rounded-[var(--tracer-radius-surface)] border border-neutral-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
           role="group"
           :aria-label="t('auth.accountType')"
         >
-          <button
+          <UButton color="primary" variant="soft"
             v-for="option in roleOptions"
             :key="option.value"
             type="button"
-            class="rounded-lg text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+            class="rounded-[var(--tracer-radius-control)] text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
             :class="accountRole === option.value ? 'bg-neutral-800 text-white' : 'bg-transparent text-neutral-950 dark:text-slate-50'"
             :aria-pressed="accountRole === option.value"
             :disabled="busy"
             @click="accountRole = option.value"
           >
             {{ t(option.label) }}
-          </button>
+          </UButton>
         </div>
 
         <label v-if="mode === 'signup'" class="mt-4 flex items-center gap-3 text-sm leading-[18px] text-neutral-800 dark:text-slate-200">
-          <input
+          <UCheckbox
             v-model="ageConfirmed"
-            type="checkbox"
-            class="h-5 w-5 shrink-0 rounded border-neutral-300 accent-neutral-800"
+
+            class="h-5 w-5 shrink-0 rounded-[var(--tracer-radius-control)] border-neutral-300 accent-neutral-800"
             :disabled="busy"
           />
           <span>{{ t('auth.ageConfirmation') }}</span>
         </label>
 
-        <div v-if="!configured" class="mt-6 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
+        <div v-if="!configured" class="mt-6 rounded-[var(--tracer-radius-surface)] border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
           {{ t('auth.notConfigured') }}
         </div>
 
-        <button
+        <UButton color="primary" variant="soft"
           type="button"
-          class="mt-[18px] flex h-11 w-full items-center justify-center rounded-[10px] border border-neutral-300 bg-white px-4 font-medium text-neutral-950 shadow-sm hover:bg-neutral-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:hover:bg-slate-800"
+          class="mt-[18px] flex h-11 w-full items-center justify-center rounded-[var(--tracer-radius-control)] border border-neutral-300 bg-white px-4 font-medium text-neutral-950 shadow-sm hover:bg-neutral-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:hover:bg-slate-800"
           :disabled="busy || !configured || (mode === 'signup' && !ageConfirmed)"
           @click="onGoogle"
         >
-          <LoadingSpinner v-if="busyProvider === 'google'" class="mr-auto" size="sm" :show-label="false" />
-          <svg v-else aria-hidden="true" viewBox="0 0 24 24" class="mr-auto h-6 w-6">
+          <LoadingSpinner v-if="busyProvider === 'google'"  size="sm" :show-label="false" />
+          <svg v-else aria-hidden="true" viewBox="0 0 24 24" class="h-5 w-5">
             <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.91h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.4Z" />
             <path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.37l-3.24-2.54c-.9.6-2.05.96-3.38.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z" />
             <path fill="#FBBC05" d="M6.39 13.92A6.02 6.02 0 0 1 6.07 12c0-.67.12-1.32.32-1.92V7.46H3.04A10 10 0 0 0 2 12c0 1.61.39 3.14 1.04 4.54l3.35-2.62Z" />
             <path fill="#EA4335" d="M12 5.95c1.47 0 2.79.51 3.83 1.5l2.87-2.88A9.64 9.64 0 0 0 12 2a10 10 0 0 0-8.96 5.46l3.35 2.62C7.18 7.71 9.39 5.95 12 5.95Z" />
           </svg>
-          <span class="mr-auto">{{ busyProvider === 'google' ? t('auth.openingBrowser') : t(mode === 'signup' ? 'auth.google' : 'auth.googleSignIn') }}</span>
-        </button>
+          <span >{{ busyProvider === 'google' ? t('auth.openingBrowser') : t(mode === 'signup' ? 'auth.google' : 'auth.googleSignIn') }}</span>
+        </UButton>
 
         <div class="my-[18px] flex items-center gap-3 text-sm uppercase text-neutral-400">
           <span class="h-px flex-1 bg-neutral-300 dark:bg-slate-700" />
@@ -65,23 +65,23 @@
         <form class="space-y-2" @submit.prevent="onEmail">
           <div v-if="mode === 'signup'">
             <label class="block text-sm font-medium" for="account-name">{{ t('auth.name') }}</label>
-            <input id="account-name" v-model="name" autocomplete="name" class="auth-input" />
+            <UInput id="account-name" v-model="name" autocomplete="name" class="w-full" />
           </div>
           <div>
             <label class="block text-sm font-medium" for="account-email">{{ t('auth.email') }}</label>
-            <input id="account-email" v-model="email" type="email" autocomplete="email" class="auth-input" />
+            <UInput id="account-email" v-model="email" type="email" autocomplete="email" class="w-full" />
           </div>
           <div>
             <label class="block text-sm font-medium" for="account-password">{{ t('auth.accountPassword') }}</label>
             <div class="relative">
-              <input
+              <UInput
                 id="account-password"
                 v-model="accountPassword"
                 :type="showAccountPassword ? 'text' : 'password'"
                 :autocomplete="mode === 'signup' ? 'new-password' : 'current-password'"
-                class="auth-input auth-password-input"
+                class="w-full"
               />
-              <button
+              <UButton color="primary" variant="soft"
                 type="button"
                 class="absolute bottom-0 right-0 flex h-10 w-11 items-center justify-center rounded-r-[10px] text-neutral-500 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-neutral-500 dark:text-slate-400 dark:hover:text-white"
                 :aria-label="t(showAccountPassword ? 'auth.hidePassword' : 'auth.showPassword')"
@@ -98,14 +98,14 @@
                   <path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z" />
                   <circle cx="12" cy="12" r="2.5" />
                 </svg>
-              </button>
+              </UButton>
             </div>
           </div>
           <label v-if="mode === 'signup'" class="flex items-center gap-5 px-4 pb-3 pt-2 text-sm leading-[18px] text-neutral-800 dark:text-slate-200">
-            <input
+            <UCheckbox
               v-model="acceptedTerms"
-              type="checkbox"
-              class="h-5 w-5 shrink-0 rounded border-neutral-300 accent-neutral-800"
+
+              class="h-5 w-5 shrink-0 rounded-[var(--tracer-radius-control)] border-neutral-300 accent-neutral-800"
               :disabled="busy"
             />
             <span>
@@ -125,28 +125,28 @@
             @expired="onCaptchaExpired"
             @error="onCaptchaError"
           />
-          <button type="submit" class="auth-primary" :disabled="busy || !configured || (mode === 'signup' && !ageConfirmed) || (turnstileEnabled && !captchaToken)">
+          <UButton color="primary" variant="solid" type="submit" class="auth-primary" :disabled="busy || !configured || (mode === 'signup' && !ageConfirmed) || (turnstileEnabled && !captchaToken)">
             <LoadingSpinner v-if="busyProvider === 'email'" size="sm" />
             <template v-else>{{ mode === 'signup' ? t('auth.letsGo') : t('auth.signInEmail') }}</template>
-          </button>
+          </UButton>
         </form>
 
-        <button type="button" class="mt-2 w-full text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-950 dark:text-slate-300 dark:hover:text-white" :disabled="busy" @click="toggleMode">
+        <UButton color="primary" variant="soft" type="button" class="mt-2 w-full justify-center text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-950 dark:text-slate-300 dark:hover:text-white" :disabled="busy" @click="toggleMode">
           {{ mode === 'signup' ? t('auth.haveAccount') : t('auth.needAccount') }}
-        </button>
+        </UButton>
         <NuxtLink v-if="mode === 'signup'" to="/parent-consent-request" class="mt-3 block text-center text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-950 dark:text-slate-300 dark:hover:text-white">
           Need an account for someone under 13? Ask a parent for consent.
         </NuxtLink>
 
-        <div v-if="authorizationUrl && errorCode === 'browser_open_failed'" class="mt-4 rounded border border-slate-300 p-3 text-sm dark:border-slate-700">
+        <div v-if="authorizationUrl && errorCode === 'browser_open_failed'" class="mt-4 rounded-[var(--tracer-radius-surface)] border border-slate-300 p-3 text-sm dark:border-slate-700">
           <p>{{ t('auth.copyBrowserLink') }}</p>
-          <button type="button" class="mt-2 font-medium text-blue-700 hover:underline dark:text-blue-300" @click="copyAuthorizationUrl"><AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }}</button>
+          <UButton color="primary" variant="soft" type="button" class="mt-2 font-medium text-blue-700 hover:underline dark:text-blue-300" @click="copyAuthorizationUrl"><AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }}</UButton>
         </div>
       </template>
 
       <template v-else-if="stage === 'verify'">
         <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">{{ t('auth.checkEmail', { email }) }}</p>
-        <div class="mt-6 rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+        <div class="mt-6 rounded-[var(--tracer-radius-surface)] border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
           {{ t('auth.waitingVerification') }}
         </div>
         <TurnstileWidget
@@ -159,41 +159,41 @@
           @expired="onCaptchaExpired"
           @error="onCaptchaError"
         />
-        <button type="button" class="auth-primary mt-5" :disabled="busy || resendCooldown > 0 || (turnstileEnabled && !captchaToken)" @click="onResend">
+        <UButton color="primary" variant="soft" type="button" class="auth-primary mt-5" :disabled="busy || resendCooldown > 0 || (turnstileEnabled && !captchaToken)" @click="onResend">
           {{ resendCooldown > 0 ? t('auth.resendIn', { seconds: resendCooldown }) : t('auth.resend') }}
-        </button>
-        <button type="button" class="mt-4 w-full text-sm text-blue-700 hover:underline dark:text-blue-300" @click="returnToSignIn">{{ t('auth.returnToSignIn') }}</button>
+        </UButton>
+        <UButton color="primary" variant="soft" type="button" class="mt-4 w-full text-sm text-blue-700 hover:underline dark:text-blue-300" @click="returnToSignIn">{{ t('auth.returnToSignIn') }}</UButton>
       </template>
 
       <template v-else-if="stage === 'local'">
-        <div class="mt-5 rounded border border-slate-200 p-3 text-sm dark:border-slate-700">
+        <div class="mt-5 rounded-[var(--tracer-radius-surface)] border border-slate-200 p-3 text-sm dark:border-slate-700">
           <div class="font-medium">{{ authenticatedEmail }}</div>
           <div class="mt-1 text-slate-500 dark:text-slate-400">
             {{ t(usesGoogleDeviceKey ? 'auth.googleAccountConnected' : 'auth.emailAccountConnected') }}
           </div>
         </div>
         <form class="mt-6 space-y-4" @submit.prevent="onLocalSetup">
-          <div v-if="usesGoogleDeviceKey && hasTauriRuntime()" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+          <div v-if="usesGoogleDeviceKey && hasTauriRuntime()" class="rounded-[var(--tracer-radius-surface)] border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
             <p class="font-medium">{{ t('auth.deviceKeyTitle') }}</p>
-            <p class="mt-2">{{ t('auth.deviceKeyDescription') }}</p>
+
             <p class="mt-2">{{ t('auth.deviceKeyTradeoff') }}</p>
           </div>
-          <div v-else-if="hasTauriRuntime() && usesEmailAccountPassword" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+          <div v-else-if="hasTauriRuntime() && usesEmailAccountPassword" class="rounded-[var(--tracer-radius-surface)] border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
             {{ t('auth.emailPasswordReuse') }}
           </div>
           <div v-else-if="hasTauriRuntime()">
             <label class="block text-sm font-medium" for="local-password">{{ t('auth.localPassword') }}</label>
-            <input id="local-password" v-model="localPassword" type="password" autocomplete="new-password" class="auth-input" />
+            <UInput id="local-password" v-model="localPassword" type="password" autocomplete="new-password" class="w-full" />
           </div>
           <div v-if="hasTauriRuntime() && !usesGoogleDeviceKey && !usesEmailAccountPassword">
             <label class="block text-sm font-medium" for="local-confirm">{{ t('auth.confirmPassword') }}</label>
-            <input id="local-confirm" v-model="localConfirm" type="password" autocomplete="new-password" class="auth-input" />
+            <UInput id="local-confirm" v-model="localConfirm" type="password" autocomplete="new-password" class="w-full" />
           </div>
           <label v-if="pendingSignupRole && usesGoogleDeviceKey" class="flex items-center gap-5 px-4 py-2 text-sm leading-[18px] text-neutral-800 dark:text-slate-200">
-            <input
+            <UCheckbox
               v-model="acceptedTerms"
-              type="checkbox"
-              class="h-5 w-5 shrink-0 rounded border-neutral-300 accent-neutral-800"
+
+              class="h-5 w-5 shrink-0 rounded-[var(--tracer-radius-control)] border-neutral-300 accent-neutral-800"
               :disabled="busy"
             />
             <span>
@@ -203,25 +203,25 @@
               <NuxtLink to="/privacy" class="underline underline-offset-2">{{ t('auth.privacyPolicy') }}</NuxtLink>
             </span>
           </label>
-          <button type="submit" class="auth-primary" :disabled="busy">
+          <UButton color="primary" variant="solid" type="submit" class="auth-primary" :disabled="busy">
             <LoadingSpinner v-if="busy" size="sm" />
             <template v-else>{{ !hasTauriRuntime() ? t('common.continue') : usesGoogleDeviceKey ? t('auth.continueWithoutPassword') : t('auth.finishSetup') }}</template>
-          </button>
+          </UButton>
         </form>
       </template>
 
       <LoadingSpinner v-else screen label="Finishing sign in…" />
 
       <p v-if="error" role="alert" class="mt-4 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
-      <button
+      <UButton color="primary" variant="soft"
         v-if="showsResetRecovery"
         type="button"
-        class="mt-3 w-full rounded-[10px] border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
+        class="mt-3 w-full rounded-[var(--tracer-radius-control)] border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
         :disabled="busy"
         @click="openResetConfirmation"
       >
         {{ t('settings.resetTracer') }}
-      </button>
+      </UButton>
     </div>
 
     <ResetTracerDialog
@@ -562,6 +562,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+@reference "~/assets/css/tailwind.css";
 .auth-input { @apply mt-0.5 h-10 w-full rounded-[10px] border border-neutral-300 bg-white px-3 text-neutral-950 shadow-sm outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50; }
 .auth-password-input { padding-right: 2.75rem; }
 .auth-primary { @apply h-10 w-full rounded-[10px] bg-neutral-800 px-4 text-lg font-medium text-white hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-offset-slate-950; }

@@ -12,6 +12,7 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
+    aiGatewayUrl: process.env.VITE_TRACER_AI_GATEWAY_URL || 'https://app.tracerquiz.com',
     githubOauthClientId: process.env.VITE_GITHUB_OAUTH_CLIENT_ID || '',
     supabaseUrl: process.env.VITE_SUPABASE_URL || '',
     supabasePublishableKey: process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '',
@@ -25,7 +26,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-07-10',
   ignore: ['src-tauri/**'],
 
-  modules: ['@nuxtjs/tailwindcss'],
+  modules: ['@nuxt/ui'],
+  ui: { colorMode: false, fonts: false },
   css: ['~/assets/css/tailwind.css', 'katex/dist/katex.min.css'],
 
   experimental: {

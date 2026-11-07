@@ -6,6 +6,7 @@
 import X from '@lucide/vue/dist/esm/icons/x.mjs'
 import Copy from '@lucide/vue/dist/esm/icons/copy.mjs'
 import Download from '@lucide/vue/dist/esm/icons/download.mjs'
+import FileInput from '@lucide/vue/dist/esm/icons/file-input.mjs'
 import ScanText from '@lucide/vue/dist/esm/icons/scan-text.mjs'
 import LibraryBig from '@lucide/vue/dist/esm/icons/library-big.mjs'
 import ListFilter from '@lucide/vue/dist/esm/icons/list-filter.mjs'
@@ -16,8 +17,22 @@ import FolderPlus from '@lucide/vue/dist/esm/icons/folder-plus.mjs'
 import Settings from '@lucide/vue/dist/esm/icons/settings.mjs'
 import Crown from '@lucide/vue/dist/esm/icons/crown.mjs'
 import Lightbulb from '@lucide/vue/dist/esm/icons/lightbulb.mjs'
+import PanelsTopLeft from '@lucide/vue/dist/esm/icons/panels-top-left.mjs'
+import GraduationCap from '@lucide/vue/dist/esm/icons/graduation-cap.mjs'
+import MessageCircle from '@lucide/vue/dist/esm/icons/message-circle.mjs'
+import BookOpen from '@lucide/vue/dist/esm/icons/book-open.mjs'
+import Layers from '@lucide/vue/dist/esm/icons/layers.mjs'
+import ListChecks from '@lucide/vue/dist/esm/icons/list-checks.mjs'
+import ChevronRight from '@lucide/vue/dist/esm/icons/chevron-right.mjs'
+import GripVertical from '@lucide/vue/dist/esm/icons/grip-vertical.mjs'
+import Trash2 from '@lucide/vue/dist/esm/icons/trash-2.mjs'
+import Expand from '@lucide/vue/dist/esm/icons/maximize.mjs'
+import Puzzle from '@lucide/vue/dist/esm/icons/puzzle.mjs'
+import ClipboardCheck from '@lucide/vue/dist/esm/icons/clipboard-check.mjs'
+import ChevronDown from '@lucide/vue/dist/esm/icons/chevron-down.mjs'
+import ImagePlus from '@lucide/vue/dist/esm/icons/image-plus.mjs'
 withDefaults(defineProps<{
-  name: 'close' | 'copy' | 'download' | 'select' | 'publish' | 'filter' | 'dashboard' | 'insights' | 'edit' | 'share' | 'add-folder' | 'settings' | 'crown'
+  name: 'close' | 'copy' | 'download' | 'select' | 'publish' | 'filter' | 'dashboard' | 'insights' | 'edit' | 'share' | 'add-folder' | 'settings' | 'crown' | 'cards' | 'classes' | 'chat' | 'guide' | 'practice' | 'chevron' | 'grip' | 'trash' | 'fullscreen' | 'match' | 'test' | 'chevron-down' | 'image-plus' | 'file-input'
   size?: number
   strokeWidth?: number
 }>(), {
@@ -25,6 +40,20 @@ withDefaults(defineProps<{
   strokeWidth: 2,
 })
 const icons = {
+  'chevron-down': ChevronDown,
+  'image-plus': ImagePlus,
+  'file-input': FileInput,
+  fullscreen: Expand,
+  match: Puzzle,
+  test: ClipboardCheck,
+  chevron: ChevronRight,
+  grip: GripVertical,
+  trash: Trash2,
+  cards: Layers,
+  classes: GraduationCap,
+  chat: MessageCircle,
+  guide: BookOpen,
+  practice: ListChecks,
   close: X,
   copy: Copy,
   download: Download,

@@ -66,3 +66,7 @@ notes.md
 .nuxt-ai-staging-cloudflare/
 
 .output-ai-staging-cloudflare/
+
+.nuxt-uihaul-build/
+
+.nuxt-followup/

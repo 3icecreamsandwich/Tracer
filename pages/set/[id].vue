@@ -1,5709 +1,5226 @@
 <template>
-    <NuxtPage v-if="isNestedSetRoute" />
-    <main v-else>
-        <AiErrorModal
-            :open="aiErrorOpen"
-            :error="aiError"
-            :from="route.fullPath"
-            :show-retry="true"
-            @close="closeAiError"
-            @retry="retryAiRequest"
-        />
-        <div class="tracer-page mx-auto max-w-4xl p-3 sm:p-8">
-            <div
-                class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-950"
+  <NuxtPage v-if="isNestedSetRoute" />
+  <main v-else>
+    <AiErrorModal
+      :open="aiErrorOpen"
+      :error="aiError"
+      :from="route.fullPath"
+      :show-retry="true"
+      @close="closeAiError"
+      @retry="retryAiRequest"
+    />
+    <div class="tracer-page set-page mx-auto max-w-4xl p-3 sm:p-8">
+      <div class="bg-white p-4 sm:p-5 dark:bg-slate-950">
+        <div class="flex items-start justify-between gap-4">
+          <div class="min-w-0">
+            <h1 class="truncate text-3xl font-semibold sm:text-2xl">
+              {{ set?.title ?? t("home.setKind") }}
+            </h1>
+            <p
+              v-if="set?.description"
+              class="line-clamp-2 mt-2 text-sm text-slate-600 dark:text-slate-300"
             >
-                <div class="flex items-start justify-between gap-4">
-                    <div class="min-w-0">
-                        <h1 class="truncate text-3xl font-semibold sm:text-2xl">
-                            {{ set?.title ?? t("home.setKind") }}
-                        </h1>
-                        <p
-                            v-if="set?.description"
-                            class="line-clamp-2 sm:line-clamp-none mt-2 text-sm text-slate-600 dark:text-slate-300"
-                        >
-                            {{ translateAppGeneratedText(set.description) }}
-                        </p>
-                    </div>
+              {{ translateAppGeneratedText(set.description) }}
+            </p>
+          </div>
 
-                    <div class="flex shrink-0 flex-wrap items-center gap-2">
-                        <NuxtLink
-                            v-if="set && !isPublicSet"
-                            :to="`/set/${set.id}/edit`"
-                            class="tracer-button tracer-button--white tracer-button--md"
-                        >
-                            <AppIcon name="edit" class="sm:hidden" />
-                            <span class="sr-only sm:not-sr-only">{{
-                                t("common.edit")
-                            }}</span>
-                        </NuxtLink>
-                        <NuxtLink
-                            v-else-if="set && canEditPublishedSet"
-                            :to="`/set/${set.id}/edit?published=1`"
-                            class="tracer-button tracer-button--white tracer-button--md"
-                        >
-                            Edit
-                        </NuxtLink>
-                        <NuxtLink
-                            v-if="set && isPublicSet && publicSetReportable"
-                            :to="`/report?set=${encodeURIComponent(set.id)}`"
-                            class="tracer-button tracer-button--white tracer-button--md"
-                        >
-                            Report
-                        </NuxtLink>
-                        <button
-                            type="button"
-                            class="tracer-button tracer-button--dark tracer-button--md"
-                            :disabled="busy || !set"
-                            @click="openExport"
-                        >
-                            <AppIcon name="share" class="sm:hidden" />
-                            <span class="sr-only sm:not-sr-only">{{
-                                t("public.share")
-                            }}</span>
-                        </button>
-                    </div>
+          <div class="flex shrink-0 flex-wrap items-center gap-2">
+            <UButton
+              color="primary"
+              variant="soft"
+              v-if="set && !isPublicSet"
+              :to="`/set/${set.id}/edit`"
+              class=""
+            >
+              <AppIcon name="edit" class="sm:hidden" />
+              <span class="sr-only sm:not-sr-only">{{ t("common.edit") }}</span>
+            </UButton>
+            <UButton
+              color="primary"
+              variant="soft"
+              v-else-if="set && canEditPublishedSet"
+              :to="`/set/${set.id}/edit?published=1`"
+              class=""
+            >
+              Edit
+            </UButton>
+            <UButton
+              color="primary"
+              variant="soft"
+              v-if="set && isPublicSet && publicSetReportable"
+              :to="`/report?set=${encodeURIComponent(set.id)}`"
+              class=""
+            >
+              Report
+            </UButton>
+            <UButton
+              color="primary"
+              variant="solid"
+              type="button"
+              :disabled="busy || !set"
+              @click="openExport"
+              size="md"
+            >
+              <AppIcon name="share" class="sm:hidden" />
+              <span class="sr-only sm:not-sr-only">{{
+                t("public.share")
+              }}</span>
+            </UButton>
+          </div>
+        </div>
+
+        <div
+          v-if="linkedFolder"
+          class="mt-4 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <span aria-hidden="true">📁</span>
+                <p
+                  class="truncate font-medium text-slate-900 dark:text-slate-50"
+                >
+                  {{ linkedFolderName }}
+                </p>
+                <span
+                  class="rounded-full px-2 py-0.5 text-xs font-medium"
+                  :class="linkedFolderStatusClass"
+                >
+                  <LoadingSpinner
+                    v-if="
+                      linkedFolder.status === 'pending' ||
+                      linkedFolder.status === 'syncing'
+                    "
+                    size="sm"
+                    :label="linkedFolderStatusLabel"
+                  />
+                  <template v-else>{{ linkedFolderStatusLabel }}</template>
+                </span>
+              </div>
+              <p
+                class="mt-1 truncate text-xs text-slate-500 dark:text-slate-400"
+                :title="linkedFolder.path"
+              >
+                {{ linkedFolder.path }}
+              </p>
+              <p
+                v-if="linkedFolder.lastError"
+                class="mt-1 text-xs text-red-700 dark:text-red-300"
+              >
+                {{ linkedFolder.lastError }}
+              </p>
+            </div>
+            <div class="flex shrink-0 flex-wrap gap-2">
+              <UButton
+                color="primary"
+                variant="soft"
+                type="button"
+                class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800"
+                :disabled="
+                  linkedFolderBusy || linkedFolder.status === 'syncing'
+                "
+                @click="syncLinkedFolderNow"
+              >
+                {{ t("linkedFolder.syncNow") }}
+              </UButton>
+              <UButton
+                color="primary"
+                variant="soft"
+                type="button"
+                class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800"
+                :disabled="
+                  linkedFolderBusy || linkedFolder.status === 'syncing'
+                "
+                @click="unlinkCurrentFolder"
+              >
+                {{ t("linkedFolder.unlink") }}
+              </UButton>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5">
+          <div
+            v-if="loadError"
+            role="alert"
+            class="space-y-3 text-sm text-red-700 dark:text-red-300"
+          >
+            <p>{{ loadError }}</p>
+            <AppButton
+              v-if="isPublicSet"
+              variant="white"
+              @click="openSetPage"
+              >{{ t("common.retry") }}</AppButton
+            >
+          </div>
+
+          <LoadingSpinner v-else-if="busy" screen />
+
+          <div
+            v-else-if="!set"
+            class="text-sm text-slate-700 dark:text-slate-200"
+          >
+            Set not found.
+          </div>
+
+          <div v-else class="space-y-6">
+            <section v-if="false" :aria-label="t('set.studyModes')">
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div
+                  class="group rounded-[var(--tracer-radius-surface)] border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                >
+                  <NuxtLink
+                    replace
+                    :to="setModePath('flashcards')"
+                    class="w-5/6"
+                  >
+                    <p
+                      class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                    >
+                      {{ t("set.flashcards") }}
+                    </p>
+                  </NuxtLink>
+                  <NuxtLink
+                    v-if="set"
+                    :to="`/set/${set.id}-flashcards`"
+                    class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    title="Open fullscreen"
+                  >
+                    ⛶
+                  </NuxtLink>
+                </div>
+
+                <NuxtLink
+                  v-if="studyGuideSetId"
+                  :to="studyGuideUrl"
+                  class="group rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                >
+                  <p
+                    class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                  >
+                    {{ t("set.studyGuide") }}
+                  </p>
+                  <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    Markdown
+                  </p>
+                </NuxtLink>
+
+                <div
+                  class="group rounded-[var(--tracer-radius-surface)] border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                >
+                  <NuxtLink replace :to="setModePath('learn')" class="w-5/6">
+                    <p
+                      class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                    >
+                      {{ t("set.learn") }}
+                    </p>
+                  </NuxtLink>
+                  <NuxtLink
+                    v-if="set"
+                    :to="`/set/${set.id}-learn`"
+                    class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    title="Open fullscreen"
+                  >
+                    ⛶
+                  </NuxtLink>
                 </div>
 
                 <div
-                    v-if="linkedFolder"
-                    class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900"
+                  class="group rounded-[var(--tracer-radius-surface)] border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                 >
-                    <div
-                        class="flex flex-wrap items-center justify-between gap-3"
+                  <NuxtLink replace :to="setModePath('match')" class="w-5/6">
+                    <p
+                      class="text-sm font-medium text-slate-900 dark:text-slate-50"
                     >
-                        <div class="min-w-0">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span aria-hidden="true">📁</span>
-                                <p
-                                    class="truncate font-medium text-slate-900 dark:text-slate-50"
-                                >
-                                    {{ linkedFolderName }}
-                                </p>
-                                <span
-                                    class="rounded-full px-2 py-0.5 text-xs font-medium"
-                                    :class="linkedFolderStatusClass"
-                                >
-                                    <LoadingSpinner
-                                        v-if="
-                                            linkedFolder.status === 'pending' ||
-                                            linkedFolder.status === 'syncing'
-                                        "
-                                        size="sm"
-                                        :label="linkedFolderStatusLabel"
-                                    />
-                                    <template v-else>{{
-                                        linkedFolderStatusLabel
-                                    }}</template>
-                                </span>
-                            </div>
-                            <p
-                                class="mt-1 truncate text-xs text-slate-500 dark:text-slate-400"
-                                :title="linkedFolder.path"
-                            >
-                                {{ linkedFolder.path }}
-                            </p>
-                            <p
-                                v-if="linkedFolder.lastError"
-                                class="mt-1 text-xs text-red-700 dark:text-red-300"
-                            >
-                                {{ linkedFolder.lastError }}
-                            </p>
-                        </div>
-                        <div class="flex shrink-0 flex-wrap gap-2">
-                            <button
-                                type="button"
-                                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800"
-                                :disabled="
-                                    linkedFolderBusy ||
-                                    linkedFolder.status === 'syncing'
-                                "
-                                @click="syncLinkedFolderNow"
-                            >
-                                {{ t("linkedFolder.syncNow") }}
-                            </button>
-                            <button
-                                type="button"
-                                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800"
-                                :disabled="
-                                    linkedFolderBusy ||
-                                    linkedFolder.status === 'syncing'
-                                "
-                                @click="unlinkCurrentFolder"
-                            >
-                                {{ t("linkedFolder.unlink") }}
-                            </button>
-                        </div>
-                    </div>
+                      {{ t("set.match") }}
+                    </p>
+                  </NuxtLink>
+                  <NuxtLink
+                    v-if="set"
+                    :to="`/set/${set.id}-match`"
+                    class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    title="Open fullscreen"
+                  >
+                    ⛶
+                  </NuxtLink>
+                </div>
+                <NuxtLink
+                  replace
+                  :to="setModePath('chat')"
+                  class="group rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                >
+                  <p
+                    class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                  >
+                    {{ t("set.chat") }}
+                  </p>
+                </NuxtLink>
+              </div>
+            </section>
+
+            <section
+              v-if="mode === 'flashcards'"
+              aria-label="Flashcards"
+              class="mobile-study-panel flex min-h-[calc(100dvh-14.5rem)] flex-col rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-3 shadow-sm sm:hidden dark:border-slate-800 dark:bg-slate-950"
+            >
+              <div class="flex items-start justify-between gap-3 px-1">
+                <div>
+                  <p
+                    class="text-base font-semibold text-slate-950 dark:text-white"
+                  >
+                    {{ t("set.flashcards") }}
+                  </p>
+                  <p
+                    class="mt-1 text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    {{ ratioText }}
+                  </p>
                 </div>
 
-                <div class="mt-5">
-                    <div
-                        v-if="loadError"
-                        role="alert"
-                        class="space-y-3 text-sm text-red-700 dark:text-red-300"
+                <div class="flex items-center gap-2">
+                  <details
+                    class="group relative"
+                    @click="closeFlashcardDisclosure"
+                  >
+                    <summary
+                      class="inline-flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                      :aria-label="t('set.flashcardSettings')"
+                      :title="t('set.flashcardSettings')"
                     >
-                        <p>{{ loadError }}</p>
-                        <AppButton
-                            v-if="isPublicSet"
-                            variant="white"
-                            @click="openSetPage"
-                            >{{ t("common.retry") }}</AppButton
-                        >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        class="h-6 w-6"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
+                        />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </summary>
+                    <div
+                      class="flashcard-settings-menu absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                      role="menu"
+                    >
+                      <FlashcardSettingsMenu
+                        :shuffle="shuffleEnabled"
+                        :starred="starredOnly"
+                        :smart-review="smartReviewEnabled"
+                        :selected="flashcardStudyFilter"
+                        :empty="totalCount === 0"
+                        :front-busy="flashcardFrontPreferenceBusy"
+                        :star-disabled="starredStudyCount === 0 && !starredOnly"
+                        :restart-disabled="allStudyTermIds.length === 0"
+                        :shuffle-label="t('set.shuffle')"
+                        :front-label="preferredFlashcardFrontOptionLabel"
+                        :starred-label="t('set.starredOnly')"
+                        :restart-label="t('common.restart')"
+                        :filters="
+                          (['learning', 'mastered', 'all'] as const).map(
+                            (value) => ({
+                              value,
+                              label:
+                                value === 'all'
+                                  ? t('set.filterAll')
+                                  : t(`set.${value}`),
+                            }),
+                          )
+                        "
+                        @shuffle="shuffleFromFlashcardSettings"
+                        @front="togglePreferredFlashcardFront"
+                        @star="toggleStarredOnlyFromFlashcardSettings"
+                        @smart="toggleSmartReview"
+                        @filter="selectFlashcardStudyFilter"
+                        @restart="restartFromFlashcardSettings"
+                      />
                     </div>
+                  </details>
 
-                    <LoadingSpinner v-else-if="busy" screen />
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-if="set && fullscreenModePath('flashcards')"
+                    type="button"
+                    class="inline-flex h-11 w-11 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                    :aria-label="t('set.fullscreen')"
+                    :title="t('set.fullscreen')"
+                    @click="openFullscreenMode('flashcards')"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="h-6 w-6"
+                    >
+                      <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
+                    </svg>
+                  </UButton>
+                </div>
+              </div>
+
+              <div
+                v-if="smartReviewEnabled"
+                class="mt-3 flex flex-wrap gap-1.5 text-[11px]"
+              >
+                <UButton
+                  color="primary"
+                  variant="soft"
+                  v-for="filter in reviewFilters"
+                  :key="filter.value"
+                  type="button"
+                  class="rounded-full border px-2 py-1"
+                  :class="
+                    reviewFilter === filter.value
+                      ? 'border-transparent bg-slate-950 text-white'
+                      : 'border-slate-200 text-slate-600'
+                  "
+                  @click="setReviewFilter(filter.value)"
+                >
+                  {{
+                    filter.value === "due" && filter.count > 0
+                      ? t("set.reviewReadyNow")
+                      : filter.label
+                  }}
+                  ({{ filter.count }})
+                </UButton>
+              </div>
+
+              <div
+                v-if="isFinished"
+                class="flex flex-1 flex-col items-center justify-center px-4 text-center"
+              >
+                <h2
+                  class="text-xl font-semibold text-slate-950 dark:text-white"
+                >
+                  {{ t("common.results") }}
+                </h2>
+                <p class="mt-3 text-slate-700 dark:text-slate-200">
+                  {{ t("set.accuracy") }}
+                  <span class="font-semibold">{{ accuracyText }}</span>
+                </p>
+                <div class="mt-5 flex flex-wrap justify-center gap-2">
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-if="hasIncorrectCards"
+                    type="button"
+                    class="rounded-[var(--tracer-radius-control)] bg-orange-600 px-4 py-2 text-sm font-medium text-white"
+                    @click="resumeIncorrect"
+                  >
+                    {{ t("set.resumeIncorrect") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    type="button"
+                    class="rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-slate-950"
+                    @click="restartAllFlashcards"
+                  >
+                    {{ t("common.restart") }}
+                  </UButton>
+                </div>
+              </div>
+              <div
+                v-else-if="totalCount === 0"
+                class="flex flex-1 items-center justify-center px-4 text-center text-sm text-slate-600 dark:text-slate-300"
+              >
+                {{ t("set.noCards") }}
+              </div>
+              <template v-else>
+                <div class="relative mt-5 min-h-0 flex-1">
+                  <button
+                    ref="mobileViewerButtonEl"
+                    type="button"
+                    class="mobile-flashcard-card relative flex h-full w-full min-h-0 touch-pan-y flex-col items-center justify-center overflow-hidden rounded-[var(--tracer-radius-control)] px-5 py-10 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+                    :class="[
+                      flashcardSurfaceClass,
+                      {
+                        'animate-flip': isFlipping,
+                        'animate-card-swipe-left': isNavigating === 'next',
+                        'animate-card-swipe-right': isNavigating === 'prev',
+                      },
+                    ]"
+                    :disabled="flashcardAnswerBusy"
+                    @touchstart.passive="flashcardSwipe.onTouchStart"
+                    @touchend.passive="flashcardSwipe.onTouchEnd"
+                    @touchcancel="flashcardSwipe.onTouchCancel"
+                    @click="flashcardSwipe.onClick"
+                  >
+                    <span
+                      v-if="isCurrentRetry"
+                      class="absolute right-4 top-4 rounded-[var(--tracer-radius-control)] border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800"
+                      >{{ t("set.tryAgain") }}</span
+                    >
+                    <p
+                      class="absolute left-5 top-5 text-sm font-medium text-slate-500 dark:text-slate-400"
+                    >
+                      {{
+                        showingDefinition
+                          ? t("create.definition")
+                          : t("create.term")
+                      }}
+                    </p>
+                    <div
+                      class="flashcard-content-row flex w-full items-center justify-center overflow-y-auto text-center text-[clamp(1.75rem,8vw,2.5rem)] font-medium text-slate-900 dark:text-slate-50"
+                      :class="{
+                        'flashcard-content-row--paired':
+                          viewerImage && viewerHasText,
+                      }"
+                    >
+                      <img
+                        v-if="viewerImage"
+                        class="flashcard-side-image shrink-0 border border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-950/70"
+                        :src="viewerImage.dataUrl"
+                        :alt="viewerImage.altText || viewerImage.filename"
+                      />
+                      <div
+                        v-if="viewerHasText"
+                        class="flashcard-side-text"
+                        :class="{
+                          'flashcard-side-text--paired': viewerImage,
+                        }"
+                      >
+                        <MarkdownRenderer
+                          :markdown="viewerText"
+                          variant="flashcard"
+                        />
+                      </div>
+                    </div>
+                  </button>
+                  <FlashcardStar
+                    :starred="isCurrentStarred"
+                    :disabled="!currentTerm || starBusy"
+                    @toggle="toggleStar"
+                  />
+                </div>
+
+                <SmartReviewRating
+                  v-if="smartReviewEnabled"
+                  :disabled="!currentTerm || flashcardAnswerBusy"
+                  @rate="markRating"
+                />
+                <div v-else class="mt-3 grid grid-cols-4 gap-2">
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    type="button"
+                    class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
+                    :disabled="
+                      cursorIndex === 0 ||
+                      flashcardAnswerBusy ||
+                      !!isNavigating ||
+                      isFlipping
+                    "
+                    :aria-label="t('set.previous')"
+                    :class="{
+                      '!opacity-100':
+                        (isNavigating || isFlipping) && cursorIndex > 0,
+                    }"
+                    style="color: var(--color-orange-700)"
+                    @click="goPrev"
+                  >
+                    <span aria-hidden="true">←</span>
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    type="button"
+                    class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
+                    :disabled="
+                      flashcardAnswerBusy || !!isNavigating || isFlipping
+                    "
+                    :aria-label="t('set.next')"
+                    :class="{ '!opacity-100': isNavigating || isFlipping }"
+                    @click="goNext"
+                  >
+                    <span aria-hidden="true">→</span>
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    type="button"
+                    class="mobile-flashcard-action border-red-400 text-red-500"
+                    :disabled="!currentTerm || flashcardAnswerBusy"
+                    :aria-label="t('set.missed')"
+                    @click="markIncorrect"
+                  >
+                    <span aria-hidden="true">×</span>
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    type="button"
+                    class="mobile-flashcard-action border-green-500 text-green-600"
+                    :disabled="!currentTerm || flashcardAnswerBusy"
+                    :aria-label="t('set.gotIt')"
+                    @click="markCorrect"
+                  >
+                    <span aria-hidden="true">✓</span>
+                  </UButton>
+                </div>
+              </template>
+            </section>
+
+            <section
+              v-if="mode === 'flashcards'"
+              aria-label="Flashcards"
+              class="study-panel hidden flex-col rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-4 shadow-sm sm:flex dark:border-slate-800 dark:bg-slate-950"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <p
+                  class="text-lg font-medium text-slate-900 dark:text-slate-50"
+                >
+                  {{ t("set.flashcards") }}
+                </p>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <p
+                    v-if="practiceTimed && !learnIsFinished"
+                    class="rounded-[var(--tracer-radius-control)] bg-orange-50 px-2.5 py-2 text-sm font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300"
+                    aria-live="polite"
+                  >
+                    {{ practiceTimerText }}
+                  </p>
+                  <p
+                    class="text-xs font-medium text-slate-500 dark:text-slate-400"
+                  >
+                    {{ ratioText }}
+                  </p>
+                  <div ref="flashcardSettingsMenuRoot" class="relative">
+                    <button
+                      ref="flashcardSettingsButtonEl"
+                      type="button"
+                      class="inline-flex h-9 w-9 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      :aria-label="t('set.flashcardSettings')"
+                      :title="t('set.flashcardSettings')"
+                      :aria-expanded="flashcardSettingsOpen"
+                      aria-haspopup="menu"
+                      @click="flashcardSettingsOpen = !flashcardSettingsOpen"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        class="h-5 w-5"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
+                        />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </button>
 
                     <div
-                        v-else-if="!set"
-                        class="text-sm text-slate-700 dark:text-slate-200"
+                      v-if="flashcardSettingsOpen"
+                      class="flashcard-settings-menu absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                      role="menu"
+                      :aria-label="t('set.flashcardSettings')"
                     >
-                        Set not found.
+                      <FlashcardSettingsMenu
+                        :shuffle="shuffleEnabled"
+                        :starred="starredOnly"
+                        :smart-review="smartReviewEnabled"
+                        :selected="flashcardStudyFilter"
+                        :empty="totalCount === 0"
+                        :front-busy="flashcardFrontPreferenceBusy"
+                        :star-disabled="starredStudyCount === 0 && !starredOnly"
+                        :restart-disabled="allStudyTermIds.length === 0"
+                        :shuffle-label="t('set.shuffle')"
+                        :front-label="preferredFlashcardFrontOptionLabel"
+                        :starred-label="t('set.starredOnly')"
+                        :restart-label="t('common.restart')"
+                        :filters="
+                          (['learning', 'mastered', 'all'] as const).map(
+                            (value) => ({
+                              value,
+                              label:
+                                value === 'all'
+                                  ? t('set.filterAll')
+                                  : t(`set.${value}`),
+                            }),
+                          )
+                        "
+                        @shuffle="shuffleFromFlashcardSettings"
+                        @front="togglePreferredFlashcardFront"
+                        @star="toggleStarredOnlyFromFlashcardSettings"
+                        @smart="toggleSmartReview"
+                        @filter="selectFlashcardStudyFilter"
+                        @restart="restartFromFlashcardSettings"
+                      />
                     </div>
+                  </div>
+                </div>
+              </div>
 
-                    <div v-else class="space-y-6">
-                        <section v-if="false" :aria-label="t('set.studyModes')">
-                            <div class="grid gap-3 sm:grid-cols-2">
-                                <div
-                                    class="group rounded-md border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                >
-                                    <NuxtLink
-                                        replace
-                                        :to="setModePath('flashcards')"
-                                        class="w-5/6"
-                                    >
-                                        <p
-                                            class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                                        >
-                                            {{ t("set.flashcards") }}
-                                        </p>
-                                        <p
-                                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                                        >
-                                            {{ t("set.flashcardsHint") }}
-                                        </p>
-                                    </NuxtLink>
-                                    <NuxtLink
-                                        v-if="set"
-                                        :to="`/set/${set.id}-flashcards`"
-                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        title="Open fullscreen"
-                                    >
-                                        ⛶
-                                    </NuxtLink>
-                                </div>
+              <div
+                v-if="smartReviewEnabled"
+                class="mt-3 flex flex-wrap gap-2 text-xs"
+              >
+                <UButton
+                  color="primary"
+                  variant="soft"
+                  v-for="filter in reviewFilters"
+                  :key="filter.value"
+                  type="button"
+                  class="rounded-full border px-3 py-1.5 transition-colors"
+                  :class="
+                    reviewFilter === filter.value
+                      ? 'border-transparent bg-slate-950 text-white dark:bg-white dark:text-slate-950'
+                      : 'border-slate-200 text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:text-slate-300'
+                  "
+                  @click="setReviewFilter(filter.value)"
+                >
+                  {{
+                    filter.value === "due" && filter.count > 0
+                      ? t("set.reviewReadyNow")
+                      : filter.label
+                  }}
+                  ({{ filter.count }})
+                </UButton>
+                <p
+                  v-if="dueCount === 0 && nextReviewText"
+                  class="w-full pt-1 text-slate-500 dark:text-slate-400"
+                >
+                  {{ t("set.nothingReady") }} ·
+                  {{ t("set.nextReview") }}
+                  {{ nextReviewText }}
+                </p>
+              </div>
 
-                                <NuxtLink
-                                    v-if="studyGuideSetId"
-                                    :to="studyGuideUrl"
-                                    class="group rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                >
-                                    <p
-                                        class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                                    >
-                                        {{ t("set.studyGuide") }}
-                                    </p>
-                                    <p
-                                        class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                                    >
-                                        Markdown
-                                    </p>
-                                </NuxtLink>
+              <div v-if="isFinished" class="mt-4 select-none">
+                <h2
+                  class="text-lg font-semibold text-slate-900 dark:text-slate-50"
+                >
+                  {{ t("common.results") }}
+                </h2>
+                <p class="mt-2 text-sm text-slate-700 dark:text-slate-200">
+                  {{ t("set.accuracy") }}
+                  <span class="font-medium">{{ accuracyText }}</span>
+                </p>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  {{ t("set.correct") }} {{ correctCount }} ·
+                  {{ t("set.attempted") }}
+                  {{ attemptedCount }}
+                </p>
 
-                                <div
-                                    class="group rounded-md border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                >
-                                    <NuxtLink
-                                        replace
-                                        :to="setModePath('learn')"
-                                        class="w-5/6"
-                                    >
-                                        <p
-                                            class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                                        >
-                                            {{ t("set.learn") }}
-                                        </p>
-                                        <p
-                                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                                        >
-                                            {{ t("set.learnHint") }}
-                                        </p>
-                                    </NuxtLink>
-                                    <NuxtLink
-                                        v-if="set"
-                                        :to="`/set/${set.id}-learn`"
-                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        title="Open fullscreen"
-                                    >
-                                        ⛶
-                                    </NuxtLink>
-                                </div>
-
-                                <div
-                                    class="group rounded-md border flex flex-row justify-between items-center border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                >
-                                    <NuxtLink
-                                        replace
-                                        :to="setModePath('match')"
-                                        class="w-5/6"
-                                    >
-                                        <p
-                                            class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                                        >
-                                            {{ t("set.match") }}
-                                        </p>
-                                        <p
-                                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                                        >
-                                            {{ t("set.matchHint") }}
-                                        </p>
-                                    </NuxtLink>
-                                    <NuxtLink
-                                        v-if="set"
-                                        :to="`/set/${set.id}-match`"
-                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        title="Open fullscreen"
-                                    >
-                                        ⛶
-                                    </NuxtLink>
-                                </div>
-                                <NuxtLink
-                                    replace
-                                    :to="setModePath('chat')"
-                                    class="group rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                >
-                                    <p
-                                        class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                                    >
-                                        {{ t("set.chat") }}
-                                    </p>
-                                    <p
-                                        class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                                    >
-                                        {{ t("set.chatHint") }}
-                                    </p>
-                                </NuxtLink>
-                            </div>
-                        </section>
-
-                        <section
-                            v-if="mode === 'flashcards'"
-                            aria-label="Flashcards"
-                            class="mobile-study-panel flex min-h-[calc(100dvh-14.5rem)] flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:hidden dark:border-slate-800 dark:bg-slate-950"
-                        >
-                            <div
-                                class="flex items-start justify-between gap-3 px-1"
-                            >
-                                <div>
-                                    <p
-                                        class="text-base font-semibold text-slate-950 dark:text-white"
-                                    >
-                                        {{ t("set.flashcards") }}
-                                    </p>
-                                    <p
-                                        class="mt-1 text-sm font-medium text-slate-700 dark:text-slate-300"
-                                    >
-                                        {{ ratioText }}
-                                    </p>
-                                </div>
-
-                                <div class="flex items-center gap-2">
-                                    <details class="group relative" @click="closeFlashcardDisclosure">
-                                        <summary
-                                            class="inline-flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                                            :aria-label="
-                                                t('set.flashcardSettings')
-                                            "
-                                            :title="t('set.flashcardSettings')"
-                                        >
-                                            <svg
-                                                aria-hidden="true"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.8"
-                                                class="h-6 w-6"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
-                                                />
-                                                <circle cx="12" cy="12" r="3" />
-                                            </svg>
-                                        </summary>
-                                        <div
-                                            class="absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-                                            role="menu"
-                                        >
-                                            <button
-                                                type="button"
-                                                role="menuitemcheckbox"
-                                                :aria-checked="shuffleEnabled"
-                                                class="mobile-settings-item"
-                                                :disabled="totalCount === 0"
-                                                @click="
-                                                    shuffleFromFlashcardSettings
-                                                "
-                                            >
-                                                <span>{{
-                                                    t("set.shuffle")
-                                                }}</span
-                                                ><span aria-hidden="true">{{
-                                                    shuffleEnabled ? "✓" : ""
-                                                }}</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                role="menuitemcheckbox"
-                                                :aria-checked="
-                                                    smartReviewEnabled
-                                                "
-                                                class="mobile-settings-item"
-                                                @click="toggleSmartReview"
-                                            >
-                                                <span>Smart Review</span
-                                                ><span aria-hidden="true">{{
-                                                    smartReviewEnabled
-                                                        ? "✓"
-                                                        : ""
-                                                }}</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                role="menuitemcheckbox"
-                                                :aria-checked="starredOnly"
-                                                class="mobile-settings-item"
-                                                :disabled="
-                                                    starredStudyCount === 0 &&
-                                                    !starredOnly
-                                                "
-                                                @click="
-                                                    toggleStarredOnlyFromFlashcardSettings
-                                                "
-                                            >
-                                                <span>{{
-                                                    t("set.starredOnly")
-                                                }}</span
-                                                ><span aria-hidden="true">{{
-                                                    starredOnly ? "✓" : ""
-                                                }}</span>
-                                            </button>
-                                            <div
-                                                class="my-1 border-t border-slate-200 dark:border-slate-800"
-                                            />
-                                            <button
-                                                v-for="filter in [
-                                                    'learning',
-                                                    'mastered',
-                                                    'all',
-                                                ] as const"
-                                                :key="filter"
-                                                type="button"
-                                                role="menuitemradio"
-                                                :aria-checked="
-                                                    flashcardStudyFilter ===
-                                                    filter
-                                                "
-                                                class="mobile-settings-item"
-                                                @click="
-                                                    selectFlashcardStudyFilter(
-                                                        filter,
-                                                    )
-                                                "
-                                            >
-                                                <span>{{
-                                                    filter === "all"
-                                                        ? t("set.filterAll")
-                                                        : t(`set.${filter}`)
-                                                }}</span
-                                                ><span aria-hidden="true">{{
-                                                    flashcardStudyFilter ===
-                                                    filter
-                                                        ? "✓"
-                                                        : ""
-                                                }}</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                role="menuitem"
-                                                class="mobile-settings-item"
-                                                :disabled="
-                                                    allStudyTermIds.length === 0
-                                                "
-                                                @click="
-                                                    restartFromFlashcardSettings
-                                                "
-                                            >
-                                                {{ t("common.restart") }}
-                                            </button>
-                                            <div
-                                                class="my-1 border-t border-slate-200 dark:border-slate-800"
-                                            />
-                                            <button
-                                                type="button"
-                                                role="menuitem"
-                                                class="mobile-settings-item"
-                                                :disabled="
-                                                    flashcardFrontPreferenceBusy
-                                                "
-                                                @click="
-                                                    togglePreferredFlashcardFront
-                                                "
-                                            >
-                                                {{
-                                                    preferredFlashcardFrontOptionLabel
-                                                }}
-                                            </button>
-                                        </div>
-                                    </details>
-
-                                    <button
-                                        v-if="
-                                            set &&
-                                            fullscreenModePath('flashcards')
-                                        "
-                                        type="button"
-                                        class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                                        :aria-label="t('set.fullscreen')"
-                                        :title="t('set.fullscreen')"
-                                        @click="
-                                            openFullscreenMode('flashcards')
-                                        "
-                                    >
-                                        <svg
-                                            aria-hidden="true"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            class="h-6 w-6"
-                                        >
-                                            <path
-                                                d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"
-                                            />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="smartReviewEnabled"
-                                class="mt-3 flex flex-wrap gap-1.5 text-[11px]"
-                            >
-                                <button
-                                    v-for="filter in reviewFilters"
-                                    :key="filter.value"
-                                    type="button"
-                                    class="rounded-full border px-2 py-1"
-                                    :class="
-                                        reviewFilter === filter.value
-                                            ? 'border-amber-500 bg-amber-50 text-amber-800'
-                                            : 'border-slate-200 text-slate-600'
-                                    "
-                                    @click="setReviewFilter(filter.value)"
-                                >
-                                    {{
-                                        filter.value === "due" &&
-                                        filter.count > 0
-                                            ? t("set.reviewReadyNow")
-                                            : filter.label
-                                    }}
-                                    ({{ filter.count }})
-                                </button>
-                            </div>
-
-                            <div
-                                v-if="isFinished"
-                                class="flex flex-1 flex-col items-center justify-center px-4 text-center"
-                            >
-                                <h2
-                                    class="text-xl font-semibold text-slate-950 dark:text-white"
-                                >
-                                    {{ t("common.results") }}
-                                </h2>
-                                <p
-                                    class="mt-3 text-slate-700 dark:text-slate-200"
-                                >
-                                    {{ t("set.accuracy") }}
-                                    <span class="font-semibold">{{
-                                        accuracyText
-                                    }}</span>
-                                </p>
-                                <div
-                                    class="mt-5 flex flex-wrap justify-center gap-2"
-                                >
-                                    <button
-                                        v-if="hasIncorrectCards"
-                                        type="button"
-                                        class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white"
-                                        @click="resumeIncorrect"
-                                    >
-                                        {{ t("set.resumeIncorrect") }}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-slate-950"
-                                        @click="restartAllFlashcards"
-                                    >
-                                        {{ t("common.restart") }}
-                                    </button>
-                                </div>
-                            </div>
-                            <div
-                                v-else-if="totalCount === 0"
-                                class="flex flex-1 items-center justify-center px-4 text-center text-sm text-slate-600 dark:text-slate-300"
-                            >
-                                {{ t("set.noCards") }}
-                            </div>
-                            <template v-else>
-                                <div class="relative mt-5 min-h-0 flex-1">
-<button
-                                    ref="mobileViewerButtonEl"
-                                    type="button"
-                                    class="mobile-flashcard-card relative flex h-full w-full min-h-0 touch-pan-y flex-col items-center justify-center overflow-hidden rounded-2xl px-5 py-10 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
-                                    :class="[
-                                        flashcardSurfaceClass,
-                                        {
-                                            'animate-flip': isFlipping,
-                                            'animate-card-swipe-left':
-                                                isNavigating === 'next',
-                                            'animate-card-swipe-right':
-                                                isNavigating === 'prev',
-                                        },
-                                    ]"
-                                    :disabled="flashcardAnswerBusy"
-                                    @touchstart.passive="flashcardSwipe.onTouchStart"
-                                    @touchend.passive="flashcardSwipe.onTouchEnd"
-                                    @touchcancel="flashcardSwipe.onTouchCancel"
-                                    @click="flashcardSwipe.onClick"
-                                >
-                                    <span
-                                        v-if="isCurrentRetry"
-                                        class="absolute right-4 top-4 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800"
-                                        >{{ t("set.tryAgain") }}</span
-                                    >
-                                    <p
-                                        class="absolute left-5 top-5 text-sm font-medium text-slate-500 dark:text-slate-400"
-                                    >
-                                        {{
-                                            showingDefinition
-                                                ? t("create.definition")
-                                                : t("create.term")
-                                        }}
-                                    </p>
-                                    <div
-                                        class="flashcard-content-row flex w-full items-center justify-center overflow-y-auto text-center text-[clamp(1.75rem,8vw,2.5rem)] font-medium text-slate-900 dark:text-slate-50"
-                                        :class="{
-                                            'flashcard-content-row--paired':
-                                                viewerImage && viewerHasText,
-                                        }"
-                                    >
-                                        <img
-                                            v-if="viewerImage"
-                                            class="flashcard-side-image shrink-0 border border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-950/70"
-                                            :src="viewerImage.dataUrl"
-                                            :alt="viewerImage.altText || viewerImage.filename"
-                                        />
-                                        <div
-                                            v-if="viewerHasText"
-                                            class="flashcard-side-text"
-                                            :class="{
-                                                'flashcard-side-text--paired':
-                                                    viewerImage,
-                                            }"
-                                        >
-                                            <MarkdownRenderer
-                                                :markdown="viewerText"
-                                                variant="flashcard"
-                                            />
-                                        </div>
-                                    </div>
-                                </button>
-<FlashcardStar :starred="isCurrentStarred" :disabled="!currentTerm || starBusy" @toggle="toggleStar" />
-</div>
-
-                                <SmartReviewRating v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" @rate="markRating" />
-                                <div v-else class="mt-3 grid grid-cols-4 gap-2">
-                                    <button
-                                        type="button"
-                                        class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
-                                        :disabled="
-                                            cursorIndex === 0 ||
-                                            (flashcardAnswerBusy || !!isNavigating || isFlipping)
-                                        "
-                                        :aria-label="t('set.previous')"
-                                        @click="goPrev"
-                                    >
-                                        <span aria-hidden="true">←</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
-                                        :disabled="
-                                            (flashcardAnswerBusy || !!isNavigating || isFlipping)
-                                        "
-                                        :aria-label="t('set.next')"
-                                        @click="goNext"
-                                    >
-                                        <span aria-hidden="true">→</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="mobile-flashcard-action border-red-400 text-red-500"
-                                        :disabled="
-                                            !currentTerm || flashcardAnswerBusy
-                                        "
-                                        :aria-label="t('set.missed')"
-                                        @click="markIncorrect"
-                                    >
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="mobile-flashcard-action border-green-500 text-green-600"
-                                        :disabled="
-                                            !currentTerm || flashcardAnswerBusy
-                                        "
-                                        :aria-label="t('set.gotIt')"
-                                        @click="markCorrect"
-                                    >
-                                        <span aria-hidden="true">✓</span>
-                                    </button>
-                                </div>
-                            </template>
-                        </section>
-
-                        <section
-                            v-if="mode === 'flashcards'"
-                            aria-label="Flashcards"
-                            class="study-panel hidden flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:flex dark:border-slate-800 dark:bg-slate-950"
-                        >
-                            <div
-                                class="flex flex-wrap items-center justify-between gap-3"
-                            >
-                                <p
-                                    class="text-lg font-medium text-slate-900 dark:text-slate-50"
-                                >
-                                    {{ t("set.flashcards") }}
-                                </p>
-
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <p
-                                        v-if="practiceTimed && !learnIsFinished"
-                                        class="rounded-md bg-orange-50 px-2.5 py-2 text-sm font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300"
-                                        aria-live="polite"
-                                    >
-                                        {{ practiceTimerText }}
-                                    </p>
-                                    <p
-                                        class="text-xs font-medium text-slate-500 dark:text-slate-400"
-                                    >
-                                        {{ ratioText }}
-                                    </p>
-                                    <div
-                                        ref="flashcardSettingsMenuRoot"
-                                        class="relative"
-                                    >
-                                        <button
-                                            ref="flashcardSettingsButtonEl"
-                                            type="button"
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                            :aria-label="
-                                                t('set.flashcardSettings')
-                                            "
-                                            :title="t('set.flashcardSettings')"
-                                            :aria-expanded="
-                                                flashcardSettingsOpen
-                                            "
-                                            aria-haspopup="menu"
-                                            @click="
-                                                flashcardSettingsOpen =
-                                                    !flashcardSettingsOpen
-                                            "
-                                        >
-                                            <svg
-                                                aria-hidden="true"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.8"
-                                                class="h-4 w-4"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
-                                                />
-                                                <circle cx="12" cy="12" r="3" />
-                                            </svg>
-                                        </button>
-
-                                        <div
-                                            v-if="flashcardSettingsOpen"
-                                            class="absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-                                            role="menu"
-                                            :aria-label="
-                                                t('set.flashcardSettings')
-                                            "
-                                        >
-                                            <button
-                                                type="button"
-                                                role="menuitemcheckbox"
-                                                :aria-checked="shuffleEnabled"
-                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
-                                                :disabled="totalCount === 0"
-                                                @click="
-                                                    shuffleFromFlashcardSettings
-                                                "
-                                            >
-                                                <span>{{
-                                                    t("set.shuffle")
-                                                }}</span>
-                                                <span
-                                                    class="w-4 text-center"
-                                                    aria-hidden="true"
-                                                    >{{
-                                                        shuffleEnabled
-                                                            ? "✓"
-                                                            : ""
-                                                    }}</span
-                                                >
-                                            </button>
-                                            <button
-                                                type="button"
-                                                role="menuitemcheckbox"
-                                                :aria-checked="
-                                                    smartReviewEnabled
-                                                "
-                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900"
-                                                @click="toggleSmartReview"
-                                            >
-                                                <span>Smart Review</span>
-                                                <span
-                                                    class="w-4 text-center"
-                                                    aria-hidden="true"
-                                                    >{{
-                                                        smartReviewEnabled
-                                                            ? "✓"
-                                                            : ""
-                                                    }}</span
-                                                >
-                                            </button>
-                                            <button
-                                                type="button"
-                                                role="menuitemcheckbox"
-                                                :aria-checked="starredOnly"
-                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
-                                                :disabled="
-                                                    starredStudyCount === 0 &&
-                                                    !starredOnly
-                                                "
-                                                @click="
-                                                    toggleStarredOnlyFromFlashcardSettings
-                                                "
-                                            >
-                                                <span>{{
-                                                    t("set.starredOnly")
-                                                }}</span>
-                                                <span
-                                                    class="w-4 text-center"
-                                                    aria-hidden="true"
-                                                    >{{
-                                                        starredOnly ? "✓" : ""
-                                                    }}</span
-                                                >
-                                            </button>
-                                            <div
-                                                class="my-1 border-t border-slate-200 dark:border-slate-800"
-                                            />
-                                            <button
-                                                v-for="filter in [
-                                                    'learning',
-                                                    'mastered',
-                                                    'all',
-                                                ] as const"
-                                                :key="filter"
-                                                type="button"
-                                                role="menuitemradio"
-                                                :aria-checked="
-                                                    flashcardStudyFilter ===
-                                                    filter
-                                                "
-                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900"
-                                                @click="
-                                                    selectFlashcardStudyFilter(
-                                                        filter,
-                                                    )
-                                                "
-                                            >
-                                                <span>{{
-                                                    filter === "all"
-                                                        ? t("set.filterAll")
-                                                        : t(`set.${filter}`)
-                                                }}</span>
-                                                <span
-                                                    class="w-4 text-center"
-                                                    aria-hidden="true"
-                                                    >{{
-                                                        flashcardStudyFilter ===
-                                                        filter
-                                                            ? "✓"
-                                                            : ""
-                                                    }}</span
-                                                >
-                                            </button>
-                                            <button
-                                                type="button"
-                                                role="menuitem"
-                                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
-                                                :disabled="
-                                                    allStudyTermIds.length === 0
-                                                "
-                                                @click="
-                                                    restartFromFlashcardSettings
-                                                "
-                                            >
-                                                {{ t("common.restart") }}
-                                            </button>
-                                            <div
-                                                class="my-1 border-t border-slate-200 dark:border-slate-800"
-                                            />
-                                            <button
-                                                type="button"
-                                                role="menuitem"
-                                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
-                                                :disabled="
-                                                    flashcardFrontPreferenceBusy
-                                                "
-                                                @click="
-                                                    togglePreferredFlashcardFront
-                                                "
-                                            >
-                                                {{
-                                                    preferredFlashcardFrontOptionLabel
-                                                }}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="smartReviewEnabled"
-                                class="mt-3 flex flex-wrap gap-2 text-xs"
-                            >
-                                <button
-                                    v-for="filter in reviewFilters"
-                                    :key="filter.value"
-                                    type="button"
-                                    class="rounded-full border px-3 py-1.5 transition-colors"
-                                    :class="
-                                        reviewFilter === filter.value
-                                            ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
-                                            : 'border-slate-200 text-slate-600 hover:border-amber-300 dark:border-slate-700 dark:text-slate-300'
-                                    "
-                                    @click="setReviewFilter(filter.value)"
-                                >
-                                    {{
-                                        filter.value === "due" &&
-                                        filter.count > 0
-                                            ? t("set.reviewReadyNow")
-                                            : filter.label
-                                    }}
-                                    ({{ filter.count }})
-                                </button>
-                                <p
-                                    v-if="dueCount === 0 && nextReviewText"
-                                    class="w-full pt-1 text-slate-500 dark:text-slate-400"
-                                >
-                                    {{ t("set.nothingReady") }} ·
-                                    {{ t("set.nextReview") }}
-                                    {{ nextReviewText }}
-                                </p>
-                            </div>
-
-                            <div v-if="isFinished" class="mt-4 select-none">
-                                <h2
-                                    class="text-lg font-semibold text-slate-900 dark:text-slate-50"
-                                >
-                                    {{ t("common.results") }}
-                                </h2>
-                                <p
-                                    class="mt-2 text-sm text-slate-700 dark:text-slate-200"
-                                >
-                                    {{ t("set.accuracy") }}
-                                    <span class="font-medium">{{
-                                        accuracyText
-                                    }}</span>
-                                </p>
-                                <p
-                                    class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                                >
-                                    {{ t("set.correct") }} {{ correctCount }} ·
-                                    {{ t("set.attempted") }}
-                                    {{ attemptedCount }}
-                                </p>
-
-                                <div class="mt-4 flex flex-wrap gap-2">
-                                    <button
-                                        v-if="hasIncorrectCards"
-                                        type="button"
-                                        class="inline-flex items-center rounded-xl bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
-                                        @click="resumeIncorrect"
-                                    >
-                                        {{ t("set.resumeIncorrect") }}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-                                        :disabled="allStudyTermIds.length === 0"
-                                        @click="restartAllFlashcards"
-                                    >
-                                        {{ t("common.restart") }}
-                                    </button>
-                                    <!-- <NuxtLink
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-if="hasIncorrectCards"
+                    type="button"
+                    class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+                    @click="resumeIncorrect"
+                  >
+                    {{ t("set.resumeIncorrect") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    type="button"
+                    class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                    :disabled="allStudyTermIds.length === 0"
+                    @click="restartAllFlashcards"
+                  >
+                    {{ t("common.restart") }}
+                  </UButton>
+                  <!-- <NuxtLink
                     :to="`/set/${set.id}/results?mode=flashcards&correct=${correctCount}&attempted=${attemptedCount}`"
                     class="tracer-button tracer-button--dark tracer-button--md"
                   >
                     Open results page
                   </NuxtLink>  -->
-                                    <NuxtLink
-                                        replace
-                                        :to="setModePath('chat')"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                    >
-                                        {{ t("set.chat") }}
-                                    </NuxtLink>
-                                    <NuxtLink
-                                        replace
-                                        :to="setModePath('learn')"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                    >
-                                        {{ t("set.learn") }}
-                                    </NuxtLink>
-                                    <NuxtLink
-                                        replace
-                                        :to="setModePath('match')"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                    >
-                                        {{ t("set.match") }}
-                                    </NuxtLink>
-                                </div>
-                            </div>
-
-                            <div
-                                v-else-if="isStarredOnlyEmpty"
-                                class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                            >
-                                {{ t("set.noStarred") }}
-                            </div>
-
-                            <div
-                                v-else-if="totalCount === 0"
-                                class="mt-4 rounded-md border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-100"
-                            >
-                                <p>{{ t("set.noCards") }}</p>
-                                <button
-                                    type="button"
-                                    class="mt-3 inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
-                                    @click="restartAllFlashcards"
-                                >
-                                    {{ t("common.restart") }}
-                                </button>
-                            </div>
-
-                            <div v-else>
-                                <div class="relative mt-3">
-<button
-                                    ref="viewerButtonEl"
-                                    type="button"
-                                    class="relative flex min-h-[clamp(16rem,34vh,24rem)] w-full touch-pan-y items-center justify-center rounded-lg p-6 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2"
-                                    :class="[
-                                        flashcardSurfaceClass,
-                                        {
-                                            'animate-flip': isFlipping,
-                                            'animate-card-swipe-left':
-                                                isNavigating === 'next',
-                                            'animate-card-swipe-right':
-                                                isNavigating === 'prev',
-                                        },
-                                    ]"
-                                    :disabled="
-                                        totalCount === 0 || flashcardAnswerBusy
-                                    "
-                                    @touchstart.passive="flashcardSwipe.onTouchStart"
-                                    @touchend.passive="flashcardSwipe.onTouchEnd"
-                                    @touchcancel="flashcardSwipe.onTouchCancel"
-                                    @click="flashcardSwipe.onClick"
-                                >
-                                    <span
-                                        v-if="isCurrentRetry"
-                                        class="absolute top-3 right-3 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100"
-                                    >
-                                        {{ t("set.tryAgain") }}
-                                    </span>
-                                    <p
-                                        class="absolute top-6 left-6 text-xs font-medium text-slate-500 dark:text-slate-400"
-                                    >
-                                        {{
-                                            showingDefinition
-                                                ? t("create.definition")
-                                                : t("create.term")
-                                        }}
-                                    </p>
-                                    <div
-                                        class="flashcard-content-row flex w-full flex-row items-center justify-center text-center text-2xl text-slate-900 dark:text-slate-50"
-                                        :class="{
-                                            'flashcard-content-row--paired':
-                                                viewerImage && viewerHasText,
-                                        }"
-                                    >
-                                        <img
-                                            v-if="viewerImage"
-                                            class="flashcard-side-image shrink-0 border border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-950/70"
-                                            :src="viewerImage.dataUrl"
-                                            :alt="viewerImage.altText || viewerImage.filename"
-                                        />
-                                        <div
-                                            v-if="viewerHasText"
-                                            class="flashcard-side-text"
-                                            :class="{
-                                                'flashcard-side-text--paired':
-                                                    viewerImage,
-                                            }"
-                                        >
-                                            <MarkdownRenderer
-                                                :markdown="viewerText"
-                                                variant="flashcard"
-                                            />
-                                        </div>
-                                    </div>
-                                </button>
-<FlashcardStar :starred="isCurrentStarred" :disabled="!currentTerm || starBusy" @toggle="toggleStar" />
-</div>
-
-                                <SmartReviewRating v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" @rate="markRating" />
-                                <div
-                                    v-else
-                    class="mt-4 flex flex-wrap items-center justify-between gap-3"
-                                >
-                                    <div
-                                        class="flex flex-wrap items-center gap-2"
-                                    >
-                                        <button
-                                            type="button"
-                                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                            :disabled="
-                                                totalCount === 0 ||
-                                                cursorIndex === 0 ||
-                                                (flashcardAnswerBusy || !!isNavigating || isFlipping)
-                                            "
-                                            @click="goPrev"
-                                        >
-                                            ← {{ t("set.previous") }}
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                            :disabled="
-                                                totalCount === 0 ||
-                                                (flashcardAnswerBusy || !!isNavigating || isFlipping)
-                                            "
-                                            @click="goNext"
-                                        >
-                                            {{ t("set.next") }} →
-                                        </button>
-                                    </div>
-
-                                    <div
-                                        class="flex flex-wrap items-center gap-2"
-                                    >
-                                        <button
-                                            type="button"
-                                            class="inline-flex h-10 items-center justify-center rounded-xl border border-[#C14D4D] bg-white px-3 text-sm font-semibold text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
-                                            :disabled="
-                                                !currentTerm ||
-                                                flashcardAnswerBusy
-                                            "
-                                            @click="markIncorrect"
-                                        >
-                                            {{ t("set.missed") }}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            class="inline-flex h-10 items-center justify-center rounded-xl border border-[#2D8210] bg-white px-3 text-sm font-semibold text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
-                                            :disabled="
-                                                !currentTerm ||
-                                                flashcardAnswerBusy
-                                            "
-                                            @click="markCorrect"
-                                        >
-                                            {{ t("set.gotIt") }}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section
-                            v-else-if="mode === 'learn'"
-                            aria-label="Practice"
-                            class="study-panel study-panel--practice relative flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-                        >
-                            <div
-                                class="flex flex-wrap items-center justify-between gap-3"
-                            >
-                                <div>
-                                    <p
-                                        class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                                    >
-                                        {{ t("set.learn") }}
-                                    </p>
-                                    <p
-                                        class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
-                                    >
-                                        {{ t("set.learnInstructions") }}
-                                    </p>
-                                </div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <p
-                                        class="text-xs font-medium text-slate-500 dark:text-slate-400"
-                                    >
-                                        {{ learnRatioText }}
-                                    </p>
-                                    <button
-                                        type="button"
-                                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="practiceAnswerBusy"
-                                        :aria-expanded="practiceSettingsOpen"
-                                        aria-label="Practice settings"
-                                        title="Practice settings"
-                                        @click="openPracticeSettings"
-                                        @keydown.esc="practiceSettingsOpen = false"
-                                    >
-                                        <svg
-                                            aria-hidden="true"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.8"
-                                            class="h-4 w-4"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
-                                            />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                    </button>
-                                    <NuxtLink
-                                        v-if="set"
-                                        :to="fullscreenModePath('learn')"
-                                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                                        :aria-label="t('set.fullscreen')"
-                                        :title="t('set.fullscreen')"
-                                    >
-                                        ⛶
-                                    </NuxtLink>
-                                </div>
-                            </div>
-
-                            <p
-                                v-if="learnError"
-                                class="mt-3 text-sm text-red-700 dark:text-red-300"
-                            >
-                                {{ learnError }}
-                            </p>
-
-                            <button
-                                v-if="practiceSettingsOpen"
-                                type="button"
-                                class="fixed inset-0 z-40 cursor-default"
-                                aria-label="Close practice settings"
-                                @click="practiceSettingsOpen = false"
-                            />
-
-                            <div
-                                v-if="practiceSettingsOpen"
-                                class="absolute inset-x-4 top-14 z-50 max-h-[min(72dvh,40rem)] overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900"
-                                role="dialog"
-                                aria-label="Practice and test settings"
-                                @keydown.esc="practiceSettingsOpen = false"
-                            >
-                                <div
-                                    class="flex flex-wrap items-start justify-between gap-3"
-                                >
-                                    <div>
-                                        <h2
-                                            class="text-base font-semibold text-slate-950 dark:text-white"
-                                        >
-                                            Practice settings
-                                        </h2>
-                                        <p
-                                            class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                                        >
-                                            Build a session that fits how you
-                                            want to study.
-                                        </p>
-                                    </div>
-                                    <div
-                                        class="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-950"
-                                    >
-                                        <button
-                                            v-for="choice in practiceSessionChoices"
-                                            :key="choice"
-                                            type="button"
-                                            class="rounded-md px-4 py-2 text-sm font-semibold capitalize transition"
-                                            :class="
-                                                practiceSessionMode === choice
-                                                    ? 'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-950'
-                                                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-                                            "
-                                            @click="
-                                                practiceSessionMode = choice
-                                            "
-                                        >
-                                            {{ choice }}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="mt-5 grid gap-5 md:grid-cols-2">
-                                    <div>
-                                        <p
-                                            class="text-sm font-semibold text-slate-900 dark:text-white"
-                                        >
-                                            Question types
-                                        </p>
-                                        <div class="mt-2 grid gap-2">
-                                            <button
-                                                v-for="item in practiceQuestionTypeChoices"
-                                                :key="item.kind"
-                                                type="button"
-                                                class="flex min-h-12 items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition"
-                                                :class="
-                                                    practiceQuestionTypes[
-                                                        item.kind
-                                                    ]
-                                                        ? 'border-orange-300 bg-orange-50 text-slate-950 dark:border-orange-700 dark:bg-orange-950/30 dark:text-white'
-                                                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300'
-                                                "
-                                                :aria-pressed="
-                                                    practiceQuestionTypes[
-                                                        item.kind
-                                                    ]
-                                                "
-                                                @click="
-                                                    togglePracticeQuestionType(
-                                                        item.kind,
-                                                    )
-                                                "
-                                            >
-                                                {{ item.label }}
-                                                <span
-                                                    class="relative h-5 w-9 shrink-0 rounded-full transition"
-                                                    :class="
-                                                        practiceQuestionTypes[
-                                                            item.kind
-                                                        ]
-                                                            ? 'bg-orange-500'
-                                                            : 'bg-slate-300 dark:bg-slate-700'
-                                                    "
-                                                >
-                                                    <span
-                                                        class="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all"
-                                                        :class="
-                                                            practiceQuestionTypes[
-                                                                item.kind
-                                                            ]
-                                                                ? 'left-[18px]'
-                                                                : 'left-0.5'
-                                                        "
-                                                    />
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-4">
-                                        <label
-                                            class="flex items-center justify-between gap-4"
-                                        >
-                                            <span
-                                                class="text-sm font-semibold text-slate-900 dark:text-white"
-                                                >Questions</span
-                                            >
-                                            <input
-                                                v-model.number="
-                                                    practiceQuestionCount
-                                                "
-                                                type="number"
-                                                min="1"
-                                                :max="practiceQuestionLimit"
-                                                step="1"
-                                                class="w-24 rounded-lg border border-slate-300 bg-white px-3 py-2 text-right text-sm font-semibold text-slate-950 shadow-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
-                                                @change="
-                                                    clampPracticeQuestionCount
-                                                "
-                                            />
-                                        </label>
-
-                                        <button
-                                            type="button"
-                                            class="flex w-full items-center justify-between text-left"
-                                            :aria-pressed="practiceShuffle"
-                                            @click="
-                                                practiceShuffle =
-                                                    !practiceShuffle
-                                            "
-                                        >
-                                            <span>
-                                                <span
-                                                    class="block text-sm font-semibold text-slate-900 dark:text-white"
-                                                    >Shuffle questions</span
-                                                >
-                                                <span
-                                                    class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400"
-                                                    >Mix question types and
-                                                    terms</span
-                                                >
-                                            </span>
-                                            <span
-                                                class="relative h-6 w-11 rounded-full transition"
-                                                :class="
-                                                    practiceShuffle
-                                                        ? 'bg-orange-500'
-                                                        : 'bg-slate-300 dark:bg-slate-700'
-                                                "
-                                            >
-                                                <span
-                                                    class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all"
-                                                    :class="
-                                                        practiceShuffle
-                                                            ? 'left-6'
-                                                            : 'left-1'
-                                                    "
-                                                />
-                                            </span>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            class="flex w-full items-center justify-between text-left"
-                                            :aria-pressed="practiceTimed"
-                                            @click="
-                                                practiceTimed = !practiceTimed
-                                            "
-                                        >
-                                            <span>
-                                                <span
-                                                    class="block text-sm font-semibold text-slate-900 dark:text-white"
-                                                    >Time limit</span
-                                                >
-                                                <span
-                                                    class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400"
-                                                    >Finish before the countdown
-                                                    ends</span
-                                                >
-                                            </span>
-                                            <span
-                                                class="relative h-6 w-11 rounded-full transition"
-                                                :class="
-                                                    practiceTimed
-                                                        ? 'bg-orange-500'
-                                                        : 'bg-slate-300 dark:bg-slate-700'
-                                                "
-                                            >
-                                                <span
-                                                    class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all"
-                                                    :class="
-                                                        practiceTimed
-                                                            ? 'left-6'
-                                                            : 'left-1'
-                                                    "
-                                                />
-                                            </span>
-                                        </button>
-
-                                        <label
-                                            v-if="practiceTimed"
-                                            class="block"
-                                        >
-                                            <span
-                                                class="flex items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200"
-                                            >
-                                                Minutes
-                                                <span>{{
-                                                    practiceTimeLimitMinutes
-                                                }}</span>
-                                            </span>
-                                            <input
-                                                v-model.number="
-                                                    practiceTimeLimitMinutes
-                                                "
-                                                type="range"
-                                                min="1"
-                                                max="60"
-                                                step="1"
-                                                class="mt-2 w-full accent-orange-500"
-                                            />
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="mt-5 flex justify-end">
-                                    <button
-                                        type="button"
-                                        class="rounded-lg bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
-                                        :disabled="
-                                            learnBusy ||
-                                            enabledPracticeQuestionTypes()
-                                                .length === 0
-                                        "
-                                        @click="applyPracticeSettings"
-                                    >
-                                        Restart
-                                        {{
-                                            practiceSessionMode === "test"
-                                                ? "test"
-                                                : "practice"
-                                        }}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <LoadingSpinner
-                                v-if="learnBusy"
-                                class="mt-4"
-                                centered
-                            />
-
-                            <div
-                                v-else-if="learnIsFinished"
-                                class="tracer-result-surface mt-4 select-none p-5"
-                            >
-                                <h2
-                                    class="text-lg font-semibold text-slate-900 dark:text-slate-50"
-                                >
-                                    {{ t("common.results") }}
-                                </h2>
-                                <p
-                                    v-if="practiceTimedOut"
-                                    class="mt-2 text-sm font-semibold text-orange-700 dark:text-orange-300"
-                                >
-                                    Time is up. Unanswered questions were
-                                    counted as missed.
-                                </p>
-                                <p
-                                    class="mt-2 text-sm text-slate-700 dark:text-slate-200"
-                                >
-                                    {{ t("set.accuracy") }}
-                                    <span class="font-medium">{{
-                                        learnAccuracyText
-                                    }}</span>
-                                </p>
-                                <p
-                                    class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                                >
-                                    {{ t("set.correct") }}
-                                    {{ learnCorrectCount }} ·
-                                    {{ t("set.attempted") }}
-                                    {{ learnAttemptedCount }}
-                                </p>
-
-                                <div class="mt-4 flex flex-wrap gap-2">
-                                    <button
-                                        v-if="set"
-                                        type="button"
-                                        class="inline-flex items-center rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900 shadow-sm hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
-                                        @click="
-                                            initializePracticeRun({
-                                                forceNew: true,
-                                            })
-                                        "
-                                    >
-                                        Restart
-                                    </button>
-                                    <NuxtLink
-                                        v-if="set"
-                                        replace
-                                        :to="setModePath('flashcards')"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                    >
-                                        {{ t("set.flashcards") }}
-                                    </NuxtLink>
-                                    <NuxtLink
-                                        v-if="set"
-                                        replace
-                                        :to="setModePath('chat')"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                    >
-                                        {{ t("set.chat") }}
-                                    </NuxtLink>
-                                    <NuxtLink
-                                        v-if="set"
-                                        replace
-                                        :to="setModePath('match')"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                    >
-                                        {{ t("set.match") }}
-                                    </NuxtLink>
-                                </div>
-                            </div>
-
-                            <div v-else class="mt-4 flex flex-1 flex-col">
-                                <div
-                                    v-if="!learnCurrentQuestion"
-                                    class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                                >
-                                    No questions available.
-                                </div>
-
-                                <div
-                                    v-else
-                                    class="tracer-practice-card flex flex-1 flex-col p-5"
-                                    :class="[
-                                        practiceQuestionSurfaceClass(),
-                                        {
-                                            'animate-slide-left':
-                                                learnIsNavigating,
-                                        },
-                                    ]"
-                                >
-                                    <p
-                                        class="text-xs font-medium text-slate-500 dark:text-slate-400"
-                                    >
-                                        {{ t("set.question") }}
-                                    </p>
-                                    <div
-                                        class="mt-3 text-2xl font-medium text-slate-900 dark:text-slate-50"
-                                    >
-                                        <MarkdownRenderer
-                                            :markdown="
-                                                learnCurrentQuestion.prompt
-                                            "
-                                            variant="flashcard"
-                                        />
-                                    </div>
-
-                                    <div
-                                        class="grid gap-3"
-                                        :class="
-                                            learnCurrentQuestion.kind ===
-                                            'true_false'
-                                                ? 'mt-auto grid-cols-2 pt-4'
-                                                : 'mt-4 flex-1'
-                                        "
-                                    >
-                                        <template
-                                            v-if="
-                                                learnCurrentQuestion.kind ===
-                                                'true_false'
-                                            "
-                                        >
-                                            <button
-                                                type="button"
-                                                class="tracer-practice-choice text-base"
-                                                :class="
-                                                    practiceTrueFalseChoiceClass(
-                                                        true,
-                                                    )
-                                                "
-                                                :disabled="
-                                                    learnBusy ||
-                                                    practiceAnswerBusy
-                                                "
-                                                @click="
-                                                    answerLearnTrueFalse(true)
-                                                "
-                                            >
-                                                True
-                                            </button>
-                                            <button
-                                                type="button"
-                                                class="tracer-practice-choice text-base"
-                                                :class="
-                                                    practiceTrueFalseChoiceClass(
-                                                        false,
-                                                    )
-                                                "
-                                                :disabled="
-                                                    learnBusy ||
-                                                    practiceAnswerBusy
-                                                "
-                                                @click="
-                                                    answerLearnTrueFalse(false)
-                                                "
-                                            >
-                                                False
-                                            </button>
-                                        </template>
-
-                                        <template
-                                            v-else-if="
-                                                learnCurrentQuestion.kind ===
-                                                'multiple_choice'
-                                            "
-                                        >
-                                            <button
-                                                v-for="(
-                                                    opt, idx
-                                                ) in learnCurrentQuestion.options"
-                                                :key="`${learnCurrentQuestion.id}:${idx}`"
-                                                type="button"
-                                                class="tracer-practice-choice"
-                                                :class="
-                                                    practiceMultipleChoiceClass(
-                                                        idx,
-                                                    )
-                                                "
-                                                :disabled="
-                                                    learnBusy ||
-                                                    practiceAnswerBusy
-                                                "
-                                                @click="
-                                                    answerLearnMultipleChoice(
-                                                        idx,
-                                                    )
-                                                "
-                                            >
-                                                <MarkdownRenderer
-                                                    :markdown="opt"
-                                                    variant="compact"
-                                                />
-                                            </button>
-                                        </template>
-                                        <form
-                                            v-else
-                                            class="grid gap-2"
-                                            @submit.prevent="answerLearnWritten()"
-                                        >
-                                            <label
-                                                for="practice-written-answer"
-                                                class="sr-only"
-                                            >
-                                                Your answer
-                                            </label>
-                                            <div class="flex items-end gap-2">
-                                                <textarea
-                                                    id="practice-written-answer"
-                                                    v-model="
-                                                        practiceWrittenAnswer
-                                                    "
-                                                    rows="1"
-                                                    autofocus
-                                                    class="h-12 w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
-                                                    placeholder="Type your answer…"
-                                                    :disabled="
-                                                        practiceAnswerBusy ||
-                                                        Boolean(
-                                                            practiceWrittenFeedback,
-                                                        )
-                                                    "
-                                                />
-                                                <button
-                                                    type="submit"
-                                                    class="inline-flex h-12 shrink-0 items-center rounded-lg border border-amber-500 bg-amber-400 px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
-                                                    :disabled="
-                                                        !practiceWrittenAnswer.trim() ||
-                                                        practiceAnswerBusy ||
-                                                        Boolean(
-                                                            practiceWrittenFeedback,
-                                                        )
-                                                    "
-                                                >
-                                                    <LoadingSpinner
-                                                        v-if="
-                                                            practiceAnswerBusy
-                                                        "
-                                                        size="sm"
-                                                        label="Checking…"
-                                                    />
-                                                    <template v-else
-                                                        >Save</template
-                                                    >
-                                                </button>
-                                                <button v-if="defaultModelId === 'builtin:auto'" type="button" class="rounded border border-amber-400 px-3 py-2 text-xs disabled:opacity-50" :disabled="practiceAnswerBusy || !practiceWrittenAnswer.trim()" @click="answerLearnWritten(true)">Grade with AI · 1 action</button>
-
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-
-                                <div
-                                    v-if="practiceWrittenFeedback"
-                                    class="mt-3 rounded-md border p-4 shadow-sm"
-                                    :class="
-                                        practiceWrittenFeedback.isCorrect
-                                            ? 'border-emerald-300 bg-emerald-50/80 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100'
-                                            : 'border-red-300 bg-red-50/80 text-red-950 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100'
-                                    "
-                                >
-                                    <p class="text-sm font-semibold">
-                                        {{
-                                            practiceWrittenFeedback.isCorrect
-                                                ? "Correct"
-                                                : "Not quite"
-                                        }}
-                                    </p>
-                                    <p class="mt-1 text-sm">
-                                        {{
-                                            practiceWrittenFeedback.explanation
-                                        }}
-                                    </p>
-                                    <div class="mt-3 flex justify-end">
-                                        <button
-                                            type="button"
-                                            class="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
-                                            :disabled="practiceAnswerBusy"
-                                            @click="
-                                                continueAfterWrittenFeedback
-                                            "
-                                        >
-                                            Continue
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section
-                            v-else-if="mode === 'chat'"
-                            aria-label="Chat"
-                            class="study-panel study-panel--chat flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-                        >
-                            <div
-                                class="flex flex-wrap items-center justify-between gap-3"
-                            >
-                                <div class="flex min-w-0 items-center gap-3">
-                                    <img :src="chatModeIcon" alt="" aria-hidden="true" class="h-10 w-10 shrink-0 rounded-xl bg-amber-50 p-1.5 object-contain dark:bg-amber-950/40" />
-                                    <div>
-                                    <p
-                                        class="text-base font-semibold text-slate-900 dark:text-slate-50"
-                                    >
-                                        {{ t("set.chat") }}
-                                    </p>
-                                    <p
-                                        class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
-                                    >
-                                        {{ t("set.chatHint") }}
-                                    </p>
-                                    </div>
-                                </div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <button
-                                        type="button"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                        :disabled="
-                                            chatBusy ||
-                                            chatSaveBusy ||
-                                            !set ||
-                                            isWebPreview
-                                        "
-                                        @click="openChatHistory"
-                                    >
-                                        {{ t("chat.history") }}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                        :disabled="
-                                            chatBusy ||
-                                            chatSaveBusy ||
-                                            chatMessages.length === 0
-                                        "
-                                        @click="clearCurrentChat"
-                                    >
-                                        {{ t("common.clear") }}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :disabled="
-                                            chatBusy || chatSaveBusy || !set
-                                        "
-                                        :aria-label="t('chat.new')"
-                                        :title="t('chat.new')"
-                                        @click="startNewChat"
-                                    >
-                                        <span aria-hidden="true">+</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div
-                                ref="chatLogEl"
-                                class="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-xl bg-slate-50 p-4 text-sm text-slate-900 dark:bg-slate-900/60 dark:text-slate-50"
-                                role="log"
-                                aria-live="polite"
-                            >
-                                <p
-                                    v-if="chatError"
-                                    class="text-sm text-red-700 dark:text-red-300"
-                                >
-                                    {{ chatError }}
-                                </p>
-                                <p
-                                    v-if="chatMessages.length === 0"
-                                    class="text-sm text-slate-600 dark:text-slate-300"
-                                >
-                                    {{ t("set.chatHint") }}
-                                </p>
-
-                                <div
-                                    v-for="m in chatMessages"
-                                    :key="m.id"
-                                    class="flex"
-                                    :class="
-                                        m.role === 'user'
-                                            ? 'justify-end'
-                                            : 'justify-start'
-                                    "
-                                >
-                                    <div
-                                        class="max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed"
-                                        :class="
-                                            m.role === 'assistant' &&
-                                            chatBusy &&
-                                            !m.content
-                                                ? ''
-                                                : m.role === 'user'
-                                                  ? 'bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-50'
-                                                  : 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
-                                        "
-                                    >
-                                        <LoadingSpinner
-                                            v-if="
-                                                m.role === 'assistant' &&
-                                                chatBusy &&
-                                                !m.content
-                                            "
-                                            label="Loading response"
-                                            :show-label="false"
-                                        />
-                                        <MarkdownRenderer
-                                            v-else
-                                            :markdown="m.content"
-                                            variant="compact"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="relative mt-3">
-                                <label class="sr-only" for="chat-input">{{
-                                    t("set.chat")
-                                }}</label>
-                                <textarea
-                                    id="chat-input"
-                                    ref="chatTextareaEl"
-                                    v-model="chatInput"
-                                    rows="2"
-                                    autocomplete="off"
-                                    :placeholder="t('set.chatHint')"
-                                    class="block min-h-[76px] w-full resize-y rounded-xl border border-slate-200 bg-white px-4 pb-12 pt-2.5 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                    :disabled="chatBusy || chatSaveBusy || !set"
-                                    @keydown="onChatInputKeydown"
-                                />
-                                <button
-                                    type="button"
-                                    aria-label="Send message"
-                                    class="absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-                                    :disabled="
-                                        chatBusy ||
-                                        chatSaveBusy ||
-                                        !set ||
-                                        !chatInput.trim()
-                                    "
-                                    @click="sendChat"
-                                >
-                                    <svg aria-hidden="true" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
-                                </button>
-                            </div>
-
-                            <p
-                                class="mt-2 text-xs text-slate-500 dark:text-slate-400"
-                            >
-                                Enter · Shift+Enter
-                            </p>
-                        </section>
-
-                        <section
-                            v-else-if="mode === 'match'"
-                            aria-label="Match"
-                            class="study-panel flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-                        >
-                            <div
-                                class="flex flex-wrap items-start justify-between gap-3"
-                            >
-                                <div>
-                                    <p
-                                        class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                                    >
-                                        {{ t("set.match") }}
-                                    </p>
-                                    <p
-                                        class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
-                                    >
-                                        {{ t("set.matchInstructions") }}
-                                    </p>
-                                </div>
-                                <NuxtLink
-                                    v-if="set"
-                                    :to="fullscreenModePath('match')"
-                                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                                    :aria-label="t('set.fullscreen')"
-                                    :title="t('set.fullscreen')"
-                                >
-                                    ⛶
-                                </NuxtLink>
-                            </div>
-
-                            <p
-                                v-if="matchError"
-                                class="mt-3 text-sm text-red-700 dark:text-red-300"
-                            >
-                                {{ matchError }}
-                            </p>
-
-                            <div
-                                v-if="matchIsFinished"
-                                class="tracer-result-surface mt-4 select-none p-5"
-                            >
-                                <h2
-                                    class="text-lg font-semibold text-slate-900 dark:text-slate-50"
-                                >
-                                    {{ t("common.results") }}
-                                </h2>
-                                <p
-                                    class="mt-2 text-sm text-slate-700 dark:text-slate-200"
-                                >
-                                    {{ t("set.accuracy") }}
-                                    <span class="font-medium">{{
-                                        matchAccuracyText
-                                    }}</span>
-                                </p>
-                                <p
-                                    class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                                >
-                                    {{ t("set.matched") }}
-                                    {{ matchMatchedPairsCount }}/{{
-                                        matchPairsTarget
-                                    }}
-                                    · {{ t("set.attempts") }}
-                                    {{ matchAttemptsCount }}
-                                </p>
-                                <p
-                                    class="mt-1 text-sm text-slate-600 dark:text-slate-300"
-                                >
-                                    {{ t("set.time") }} {{ matchTimeText }}
-                                </p>
-
-                                <div class="mt-4 flex flex-wrap gap-2">
-                                    <button
-                                        type="button"
-                                        class="tracer-button tracer-button--dark tracer-button--md"
-                                        :disabled="
-                                            !set || set.terms.length === 0
-                                        "
-                                        @click="restartMatchRun"
-                                    >
-                                        {{ t("set.playAgain") }}
-                                    </button>
-                                    <NuxtLink
-                                        v-if="set"
-                                        replace
-                                        :to="setModePath('flashcards')"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                    >
-                                        {{ t("set.flashcards") }}
-                                    </NuxtLink>
-                                    <NuxtLink
-                                        v-if="set"
-                                        replace
-                                        :to="setModePath('learn')"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                    >
-                                        {{ t("set.learn") }}
-                                    </NuxtLink>
-                                    <NuxtLink
-                                        v-if="set"
-                                        replace
-                                        :to="setModePath('chat')"
-                                        class="tracer-button tracer-button--white tracer-button--md"
-                                    >
-                                        Chat
-                                    </NuxtLink>
-                                </div>
-                                <MatchLeaderboard
-                                    :assignment-id="assignedAssignmentId"
-                                    :entries="matchLeaderboard"
-                                    :loading="matchLeaderboardLoading"
-                                    :error="matchLeaderboardError"
-                                    @retry="loadMatchLeaderboard"
-                                />
-                            </div>
-
-                            <div v-else class="mt-4 flex flex-1 flex-col">
-                                <p
-                                    v-if="matchIsRunning"
-                                    class="mb-3 text-center text-sm font-medium tabular-nums text-slate-600 dark:text-slate-300"
-                                >
-                                    {{ matchTopline }}
-                                </p>
-                                <MatchStartScreen
-                                    v-if="!matchIsRunning"
-                                    class="flex-1"
-                                    :disabled="!set || set.terms.length === 0"
-                                    @start="startMatch"
-                                />
-
-                                <div
-                                    v-else
-                                    class="grid auto-rows-[4rem] grid-cols-2 content-start gap-2 sm:flex-1 sm:auto-rows-fr sm:grid-cols-4"
-                                >
-                                    <button
-                                        v-for="tile in matchTiles"
-                                        :key="tile.id"
-                                        type="button"
-                                        data-match-tile="true"
-                                        class="relative min-h-16 w-full rounded-md border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:min-h-20 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                        :class="matchTileClass(tile)"
-                                        :disabled="
-                                            matchTileDisabled(tile) || matchBusy
-                                        "
-                                        @click.stop="onMatchTileClick(tile)"
-                                    >
-                                        <span class="sr-only">{{
-                                            t("set.tile")
-                                        }}</span>
-                                        <span
-                                            v-if="matchIsTileRevealed(tile)"
-                                            class="block h-full overflow-hidden text-xs font-medium leading-snug"
-                                        >
-                                            <MarkdownRenderer
-                                                :markdown="tile.text"
-                                                variant="tile"
-                                            />
-                                        </span>
-                                    </button>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section
-                            v-else
-                            aria-label="Mode"
-                            class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-                        >
-                            <p
-                                class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                            >
-                                {{ t("set.comingSoon") }}
-                            </p>
-                            <p
-                                class="mt-2 text-sm text-slate-600 dark:text-slate-300"
-                            >
-                                {{ t("set.notImplemented") }}
-                            </p>
-                            <div class="mt-4 flex flex-wrap gap-2">
-                                <NuxtLink
-                                    replace
-                                    :to="setModePath('flashcards')"
-                                    class="tracer-button tracer-button--dark tracer-button--md"
-                                >
-                                    {{ t("common.continue") }} ·
-                                    {{ t("set.flashcards") }}
-                                </NuxtLink>
-                            </div>
-                        </section>
-
-                        <section
-                            class="hidden sm:block"
-                            :aria-label="t('set.studyModes')"
-                        >
-                            <div
-                                class="study-mode-bar flex flex-nowrap gap-3 overflow-x-auto pb-1"
-                            >
-                                <StudyModeTile
-                                    :to="setModePath('flashcards')"
-                                    :fullscreen-to="
-                                        fullscreenModePath('flashcards')
-                                    "
-                                    :icon="flashcardsModeIcon"
-                                    :title="t('set.flashcards')"
-                                    :active="mode === 'flashcards'"
-                                    replace
-                                />
-                                <StudyModeTile
-                                    :to="setModePath('learn')"
-                                    :fullscreen-to="fullscreenModePath('learn')"
-                                    :icon="practiceModeIcon"
-                                    :title="t('set.learn')"
-                                    :active="mode === 'learn'"
-                                    replace
-                                />
-                                <StudyModeTile
-                                    :to="setModePath('chat')"
-                                    :icon="chatModeIcon"
-                                    :title="t('set.chat')"
-                                    :active="mode === 'chat'"
-                                    replace
-                                />
-                                <StudyModeTile
-                                    :to="setModePath('match')"
-                                    :fullscreen-to="fullscreenModePath('match')"
-                                    :icon="matchModeIcon"
-                                    :title="t('set.match')"
-                                    :active="mode === 'match'"
-                                    replace
-                                />
-                                <StudyModeTile
-                                    v-if="studyGuideSetId"
-                                    :to="studyGuideUrl"
-                                    :icon="studyGuideModeIcon"
-                                    :title="t('set.studyGuide')"
-                                    show-caret
-                                />
-                            </div>
-                        </section>
-
-                        <nav
-                            class="grid gap-2 sm:hidden"
-                            :class="
-                                mobileStudyModes.length === 5
-                                    ? 'grid-cols-5'
-                                    : 'grid-cols-4'
-                            "
-                            :aria-label="t('set.studyModes')"
-                        >
-                            <NuxtLink
-                                v-for="item in mobileStudyModes"
-                                :key="item.key"
-                                :to="item.to"
-                                :replace="item.replace"
-                                class="inline-flex h-14 min-w-0 items-center justify-center rounded-xl border bg-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:bg-slate-950"
-                                :class="
-                                    item.active
-                                        ? 'border-slate-500 bg-slate-300 dark:border-slate-500 dark:bg-slate-700'
-                                        : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900'
-                                "
-                                :aria-label="item.title"
-                                :title="item.title"
-                            >
-                                <img
-                                    :src="item.icon"
-                                    alt=""
-                                    class="max-h-7 max-w-8 object-contain"
-                                    aria-hidden="true"
-                                />
-                            </NuxtLink>
-                        </nav>
-
-                        <section
-                            aria-label="Terms"
-                            class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
-                        >
-                            <div
-                                class="flex items-center justify-between gap-3"
-                            >
-                                <h2
-                                    class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                                >
-                                    {{ t("set.terms") }}
-                                </h2>
-                                <div class="flex shrink-0 items-center gap-2">
-                                    <span
-                                        class="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                                    >
-                                        {{ filteredTerms.length }}
-                                    </span>
-                                    <div
-                                        ref="termsFilterMenuRoot"
-                                        class="relative"
-                                    >
-                                        <button
-                                            ref="termsFilterButtonEl"
-                                            type="button"
-                                            class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                                            :aria-label="t('set.filterTerms')"
-                                            :title="t('set.filterTerms')"
-                                            :aria-expanded="termsFilterMenuOpen"
-                                            :disabled="set.terms.length === 0"
-                                            aria-haspopup="menu"
-                                            @click="
-                                                termsFilterMenuOpen =
-                                                    !termsFilterMenuOpen
-                                            "
-                                        >
-                                            <svg
-                                                aria-hidden="true"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.8"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                class="h-4 w-4"
-                                            >
-                                                <path d="M4 6h16" />
-                                                <path d="M7 12h10" />
-                                                <path d="M10 18h4" />
-                                            </svg>
-                                        </button>
-
-                                        <div
-                                            v-if="termsFilterMenuOpen"
-                                            class="absolute end-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-                                            role="menu"
-                                            :aria-label="t('set.filterTerms')"
-                                        >
-                                            <button
-                                                v-for="option in termsFilterOptions"
-                                                :key="option.value"
-                                                type="button"
-                                                role="menuitemradio"
-                                                :aria-checked="
-                                                    termsFilter === option.value
-                                                "
-                                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500"
-                                                @click="
-                                                    selectTermsFilter(
-                                                        option.value,
-                                                    )
-                                                "
-                                            >
-                                                <span>{{
-                                                    t(option.labelKey)
-                                                }}</span>
-                                                <span
-                                                    class="w-4 text-center"
-                                                    aria-hidden="true"
-                                                >
-                                                    {{
-                                                        termsFilter ===
-                                                        option.value
-                                                            ? "✓"
-                                                            : ""
-                                                    }}
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="set.terms.length > 0"
-                                class="mt-3 grid grid-cols-3 gap-2"
-                                aria-label="Flashcard study progress"
-                            >
-                                <button
-                                    type="button"
-                                    class="rounded-md border px-2 py-2 text-left text-xs font-medium transition-colors"
-                                    :class="termsFilter === 'learning' ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100' : 'border-slate-200 text-slate-700 hover:border-amber-300 dark:border-slate-800 dark:text-slate-200'"
-                                    @click="selectTermsFilter('learning')"
-                                >
-                                    <span class="block uppercase tracking-wide">{{ t("set.learning") }}</span>
-                                    <span class="mt-1 block text-base">{{ termStudyGroupCounts.learning }}</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    class="rounded-md border px-2 py-2 text-left text-xs font-medium transition-colors"
-                                    :class="termsFilter === 'gettingBetter' ? 'border-sky-500 bg-sky-50 text-sky-900 dark:bg-sky-950/30 dark:text-sky-100' : 'border-slate-200 text-slate-700 hover:border-sky-300 dark:border-slate-800 dark:text-slate-200'"
-                                    @click="selectTermsFilter('gettingBetter')"
-                                >
-                                    <span class="block uppercase tracking-wide">{{ t("set.gettingBetter") }}</span>
-                                    <span class="mt-1 block text-base">{{ termStudyGroupCounts.gettingBetter }}</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    class="rounded-md border px-2 py-2 text-left text-xs font-medium transition-colors"
-                                    :class="termsFilter === 'mastered' ? 'border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100' : 'border-slate-200 text-slate-700 hover:border-emerald-300 dark:border-slate-800 dark:text-slate-200'"
-                                    @click="selectTermsFilter('mastered')"
-                                >
-                                    <span class="block uppercase tracking-wide">{{ t("set.mastered") }}</span>
-                                    <span class="mt-1 block text-base">{{ termStudyGroupCounts.mastered }}</span>
-                                </button>
-                            </div>
-
-                            <div
-                                v-if="filteredTerms.length === 0"
-                                class="mt-3 text-sm text-slate-700 dark:text-slate-200"
-                            >
-                                {{ t("set.noCards") }}
-                            </div>
-
-                            <ul v-else class="mt-3 space-y-3">
-                                <li
-                                    v-for="(term, idx) in filteredTerms"
-                                    :key="term.id"
-                                >
-                                    <h3
-                                        v-if="
-                                            idx === 0 ||
-                                            termStudyGroup(
-                                                filteredTerms[idx - 1]!
-                                                    .id as Uuid,
-                                            ) !==
-                                                termStudyGroup(term.id as Uuid)
-                                        "
-                                        class="mb-2 text-xs font-semibold uppercase tracking-wide"
-                                        :class="
-                                            termStudyGroup(term.id as Uuid) === 'mastered'
-                                                ? 'text-emerald-700 dark:text-emerald-300'
-                                                : termStudyGroup(term.id as Uuid) === 'gettingBetter'
-                                                  ? 'text-sky-700 dark:text-sky-300'
-                                                  : 'text-amber-700 dark:text-amber-300'
-                                        "
-                                    >
-                                        {{
-                                            termStudyGroup(term.id as Uuid) === 'mastered'
-                                                ? t("set.mastered")
-                                                : termStudyGroup(term.id as Uuid) === 'gettingBetter'
-                                                  ? t("set.gettingBetter")
-                                                  : t("set.learning")
-                                        }}
-                                    </h3>
-                                    <div
-                                        class="relative rounded-md border p-4 shadow-sm"
-                                        :class="
-                                            termStudyGroup(term.id as Uuid) === 'mastered'
-                                                ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/25'
-                                                : termStudyGroup(term.id as Uuid) === 'gettingBetter'
-                                                  ? 'border-sky-200 bg-sky-50/70 dark:border-sky-900 dark:bg-sky-950/25'
-                                                  : 'border-amber-500/70 bg-amber-50/20 dark:border-amber-600/45 dark:bg-amber-950/5'
-                                        "
-                                    >
-                                        <button
-                                            type="button"
-                                            class="absolute top-3 right-3 inline-flex items-center justify-center w-6 h-6 rounded-md text-sm transition-colors"
-                                            :class="
-                                                starredTermIds.has(
-                                                    term.id as Uuid,
-                                                )
-                                                    ? 'border border-amber-300 bg-amber-50 text-amber-500 dark:border-amber-800 dark:bg-amber-950/30'
-                                                    : 'border border-slate-200 text-amber-500 hover:border-amber-200 hover:bg-amber-50 dark:border-slate-700 dark:hover:bg-amber-950/30'
-                                            "
-                                            :aria-pressed="
-                                                starredTermIds.has(
-                                                    term.id as Uuid,
-                                                )
-                                            "
-                                            :disabled="starBusy"
-                                            @click="
-                                                toggleTermStar(term.id as Uuid)
-                                            "
-                                        >
-                                            <StarGlyph
-                                                :active="
-                                                    starredTermIds.has(
-                                                        term.id as Uuid,
-                                                    )
-                                                "
-                                            />
-                                        </button>
-                                        <p
-                                            class="text-xs font-medium text-slate-500 dark:text-slate-400"
-                                        >
-                                            {{ idx + 1 }}
-                                        </p>
-                                        <div
-                                            class="mt-2 text-sm text-slate-700 dark:text-slate-200"
-                                        >
-                                            <span
-                                                class="font-medium text-slate-900 dark:text-slate-50"
-                                                >{{ t("set.termLabel") }}
-                                            </span>
-                                            <div class="mt-1">
-                                                <MarkdownRenderer
-                                                    :markdown="term.front"
-                                                    variant="compact"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div
-                                            class="mt-2 text-sm text-slate-700 dark:text-slate-200"
-                                        >
-                                            <span
-                                                class="font-medium text-slate-900 dark:text-slate-50"
-                                                >{{ t("set.definitionLabel") }}
-                                            </span>
-                                            <div class="mt-1">
-                                                <MarkdownRenderer
-                                                    :markdown="term.back"
-                                                    variant="compact"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </section>
-                    </div>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    replace
+                    :to="setModePath('chat')"
+                    class=""
+                  >
+                    {{ t("set.chat") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    replace
+                    :to="setModePath('learn')"
+                    class=""
+                  >
+                    {{ t("set.learn") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    replace
+                    :to="setModePath('match')"
+                    class=""
+                  >
+                    {{ t("set.match") }}
+                  </UButton>
                 </div>
-            </div>
-        </div>
+              </div>
 
-        <BaseModal
-            :open="Boolean(chatHistoryOpen)"
-            :title="t('chat.history')"
-            panel-class="max-w-xl"
-            :close-label="t('common.close')"
-            @close="closeChatHistory"
-        >
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                        {{ set?.title }}
-                    </p>
-                </div>
-            </div>
-            <div class="mt-4 max-h-[26rem] overflow-y-auto">
-                <p
-                    v-if="chatHistoryError"
-                    class="text-sm text-red-700 dark:text-red-300"
+              <div
+                v-else-if="isStarredOnlyEmpty"
+                class="mt-4 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+              >
+                {{ t("set.noStarred") }}
+              </div>
+
+              <div
+                v-else-if="totalCount === 0"
+                class="mt-4 rounded-[var(--tracer-radius-surface)] border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-100"
+              >
+                <p>{{ t("set.noCards") }}</p>
+                <UButton
+                  color="primary"
+                  variant="soft"
+                  type="button"
+                  class="mt-3 inline-flex items-center rounded-[var(--tracer-radius-control)] bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
+                  @click="restartAllFlashcards"
                 >
-                    {{ chatHistoryError }}
-                </p>
-                <LoadingSpinner
-                    v-else-if="chatHistoryBusy"
-                    class="text-sm text-slate-600 dark:text-slate-300"
-                />
-                <p
-                    v-else-if="savedChats.length === 0"
-                    class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-                >
-                    {{ t("chat.noHistory") }}
-                </p>
-                <ul v-else class="space-y-2">
-                    <li
-                        v-for="savedChat in savedChats"
-                        :key="savedChat.id"
-                        class="group relative"
+                  {{ t("common.restart") }}
+                </UButton>
+              </div>
+
+              <div v-else class="flex min-h-0 flex-1 flex-col">
+                <div class="relative mt-3 min-h-0 flex-1">
+                  <button
+                    ref="viewerButtonEl"
+                    type="button"
+                    class="relative flex h-full min-h-[clamp(16rem,34vh,24rem)] w-full touch-pan-y items-center justify-center rounded-[var(--tracer-radius-control)] p-6 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2"
+                    :class="[
+                      flashcardSurfaceClass,
+                      {
+                        'animate-flip': isFlipping,
+                        'animate-card-swipe-left': isNavigating === 'next',
+                        'animate-card-swipe-right': isNavigating === 'prev',
+                      },
+                    ]"
+                    :disabled="totalCount === 0 || flashcardAnswerBusy"
+                    @touchstart.passive="flashcardSwipe.onTouchStart"
+                    @touchend.passive="flashcardSwipe.onTouchEnd"
+                    @touchcancel="flashcardSwipe.onTouchCancel"
+                    @click="flashcardSwipe.onClick"
+                  >
+                    <span
+                      v-if="isCurrentRetry"
+                      class="absolute top-3 right-3 rounded-[var(--tracer-radius-control)] border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100"
                     >
-                        <button
-                            type="button"
-                            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                            :disabled="chatHistoryBusy || chatDeleteBusy"
-                            @click="openSavedChat(savedChat.id)"
-                        >
-                            <span
-                                class="block truncate text-sm font-medium text-slate-900 dark:text-slate-50"
-                            >
-                                {{ savedChat.title }}
-                            </span>
-                            <span
-                                class="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400"
-                            >
-                                {{ set?.title }} ·
-                                {{
-                                    formatSavedChatDate(savedChat.lastOpenedAt)
-                                }}
-                            </span>
-                        </button>
-                        <button
-                            type="button"
-                            class="absolute top-1/2 right-3 inline-flex -translate-y-1/2 items-center justify-center rounded-md p-2 text-slate-500 opacity-0 hover:bg-red-50 hover:text-red-700 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
-                            :aria-label="
-                                t('chat.deleteNamed', {
-                                    title: savedChat.title,
-                                })
-                            "
-                            :disabled="chatDeleteBusy"
-                            @click.stop="requestDeleteChat(savedChat)"
-                        >
-                            <svg
-                                aria-hidden="true"
-                                viewBox="0 0 24 24"
-                                class="h-4 w-4"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <path d="M3 6h18" />
-                                <path d="M8 6V4h8v2" />
-                                <path d="M19 6l-1 14H6L5 6" />
-                                <path d="M10 11v5M14 11v5" />
-                            </svg>
-                        </button>
-                    </li>
-                </ul>
-            </div>
-        </BaseModal>
+                      {{ t("set.tryAgain") }}
+                    </span>
+                    <p
+                      class="absolute top-6 left-6 text-xs font-medium text-slate-500 dark:text-slate-400"
+                    >
+                      {{
+                        showingDefinition
+                          ? t("create.definition")
+                          : t("create.term")
+                      }}
+                    </p>
+                    <div
+                      class="flashcard-content-row flex w-full flex-row items-center justify-center text-center text-2xl text-slate-900 dark:text-slate-50"
+                      :class="{
+                        'flashcard-content-row--paired':
+                          viewerImage && viewerHasText,
+                      }"
+                    >
+                      <img
+                        v-if="viewerImage"
+                        class="flashcard-side-image shrink-0 border border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-950/70"
+                        :src="viewerImage.dataUrl"
+                        :alt="viewerImage.altText || viewerImage.filename"
+                      />
+                      <div
+                        v-if="viewerHasText"
+                        class="flashcard-side-text"
+                        :class="{
+                          'flashcard-side-text--paired': viewerImage,
+                        }"
+                      >
+                        <MarkdownRenderer
+                          :markdown="viewerText"
+                          variant="flashcard"
+                        />
+                      </div>
+                    </div>
+                  </button>
+                  <FlashcardStar
+                    :starred="isCurrentStarred"
+                    :disabled="!currentTerm || starBusy"
+                    @toggle="toggleStar"
+                  />
+                </div>
 
-        <BaseModal
-            :open="Boolean(chatDeleteTarget)"
-            :title="t('chat.deleteTitle')"
-            panel-class="max-w-md"
-            :close-label="t('common.close')"
-            @close="cancelDeleteChat"
+                <SmartReviewRating
+                  v-if="smartReviewEnabled"
+                  :disabled="!currentTerm || flashcardAnswerBusy"
+                  @rate="markRating"
+                />
+                <div
+                  v-else
+                  class="mt-4 flex flex-wrap items-center justify-between gap-3"
+                >
+                  <div class="flex flex-wrap items-center gap-2">
+                    <UButton
+                      color="primary"
+                      variant="soft"
+                      type="button"
+                      class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      :disabled="
+                        totalCount === 0 ||
+                        cursorIndex === 0 ||
+                        flashcardAnswerBusy ||
+                        !!isNavigating ||
+                        isFlipping
+                      "
+                      :class="{
+                        '!opacity-100':
+                          (isNavigating || isFlipping) && cursorIndex > 0,
+                      }"
+                      style="color: var(--color-orange-700)"
+                      @click="goPrev"
+                    >
+                      ← {{ t("set.previous") }}
+                    </UButton>
+
+                    <UButton
+                      color="primary"
+                      variant="soft"
+                      type="button"
+                      class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      :disabled="
+                        totalCount === 0 ||
+                        flashcardAnswerBusy ||
+                        !!isNavigating ||
+                        isFlipping
+                      "
+                      :class="{ '!opacity-100': isNavigating || isFlipping }"
+                      @click="goNext"
+                    >
+                      {{ t("set.next") }} →
+                    </UButton>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-2">
+                    <UButton
+                      color="primary"
+                      variant="soft"
+                      type="button"
+                      class="inline-flex h-10 items-center justify-center rounded-[var(--tracer-radius-control)] border border-[#C14D4D] bg-white px-3 text-sm font-semibold text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                      :disabled="!currentTerm || flashcardAnswerBusy"
+                      @click="markIncorrect"
+                    >
+                      {{ t("set.missed") }}
+                    </UButton>
+                    <UButton
+                      color="primary"
+                      variant="soft"
+                      type="button"
+                      class="inline-flex h-10 items-center justify-center rounded-[var(--tracer-radius-control)] border border-[#2D8210] bg-white px-3 text-sm font-semibold text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                      :disabled="!currentTerm || flashcardAnswerBusy"
+                      @click="markCorrect"
+                    >
+                      {{ t("set.gotIt") }}
+                    </UButton>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section
+              v-else-if="mode === 'learn'"
+              aria-label="Practice"
+              class="study-panel study-panel--practice relative flex flex-col rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p
+                    class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                  >
+                    {{ t("set.learn") }}
+                  </p>
+                  <p
+                    class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
+                  >
+                    {{ t("set.learnInstructions") }}
+                  </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <p
+                    class="text-xs font-medium text-slate-500 dark:text-slate-400"
+                  >
+                    {{ learnRatioText }}
+                  </p>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    type="button"
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    :disabled="practiceAnswerBusy"
+                    :aria-expanded="practiceSettingsOpen"
+                    aria-label="Practice settings"
+                    title="Practice settings"
+                    @click="openPracticeSettings"
+                    @keydown.esc="practiceSettingsOpen = false"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      class="h-5 w-5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
+                      />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </UButton>
+                  <NuxtLink
+                    v-if="set"
+                    :to="fullscreenModePath('learn')"
+                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                    :aria-label="t('set.fullscreen')"
+                    :title="t('set.fullscreen')"
+                  >
+                    ⛶
+                  </NuxtLink>
+                </div>
+              </div>
+
+              <p
+                v-if="learnError"
+                class="mt-3 text-sm text-red-700 dark:text-red-300"
+              >
+                {{ learnError }}
+              </p>
+
+              <button
+                v-if="practiceSettingsOpen"
+                type="button"
+                class="fixed inset-0 z-40 bg-transparent"
+                aria-label="Dismiss practice settings"
+                @click="practiceSettingsOpen = false"
+              />
+              <div
+                v-if="practiceSettingsOpen"
+                class="absolute right-4 top-14 z-50 w-72 max-w-[calc(100vw-2rem)] max-h-[min(78dvh,34rem)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-950"
+                role="dialog"
+                aria-label="Practice and test settings"
+                @keydown.esc="practiceSettingsOpen = false"
+              >
+                <PracticeSettingsMenu
+                  v-model:session-mode="practiceSessionMode"
+                  v-model:question-count="practiceQuestionCount"
+                  v-model:shuffle="practiceShuffle"
+                  v-model:timed="practiceTimed"
+                  v-model:minutes="practiceTimeLimitMinutes"
+                  :choices="practiceQuestionTypeChoices"
+                  :question-types="practiceQuestionTypes"
+                  :question-limit="practiceQuestionLimit"
+                  :busy="
+                    learnBusy || enabledPracticeQuestionTypes().length === 0
+                  "
+                  @toggle-type="togglePracticeQuestionType"
+                  @clamp-count="clampPracticeQuestionCount"
+                  @close="practiceSettingsOpen = false"
+                  @apply="applyPracticeSettings"
+                />
+              </div>
+
+              <LoadingSpinner v-if="learnBusy" class="mt-4" centered />
+
+              <div
+                v-else-if="learnIsFinished"
+                class="tracer-result-surface mt-4 flex flex-1 flex-col justify-center select-none p-5"
+              >
+                <h2
+                  class="text-lg font-semibold text-slate-900 dark:text-slate-50"
+                >
+                  {{ t("common.results") }}
+                </h2>
+                <p
+                  v-if="practiceTimedOut"
+                  class="mt-2 text-sm font-semibold text-orange-700 dark:text-orange-300"
+                >
+                  Time is up. Unanswered questions were counted as missed.
+                </p>
+                <p class="mt-2 text-sm text-slate-700 dark:text-slate-200">
+                  {{ t("set.accuracy") }}
+                  <span class="font-medium">{{ learnAccuracyText }}</span>
+                </p>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  {{ t("set.correct") }}
+                  {{ learnCorrectCount }} ·
+                  {{ t("set.attempted") }}
+                  {{ learnAttemptedCount }}
+                </p>
+
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-if="set"
+                    type="button"
+                    class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900 shadow-sm hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
+                    @click="
+                      initializePracticeRun({
+                        forceNew: true,
+                      })
+                    "
+                  >
+                    Restart
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-if="set"
+                    replace
+                    :to="setModePath('flashcards')"
+                    class=""
+                  >
+                    {{ t("set.flashcards") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-if="set"
+                    replace
+                    :to="setModePath('chat')"
+                    class=""
+                  >
+                    {{ t("set.chat") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-if="set"
+                    replace
+                    :to="setModePath('match')"
+                    class=""
+                  >
+                    {{ t("set.match") }}
+                  </UButton>
+                </div>
+              </div>
+
+              <div v-else class="mt-4 flex flex-1 flex-col">
+                <div
+                  v-if="!learnCurrentQuestion"
+                  class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                >
+                  No questions available.
+                </div>
+
+                <div
+                  v-else
+                  class="tracer-practice-card flex flex-1 flex-col p-5"
+                  :class="[
+                    practiceQuestionSurfaceClass(),
+                    {
+                      'animate-slide-left': learnIsNavigating,
+                    },
+                  ]"
+                >
+                  <p
+                    class="text-xs font-medium text-slate-500 dark:text-slate-400"
+                  >
+                    {{ t("set.question") }}
+                  </p>
+                  <div
+                    class="mt-3 text-2xl font-medium text-slate-900 dark:text-slate-50"
+                  >
+                    <MarkdownRenderer
+                      :markdown="learnCurrentQuestion.prompt"
+                      variant="flashcard"
+                    />
+                  </div>
+
+                  <div
+                    class="grid gap-3"
+                    :class="
+                      learnCurrentQuestion.kind === 'true_false'
+                        ? 'mt-auto grid-cols-2 pt-4'
+                        : 'mt-4 flex-1'
+                    "
+                  >
+                    <template v-if="learnCurrentQuestion.kind === 'true_false'">
+                      <UButton
+                        color="primary"
+                        variant="soft"
+                        type="button"
+                        class="tracer-practice-choice tracer-practice-choice--true-false tracer-practice-choice--true"
+                        :class="practiceTrueFalseChoiceClass(true)"
+                        :disabled="learnBusy || practiceAnswerBusy"
+                        @click="answerLearnTrueFalse(true)"
+                      >
+                        True
+                      </UButton>
+                      <UButton
+                        color="primary"
+                        variant="soft"
+                        type="button"
+                        class="tracer-practice-choice tracer-practice-choice--true-false tracer-practice-choice--false"
+                        :class="practiceTrueFalseChoiceClass(false)"
+                        :disabled="learnBusy || practiceAnswerBusy"
+                        @click="answerLearnTrueFalse(false)"
+                      >
+                        False
+                      </UButton>
+                    </template>
+
+                    <template
+                      v-else-if="
+                        learnCurrentQuestion.kind === 'multiple_choice'
+                      "
+                    >
+                      <UButton
+                        color="neutral"
+                        variant="soft"
+                        v-for="(opt, idx) in learnCurrentQuestion.options"
+                        :key="`${learnCurrentQuestion.id}:${idx}`"
+                        type="button"
+                        class="tracer-practice-choice tracer-practice-choice--multiple-choice w-[min(100%,32rem)] justify-self-center"
+                        :class="practiceMultipleChoiceClass(idx)"
+                        :disabled="learnBusy || practiceAnswerBusy"
+                        @click="answerLearnMultipleChoice(idx)"
+                      >
+                        <MarkdownRenderer :markdown="opt" variant="compact" />
+                      </UButton>
+                    </template>
+                    <form
+                      v-else
+                      class="grid gap-2"
+                      @submit.prevent="
+                        answerLearnWritten(defaultModelId === 'builtin:auto')
+                      "
+                    >
+                      <label for="practice-written-answer" class="sr-only">
+                        Your answer
+                      </label>
+                      <div class="flex flex-wrap items-end gap-2">
+                        <UTextarea
+                          id="practice-written-answer"
+                          v-model="practiceWrittenAnswer"
+                          :rows="1"
+                          autofocus
+                          class="min-w-0 flex-1 resize-none"
+                          placeholder="Type your answer…"
+                          :disabled="
+                            practiceAnswerBusy ||
+                            Boolean(practiceWrittenFeedback)
+                          "
+                        />
+                        <UButton
+                          color="primary"
+                          variant="soft"
+                          type="submit"
+                          class="inline-flex h-12 shrink-0 items-center rounded-[var(--tracer-radius-control)] border border-slate-950 bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 dark:border-white dark:bg-white dark:text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+                          :disabled="
+                            !practiceWrittenAnswer.trim() ||
+                            practiceAnswerBusy ||
+                            Boolean(practiceWrittenFeedback)
+                          "
+                        >
+                          <LoadingSpinner
+                            v-if="practiceAnswerBusy"
+                            size="sm"
+                            label="Checking…"
+                          />
+                          <template v-else>Check</template>
+                        </UButton>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                <div
+                  v-if="practiceWrittenFeedback"
+                  class="mt-3 rounded-[var(--tracer-radius-surface)] border p-4 shadow-sm"
+                  :class="
+                    practiceWrittenFeedback.isCorrect
+                      ? 'border-emerald-300 bg-emerald-50/80 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100'
+                      : 'border-red-300 bg-red-50/80 text-red-950 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100'
+                  "
+                >
+                  <p class="text-sm font-semibold">
+                    {{
+                      practiceWrittenFeedback.isCorrect
+                        ? "Correct"
+                        : "Not quite"
+                    }}
+                  </p>
+                  <p class="mt-1 text-sm">
+                    {{ practiceWrittenFeedback.explanation }}
+                  </p>
+                  <div class="mt-3 flex justify-end">
+                    <UButton
+                      color="primary"
+                      variant="soft"
+                      type="button"
+                      class="rounded-[var(--tracer-radius-control)] bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                      :disabled="practiceAnswerBusy"
+                      @click="continueAfterWrittenFeedback"
+                    >
+                      Continue
+                    </UButton>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section
+              v-else-if="mode === 'chat'"
+              aria-label="Chat"
+              class="study-panel study-panel--chat flex flex-col rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex min-w-0 items-center gap-3">
+                  <StudyModeArtwork name="chat" :size="32" />
+                  <div>
+                    <p
+                      class="text-base font-semibold text-slate-900 dark:text-slate-50"
+                    >
+                      {{ t("set.chat") }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    type="button"
+                    :disabled="chatBusy || chatSaveBusy || !set || isWebPreview"
+                    @click="openChatHistory"
+                    size="md"
+                  >
+                    {{ t("chat.history") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    type="button"
+                    :disabled="
+                      chatBusy || chatSaveBusy || chatMessages.length === 0
+                    "
+                    @click="clearCurrentChat"
+                    size="md"
+                  >
+                    {{ t("common.clear") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-lg font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    :disabled="chatBusy || chatSaveBusy || !set"
+                    :aria-label="t('chat.new')"
+                    :title="t('chat.new')"
+                    @click="startNewChat"
+                  >
+                    <span aria-hidden="true" class="text-2xl leading-none"
+                      >+</span
+                    >
+                  </UButton>
+                </div>
+              </div>
+
+              <div
+                ref="chatLogEl"
+                class="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-[var(--tracer-radius-surface)] bg-slate-50 p-4 text-sm text-slate-900 dark:bg-slate-900/60 dark:text-slate-50"
+                role="log"
+                aria-live="polite"
+              >
+                <p
+                  v-if="chatError"
+                  class="text-sm text-red-700 dark:text-red-300"
+                >
+                  {{ chatError }}
+                </p>
+
+                <div
+                  v-for="m in chatMessages"
+                  :key="m.id"
+                  class="flex"
+                  :class="m.role === 'user' ? 'justify-end' : 'justify-start'"
+                >
+                  <div
+                    class="max-w-[85%] rounded-[var(--tracer-radius-surface)] px-4 py-3 leading-relaxed"
+                    :class="
+                      m.role === 'assistant' && chatBusy && !m.content
+                        ? ''
+                        : m.role === 'user'
+                          ? 'bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-50'
+                          : 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50'
+                    "
+                  >
+                    <LoadingSpinner
+                      v-if="m.role === 'assistant' && chatBusy && !m.content"
+                      label="Loading response"
+                      :show-label="false"
+                    />
+                    <MarkdownRenderer
+                      v-else
+                      :markdown="m.content"
+                      variant="compact"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="relative mt-3">
+                <label class="sr-only" for="chat-input">{{
+                  t("set.chat")
+                }}</label>
+                <UTextarea
+                  id="chat-input"
+                  ref="chatTextareaEl"
+                  v-model="chatInput"
+                  :rows="2"
+                  autocomplete="off"
+                  :placeholder="t('set.chatHint')"
+                  class="w-full"
+                  :disabled="chatBusy || chatSaveBusy || !set"
+                  @keydown="onChatInputKeydown"
+                />
+                <UButton
+                  color="primary"
+                  variant="soft"
+                  type="button"
+                  aria-label="Send message"
+                  class="absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-950 bg-slate-950 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                  :disabled="
+                    chatBusy || chatSaveBusy || !set || !chatInput.trim()
+                  "
+                  @click="sendChat"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    class="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 19V5M6 11l6-6 6 6" />
+                  </svg>
+                </UButton>
+              </div>
+
+              <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                Enter · Shift+Enter
+              </p>
+            </section>
+
+            <section
+              v-else-if="mode === 'match'"
+              aria-label="Match"
+              class="study-panel flex flex-col rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+            >
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p
+                    class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                  >
+                    {{ t("set.match") }}
+                  </p>
+                  <p
+                    class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
+                  >
+                    {{ t("set.matchInstructions") }}
+                  </p>
+                </div>
+                <NuxtLink
+                  v-if="set"
+                  :to="fullscreenModePath('match')"
+                  class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                  :aria-label="t('set.fullscreen')"
+                  :title="t('set.fullscreen')"
+                >
+                  ⛶
+                </NuxtLink>
+              </div>
+
+              <p
+                v-if="matchError"
+                class="mt-3 text-sm text-red-700 dark:text-red-300"
+              >
+                {{ matchError }}
+              </p>
+
+              <div
+                v-if="matchIsFinished"
+                class="tracer-result-surface mt-4 flex flex-1 flex-col justify-center select-none p-5"
+              >
+                <h2
+                  class="text-lg font-semibold text-slate-900 dark:text-slate-50"
+                >
+                  {{ t("common.results") }}
+                </h2>
+                <p class="mt-2 text-sm text-slate-700 dark:text-slate-200">
+                  {{ t("set.accuracy") }}
+                  <span class="font-medium">{{ matchAccuracyText }}</span>
+                </p>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  {{ t("set.matched") }}
+                  {{ matchMatchedPairsCount }}/{{ matchPairsTarget }} ·
+                  {{ t("set.attempts") }}
+                  {{ matchAttemptsCount }}
+                </p>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  {{ t("set.time") }} {{ matchTimeText }}
+                </p>
+
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <UButton
+                    color="primary"
+                    variant="solid"
+                    type="button"
+                    :disabled="!set || set.terms.length === 0"
+                    @click="restartMatchRun"
+                    size="md"
+                  >
+                    {{ t("set.playAgain") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-if="set"
+                    replace
+                    :to="setModePath('flashcards')"
+                    class=""
+                  >
+                    {{ t("set.flashcards") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-if="set"
+                    replace
+                    :to="setModePath('learn')"
+                    class=""
+                  >
+                    {{ t("set.learn") }}
+                  </UButton>
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-if="set"
+                    replace
+                    :to="setModePath('chat')"
+                    class=""
+                  >
+                    Chat
+                  </UButton>
+                </div>
+                <MatchLeaderboard
+                  :assignment-id="assignedAssignmentId"
+                  :entries="matchLeaderboard"
+                  :loading="matchLeaderboardLoading"
+                  :error="matchLeaderboardError"
+                  @retry="loadMatchLeaderboard"
+                />
+              </div>
+
+              <div v-else class="mt-4 flex flex-1 flex-col">
+                <p
+                  v-if="matchIsRunning"
+                  class="mb-3 text-center text-sm font-medium tabular-nums text-slate-600 dark:text-slate-300"
+                >
+                  {{ matchTopline }}
+                </p>
+                <MatchStartScreen
+                  v-if="!matchIsRunning"
+                  class="flex-1"
+                  :disabled="!set || set.terms.length === 0"
+                  @start="startMatch"
+                />
+
+                <div
+                  v-else
+                  class="grid auto-rows-[4rem] grid-cols-2 content-start gap-2 sm:flex-1 sm:auto-rows-fr sm:grid-cols-4"
+                >
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    v-for="tile in matchTiles"
+                    :key="tile.id"
+                    type="button"
+                    data-match-tile="true"
+                    class="relative min-h-16 w-full rounded-[var(--tracer-radius-control)] border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:min-h-20 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    :class="matchTileClass(tile)"
+                    :disabled="matchTileDisabled(tile) || matchBusy"
+                    @click.stop="onMatchTileClick(tile)"
+                  >
+                    <span class="sr-only">{{ t("set.tile") }}</span>
+                    <span
+                      v-if="matchIsTileRevealed(tile)"
+                      class="block h-full overflow-hidden text-xs font-medium leading-snug"
+                    >
+                      <MarkdownRenderer :markdown="tile.text" variant="tile" />
+                    </span>
+                  </UButton>
+                </div>
+              </div>
+            </section>
+
+            <section
+              v-else
+              aria-label="Mode"
+              class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+            >
+              <p class="text-sm font-medium text-slate-900 dark:text-slate-50">
+                {{ t("set.comingSoon") }}
+              </p>
+              <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                {{ t("set.notImplemented") }}
+              </p>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <UButton
+                  color="primary"
+                  variant="solid"
+                  replace
+                  :to="setModePath('flashcards')"
+                  class=""
+                >
+                  {{ t("common.continue") }} ·
+                  {{ t("set.flashcards") }}
+                </UButton>
+              </div>
+            </section>
+
+            <section
+              class="study-mode-navigation hidden sm:block"
+              :aria-label="t('set.studyModes')"
+            >
+              <div
+                class="study-mode-bar flex flex-nowrap gap-3 overflow-x-auto pb-1"
+              >
+                <StudyModeTile
+                  :to="setModePath('flashcards')"
+                  :fullscreen-to="fullscreenModePath('flashcards')"
+                  :icon="flashcardsModeIcon"
+                  :title="t('set.flashcards')"
+                  :active="mode === 'flashcards'"
+                  replace
+                />
+                <StudyModeTile
+                  :to="setModePath('learn')"
+                  :fullscreen-to="fullscreenModePath('learn')"
+                  :icon="practiceModeIcon"
+                  :title="t('set.learn')"
+                  :active="mode === 'learn'"
+                  replace
+                />
+                <StudyModeTile
+                  :to="setModePath('chat')"
+                  :icon="chatModeIcon"
+                  :title="t('set.chat')"
+                  :active="mode === 'chat'"
+                  replace
+                />
+                <StudyModeTile
+                  :to="setModePath('match')"
+                  :fullscreen-to="fullscreenModePath('match')"
+                  :icon="matchModeIcon"
+                  :title="t('set.match')"
+                  :active="mode === 'match'"
+                  replace
+                />
+                <StudyModeTile
+                  v-if="studyGuideSetId"
+                  :to="studyGuideUrl"
+                  :icon="studyGuideModeIcon"
+                  :title="t('set.studyGuide')"
+                  show-caret
+                />
+              </div>
+            </section>
+
+            <nav
+              class="grid gap-2 sm:hidden"
+              :class="
+                mobileStudyModes.length === 5 ? 'grid-cols-5' : 'grid-cols-4'
+              "
+              :aria-label="t('set.studyModes')"
+            >
+              <NuxtLink
+                v-for="item in mobileStudyModes"
+                :key="item.key"
+                :to="item.to"
+                :replace="item.replace"
+                class="inline-flex h-14 min-w-0 items-center justify-center rounded-[var(--tracer-radius-control)] border bg-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:bg-slate-950"
+                :class="
+                  item.active
+                    ? 'border-slate-500 bg-slate-300 dark:border-slate-500 dark:bg-slate-700'
+                    : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900'
+                "
+                :aria-label="item.title"
+                :title="item.title"
+              >
+                <img
+                  :src="item.icon"
+                  alt=""
+                  class="max-h-7 max-w-8 object-contain"
+                  aria-hidden="true"
+                />
+              </NuxtLink>
+            </nav>
+
+            <section aria-label="Terms" class="bg-white dark:bg-slate-950">
+              <div class="flex items-center justify-between gap-3">
+                <h2
+                  class="text-sm font-medium text-slate-900 dark:text-slate-50"
+                >
+                  {{ t("set.terms") }}
+                </h2>
+                <div class="flex shrink-0 items-center gap-2">
+                  <span
+                    class="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    {{ filteredTerms.length }}
+                  </span>
+                  <div ref="termsFilterMenuRoot" class="relative">
+                    <button
+                      ref="termsFilterButtonEl"
+                      type="button"
+                      class="inline-flex h-8 w-8 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      :aria-label="t('set.filterTerms')"
+                      :title="t('set.filterTerms')"
+                      :aria-expanded="termsFilterMenuOpen"
+                      :disabled="set.terms.length === 0"
+                      aria-haspopup="menu"
+                      @click="termsFilterMenuOpen = !termsFilterMenuOpen"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="h-5 w-5"
+                      >
+                        <path d="M4 6h16" />
+                        <path d="M7 12h10" />
+                        <path d="M10 18h4" />
+                      </svg>
+                    </button>
+
+                    <div
+                      v-if="termsFilterMenuOpen"
+                      class="absolute end-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                      role="menu"
+                      :aria-label="t('set.filterTerms')"
+                    >
+                      <button
+                        v-for="option in termsFilterOptions"
+                        :key="option.value"
+                        type="button"
+                        role="menuitemradio"
+                        :aria-checked="termsFilter === option.value"
+                        class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500"
+                        @click="selectTermsFilter(option.value)"
+                      >
+                        <span>{{ t(option.labelKey) }}</span>
+                        <span class="w-4 text-center" aria-hidden="true">
+                          {{ termsFilter === option.value ? "✓" : "" }}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-if="set.terms.length > 0"
+                class="mt-3 grid grid-cols-3 gap-2"
+                aria-label="Flashcard study progress"
+              >
+                <UButton
+                  color="primary"
+                  variant="soft"
+                  type="button"
+                  class="flex flex-col items-center justify-center gap-1 rounded-[var(--tracer-radius-control)] border px-2 py-2 text-center text-xs font-medium transition-colors"
+                  :class="
+                    termsFilter === 'learning'
+                      ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100'
+                      : 'border-slate-200 text-slate-700 hover:border-slate-400 dark:border-slate-800 dark:text-slate-200'
+                  "
+                  @click="selectTermsFilter('learning')"
+                >
+                  <span
+                    class="flex min-h-8 items-center uppercase tracking-wide"
+                    >{{ t("set.learning") }}</span
+                  >
+                  <span class="block text-base">{{
+                    termStudyGroupCounts.learning
+                  }}</span>
+                </UButton>
+                <UButton
+                  color="primary"
+                  variant="soft"
+                  type="button"
+                  class="flex flex-col items-center justify-center gap-1 rounded-[var(--tracer-radius-control)] border px-2 py-2 text-center text-xs font-medium transition-colors"
+                  :class="
+                    termsFilter === 'gettingBetter'
+                      ? 'border-sky-500 bg-sky-50 text-sky-900 dark:bg-sky-950/30 dark:text-sky-100'
+                      : 'border-slate-200 text-slate-700 hover:border-sky-300 dark:border-slate-800 dark:text-slate-200'
+                  "
+                  @click="selectTermsFilter('gettingBetter')"
+                >
+                  <span
+                    class="flex min-h-8 items-center uppercase tracking-wide"
+                    >{{ t("set.gettingBetter") }}</span
+                  >
+                  <span class="block text-base">{{
+                    termStudyGroupCounts.gettingBetter
+                  }}</span>
+                </UButton>
+                <UButton
+                  color="primary"
+                  variant="soft"
+                  type="button"
+                  class="flex flex-col items-center justify-center gap-1 rounded-[var(--tracer-radius-control)] border px-2 py-2 text-center text-xs font-medium transition-colors"
+                  :class="
+                    termsFilter === 'mastered'
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100'
+                      : 'border-slate-200 text-slate-700 hover:border-emerald-300 dark:border-slate-800 dark:text-slate-200'
+                  "
+                  @click="selectTermsFilter('mastered')"
+                >
+                  <span
+                    class="flex min-h-8 items-center uppercase tracking-wide"
+                    >{{ t("set.mastered") }}</span
+                  >
+                  <span class="block text-base">{{
+                    termStudyGroupCounts.mastered
+                  }}</span>
+                </UButton>
+              </div>
+
+              <div
+                v-if="filteredTerms.length === 0"
+                class="mt-3 text-sm text-slate-700 dark:text-slate-200"
+              >
+                {{ t("set.noCards") }}
+              </div>
+
+              <ul v-else class="mt-3 space-y-3">
+                <li v-for="(term, idx) in filteredTerms" :key="term.id">
+                  <h3
+                    v-if="
+                      idx === 0 ||
+                      termStudyGroup(filteredTerms[idx - 1]!.id as Uuid) !==
+                        termStudyGroup(term.id as Uuid)
+                    "
+                    class="mb-2 text-xs font-semibold uppercase tracking-wide"
+                    :class="
+                      termStudyGroup(term.id as Uuid) === 'mastered'
+                        ? 'text-emerald-700 dark:text-emerald-300'
+                        : termStudyGroup(term.id as Uuid) === 'gettingBetter'
+                          ? 'text-sky-700 dark:text-sky-300'
+                          : 'text-amber-700 dark:text-amber-300'
+                    "
+                  >
+                    {{
+                      termStudyGroup(term.id as Uuid) === "mastered"
+                        ? t("set.mastered")
+                        : termStudyGroup(term.id as Uuid) === "gettingBetter"
+                          ? t("set.gettingBetter")
+                          : t("set.learning")
+                    }}
+                  </h3>
+                  <div
+                    class="relative rounded-[var(--tracer-radius-surface)] border p-4 shadow-sm"
+                    :class="
+                      termStudyGroup(term.id as Uuid) === 'mastered'
+                        ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/25'
+                        : termStudyGroup(term.id as Uuid) === 'gettingBetter'
+                          ? 'border-sky-200 bg-sky-50/70 dark:border-sky-900 dark:bg-sky-950/25'
+                          : 'border-amber-500/70 bg-amber-50/20 dark:border-amber-600/45 dark:bg-amber-950/5'
+                    "
+                  >
+                    <FlashcardStar
+                      :starred="starredTermIds.has(term.id as Uuid)"
+                      :disabled="starBusy"
+                      @toggle="toggleTermStar(term.id as Uuid)"
+                    />
+                    <p
+                      class="text-xs font-medium text-slate-500 dark:text-slate-400"
+                    >
+                      {{ idx + 1 }}
+                    </p>
+                    <div
+                      class="mt-2 text-sm text-slate-700 dark:text-slate-200"
+                    >
+                      <span
+                        class="font-medium text-slate-900 dark:text-slate-50"
+                        >{{ t("set.termLabel") }}
+                      </span>
+                      <div class="mt-1">
+                        <MarkdownRenderer
+                          :markdown="term.front"
+                          variant="compact"
+                        />
+                      </div>
+                    </div>
+                    <div
+                      class="mt-2 text-sm text-slate-700 dark:text-slate-200"
+                    >
+                      <span
+                        class="font-medium text-slate-900 dark:text-slate-50"
+                        >{{ t("set.definitionLabel") }}
+                      </span>
+                      <div class="mt-1">
+                        <MarkdownRenderer
+                          :markdown="term.back"
+                          variant="compact"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <BaseModal
+      :open="Boolean(chatHistoryOpen)"
+      :title="t('chat.history')"
+      panel-class="max-w-xl"
+      :close-label="t('common.close')"
+      @close="closeChatHistory"
+    >
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            {{ set?.title }}
+          </p>
+        </div>
+      </div>
+      <div class="mt-4 max-h-[26rem] overflow-y-auto">
+        <p
+          v-if="chatHistoryError"
+          class="text-sm text-red-700 dark:text-red-300"
         >
-            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                {{
-                    t("chat.deleteDescription", {
-                        title: chatDeleteTarget.title,
-                    })
-                }}
-            </p>
-            <div class="mt-5 flex justify-end gap-2">
-                <button
-                    type="button"
-                    class="tracer-button tracer-button--white tracer-button--md"
-                    :disabled="chatDeleteBusy"
-                    @click="cancelDeleteChat"
-                >
-                    {{ t("common.cancel") }}
-                </button>
-                <button
-                    type="button"
-                    class="inline-flex items-center rounded-xl border border-red-600 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
-                    :disabled="chatDeleteBusy"
-                    @click="confirmDeleteChat"
-                >
-                    {{ t("common.delete") }}
-                </button>
-            </div>
-        </BaseModal>
-
-        <ShareSetDialog
-            :open="isExportOpen"
-            :set="set"
-            :public-set="isPublicSet"
-            :allow-copying="publishedSet?.allow_copying ?? true"
-            @close="closeExport"
+          {{ chatHistoryError }}
+        </p>
+        <LoadingSpinner
+          v-else-if="chatHistoryBusy"
+          class="text-sm text-slate-600 dark:text-slate-300"
         />
-    </main>
+        <p
+          v-else-if="savedChats.length === 0"
+          class="rounded-[var(--tracer-radius-control)] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+        >
+          {{ t("chat.noHistory") }}
+        </p>
+        <ul v-else class="space-y-2">
+          <li
+            v-for="savedChat in savedChats"
+            :key="savedChat.id"
+            class="group relative"
+          >
+            <UButton
+              color="primary"
+              variant="soft"
+              type="button"
+              class="w-full rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              :disabled="chatHistoryBusy || chatDeleteBusy"
+              @click="openSavedChat(savedChat.id)"
+            >
+              <span
+                class="block truncate text-sm font-medium text-slate-900 dark:text-slate-50"
+              >
+                {{ savedChat.title }}
+              </span>
+              <span
+                class="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400"
+              >
+                {{ set?.title }} ·
+                {{ formatSavedChatDate(savedChat.lastOpenedAt) }}
+              </span>
+            </UButton>
+            <UButton
+              color="primary"
+              variant="soft"
+              type="button"
+              class="absolute top-1/2 right-3 inline-flex -translate-y-1/2 items-center justify-center rounded-[var(--tracer-radius-control)] p-2 text-slate-500 opacity-0 hover:bg-red-50 hover:text-red-700 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+              :aria-label="
+                t('chat.deleteNamed', {
+                  title: savedChat.title,
+                })
+              "
+              :disabled="chatDeleteBusy"
+              @click.stop="requestDeleteChat(savedChat)"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 11v5M14 11v5" />
+              </svg>
+            </UButton>
+          </li>
+        </ul>
+      </div>
+    </BaseModal>
+
+    <BaseModal
+      :open="Boolean(chatDeleteTarget)"
+      :title="t('chat.deleteTitle')"
+      panel-class="max-w-md"
+      :close-label="t('common.close')"
+      @close="cancelDeleteChat"
+    >
+      <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        {{
+          t("chat.deleteDescription", {
+            title: chatDeleteTarget.title,
+          })
+        }}
+      </p>
+      <div class="mt-5 flex justify-end gap-2">
+        <UButton
+          color="primary"
+          variant="soft"
+          type="button"
+          :disabled="chatDeleteBusy"
+          @click="cancelDeleteChat"
+          size="md"
+        >
+          {{ t("common.cancel") }}
+        </UButton>
+        <UButton
+          color="primary"
+          variant="soft"
+          type="button"
+          class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-red-600 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
+          :disabled="chatDeleteBusy"
+          @click="confirmDeleteChat"
+        >
+          {{ t("common.delete") }}
+        </UButton>
+      </div>
+    </BaseModal>
+
+    <ShareSetDialog
+      :open="isExportOpen"
+      :set="set"
+      :public-set="isPublicSet"
+      :allow-copying="publishedSet?.allow_copying ?? true"
+      @close="closeExport"
+    />
+  </main>
 </template>
 
 <script setup lang="ts">
-import { generatePracticeQuestionsText, mixPracticeQuestions } from "~/src/composables/ai/practice";
-import { studyStorageOwner } from "~/src/composables/platform/web";
+import {
+  generatePracticeQuestionsText,
+  mixPracticeQuestions,
+} from "~/src/composables/ai/practice"
+import { studyStorageOwner } from "~/src/composables/platform/web"
 
-import { isWebPreviewRuntime } from "~/src/composables/platform/web";
+import { isWebPreviewRuntime } from "~/src/composables/platform/web"
 import {
-    getPublishedSet,
-    canReportPublishedSet,
-    isPublishedSetOwner,
-    publishedSetToStudySet,
-    type PublishedSet,
-} from "~/src/composables/published-sets";
-import flashcardsModeIcon from "~/assets/icons/study-modes/flashcards.png";
-import studyGuideModeIcon from "~/assets/icons/study-modes/study-guide.png";
-import practiceModeIcon from "~/assets/icons/study-modes/practice.png";
-import matchModeIcon from "~/assets/icons/study-modes/match.png";
-import chatModeIcon from "~/assets/icons/study-modes/chat.png";
-import { lockGetStatus } from "~/src/composables/lock";
-import { loadAppProfileOnce } from "~/src/composables/app-profile-cache";
-import { loadAppSettingsOnce } from "~/src/composables/app-settings-cache";
-import MarkdownRenderer from "~/components/MarkdownRenderer.vue";
-import { useLockSession } from "~/src/composables/lock-session";
+  getPublishedSet,
+  canReportPublishedSet,
+  isPublishedSetOwner,
+  publishedSetToStudySet,
+  type PublishedSet,
+} from "~/src/composables/published-sets"
+import flashcardsModeIcon from "~/assets/icons/study-modes/flashcards.png"
+import studyGuideModeIcon from "~/assets/icons/study-modes/study-guide.png"
+import practiceModeIcon from "~/assets/icons/study-modes/practice.png"
+import matchModeIcon from "~/assets/icons/study-modes/match.png"
+import chatModeIcon from "~/assets/icons/study-modes/chat.png"
+import { lockGetStatus } from "~/src/composables/lock"
+import { loadAppProfileOnce } from "~/src/composables/app-profile-cache"
+import { loadAppSettingsOnce } from "~/src/composables/app-settings-cache"
+import MarkdownRenderer from "~/components/MarkdownRenderer.vue"
+import { useLockSession } from "~/src/composables/lock-session"
 import {
-    createChatsRepo,
-    createFlashcardProgressRepo,
-    createLinkedFoldersRepo,
-    createSettingsRepo,
-    createSetsRepo,
-    createStarsRepo,
-    createStudyGuidesRepo,
-    useTracerDb,
-} from "~/src/composables/db";
+  createChatsRepo,
+  createFlashcardProgressRepo,
+  createLinkedFoldersRepo,
+  createSettingsRepo,
+  createSetsRepo,
+  createStarsRepo,
+  createStudyGuidesRepo,
+  useTracerDb,
+} from "~/src/composables/db"
 import type {
-    FlashcardSet,
-    LinkedFolder,
-    SavedChatListItem,
-    SavedChatPayload,
-    Uuid,
-} from "~/src/composables/db/types";
-import { hasTauriRuntime } from "~/src/composables/tauri";
+  FlashcardSet,
+  LinkedFolder,
+  SavedChatListItem,
+  SavedChatPayload,
+  Uuid,
+} from "~/src/composables/db/types"
+import { hasTauriRuntime } from "~/src/composables/tauri"
 import {
-    loadPracticeProgress,
-    savePracticeProgress,
-    type PracticeProgress,
-} from "~/src/composables/practice-progress";
+  loadPracticeProgress,
+  savePracticeProgress,
+  type PracticeProgress,
+} from "~/src/composables/practice-progress"
 import {
-    generateLearnQuestionsWithFallback,
-    type LearnQuestion,
-    type LearnQuestionKind,
-} from "~/src/composables/learn/generator";
+  generateLearnQuestionsWithFallback,
+  type LearnQuestion,
+  type LearnQuestionKind,
+} from "~/src/composables/learn/generator"
 import {
-    createPracticePresentation,
-    type PracticeChoiceFeedback,
-    type PracticeChoiceValue,
-} from "~/src/composables/learn/presentation";
+  createPracticePresentation,
+  type PracticeChoiceFeedback,
+  type PracticeChoiceValue,
+} from "~/src/composables/learn/presentation"
 import {
-    buildGroundedChatSystemPrompt,
-    normalizeGeneratedChatTitle,
-    streamGroundedChatText,
-    streamWebPreviewMockChatAnswer,
-    takeRecentChatMessages,
-    type ChatMessage,
-} from "~/src/composables/ai/chat";
-import { createChatRevealQueue } from "~/src/composables/ai/chat-reveal";
+  buildGroundedChatSystemPrompt,
+  normalizeGeneratedChatTitle,
+  streamGroundedChatText,
+  streamWebPreviewMockChatAnswer,
+  takeRecentChatMessages,
+  type ChatMessage,
+} from "~/src/composables/ai/chat"
+import { createChatRevealQueue } from "~/src/composables/ai/chat-reveal"
 import {
-    generateMatchTiles,
-    type MatchTile,
-} from "~/src/composables/match/generator";
+  generateMatchTiles,
+  type MatchTile,
+} from "~/src/composables/match/generator"
 import {
-    formatMatchTime,
-    MATCH_DURATION_MS,
-} from "~/src/composables/match/timer";
+  formatMatchTime,
+  MATCH_DURATION_MS,
+} from "~/src/composables/match/timer"
 import {
-    normalizeAiError,
-    aiErrorForMissingDefaultModel,
-    isAiErrorCandidate,
-    type AiErrorUx,
-} from "~/src/composables/ai/ux-errors";
+  normalizeAiError,
+  aiErrorForMissingDefaultModel,
+  isAiErrorCandidate,
+  type AiErrorUx,
+} from "~/src/composables/ai/ux-errors"
 import {
-    gradeWebPreviewWrittenAnswer,
-    gradeWrittenAnswer,
-    type WrittenAnswerGrade,
-    type WrittenAnswerGradeInput,
-} from "~/src/composables/ai/written-answer-grader";
-import { useAppLanguage } from "~/src/composables/language";
-import { createWebPreviewDemoSet } from "~/src/composables/demo-content";
+  gradeWebPreviewWrittenAnswer,
+  gradeWrittenAnswer,
+  type WrittenAnswerGrade,
+  type WrittenAnswerGradeInput,
+} from "~/src/composables/ai/written-answer-grader"
+import { useAppLanguage } from "~/src/composables/language"
+import { createWebPreviewDemoSet } from "~/src/composables/demo-content"
 import {
-    LINKED_FOLDER_STATUS_EVENT,
-    syncLinkedFolder,
-    unlinkFolder,
-} from "~/src/composables/generate/linked-folders/sync";
+  LINKED_FOLDER_STATUS_EVENT,
+  syncLinkedFolder,
+  unlinkFolder,
+} from "~/src/composables/generate/linked-folders/sync"
 import {
-    beginAssignedAttempt,
-    completeAssignedAttempt,
-    parseAssignedAssignmentId,
-} from "~/src/composables/assignment-progress";
-import { type AssignedMatchLeaderboardEntry } from "~/src/composables/classrooms";
-import { createRandomSeed } from "~/src/composables/random";
+  beginAssignedAttempt,
+  completeAssignedAttempt,
+  parseAssignedAssignmentId,
+} from "~/src/composables/assignment-progress"
+import { type AssignedMatchLeaderboardEntry } from "~/src/composables/classrooms"
+import { createRandomSeed } from "~/src/composables/random"
 import {
-    readWebFlashcardFrontPreference,
-    readWebFlashcardProgress,
-    saveWebFlashcardFrontPreference,
-    saveWebFlashcardProgress,
-    type SavedFlashcardProgress,
-} from "~/src/composables/cards/web-flashcard-state";
-import { createFlashcardMotion, createFlashcardSwipe } from "~/src/composables/cards/flashcard-motion";
-import { recordStudySession } from "~/src/composables/study-insights";
+  readWebFlashcardFrontPreference,
+  readWebFlashcardProgress,
+  saveWebFlashcardFrontPreference,
+  saveWebFlashcardProgress,
+  type SavedFlashcardProgress,
+} from "~/src/composables/cards/web-flashcard-state"
 import {
-    createFlashcardRun,
-} from "~/src/composables/cards/flashcard-run";
+  createFlashcardMotion,
+  createFlashcardSwipe,
+} from "~/src/composables/cards/flashcard-motion"
+import { recordStudySession } from "~/src/composables/study-insights"
+import { createFlashcardRun } from "~/src/composables/cards/flashcard-run"
 import {
-    getCardReviews,
-    getGlobalSmartReviewEnabled,
-    isFlashcardShuffleEnabled,
-    recordCardReview,
-    reviewBucket,
-    saveFlashcardShuffleEnabled,
-    saveGlobalSmartReviewEnabled,
-    saveSmartReviewEnabled,
-    resolveSmartReviewEnabled,
-    type CardReview,
-    type ReviewBucket,
-} from "~/src/composables/cards/spaced-repetition";
+  getCardReviews,
+  getGlobalSmartReviewEnabled,
+  isFlashcardShuffleEnabled,
+  recordCardReview,
+  reviewBucket,
+  saveFlashcardShuffleEnabled,
+  saveGlobalSmartReviewEnabled,
+  saveSmartReviewEnabled,
+  resolveSmartReviewEnabled,
+  type CardReview,
+  type ReviewBucket,
+} from "~/src/composables/cards/spaced-repetition"
 import {
-    DEFAULT_FLASHCARD_STUDY_FILTER,
-    flashcardStudyGroup,
-    updateFlashcardMastery,
-    type FlashcardMasteryByTermId,
-    type FlashcardStudyFilter,
-} from "~/src/composables/cards/flashcard-mastery";
+  DEFAULT_FLASHCARD_STUDY_FILTER,
+  flashcardStudyGroup,
+  updateFlashcardMastery,
+  type FlashcardMasteryByTermId,
+  type FlashcardStudyFilter,
+} from "~/src/composables/cards/flashcard-mastery"
 
-const props = defineProps<{ publicSetId?: string }>();
-const isPublicSet = computed(() => Boolean(props.publicSetId));
-const canEditPublishedSet = ref(false);
-const publicSetReportable = ref(false);
-const publishedSet = ref<PublishedSet | null>(null);
-const route = useRoute();
-const router = useRouter();
-const { language, t, translateAppGeneratedText } = useAppLanguage();
-const { unlockedThisSession, markLocked, markUnlocked } = useLockSession();
+const props = defineProps<{ publicSetId?: string }>()
+const isPublicSet = computed(() => Boolean(props.publicSetId))
+const canEditPublishedSet = ref(false)
+const publicSetReportable = ref(false)
+const publishedSet = ref<PublishedSet | null>(null)
+const route = useRoute()
+const router = useRouter()
+const { language, t, translateAppGeneratedText } = useAppLanguage()
+const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 
 // Nuxt delays useRoute updates until page navigation finishes. The child outlet
 // must follow the router immediately so opening Edit never waits on its own outlet.
 const isNestedSetRoute = computed(() =>
-    router.currentRoute.value.matched.some(match => /\/(edit|results)(?:\/|$)/.test(match.path)),
-);
+  router.currentRoute.value.matched.some((match) =>
+    /\/(edit|results)(?:\/|$)/.test(match.path),
+  ),
+)
 const isWebPreview = computed(
-    () =>
-        isPublicSet.value ||
-        isWebPreviewRuntime() ||
-        route.params.id === "demo",
-);
+  () =>
+    isPublicSet.value || isWebPreviewRuntime() || route.params.id === "demo",
+)
 
-type SetMode = "flashcards" | "learn" | "match" | "chat";
-type TrackedSetMode = Exclude<SetMode, "chat">;
+type SetMode = "flashcards" | "learn" | "match" | "chat"
+type TrackedSetMode = Exclude<SetMode, "chat">
 
 const assignedAssignmentId = computed(() =>
-    isPublicSet.value
-        ? null
-        : parseAssignedAssignmentId(route.query.assignment),
-);
+  isPublicSet.value ? null : parseAssignedAssignmentId(route.query.assignment),
+)
 const assignedClassId = computed(() =>
-    !isPublicSet.value && typeof route.query.class === "string"
-        ? route.query.class
-        : null,
-);
+  !isPublicSet.value && typeof route.query.class === "string"
+    ? route.query.class
+    : null,
+)
 
 function assignedQuery(extra: Record<string, string> = {}) {
-    const query = new URLSearchParams(extra);
-    if (assignedAssignmentId.value)
-        query.set("assignment", assignedAssignmentId.value);
-    if (assignedClassId.value) query.set("class", assignedClassId.value);
-    const encoded = query.toString();
-    return encoded ? `?${encoded}` : "";
+  const query = new URLSearchParams(extra)
+  if (assignedAssignmentId.value)
+    query.set("assignment", assignedAssignmentId.value)
+  if (assignedClassId.value) query.set("class", assignedClassId.value)
+  const encoded = query.toString()
+  return encoded ? `?${encoded}` : ""
 }
 
 function setModePath(nextMode: SetMode) {
-    return `${isPublicSet.value ? "/public-sets" : "/set"}/${set.value?.id ?? route.params.id}${assignedQuery({ mode: nextMode })}`;
+  return `${isPublicSet.value ? "/public-sets" : "/set"}/${set.value?.id ?? route.params.id}${assignedQuery({ mode: nextMode })}`
 }
 
 function fullscreenModePath(nextMode: TrackedSetMode) {
-    const setId = set.value?.id ?? route.params.id;
-    const query = isPublicSet.value
-        ? "published=1"
-        : assignedQuery().replace(/^\?/, "");
-    return `/set/${setId}-${nextMode}${query ? `?${query}` : ""}`;
+  const setId = set.value?.id ?? route.params.id
+  const query = isPublicSet.value
+    ? "published=1"
+    : assignedQuery().replace(/^\?/, "")
+  return `/set/${setId}-${nextMode}${query ? `?${query}` : ""}`
 }
 
 async function openFullscreenMode(nextMode: TrackedSetMode) {
-    const target = fullscreenModePath(nextMode);
-    if (!target) return;
-    await router.push(target);
+  const target = fullscreenModePath(nextMode)
+  if (!target) return
+  await router.push(target)
 }
 
 const mode = computed<SetMode>(() => {
-    const m =
-        typeof route.query.mode === "string" ? route.query.mode : "flashcards";
-    if (m === "flashcards" || m === "learn" || m === "match" || m === "chat")
-        return m;
-    return "flashcards";
-});
+  const m =
+    typeof route.query.mode === "string" ? route.query.mode : "flashcards"
+  if (m === "flashcards" || m === "learn" || m === "match" || m === "chat")
+    return m
+  return "flashcards"
+})
 
 const mobileStudyModes = computed(() => {
-    const items = [
-        {
-            key: "flashcards",
-            to: setModePath("flashcards"),
-            icon: flashcardsModeIcon,
-            title: t("set.flashcards"),
-            active: mode.value === "flashcards",
-            replace: true,
-        },
-        {
-            key: "learn",
-            to: setModePath("learn"),
-            icon: practiceModeIcon,
-            title: t("set.learn"),
-            active: mode.value === "learn",
-            replace: true,
-        },
-        {
-            key: "chat",
-            to: setModePath("chat"),
-            icon: chatModeIcon,
-            title: t("set.chat"),
-            active: mode.value === "chat",
-            replace: true,
-        },
-        {
-            key: "match",
-            to: setModePath("match"),
-            icon: matchModeIcon,
-            title: t("set.match"),
-            active: mode.value === "match",
-            replace: true,
-        },
-    ];
-    if (studyGuideSetId.value) {
-        items.push({
-            key: "study-guide",
-            to: studyGuideUrl.value,
-            icon: studyGuideModeIcon,
-            title: t("set.studyGuide"),
-            active: false,
-            replace: false,
-        });
-    }
-    return items;
-});
+  const items = [
+    {
+      key: "flashcards",
+      to: setModePath("flashcards"),
+      icon: flashcardsModeIcon,
+      title: t("set.flashcards"),
+      active: mode.value === "flashcards",
+      replace: true,
+    },
+    {
+      key: "learn",
+      to: setModePath("learn"),
+      icon: practiceModeIcon,
+      title: t("set.learn"),
+      active: mode.value === "learn",
+      replace: true,
+    },
+    {
+      key: "chat",
+      to: setModePath("chat"),
+      icon: chatModeIcon,
+      title: t("set.chat"),
+      active: mode.value === "chat",
+      replace: true,
+    },
+    {
+      key: "match",
+      to: setModePath("match"),
+      icon: matchModeIcon,
+      title: t("set.match"),
+      active: mode.value === "match",
+      replace: true,
+    },
+  ]
+  if (studyGuideSetId.value) {
+    items.push({
+      key: "study-guide",
+      to: studyGuideUrl.value,
+      icon: studyGuideModeIcon,
+      title: t("set.studyGuide"),
+      active: false,
+      replace: false,
+    })
+  }
+  return items
+})
 
-const busy = ref(true);
-const loadError = ref<string | null>(null);
-const set = ref<FlashcardSet | null>(null);
+const busy = ref(true)
+const loadError = ref<string | null>(null)
+const set = ref<FlashcardSet | null>(null)
 const assignedScores = reactive<
-    Record<TrackedSetMode, { correct: number; attempted: number }>
+  Record<TrackedSetMode, { correct: number; attempted: number }>
 >({
-    flashcards: { correct: 0, attempted: 0 },
-    learn: { correct: 0, attempted: 0 },
-    match: { correct: 0, attempted: 0 },
-});
-let activeAssignedMode: TrackedSetMode | null = null;
-let inlineInsightStartedAt = "";
-const matchLeaderboard = ref<AssignedMatchLeaderboardEntry[]>([]);
-const matchLeaderboardLoading = ref(false);
-const matchLeaderboardError = ref(false);
+  flashcards: { correct: 0, attempted: 0 },
+  learn: { correct: 0, attempted: 0 },
+  match: { correct: 0, attempted: 0 },
+})
+let activeAssignedMode: TrackedSetMode | null = null
+let inlineInsightStartedAt = ""
+const matchLeaderboard = ref<AssignedMatchLeaderboardEntry[]>([])
+const matchLeaderboardLoading = ref(false)
+const matchLeaderboardError = ref(false)
 
 async function loadMatchLeaderboard() {
-    const assignmentId = assignedAssignmentId.value;
-    if (!assignmentId) return;
-    matchLeaderboardLoading.value = true;
-    matchLeaderboardError.value = false;
-    try {
-        const { listAssignedMatchLeaderboard } =
-            await import("~/src/composables/classrooms");
-        matchLeaderboard.value =
-            await listAssignedMatchLeaderboard(assignmentId);
-    } catch {
-        matchLeaderboardError.value = true;
-    } finally {
-        matchLeaderboardLoading.value = false;
-    }
+  const assignmentId = assignedAssignmentId.value
+  if (!assignmentId) return
+  matchLeaderboardLoading.value = true
+  matchLeaderboardError.value = false
+  try {
+    const { listAssignedMatchLeaderboard } =
+      await import("~/src/composables/classrooms")
+    matchLeaderboard.value = await listAssignedMatchLeaderboard(assignmentId)
+  } catch {
+    matchLeaderboardError.value = true
+  } finally {
+    matchLeaderboardLoading.value = false
+  }
 }
 
 async function finishInlineAssignedMode(
-    options: {
-        completed?: boolean;
-        durationMs?: number;
-    } = {},
+  options: {
+    completed?: boolean
+    durationMs?: number
+  } = {},
 ) {
-    if (!activeAssignedMode || !set.value) return;
-    const active = activeAssignedMode;
-    activeAssignedMode = null;
-    const score = assignedScores[active];
-    const startedAt = inlineInsightStartedAt;
-    inlineInsightStartedAt = "";
-    if (startedAt) {
-        void recordStudySession({
-            setId: set.value.id,
-            mode: active === "learn" ? "practice" : active,
-            startedAt,
-            correct: score.correct,
-            attempted: score.attempted,
-        }).catch((error) => console.warn("Could not save study session", error));
-    }
-    await completeAssignedAttempt({
-        assignmentId: assignedAssignmentId.value,
-        setId: set.value.id,
-        mode: active === "learn" ? "practice" : active,
-        scoreEarned: score.correct,
-        scorePossible: score.attempted,
-        durationMs: active === "match" ? options.durationMs : undefined,
-        completed: active === "match" ? options.completed === true : true,
-    });
-    if (active === "match" && options.completed) await loadMatchLeaderboard();
+  if (!activeAssignedMode || !set.value) return
+  const active = activeAssignedMode
+  activeAssignedMode = null
+  const score = assignedScores[active]
+  const startedAt = inlineInsightStartedAt
+  inlineInsightStartedAt = ""
+  if (startedAt) {
+    void recordStudySession({
+      setId: set.value.id,
+      mode: active === "learn" ? "practice" : active,
+      startedAt,
+      correct: score.correct,
+      attempted: score.attempted,
+    }).catch((error) => console.warn("Could not save study session", error))
+  }
+  await completeAssignedAttempt({
+    assignmentId: assignedAssignmentId.value,
+    setId: set.value.id,
+    mode: active === "learn" ? "practice" : active,
+    scoreEarned: score.correct,
+    scorePossible: score.attempted,
+    durationMs: active === "match" ? options.durationMs : undefined,
+    completed: active === "match" ? options.completed === true : true,
+  })
+  if (active === "match" && options.completed) await loadMatchLeaderboard()
 }
 
 function beginInlineAssignedMode(nextMode: SetMode) {
-    if (!set.value || nextMode === "chat")
-        return;
-    if (nextMode === "match" && matchStartedAtMs.value === null) return;
-    const trackedMode = nextMode as TrackedSetMode;
-    assignedScores[trackedMode] = { correct: 0, attempted: 0 };
-    activeAssignedMode = trackedMode;
-    inlineInsightStartedAt = new Date().toISOString();
-    beginAssignedAttempt({
-        assignmentId: assignedAssignmentId.value,
-        setId: set.value.id,
-        mode: trackedMode === "learn" ? "practice" : trackedMode,
-    });
+  if (!set.value || nextMode === "chat") return
+  if (nextMode === "match" && matchStartedAtMs.value === null) return
+  const trackedMode = nextMode as TrackedSetMode
+  assignedScores[trackedMode] = { correct: 0, attempted: 0 }
+  activeAssignedMode = trackedMode
+  inlineInsightStartedAt = new Date().toISOString()
+  beginAssignedAttempt({
+    assignmentId: assignedAssignmentId.value,
+    setId: set.value.id,
+    mode: trackedMode === "learn" ? "practice" : trackedMode,
+  })
 }
 
 function recordInlineAssignedAnswer(
-    trackedMode: TrackedSetMode,
-    correct: boolean,
+  trackedMode: TrackedSetMode,
+  correct: boolean,
 ) {
-    if (activeAssignedMode !== trackedMode) return;
-    assignedScores[trackedMode].attempted += 1;
-    if (correct) assignedScores[trackedMode].correct += 1;
+  if (activeAssignedMode !== trackedMode) return
+  assignedScores[trackedMode].attempted += 1
+  if (correct) assignedScores[trackedMode].correct += 1
 }
 
 function onAssignedPageHide() {
-    finishInlineAssignedMode();
+  finishInlineAssignedMode()
 }
-const studyGuideSetId = ref<Uuid | null>(null);
-const studyGuideUrl = computed(() => `/study-guide/${studyGuideSetId.value}${isPublicSet.value ? '?published=1' : ''}`);
-const linkedFolder = ref<LinkedFolder | null>(null);
-const linkedFolderBusy = ref(false);
+const studyGuideSetId = ref<Uuid | null>(null)
+const studyGuideUrl = computed(
+  () =>
+    `/study-guide/${studyGuideSetId.value}${isPublicSet.value ? "?published=1" : ""}`,
+)
+const linkedFolder = ref<LinkedFolder | null>(null)
+const linkedFolderBusy = ref(false)
 const linkedFolderName = computed(() => {
-    const path = linkedFolder.value?.path ?? "";
-    return path.split(/[\\/]/).filter(Boolean).at(-1) || t("create.linkFolder");
-});
+  const path = linkedFolder.value?.path ?? ""
+  return path.split(/[\\/]/).filter(Boolean).at(-1) || t("create.linkFolder")
+})
 const linkedFolderStatusLabel = computed(() =>
-    t(`linkedFolder.status.${linkedFolder.value?.status ?? "synced"}`),
-);
+  t(`linkedFolder.status.${linkedFolder.value?.status ?? "synced"}`),
+)
 const linkedFolderStatusClass = computed(() => {
-    const status = linkedFolder.value?.status;
-    if (status === "error")
-        return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200";
-    if (status === "pending" || status === "syncing")
-        return "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200";
-    return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200";
-});
+  const status = linkedFolder.value?.status
+  if (status === "error")
+    return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200"
+  if (status === "pending" || status === "syncing")
+    return "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200"
+  return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
+})
 const chatSystemPrompt = computed(() =>
-    set.value ? buildGroundedChatSystemPrompt(set.value) : "",
-);
+  set.value ? buildGroundedChatSystemPrompt(set.value) : "",
+)
 
-const defaultModelId = ref<string | null>(null);
-const fallbackModelIds = ref<string[]>([]);
-const learnHybridEnabled = ref(false);
+const defaultModelId = ref<string | null>(null)
+const fallbackModelIds = ref<string[]>([])
+const learnHybridEnabled = ref(false)
 
-const isFlipped = ref(false);
-const isFlipping = ref(false);
-const isNavigating = ref<"prev" | "next" | null>(null);
+const isFlipped = ref(false)
+const isFlipping = ref(false)
+const isNavigating = ref<"prev" | "next" | null>(null)
 
-type FlashcardsAnswer = "correct" | "incorrect";
-const flashcardAnswerFeedback = ref<FlashcardsAnswer | null>(null);
-const flashcardAnswerBusy = ref(false);
-const flashcardAnswerTransitionId = ref(0);
+type FlashcardsAnswer = "correct" | "incorrect"
+const flashcardAnswerFeedback = ref<FlashcardsAnswer | null>(null)
+const flashcardAnswerBusy = ref(false)
+const flashcardAnswerTransitionId = ref(0)
 
-const runCounter = ref(0);
-const cursorIndex = ref(0);
-const order = ref<Uuid[]>([]);
-const lastOrder = ref<Uuid[]>([]);
-const answersByTermId = ref<Record<Uuid, FlashcardsAnswer>>({});
-const completedTermIds = ref<Set<Uuid>>(new Set());
-const answerAttemptsCount = ref(0);
-const correctAttemptsCount = ref(0);
-const retryTermIds = ref<Set<Uuid>>(new Set());
+const runCounter = ref(0)
+const cursorIndex = ref(0)
+const order = ref<Uuid[]>([])
+const lastOrder = ref<Uuid[]>([])
+const answersByTermId = ref<Record<Uuid, FlashcardsAnswer>>({})
+const completedTermIds = ref<Set<Uuid>>(new Set())
+const answerAttemptsCount = ref(0)
+const correctAttemptsCount = ref(0)
+const retryTermIds = ref<Set<Uuid>>(new Set())
 
-const starredTermIds = ref<Set<Uuid>>(new Set());
-const starBusy = ref(false);
-const starredOnly = ref(false);
+const starredTermIds = ref<Set<Uuid>>(new Set())
+const starBusy = ref(false)
+const starredOnly = ref(false)
 const flashcardStudyFilter = ref<FlashcardStudyFilter>(
-    DEFAULT_FLASHCARD_STUDY_FILTER,
-);
-const flashcardSettingsOpen = ref(false);
-const flashcardSettingsMenuRoot = ref<HTMLElement | null>(null);
-const flashcardSettingsButtonEl = ref<HTMLButtonElement | null>(null);
-const flashcardsDefinitionFirst = ref(false);
-const flashcardFrontPreferenceBusy = ref(false);
-const smartReviewEnabled = ref(false);
-const shuffleEnabled = ref(false);
-const reviewOwnerId = ref<Uuid | null>(null);
-const reviewFilter = ref<"all" | ReviewBucket>("all");
-const cardReviews = ref<Record<Uuid, CardReview>>({});
-const reviewClock = ref(Date.now());
-let reviewClockTimer: ReturnType<typeof setInterval> | null = null;
+  DEFAULT_FLASHCARD_STUDY_FILTER,
+)
+const flashcardSettingsOpen = ref(false)
+const flashcardSettingsMenuRoot = ref<HTMLElement | null>(null)
+const flashcardSettingsButtonEl = ref<HTMLButtonElement | null>(null)
+const flashcardsDefinitionFirst = ref(false)
+const flashcardFrontPreferenceBusy = ref(false)
+const smartReviewEnabled = ref(false)
+const shuffleEnabled = ref(false)
+const reviewOwnerId = ref<Uuid | null>(null)
+const reviewFilter = ref<"all" | ReviewBucket>("all")
+const cardReviews = ref<Record<Uuid, CardReview>>({})
+const reviewClock = ref(Date.now())
+let reviewClockTimer: ReturnType<typeof setInterval> | null = null
 type ReviewRunSnapshot = {
-    order: Uuid[];
-    cursorIndex: number;
-    answers: Record<Uuid, FlashcardsAnswer>;
-    completed: Uuid[];
-    attempts: number;
-    correctAttempts: number;
-    retries: Uuid[];
-};
+  order: Uuid[]
+  cursorIndex: number
+  answers: Record<Uuid, FlashcardsAnswer>
+  completed: Uuid[]
+  attempts: number
+  correctAttempts: number
+  retries: Uuid[]
+}
 const reviewRunSnapshots = ref<
-    Partial<Record<"all" | ReviewBucket, ReviewRunSnapshot>>
->({});
-const savedFlashcardTermId = ref<Uuid | null>(null);
-const savedFlashcardCorrectTermIds = ref<Uuid[]>([]);
-const masteryByTermId = ref<FlashcardMasteryByTermId>({});
-const savedFlashcardProgressSignature = ref<string | null>(null);
+  Partial<Record<"all" | ReviewBucket, ReviewRunSnapshot>>
+>({})
+const savedFlashcardTermId = ref<Uuid | null>(null)
+const savedFlashcardCorrectTermIds = ref<Uuid[]>([])
+const masteryByTermId = ref<FlashcardMasteryByTermId>({})
+const savedFlashcardProgressSignature = ref<string | null>(null)
 
 const preferredFlashcardFrontOptionLabel = computed(() =>
-    flashcardsDefinitionFirst.value
-        ? t("set.termAtFront")
-        : t("set.definitionAtFront"),
-);
+  flashcardsDefinitionFirst.value
+    ? t("set.termAtFront")
+    : t("set.definitionAtFront"),
+)
 
 async function loadSavedFlashcardProgress(setId: Uuid) {
-    if (isWebPreview.value) return readWebFlashcardProgress(setId);
-    try {
-        const db = await useTracerDb();
-        return await createFlashcardProgressRepo(db).get(setId);
-    } catch {
-        return null;
-    }
+  if (isWebPreview.value) return readWebFlashcardProgress(setId)
+  try {
+    const db = await useTracerDb()
+    return await createFlashcardProgressRepo(db).get(setId)
+  } catch {
+    return null
+  }
 }
 
 function persistFlashcardProgress(termId: Uuid) {
-    const setId = set.value?.id as Uuid | undefined;
-    if (!setId) return;
-    const correctTermIds = allStudyTermIds.value.filter(
-        (id) => answersByTermId.value[id] === "correct",
-    );
-    const progress = {
-        currentTermId: termId,
-        correctTermIds,
-        masteryByTermId: masteryByTermId.value,
-    };
-    const signature = JSON.stringify(progress);
-    if (savedFlashcardProgressSignature.value === signature) return;
-    savedFlashcardTermId.value = termId;
-    savedFlashcardCorrectTermIds.value = correctTermIds;
-    savedFlashcardProgressSignature.value = signature;
-    if (isWebPreview.value) {
-        saveWebFlashcardProgress(setId, progress);
-        return;
-    }
-    void useTracerDb()
-        .then((db) => createFlashcardProgressRepo(db).save(setId, progress))
-        .catch(() => {});
+  const setId = set.value?.id as Uuid | undefined
+  if (!setId) return
+  const correctTermIds = allStudyTermIds.value.filter(
+    (id) => answersByTermId.value[id] === "correct",
+  )
+  const progress = {
+    currentTermId: termId,
+    correctTermIds,
+    masteryByTermId: masteryByTermId.value,
+  }
+  const signature = JSON.stringify(progress)
+  if (savedFlashcardProgressSignature.value === signature) return
+  savedFlashcardTermId.value = termId
+  savedFlashcardCorrectTermIds.value = correctTermIds
+  savedFlashcardProgressSignature.value = signature
+  if (isWebPreview.value) {
+    saveWebFlashcardProgress(setId, progress)
+    return
+  }
+  void useTracerDb()
+    .then((db) => createFlashcardProgressRepo(db).save(setId, progress))
+    .catch(() => {})
 }
 
 async function togglePreferredFlashcardFront() {
-    if (flashcardFrontPreferenceBusy.value) return;
-    const previous = flashcardsDefinitionFirst.value;
-    const next = !previous;
-    flashcardSettingsOpen.value = false;
-    flashcardsDefinitionFirst.value = next;
-    isFlipped.value = false;
-    flashcardFrontPreferenceBusy.value = true;
-    try {
-        if (isWebPreview.value) {
-            saveWebFlashcardFrontPreference(next);
-        } else {
-            const db = await useTracerDb();
-            await createSettingsRepo(db).set({
-                flashcardsDefinitionFirst: next,
-            });
-        }
-    } catch {
-        flashcardsDefinitionFirst.value = previous;
-    } finally {
-        flashcardFrontPreferenceBusy.value = false;
-        nextTick(() => flashcardSettingsButtonEl.value?.focus());
+  if (flashcardFrontPreferenceBusy.value) return
+  const previous = flashcardsDefinitionFirst.value
+  const next = !previous
+  flashcardSettingsOpen.value = false
+  flashcardsDefinitionFirst.value = next
+  isFlipped.value = false
+  flashcardFrontPreferenceBusy.value = true
+  try {
+    if (isWebPreview.value) {
+      saveWebFlashcardFrontPreference(next)
+    } else {
+      const db = await useTracerDb()
+      await createSettingsRepo(db).set({
+        flashcardsDefinitionFirst: next,
+      })
     }
+  } catch {
+    flashcardsDefinitionFirst.value = previous
+  } finally {
+    flashcardFrontPreferenceBusy.value = false
+    nextTick(() => flashcardSettingsButtonEl.value?.focus())
+  }
 }
 
 function onDocumentFlashcardSettingsPointerDown(event: PointerEvent) {
-    const target = event.target;
-    if (!(target instanceof Node)) return;
-    if (flashcardSettingsMenuRoot.value?.contains(target)) return;
-    flashcardSettingsOpen.value = false;
+  const target = event.target
+  if (!(target instanceof Node)) return
+  if (flashcardSettingsMenuRoot.value?.contains(target)) return
+  flashcardSettingsOpen.value = false
 }
 
-type TermsFilter = "all" | "starred" | "unstarred" | "learning" | "gettingBetter" | "mastered";
-const termsFilter = ref<TermsFilter>("all");
-const termsFilterMenuOpen = ref(false);
-const termsFilterMenuRoot = ref<HTMLElement | null>(null);
-const termsFilterButtonEl = ref<HTMLButtonElement | null>(null);
+type TermsFilter =
+  "all" | "starred" | "unstarred" | "learning" | "gettingBetter" | "mastered"
+const termsFilter = ref<TermsFilter>("all")
+const termsFilterMenuOpen = ref(false)
+const termsFilterMenuRoot = ref<HTMLElement | null>(null)
+const termsFilterButtonEl = ref<HTMLButtonElement | null>(null)
 const termsFilterOptions: Array<{
-    value: TermsFilter;
-    labelKey: string;
+  value: TermsFilter
+  labelKey: string
 }> = [
-    { value: "all", labelKey: "set.filterAll" },
-    { value: "starred", labelKey: "set.filterStarred" },
-    { value: "unstarred", labelKey: "set.filterUnstarred" },
-    { value: "learning", labelKey: "set.learning" },
-    { value: "gettingBetter", labelKey: "set.gettingBetter" },
-    { value: "mastered", labelKey: "set.mastered" },
-];
+  { value: "all", labelKey: "set.filterAll" },
+  { value: "starred", labelKey: "set.filterStarred" },
+  { value: "unstarred", labelKey: "set.filterUnstarred" },
+  { value: "learning", labelKey: "set.learning" },
+  { value: "gettingBetter", labelKey: "set.gettingBetter" },
+  { value: "mastered", labelKey: "set.mastered" },
+]
 
 const filteredTerms = computed(() => {
-    const terms = set.value?.terms ?? [];
-    const rank = { learning: 0, gettingBetter: 1, mastered: 2 };
-    const sorted = [...terms].sort(
-        (left, right) =>
-            rank[termStudyGroup(left.id as Uuid)] -
-            rank[termStudyGroup(right.id as Uuid)],
-    );
-    if (termsFilter.value === "all") return sorted;
-    if (termsFilter.value === "learning")
-        return sorted.filter(
-            (term) => termStudyGroup(term.id as Uuid) === "learning",
-        );
-    if (termsFilter.value === "gettingBetter")
-        return sorted.filter(
-            (term) => termStudyGroup(term.id as Uuid) === "gettingBetter",
-        );
-    if (termsFilter.value === "mastered")
-        return sorted.filter(
-            (term) => termStudyGroup(term.id as Uuid) === "mastered",
-        );
-    const showStarred = termsFilter.value === "starred";
+  const terms = set.value?.terms ?? []
+  const rank = { learning: 0, gettingBetter: 1, mastered: 2 }
+  const sorted = [...terms].sort(
+    (left, right) =>
+      rank[termStudyGroup(left.id as Uuid)] -
+      rank[termStudyGroup(right.id as Uuid)],
+  )
+  if (termsFilter.value === "all") return sorted
+  if (termsFilter.value === "learning")
     return sorted.filter(
-        (term) => starredTermIds.value.has(term.id as Uuid) === showStarred,
-    );
-});
+      (term) => termStudyGroup(term.id as Uuid) === "learning",
+    )
+  if (termsFilter.value === "gettingBetter")
+    return sorted.filter(
+      (term) => termStudyGroup(term.id as Uuid) === "gettingBetter",
+    )
+  if (termsFilter.value === "mastered")
+    return sorted.filter(
+      (term) => termStudyGroup(term.id as Uuid) === "mastered",
+    )
+  const showStarred = termsFilter.value === "starred"
+  return sorted.filter(
+    (term) => starredTermIds.value.has(term.id as Uuid) === showStarred,
+  )
+})
 
 function isTermMastered(termId: Uuid) {
-    return masteryByTermId.value[termId]?.mastered === true;
+  return masteryByTermId.value[termId]?.mastered === true
 }
 
 function termStudyGroup(termId: Uuid) {
-    const currentAnswer = answersByTermId.value[termId];
-    if (currentAnswer === "incorrect") return "learning";
-    if (
-        currentAnswer === "correct" &&
-        !isTermMastered(termId)
-    ) {
-        return "gettingBetter";
-    }
-    return flashcardStudyGroup(masteryByTermId.value[termId]);
+  const currentAnswer = answersByTermId.value[termId]
+  if (currentAnswer === "incorrect") return "learning"
+  if (currentAnswer === "correct" && !isTermMastered(termId)) {
+    return "gettingBetter"
+  }
+  return flashcardStudyGroup(masteryByTermId.value[termId])
 }
 
 const termStudyGroupCounts = computed(() => {
-    const counts = { learning: 0, gettingBetter: 0, mastered: 0 };
-    for (const term of set.value?.terms ?? []) {
-        counts[termStudyGroup(term.id as Uuid)] += 1;
-    }
-    return counts;
-});
+  const counts = { learning: 0, gettingBetter: 0, mastered: 0 }
+  for (const term of set.value?.terms ?? []) {
+    counts[termStudyGroup(term.id as Uuid)] += 1
+  }
+  return counts
+})
 
 function selectTermsFilter(filter: TermsFilter) {
-    termsFilter.value = filter;
-    termsFilterMenuOpen.value = false;
-    nextTick(() => termsFilterButtonEl.value?.focus());
+  termsFilter.value = filter
+  termsFilterMenuOpen.value = false
+  nextTick(() => termsFilterButtonEl.value?.focus())
 }
 
 function onDocumentTermsFilterPointerDown(event: PointerEvent) {
-    const target = event.target;
-    if (!(target instanceof Node)) return;
-    if (termsFilterMenuRoot.value?.contains(target)) return;
-    termsFilterMenuOpen.value = false;
+  const target = event.target
+  if (!(target instanceof Node)) return
+  if (termsFilterMenuRoot.value?.contains(target)) return
+  termsFilterMenuOpen.value = false
 }
 
 const baseSeed = computed(() => {
-    const raw = route.query.seed;
-    if (typeof raw !== "string") return null;
-    const n = Number.parseInt(raw, 10);
-    return Number.isFinite(n) ? n : null;
-});
+  const raw = route.query.seed
+  if (typeof raw !== "string") return null
+  const n = Number.parseInt(raw, 10)
+  return Number.isFinite(n) ? n : null
+})
 
-const viewerButtonEl = ref<HTMLButtonElement | null>(null);
-const mobileViewerButtonEl = ref<HTMLButtonElement | null>(null);
+const viewerButtonEl = ref<HTMLButtonElement | null>(null)
+const mobileViewerButtonEl = ref<HTMLButtonElement | null>(null)
 
 function focusFlashcardViewer() {
-    const mobile = window.matchMedia("(max-width: 639px)").matches;
-    (mobile ? mobileViewerButtonEl.value : viewerButtonEl.value)?.focus();
+  const mobile = window.matchMedia("(max-width: 639px)").matches
+  ;(mobile ? mobileViewerButtonEl.value : viewerButtonEl.value)?.focus()
 }
 
-type UiChatMessage = ChatMessage & { id: string; fullContent?: string };
+type UiChatMessage = ChatMessage & { id: string; fullContent?: string }
 
-const chatMessages = ref<UiChatMessage[]>([]);
-const chatInput = ref("");
-const chatBusy = ref(false);
-const chatError = ref<string | null>(null);
-const chatAbort = shallowRef<AbortController | null>(null);
-const chatLogEl = ref<HTMLDivElement | null>(null);
-const chatTextareaEl = ref<HTMLTextAreaElement | null>(null);
-const activeSavedChatId = ref<Uuid | null>(null);
-const chatSaveBusy = ref(false);
-let chatSessionVersion = 0;
-const chatHistoryOpen = ref(false);
-const chatHistoryBusy = ref(false);
-const chatHistoryError = ref<string | null>(null);
-const savedChats = ref<SavedChatListItem[]>([]);
-const chatDeleteTarget = ref<SavedChatListItem | null>(null);
-const chatDeleteBusy = ref(false);
+const chatMessages = ref<UiChatMessage[]>([])
+const chatInput = ref("")
+const chatBusy = ref(false)
+const chatError = ref<string | null>(null)
+const chatAbort = shallowRef<AbortController | null>(null)
+const chatLogEl = ref<HTMLDivElement | null>(null)
+const chatTextareaEl = ref<{ textareaRef: HTMLTextAreaElement } | null>(null)
+const activeSavedChatId = ref<Uuid | null>(null)
+const chatSaveBusy = ref(false)
+let chatSessionVersion = 0
+const chatHistoryOpen = ref(false)
+const chatHistoryBusy = ref(false)
+const chatHistoryError = ref<string | null>(null)
+const savedChats = ref<SavedChatListItem[]>([])
+const chatDeleteTarget = ref<SavedChatListItem | null>(null)
+const chatDeleteBusy = ref(false)
 
 const firstChatQuestion = computed(
-    () =>
-        chatMessages.value
-            .find(
-                (message) => message.role === "user" && message.content.trim(),
-            )
-            ?.content.trim() ?? "",
-);
-const aiError = ref<AiErrorUx | null>(null);
-const aiErrorOpen = ref(false);
-const aiRetryAction = ref<"chat" | "written">("chat");
-const lastChatText = ref<string | null>(null);
-const cachedChatModel = shallowRef<{ id: string; model: any } | null>(null);
+  () =>
+    chatMessages.value
+      .find((message) => message.role === "user" && message.content.trim())
+      ?.content.trim() ?? "",
+)
+const aiError = ref<AiErrorUx | null>(null)
+const aiErrorOpen = ref(false)
+const aiRetryAction = ref<"chat" | "written">("chat")
+const lastChatText = ref<string | null>(null)
+const cachedChatModel = shallowRef<{ id: string; model: any } | null>(null)
 const cachedChatModelPromise = shallowRef<{
-    id: string;
-    promise: Promise<any>;
-} | null>(null);
+  id: string
+  promise: Promise<any>
+} | null>(null)
 
 function updateChatMessage(
-    messageId: string,
-    update: (message: UiChatMessage) => UiChatMessage,
+  messageId: string,
+  update: (message: UiChatMessage) => UiChatMessage,
 ) {
-    const index = chatMessages.value.findIndex(
-        (message) => message.id === messageId,
-    );
-    if (index < 0) return false;
-    const current = chatMessages.value[index];
-    if (!current) return false;
-    const next = update(current);
-    chatMessages.value = [
-        ...chatMessages.value.slice(0, index),
-        next,
-        ...chatMessages.value.slice(index + 1),
-    ];
-    return true;
+  const index = chatMessages.value.findIndex(
+    (message) => message.id === messageId,
+  )
+  if (index < 0) return false
+  const current = chatMessages.value[index]
+  if (!current) return false
+  const next = update(current)
+  chatMessages.value = [
+    ...chatMessages.value.slice(0, index),
+    next,
+    ...chatMessages.value.slice(index + 1),
+  ]
+  return true
 }
 
 const {
-    enqueue: enqueueChatReveal,
-    finish: finishChatRevealStream,
-    flush: flushChatRevealJobs,
-    cancelAll: cancelChatRevealJobs,
+  enqueue: enqueueChatReveal,
+  finish: finishChatRevealStream,
+  flush: flushChatRevealJobs,
+  cancelAll: cancelChatRevealJobs,
 } = createChatRevealQueue<UiChatMessage>({
-    getMessage: (messageId) =>
-        chatMessages.value.find((message) => message.id === messageId),
-    updateMessage: updateChatMessage,
-    onReveal: () => void nextTick().then(scrollChatToBottom),
-});
+  getMessage: (messageId) =>
+    chatMessages.value.find((message) => message.id === messageId),
+  updateMessage: updateChatMessage,
+  onReveal: () => void nextTick().then(scrollChatToBottom),
+})
 
 async function getCachedChatModel(modelId: string) {
-    const route = [modelId, ...fallbackModelIds.value];
-    const cacheId = route.join("\n");
-    const cached = cachedChatModel.value;
-    if (cached?.id === cacheId) return cached.model;
-    const existing = cachedChatModelPromise.value;
-    const promise =
-        existing?.id === cacheId
-            ? existing.promise
-            : import("~/src/composables/ai/registry")
-                  .then(({ resolveAiModel }) => resolveAiModel(route))
-                  .finally(() => {
-                      if (cachedChatModelPromise.value?.id === cacheId) {
-                          cachedChatModelPromise.value = null;
-                      }
-                  });
-    if (existing?.id !== cacheId) {
-        cachedChatModelPromise.value = { id: cacheId, promise };
-    }
-    const model = await promise;
-    cachedChatModel.value = { id: cacheId, model };
-    return model;
+  const route = [modelId, ...fallbackModelIds.value]
+  const cacheId = route.join("\n")
+  const cached = cachedChatModel.value
+  if (cached?.id === cacheId) return cached.model
+  const existing = cachedChatModelPromise.value
+  const promise =
+    existing?.id === cacheId
+      ? existing.promise
+      : import("~/src/composables/ai/registry")
+          .then(({ resolveAiModel }) => resolveAiModel(route))
+          .finally(() => {
+            if (cachedChatModelPromise.value?.id === cacheId) {
+              cachedChatModelPromise.value = null
+            }
+          })
+  if (existing?.id !== cacheId) {
+    cachedChatModelPromise.value = { id: cacheId, promise }
+  }
+  const model = await promise
+  cachedChatModel.value = { id: cacheId, model }
+  return model
 }
 
 function warmChatModel() {
-    if (isWebPreview.value) return;
-    const id = defaultModelId.value;
-    if (!id) return;
-    void getCachedChatModel(id).catch(() => {});
+  if (isWebPreview.value) return
+  const id = defaultModelId.value
+  if (!id) return
+  void getCachedChatModel(id).catch(() => {})
 }
 
 function showAiError(err: unknown, retryAction: "chat" | "save" = "chat") {
-    aiRetryAction.value = retryAction;
-    aiError.value = normalizeAiError(err);
-    aiErrorOpen.value = true;
+  aiRetryAction.value = retryAction
+  aiError.value = normalizeAiError(err)
+  aiErrorOpen.value = true
 }
 
 function closeAiError() {
-    aiErrorOpen.value = false;
+  aiErrorOpen.value = false
 }
 
 async function retryChat() {
-    closeAiError();
-    const text = lastChatText.value;
-    if (!text) return;
-    chatInput.value = text;
-    await sendChat();
+  closeAiError()
+  const text = lastChatText.value
+  if (!text) return
+  chatInput.value = text
+  await sendChat()
 }
 
 async function retryAiRequest() {
-    if (aiRetryAction.value === "written") {
-        closeAiError();
-        await retryPracticeWrittenAnswer();
-        return;
-    }
-    await retryChat();
+  if (aiRetryAction.value === "written") {
+    closeAiError()
+    await retryPracticeWrittenAnswer()
+    return
+  }
+  await retryChat()
 }
 
-const learnBusy = ref(false);
-const learnError = ref<string | null>(null);
+const learnBusy = ref(false)
+const learnError = ref<string | null>(null)
 
-const learnRunCounter = ref(0);
-const learnCursorIndex = ref(0);
-const learnQuestions = ref<LearnQuestion[]>([]);
-const learnAnswersByQuestionId = ref<Record<string, boolean>>({});
-const practiceProgressReady = ref(false);
-const savedPracticeProgressSignature = ref<string | null>(null);
-const practiceSettingsOpen = ref(false);
-const practiceSessionChoices = ["practice", "test"] as const;
+const learnRunCounter = ref(0)
+const learnCursorIndex = ref(0)
+const learnQuestions = ref<LearnQuestion[]>([])
+const learnAnswersByQuestionId = ref<Record<string, boolean>>({})
+const practiceProgressReady = ref(false)
+const savedPracticeProgressSignature = ref<string | null>(null)
+const practiceSettingsOpen = ref(false)
+const practiceSessionChoices = ["practice", "test"] as const
 const practiceQuestionTypeChoices: {
-    kind: LearnQuestionKind;
-    label: string;
+  kind: LearnQuestionKind
+  label: string
 }[] = [
-    { kind: "multiple_choice", label: "Multiple choice" },
-    { kind: "true_false", label: "True / false" },
-    { kind: "written", label: "Written" },
-];
-const practiceSessionMode = ref<"practice" | "test">("practice");
+  { kind: "multiple_choice", label: "Multiple choice" },
+  { kind: "true_false", label: "True / false" },
+  { kind: "written", label: "Written" },
+]
+const practiceSessionMode = ref<"practice" | "test">("practice")
 const practiceQuestionTypes = reactive<Record<LearnQuestionKind, boolean>>({
-    multiple_choice: true,
-    true_false: true,
-    written: true,
-});
-const practiceQuestionCount = ref(10);
-const practiceShuffle = ref(true);
-const practiceTimed = ref(false);
-const practiceTimeLimitMinutes = ref(10);
-const practiceSecondsRemaining = ref(10 * 60);
-const practiceTimedOut = ref(false);
-const practiceWrittenAnswer = ref("");
-const practiceTimerHandle = shallowRef<number | null>(null);
-const practiceAnswerFeedback = ref<PracticeChoiceFeedback | null>(null);
+  multiple_choice: true,
+  true_false: true,
+  written: true,
+})
+const practiceQuestionCount = ref(10)
+const practiceShuffle = ref(true)
+const practiceTimed = ref(false)
+const practiceTimeLimitMinutes = ref(10)
+const practiceSecondsRemaining = ref(10 * 60)
+const practiceTimedOut = ref(false)
+const practiceWrittenAnswer = ref("")
+const practiceTimerHandle = shallowRef<number | null>(null)
+const practiceAnswerFeedback = ref<PracticeChoiceFeedback | null>(null)
 type PracticeWrittenFeedback = WrittenAnswerGrade & {
-    questionId: string;
-};
-const practiceWrittenFeedback = ref<PracticeWrittenFeedback | null>(null);
+  questionId: string
+}
+const practiceWrittenFeedback = ref<PracticeWrittenFeedback | null>(null)
 const lastPracticeWrittenInput = ref<
-    (WrittenAnswerGradeInput & { questionId: string }) | null
->(null);
-const practiceWrittenAbort = shallowRef<AbortController | null>(null);
-const practiceAnswerBusy = ref(false);
-const learnIsNavigating = ref(false);
-const practiceAnswerTransitionId = ref(0);
+  (WrittenAnswerGradeInput & { questionId: string }) | null
+>(null)
+const practiceWrittenAbort = shallowRef<AbortController | null>(null)
+const practiceAnswerBusy = ref(false)
+const learnIsNavigating = ref(false)
+const practiceAnswerTransitionId = ref(0)
 
-const matchPairsRequested = 8;
-const matchBusy = ref(false);
-const matchError = ref<string | null>(null);
-const matchRunCounter = ref(0);
-const matchTiles = ref<MatchTile[]>([]);
-const matchStartedAtMs = ref<number | null>(null);
-const matchEndedAtMs = ref<number | null>(null);
-const matchElapsedTimeMs = ref(0);
-const matchTimerHandle = shallowRef<number | null>(null);
-const matchSelectedTileIds = ref<string[]>([]);
-const matchMatchedPairIds = ref<Set<Uuid>>(new Set());
-const matchAttemptsCount = ref(0);
-const matchCorrectAttemptsCount = ref(0);
-const matchMemoryMode = ref(false);
+const matchPairsRequested = 8
+const matchBusy = ref(false)
+const matchError = ref<string | null>(null)
+const matchRunCounter = ref(0)
+const matchTiles = ref<MatchTile[]>([])
+const matchStartedAtMs = ref<number | null>(null)
+const matchEndedAtMs = ref<number | null>(null)
+const matchElapsedTimeMs = ref(0)
+const matchTimerHandle = shallowRef<number | null>(null)
+const matchSelectedTileIds = ref<string[]>([])
+const matchMatchedPairIds = ref<Set<Uuid>>(new Set())
+const matchAttemptsCount = ref(0)
+const matchCorrectAttemptsCount = ref(0)
+const matchMemoryMode = ref(false)
 
 const matchPairsTarget = computed(() => {
-    const s = set.value;
-    const available = s?.terms?.length ?? 0;
-    return Math.min(matchPairsRequested, available);
-});
+  const s = set.value
+  const available = s?.terms?.length ?? 0
+  return Math.min(matchPairsRequested, available)
+})
 
-const isExportOpen = ref(false);
+const isExportOpen = ref(false)
 
 async function loadSet(setId: Uuid) {
-    busy.value = true;
-    loadError.value = null;
-    try {
-        const db = await useTracerDb();
-        const [loadedSet, loadedLinkedFolder, guide] = await Promise.all([
-            createSetsRepo(db).get(setId),
-            createLinkedFoldersRepo(db).getBySetId(setId),
-            createStudyGuidesRepo(db).getBySetId(setId),
-        ]);
-        set.value = loadedSet;
-        linkedFolder.value = loadedLinkedFolder;
-        studyGuideSetId.value = loadedSet && guide ? setId : null;
-    } catch {
-        loadError.value = "Failed to load set.";
-    } finally {
-        busy.value = false;
-    }
+  busy.value = true
+  loadError.value = null
+  try {
+    const db = await useTracerDb()
+    const [loadedSet, loadedLinkedFolder, guide] = await Promise.all([
+      createSetsRepo(db).get(setId),
+      createLinkedFoldersRepo(db).getBySetId(setId),
+      createStudyGuidesRepo(db).getBySetId(setId),
+    ])
+    set.value = loadedSet
+    linkedFolder.value = loadedLinkedFolder
+    studyGuideSetId.value = loadedSet && guide ? setId : null
+  } catch {
+    loadError.value = "Failed to load set."
+  } finally {
+    busy.value = false
+  }
 }
 
 async function syncLinkedFolderNow() {
-    const setId = set.value?.id;
-    if (!setId || linkedFolderBusy.value) return;
-    linkedFolderBusy.value = true;
-    try {
-        await syncLinkedFolder(setId, { explicit: true });
-        await loadSet(setId);
-    } catch {
-    } finally {
-        linkedFolderBusy.value = false;
-    }
+  const setId = set.value?.id
+  if (!setId || linkedFolderBusy.value) return
+  linkedFolderBusy.value = true
+  try {
+    await syncLinkedFolder(setId, { explicit: true })
+    await loadSet(setId)
+  } catch {
+  } finally {
+    linkedFolderBusy.value = false
+  }
 }
 
 async function unlinkCurrentFolder() {
-    const setId = set.value?.id;
-    if (!setId || linkedFolderBusy.value) return;
-    linkedFolderBusy.value = true;
-    try {
-        await unlinkFolder(setId);
-        linkedFolder.value = null;
-    } finally {
-        linkedFolderBusy.value = false;
-    }
+  const setId = set.value?.id
+  if (!setId || linkedFolderBusy.value) return
+  linkedFolderBusy.value = true
+  try {
+    await unlinkFolder(setId)
+    linkedFolder.value = null
+  } finally {
+    linkedFolderBusy.value = false
+  }
 }
 
 async function onLinkedFolderStatus(event: Event) {
-    const detail = (
-        event as CustomEvent<{ setId: Uuid; linkedFolder: LinkedFolder | null }>
-    ).detail;
-    if (!set.value || detail?.setId !== set.value.id) return;
-    const previousStatus = linkedFolder.value?.status;
-    linkedFolder.value = detail.linkedFolder;
-    if (
-        detail.linkedFolder &&
-        (detail.linkedFolder.status === "synced" ||
-            detail.linkedFolder.status === "error") &&
-        (previousStatus === "pending" || previousStatus === "syncing")
-    ) {
-        const db = await useTracerDb();
-        const refreshed = await createSetsRepo(db).get(detail.setId);
-        if (refreshed) set.value = refreshed;
-        const guide = await createStudyGuidesRepo(db).getBySetId(detail.setId);
-        studyGuideSetId.value = guide ? detail.setId : null;
-    }
+  const detail = (
+    event as CustomEvent<{ setId: Uuid; linkedFolder: LinkedFolder | null }>
+  ).detail
+  if (!set.value || detail?.setId !== set.value.id) return
+  const previousStatus = linkedFolder.value?.status
+  linkedFolder.value = detail.linkedFolder
+  if (
+    detail.linkedFolder &&
+    (detail.linkedFolder.status === "synced" ||
+      detail.linkedFolder.status === "error") &&
+    (previousStatus === "pending" || previousStatus === "syncing")
+  ) {
+    const db = await useTracerDb()
+    const refreshed = await createSetsRepo(db).get(detail.setId)
+    if (refreshed) set.value = refreshed
+    const guide = await createStudyGuidesRepo(db).getBySetId(detail.setId)
+    studyGuideSetId.value = guide ? detail.setId : null
+  }
 }
 
 async function initWebDemoSet(options?: { forceNewPractice?: boolean }) {
-    const demoId =
-        typeof route.params.id === "string" && route.params.id.trim()
-            ? route.params.id
-            : "demo";
-    if (isPublicSet.value) {
-        publishedSet.value = await getPublishedSet(props.publicSetId!);
-        void isPublishedSetOwner(props.publicSetId!)
-            .then((ownsSet) => (canEditPublishedSet.value = ownsSet))
-            .catch(() => (canEditPublishedSet.value = false));
-        void canReportPublishedSet(props.publicSetId!)
-            .then((allowed) => (publicSetReportable.value = allowed))
-            .catch(() => (publicSetReportable.value = false));
-        set.value = publishedSetToStudySet(publishedSet.value);
-        if (hasTauriRuntime()) {
-            void loadAppSettingsOnce()
-                .then((settings) => {
-                    defaultModelId.value = settings.defaultModelId;
-                    fallbackModelIds.value = settings.fallbackModelIds;
-                })
-                .catch(() => {});
-        }
-    } else set.value = createWebPreviewDemoSet(t, { id: demoId as Uuid });
-    // Web preview fallback: allow E2E validation of study guide navigation.
-    studyGuideSetId.value = isPublicSet.value
-        ? (publishedSet.value?.study_guide_markdown?.trim() ? set.value.id : null)
-        : set.value.id;
-    busy.value = false;
-    isFlipped.value = false;
-    flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
-    reviewOwnerId.value = studyStorageOwner({ id: "web-preview" }) ?? "web-preview";
-    await loadStars(set.value.id);
-    const savedProgress = await loadSavedFlashcardProgress(set.value.id);
-    savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
-    savedFlashcardCorrectTermIds.value = savedProgress?.correctTermIds ?? [];
-    masteryByTermId.value = savedProgress?.masteryByTermId ?? {};
-    savedFlashcardProgressSignature.value = savedProgress
-        ? JSON.stringify(savedProgress)
-        : null;
-    if (mode.value === "flashcards") {
-        startRun({
-            resetCounter: true,
-            resumeTermId: savedProgress?.currentTermId,
-            resumeCorrectTermIds: savedProgress?.correctTermIds,
-        });
+  const demoId =
+    typeof route.params.id === "string" && route.params.id.trim()
+      ? route.params.id
+      : "demo"
+  if (isPublicSet.value) {
+    publishedSet.value = await getPublishedSet(props.publicSetId!)
+    void isPublishedSetOwner(props.publicSetId!)
+      .then((ownsSet) => (canEditPublishedSet.value = ownsSet))
+      .catch(() => (canEditPublishedSet.value = false))
+    void canReportPublishedSet(props.publicSetId!)
+      .then((allowed) => (publicSetReportable.value = allowed))
+      .catch(() => (publicSetReportable.value = false))
+    set.value = publishedSetToStudySet(publishedSet.value)
+    if (hasTauriRuntime()) {
+      void loadAppSettingsOnce()
+        .then((settings) => {
+          defaultModelId.value = settings.defaultModelId
+          fallbackModelIds.value = settings.fallbackModelIds
+        })
+        .catch(() => {})
     }
-    if (mode.value === "learn") {
-        await initializePracticeRun({ forceNew: options?.forceNewPractice });
-    }
-    resetMatchStateForRun();
-    if (mode.value === "match") matchPrepareTiles(set.value);
-    await nextTick();
-    if (mode.value === "chat") {
-        chatTextareaEl.value?.focus();
-    } else {
-        focusFlashcardViewer();
-    }
-    window.addEventListener("keydown", onKeydown);
-    document.addEventListener("pointerdown", onDocumentMatchPointerDown);
-    document.addEventListener("pointerdown", onDocumentTermsFilterPointerDown);
-    document.addEventListener(
-        "pointerdown",
-        onDocumentFlashcardSettingsPointerDown,
-    );
+  } else set.value = createWebPreviewDemoSet(t, { id: demoId as Uuid })
+  // Web preview fallback: allow E2E validation of study guide navigation.
+  studyGuideSetId.value = isPublicSet.value
+    ? publishedSet.value?.study_guide_markdown?.trim()
+      ? set.value.id
+      : null
+    : set.value.id
+  busy.value = false
+  isFlipped.value = false
+  flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference()
+  reviewOwnerId.value =
+    studyStorageOwner({ id: "web-preview" }) ?? "web-preview"
+  await loadStars(set.value.id)
+  const savedProgress = await loadSavedFlashcardProgress(set.value.id)
+  savedFlashcardTermId.value = savedProgress?.currentTermId ?? null
+  savedFlashcardCorrectTermIds.value = savedProgress?.correctTermIds ?? []
+  masteryByTermId.value = savedProgress?.masteryByTermId ?? {}
+  savedFlashcardProgressSignature.value = savedProgress
+    ? JSON.stringify(savedProgress)
+    : null
+  if (mode.value === "flashcards") {
+    startRun({
+      resetCounter: true,
+      resumeTermId: savedProgress?.currentTermId,
+      resumeCorrectTermIds: savedProgress?.correctTermIds,
+    })
+  }
+  if (mode.value === "learn") {
+    await initializePracticeRun({ forceNew: options?.forceNewPractice })
+  }
+  resetMatchStateForRun()
+  if (mode.value === "match") matchPrepareTiles(set.value)
+  await nextTick()
+  if (mode.value === "chat") {
+    chatTextareaEl.value?.textareaRef?.focus()
+  } else {
+    focusFlashcardViewer()
+  }
+  window.addEventListener("keydown", onKeydown)
+  document.addEventListener("pointerdown", onDocumentMatchPointerDown)
+  document.addEventListener("pointerdown", onDocumentTermsFilterPointerDown)
+  document.addEventListener(
+    "pointerdown",
+    onDocumentFlashcardSettingsPointerDown,
+  )
 }
 
 const allStudyTermIds = computed(() => {
-    const s = set.value;
-    if (!s) return [];
-    return s.terms.map((t) => t.id as Uuid);
-});
+  const s = set.value
+  if (!s) return []
+  return s.terms.map((t) => t.id as Uuid)
+})
 
 const reviewFilters = computed(() => {
-    void reviewClock.value;
-    return [
-        {
-            value: "all" as const,
-            label: "All",
-            count: allStudyTermIds.value.length,
-        },
-        {
-            value: "due" as const,
-            label: t("set.reviewReady"),
-            count: allStudyTermIds.value.filter(
-                (id) => reviewBucket(cardReviews.value[id]) === "due",
-            ).length,
-        },
-        {
-            value: "learning" as const,
-            label: "Learning",
-            count: allStudyTermIds.value.filter(
-                (id) => reviewBucket(cardReviews.value[id]) === "learning",
-            ).length,
-        },
-        {
-            value: "strong" as const,
-            label: "Strong",
-            count: allStudyTermIds.value.filter(
-                (id) => reviewBucket(cardReviews.value[id]) === "strong",
-            ).length,
-        },
-    ];
-});
+  void reviewClock.value
+  return [
+    {
+      value: "all" as const,
+      label: "All",
+      count: allStudyTermIds.value.length,
+    },
+    {
+      value: "due" as const,
+      label: t("set.reviewReady"),
+      count: allStudyTermIds.value.filter(
+        (id) => reviewBucket(cardReviews.value[id]) === "due",
+      ).length,
+    },
+    {
+      value: "learning" as const,
+      label: "Learning",
+      count: allStudyTermIds.value.filter(
+        (id) => reviewBucket(cardReviews.value[id]) === "learning",
+      ).length,
+    },
+    {
+      value: "strong" as const,
+      label: "Strong",
+      count: allStudyTermIds.value.filter(
+        (id) => reviewBucket(cardReviews.value[id]) === "strong",
+      ).length,
+    },
+  ]
+})
 
 const studyTermIds = computed(() => {
-    let ids = allStudyTermIds.value.filter((id) =>
-        flashcardStudyFilter.value === "all"
-            ? true
-            : flashcardStudyFilter.value === "mastered"
-              ? isTermMastered(id)
-              : !isTermMastered(id),
-    );
-    if (smartReviewEnabled.value && reviewFilter.value !== "all") {
-        ids = ids.filter(
-            (id) => reviewBucket(cardReviews.value[id]) === reviewFilter.value,
-        );
-    } else if (smartReviewEnabled.value) {
-        const rank: Record<ReviewBucket, number> = {
-            due: 0,
-            learning: 1,
-            strong: 2,
-        };
-        ids = [...ids].sort(
-            (a, b) =>
-                rank[reviewBucket(cardReviews.value[a])] -
-                rank[reviewBucket(cardReviews.value[b])],
-        );
+  let ids = allStudyTermIds.value.filter((id) =>
+    flashcardStudyFilter.value === "all"
+      ? true
+      : flashcardStudyFilter.value === "mastered"
+        ? isTermMastered(id)
+        : !isTermMastered(id),
+  )
+  if (smartReviewEnabled.value && reviewFilter.value !== "all") {
+    ids = ids.filter(
+      (id) => reviewBucket(cardReviews.value[id]) === reviewFilter.value,
+    )
+  } else if (smartReviewEnabled.value) {
+    const rank: Record<ReviewBucket, number> = {
+      due: 0,
+      learning: 1,
+      strong: 2,
     }
-    if (starredOnly.value)
-        ids = ids.filter((id) => starredTermIds.value.has(id));
-    return ids;
-});
+    ids = [...ids].sort(
+      (a, b) =>
+        rank[reviewBucket(cardReviews.value[a])] -
+        rank[reviewBucket(cardReviews.value[b])],
+    )
+  }
+  if (starredOnly.value) ids = ids.filter((id) => starredTermIds.value.has(id))
+  return ids
+})
 
 const starredStudyCount = computed(
-    () =>
-        allStudyTermIds.value.filter((id) => starredTermIds.value.has(id))
-            .length,
-);
+  () =>
+    allStudyTermIds.value.filter((id) => starredTermIds.value.has(id)).length,
+)
 
 const isStarredOnlyEmpty = computed(
-    () => starredOnly.value && starredStudyCount.value === 0,
-);
+  () => starredOnly.value && starredStudyCount.value === 0,
+)
 
 // Freeze completion to the cards that were present when this run began. Live
 // Smart Review category changes must not make Results appear or disappear.
-const totalCount = computed(() => new Set(order.value).size);
+const totalCount = computed(() => new Set(order.value).size)
 
 const dueCount = computed(
-    () => (
-        reviewClock.value,
-        allStudyTermIds.value.filter(
-            (id) => reviewBucket(cardReviews.value[id]) === "due",
-        ).length
-    ),
-);
+  () => (
+    reviewClock.value,
+    allStudyTermIds.value.filter(
+      (id) => reviewBucket(cardReviews.value[id]) === "due",
+    ).length
+  ),
+)
 const nextReviewText = computed(() => {
-    const now = reviewClock.value;
-    const next = Object.values(cardReviews.value)
-        .map((review) => review.nextReviewAt)
-        .filter((time) => time > now)
-        .sort((a, b) => a - b)[0];
-    if (!next) return null;
-    const date = new Date(next);
-    const remaining = next - now;
-    if (remaining < 60 * 60 * 1000) {
-        return `in ${Math.max(1, Math.ceil(remaining / 60_000))} min`;
-    }
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const day = new Date(date);
-    day.setHours(0, 0, 0, 0);
-    const dayOffset = Math.round(
-        (day.getTime() - today.getTime()) / 86_400_000,
-    );
-    if (dayOffset === 0) return `in ${Math.ceil(remaining / 3_600_000)} hr`;
-    if (dayOffset === 1) return "tomorrow";
-    return new Intl.DateTimeFormat(undefined, {
-        month: "short",
-        day: "numeric",
-    }).format(date);
-});
+  const now = reviewClock.value
+  const next = Object.values(cardReviews.value)
+    .map((review) => review.nextReviewAt)
+    .filter((time) => time > now)
+    .sort((a, b) => a - b)[0]
+  if (!next) return null
+  const date = new Date(next)
+  const remaining = next - now
+  if (remaining < 60 * 60 * 1000) {
+    return `in ${Math.max(1, Math.ceil(remaining / 60_000))} min`
+  }
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const day = new Date(date)
+  day.setHours(0, 0, 0, 0)
+  const dayOffset = Math.round((day.getTime() - today.getTime()) / 86_400_000)
+  if (dayOffset === 0) return `in ${Math.ceil(remaining / 3_600_000)} hr`
+  if (dayOffset === 1) return "tomorrow"
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+  }).format(date)
+})
 
 const termById = computed(() => {
-    const m = new Map<Uuid, FlashcardSet["terms"][number] & { id: Uuid }>();
-    const s = set.value;
-    if (!s) return m;
-    for (const t of s.terms) m.set(t.id as Uuid, t as any);
-    return m;
-});
+  const m = new Map<Uuid, FlashcardSet["terms"][number] & { id: Uuid }>()
+  const s = set.value
+  if (!s) return m
+  for (const t of s.terms) m.set(t.id as Uuid, t as any)
+  return m
+})
 
-const attemptedCount = computed(() => answerAttemptsCount.value);
-const correctCount = computed(() => correctAttemptsCount.value);
+const attemptedCount = computed(() => answerAttemptsCount.value)
+const correctCount = computed(() => correctAttemptsCount.value)
 const isFinished = computed(
-    () =>
-        order.value.length > 0 &&
-        order.value.every((id) => completedTermIds.value.has(id)),
-);
-const hasIncorrectCards = computed(() => retryTermIds.value.size > 0);
+  () =>
+    order.value.length > 0 &&
+    order.value.every((id) => completedTermIds.value.has(id)),
+)
+const hasIncorrectCards = computed(() => retryTermIds.value.size > 0)
 const ratioText = computed(() => {
-    const total = totalCount.value;
-    if (total === 0) return "0/0";
-    return `${isFinished.value ? total : Math.min(cursorIndex.value + 1, total)}/${total}`;
-});
+  const total = totalCount.value
+  if (total === 0) return "0/0"
+  return `${isFinished.value ? total : Math.min(cursorIndex.value + 1, total)}/${total}`
+})
 
 const currentTerm = computed(() => {
-    if (isFinished.value) return null;
-    const id = order.value[cursorIndex.value];
-    if (!id) return null;
-    return termById.value.get(id) ?? null;
-});
+  if (isFinished.value) return null
+  const id = order.value[cursorIndex.value]
+  if (!id) return null
+  return termById.value.get(id) ?? null
+})
 
 const showingDefinition = computed(
-    () => flashcardsDefinitionFirst.value !== isFlipped.value,
-);
+  () => flashcardsDefinitionFirst.value !== isFlipped.value,
+)
 
 const viewerText = computed(() => {
-    const t = currentTerm.value;
-    if (!t) return "No cards.";
-    return showingDefinition.value ? t.back : t.front;
-});
+  const t = currentTerm.value
+  if (!t) return "No cards."
+  return showingDefinition.value ? t.back : t.front
+})
 
-const viewerHasText = computed(() => viewerText.value.trim().length > 0);
+const viewerHasText = computed(() => viewerText.value.trim().length > 0)
 
 const viewerImage = computed(() => {
-    const t = currentTerm.value;
-    if (!t) return null;
-    return showingDefinition.value
-        ? (t.backImage ?? null)
-        : (t.frontImage ?? null);
-});
+  const t = currentTerm.value
+  if (!t) return null
+  return showingDefinition.value
+    ? (t.backImage ?? null)
+    : (t.frontImage ?? null)
+})
 
 const flashcardSurfaceClass = computed(() => {
-    if (flashcardAnswerFeedback.value === "correct") {
-        return "border-2 border-emerald-600 bg-emerald-50/60 hover:bg-emerald-50/60 focus-visible:ring-emerald-300 dark:border-emerald-500 dark:bg-emerald-950/25 dark:hover:bg-emerald-950/25 dark:focus-visible:ring-emerald-800";
-    }
-    if (flashcardAnswerFeedback.value === "incorrect") {
-        return "border-2 border-red-700 bg-red-50/70 hover:bg-red-50/70 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/30 dark:hover:bg-red-950/30 dark:focus-visible:ring-red-800";
-    }
-    return "border border-amber-500/70 bg-amber-50/20 hover:bg-amber-50/30 focus-visible:ring-amber-300 dark:border-amber-600/45 dark:bg-amber-950/5 dark:hover:bg-amber-950/10 dark:focus-visible:ring-amber-800";
-});
+  if (flashcardAnswerFeedback.value === "correct") {
+    return "border-2 border-emerald-600 bg-emerald-50/60 hover:bg-emerald-50/60 focus-visible:ring-emerald-300 dark:border-emerald-500 dark:bg-emerald-950/25 dark:hover:bg-emerald-950/25 dark:focus-visible:ring-emerald-800"
+  }
+  if (flashcardAnswerFeedback.value === "incorrect") {
+    return "border-2 border-red-700 bg-red-50/70 hover:bg-red-50/70 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/30 dark:hover:bg-red-950/30 dark:focus-visible:ring-red-800"
+  }
+  return "border border-transparent bg-[#fbfcfd] hover:bg-slate-100 focus-visible:ring-slate-400 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500"
+})
 
 const isCurrentStarred = computed(() => {
-    const t = currentTerm.value;
-    if (!t) return false;
-    return starredTermIds.value.has(t.id as Uuid);
-});
+  const t = currentTerm.value
+  if (!t) return false
+  return starredTermIds.value.has(t.id as Uuid)
+})
 
 const isCurrentRetry = computed(() => {
-    const t = currentTerm.value;
-    if (!t) return false;
-    const id = t.id as Uuid;
-    return (
-        retryTermIds.value.has(id) && answersByTermId.value[id] === "incorrect"
-    );
-});
+  const t = currentTerm.value
+  if (!t) return false
+  const id = t.id as Uuid
+  return retryTermIds.value.has(id) && answersByTermId.value[id] === "incorrect"
+})
 
 const accuracyText = computed(() => {
-    const attempted = attemptedCount.value;
-    if (attempted <= 0) return "0%";
-    const pct = Math.round((correctAttemptsCount.value / attempted) * 100);
-    return `${pct}% (${correctAttemptsCount.value}/${attempted})`;
-});
+  const attempted = attemptedCount.value
+  if (attempted <= 0) return "0%"
+  const pct = Math.round((correctAttemptsCount.value / attempted) * 100)
+  return `${pct}% (${correctAttemptsCount.value}/${attempted})`
+})
 
 const {
-    toggleFlip,
-    goPrev,
-    goNext,
-    cancel: cancelFlashcardMotion,
+  toggleFlip,
+  goPrev,
+  goNext,
+  cancel: cancelFlashcardMotion,
 } = createFlashcardMotion({
-    getFlipCardCount: () => totalCount.value,
-    getNavigationCardCount: () => order.value.length,
-    getCursorIndex: () => cursorIndex.value,
-    setCursorIndex: (index) => (cursorIndex.value = index),
-    getFlipped: () => isFlipped.value,
-    setFlipped: (flipped) => (isFlipped.value = flipped),
-    getFlipping: () => isFlipping.value,
-    setFlipping: (flipping) => (isFlipping.value = flipping),
-    setNavigating: (direction) => (isNavigating.value = direction),
-    onNavigate: (direction) => {
-        if (direction !== "next") return;
-        const id = order.value[cursorIndex.value];
-        if (id)
-            completedTermIds.value = new Set(completedTermIds.value).add(id);
-    },
-    onFinish: () => {
-        const id = order.value[cursorIndex.value];
-        if (id && !smartReviewEnabled.value) completedTermIds.value = new Set(order.value);
-    },
-    isBusy: () => flashcardAnswerBusy.value,
-});
+  getFlipCardCount: () => totalCount.value,
+  getNavigationCardCount: () => order.value.length,
+  getCursorIndex: () => cursorIndex.value,
+  setCursorIndex: (index) => (cursorIndex.value = index),
+  getFlipped: () => isFlipped.value,
+  setFlipped: (flipped) => (isFlipped.value = flipped),
+  getFlipping: () => isFlipping.value,
+  setFlipping: (flipping) => (isFlipping.value = flipping),
+  setNavigating: (direction) => (isNavigating.value = direction),
+  onNavigate: (direction) => {
+    if (direction !== "next") return
+    const id = order.value[cursorIndex.value]
+    if (id) completedTermIds.value = new Set(completedTermIds.value).add(id)
+  },
+  onFinish: () => {
+    const id = order.value[cursorIndex.value]
+    if (id && !smartReviewEnabled.value)
+      completedTermIds.value = new Set(order.value)
+  },
+  isBusy: () => flashcardAnswerBusy.value,
+})
 
-const flashcardSwipe = createFlashcardSwipe({ goPrev, goNext, flip: toggleFlip });
+const flashcardSwipe = createFlashcardSwipe({
+  goPrev,
+  goNext,
+  flip: toggleFlip,
+})
 
 function matchSeed() {
-    const s = baseSeed.value;
-    if (s !== null) return s + matchRunCounter.value;
-    return createRandomSeed() ^ (matchRunCounter.value * 2654435761);
+  const s = baseSeed.value
+  if (s !== null) return s + matchRunCounter.value
+  return createRandomSeed() ^ (matchRunCounter.value * 2654435761)
 }
 
 function clearMatchTimer() {
-    const handle = matchTimerHandle.value;
-    if (handle !== null) {
-        window.clearInterval(handle);
-        matchTimerHandle.value = null;
-    }
+  const handle = matchTimerHandle.value
+  if (handle !== null) {
+    window.clearInterval(handle)
+    matchTimerHandle.value = null
+  }
 }
 
 function matchComputeElapsedMs(nowMs: number) {
-    const start = matchStartedAtMs.value;
-    if (start === null) return 0;
-    return Math.max(0, nowMs - start);
+  const start = matchStartedAtMs.value
+  if (start === null) return 0
+  return Math.max(0, nowMs - start)
 }
 
 function matchStop(reason: "completed" | "timeout") {
-    if (matchEndedAtMs.value !== null) return;
-    const now = Date.now();
-    matchEndedAtMs.value = now;
-    matchElapsedTimeMs.value = matchComputeElapsedMs(now);
-    clearMatchTimer();
+  if (matchEndedAtMs.value !== null) return
+  const now = Date.now()
+  matchEndedAtMs.value = now
+  matchElapsedTimeMs.value = matchComputeElapsedMs(now)
+  clearMatchTimer()
 
-    matchSelectedTileIds.value = [];
-    matchBusy.value = false;
-    void finishInlineAssignedMode({
-        completed: reason === "completed",
-        durationMs: matchElapsedTimeMs.value,
-    });
-    if (reason === "timeout") {
-        // Results should still show in a calm state.
-    }
+  matchSelectedTileIds.value = []
+  matchBusy.value = false
+  void finishInlineAssignedMode({
+    completed: reason === "completed",
+    durationMs: matchElapsedTimeMs.value,
+  })
+  if (reason === "timeout") {
+    // Results should still show in a calm state.
+  }
 }
 
 function startMatchTimer() {
-    clearMatchTimer();
-    matchTimerHandle.value = window.setInterval(() => {
-        const now = Date.now();
-        matchElapsedTimeMs.value = matchComputeElapsedMs(now);
-        // Stop if elapsed time reaches 10 minutes
-        if (matchElapsedTimeMs.value >= MATCH_DURATION_MS) {
-            matchElapsedTimeMs.value = MATCH_DURATION_MS;
-            matchStop("timeout");
-        }
-    }, 16);
+  clearMatchTimer()
+  matchTimerHandle.value = window.setInterval(() => {
+    const now = Date.now()
+    matchElapsedTimeMs.value = matchComputeElapsedMs(now)
+    // Stop if elapsed time reaches 10 minutes
+    if (matchElapsedTimeMs.value >= MATCH_DURATION_MS) {
+      matchElapsedTimeMs.value = MATCH_DURATION_MS
+      matchStop("timeout")
+    }
+  }, 16)
 }
 
 function resetMatchStateForRun() {
-    matchError.value = null;
-    matchBusy.value = false;
-    matchSelectedTileIds.value = [];
-    matchMatchedPairIds.value = new Set();
-    matchAttemptsCount.value = 0;
-    matchCorrectAttemptsCount.value = 0;
-    matchStartedAtMs.value = null;
-    matchEndedAtMs.value = null;
-    matchElapsedTimeMs.value = 0;
-    clearMatchTimer();
+  matchError.value = null
+  matchBusy.value = false
+  matchSelectedTileIds.value = []
+  matchMatchedPairIds.value = new Set()
+  matchAttemptsCount.value = 0
+  matchCorrectAttemptsCount.value = 0
+  matchStartedAtMs.value = null
+  matchEndedAtMs.value = null
+  matchElapsedTimeMs.value = 0
+  clearMatchTimer()
 }
 
 function matchPrepareTiles(s: FlashcardSet) {
-    const seed = matchSeed();
-    matchTiles.value = generateMatchTiles(s.terms, {
-        seed,
-        pairCount: matchPairsTarget.value,
-    });
+  const seed = matchSeed()
+  matchTiles.value = generateMatchTiles(s.terms, {
+    seed,
+    pairCount: matchPairsTarget.value,
+  })
 }
 
 function startMatch() {
-    const s = set.value;
-    if (!s) return;
-    resetMatchStateForRun();
-    matchPrepareTiles(s);
-    if (matchTiles.value.length === 0) {
-        matchError.value = "No cards available.";
-        return;
-    }
-    matchStartedAtMs.value = Date.now();
-    matchElapsedTimeMs.value = 0;
-    beginInlineAssignedMode("match");
-    startMatchTimer();
+  const s = set.value
+  if (!s) return
+  resetMatchStateForRun()
+  matchPrepareTiles(s)
+  if (matchTiles.value.length === 0) {
+    matchError.value = "No cards available."
+    return
+  }
+  matchStartedAtMs.value = Date.now()
+  matchElapsedTimeMs.value = 0
+  beginInlineAssignedMode("match")
+  startMatchTimer()
 }
 
 function restartMatchRun() {
-    void finishInlineAssignedMode({ durationMs: matchElapsedTimeMs.value });
-    matchRunCounter.value += 1;
-    resetMatchStateForRun();
-    if (set.value) matchPrepareTiles(set.value);
+  void finishInlineAssignedMode({ durationMs: matchElapsedTimeMs.value })
+  matchRunCounter.value += 1
+  resetMatchStateForRun()
+  if (set.value) matchPrepareTiles(set.value)
 }
 
 function matchIsTileRevealed(tile: MatchTile) {
-    // If memory mode is off, always reveal (show content)
-    if (!matchMemoryMode.value) {
-        return true;
-    }
-    // In memory mode, only reveal if matched or selected
-    if (matchMatchedPairIds.value.has(tile.pairId)) return true;
-    if (matchSelectedTileIds.value.includes(tile.id)) return true;
-    return false;
+  // If memory mode is off, always reveal (show content)
+  if (!matchMemoryMode.value) {
+    return true
+  }
+  // In memory mode, only reveal if matched or selected
+  if (matchMatchedPairIds.value.has(tile.pairId)) return true
+  if (matchSelectedTileIds.value.includes(tile.id)) return true
+  return false
 }
 
 function matchTileDisabled(tile: MatchTile) {
-    if (!matchIsRunning.value) return true;
-    if (matchEndedAtMs.value !== null) return true;
-    if (matchMatchedPairIds.value.has(tile.pairId)) return true;
-    if (
-        matchSelectedTileIds.value.length >= 2 &&
-        !matchSelectedTileIds.value.includes(tile.id)
-    )
-        return true;
-    return false;
+  if (!matchIsRunning.value) return true
+  if (matchEndedAtMs.value !== null) return true
+  if (matchMatchedPairIds.value.has(tile.pairId)) return true
+  if (
+    matchSelectedTileIds.value.length >= 2 &&
+    !matchSelectedTileIds.value.includes(tile.id)
+  )
+    return true
+  return false
 }
 
 function matchTileClass(tile: MatchTile) {
-    const matched = matchMatchedPairIds.value.has(tile.pairId);
-    const selected = matchSelectedTileIds.value.includes(tile.id);
-    const revealed = matchIsTileRevealed(tile);
-    if (matched) {
-        return "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100";
-    }
-    if (selected && matchBusy.value) {
-        return "border-red-800 bg-red-100 text-red-950 ring-2 ring-red-500/70 dark:border-red-500 dark:bg-red-950/60 dark:text-red-50 dark:ring-red-700/80";
-    }
-    if (selected) {
-        return "border-amber-500 bg-amber-50 text-slate-900 ring-1 ring-amber-200 dark:border-amber-600 dark:bg-amber-950/25 dark:text-slate-50 dark:ring-amber-900/60";
-    }
-    if (revealed) {
-        return "border-amber-200 bg-amber-50/20 text-slate-900 dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-50";
-    }
-    return "border-amber-200 bg-amber-50/30 text-transparent hover:bg-amber-50/60 dark:border-amber-900/60 dark:bg-amber-950/10 dark:hover:bg-amber-950/20";
+  const matched = matchMatchedPairIds.value.has(tile.pairId)
+  const selected = matchSelectedTileIds.value.includes(tile.id)
+  const revealed = matchIsTileRevealed(tile)
+  if (matched) {
+    return "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100"
+  }
+  if (selected && matchBusy.value) {
+    return "border-red-800 bg-red-100 text-red-950 ring-2 ring-red-500/70 dark:border-red-500 dark:bg-red-950/60 dark:text-red-50 dark:ring-red-700/80"
+  }
+  if (selected) {
+    return "border-amber-500 bg-amber-50 text-slate-900 ring-1 ring-amber-200 dark:border-amber-600 dark:bg-amber-950/25 dark:text-slate-50 dark:ring-amber-900/60"
+  }
+  if (revealed) {
+    return "border-amber-200 bg-amber-50/20 text-slate-900 dark:border-amber-900/60 dark:bg-amber-950/10 dark:text-slate-50"
+  }
+  return "border-amber-200 bg-amber-50/30 text-transparent hover:bg-amber-50/60 dark:border-amber-900/60 dark:bg-amber-950/10 dark:hover:bg-amber-950/20"
 }
 
 function matchFindTile(id: string) {
-    return matchTiles.value.find((t) => t.id === id) ?? null;
+  return matchTiles.value.find((t) => t.id === id) ?? null
 }
 
 async function onMatchTileClick(tile: MatchTile) {
-    if (!matchIsRunning.value) return;
-    if (matchEndedAtMs.value !== null) return;
-    if (matchMatchedPairIds.value.has(tile.pairId)) return;
-    if (matchSelectedTileIds.value.includes(tile.id)) {
-        matchSelectedTileIds.value = matchSelectedTileIds.value.filter(
-            (id) => id !== tile.id,
-        );
-        return;
+  if (!matchIsRunning.value) return
+  if (matchEndedAtMs.value !== null) return
+  if (matchMatchedPairIds.value.has(tile.pairId)) return
+  if (matchSelectedTileIds.value.includes(tile.id)) {
+    matchSelectedTileIds.value = matchSelectedTileIds.value.filter(
+      (id) => id !== tile.id,
+    )
+    return
+  }
+  if (matchSelectedTileIds.value.length >= 2) return
+
+  matchSelectedTileIds.value = [...matchSelectedTileIds.value, tile.id]
+  if (matchSelectedTileIds.value.length < 2) return
+
+  const [aId, bId] = matchSelectedTileIds.value
+  const a = aId ? matchFindTile(aId) : null
+  const b = bId ? matchFindTile(bId) : null
+  if (!a || !b) {
+    matchSelectedTileIds.value = []
+    return
+  }
+
+  matchAttemptsCount.value += 1
+  const isMatch = a.pairId === b.pairId && a.kind !== b.kind
+  recordInlineAssignedAnswer("match", isMatch)
+  if (isMatch) {
+    matchCorrectAttemptsCount.value += 1
+    matchMatchedPairIds.value = new Set([
+      ...matchMatchedPairIds.value,
+      a.pairId,
+    ])
+    matchSelectedTileIds.value = []
+    if (
+      matchMatchedPairIds.value.size >=
+      Math.min(matchPairsTarget.value, Math.floor(matchTiles.value.length / 2))
+    ) {
+      matchStop("completed")
     }
-    if (matchSelectedTileIds.value.length >= 2) return;
+    return
+  }
 
-    matchSelectedTileIds.value = [...matchSelectedTileIds.value, tile.id];
-    if (matchSelectedTileIds.value.length < 2) return;
-
-    const [aId, bId] = matchSelectedTileIds.value;
-    const a = aId ? matchFindTile(aId) : null;
-    const b = bId ? matchFindTile(bId) : null;
-    if (!a || !b) {
-        matchSelectedTileIds.value = [];
-        return;
-    }
-
-    matchAttemptsCount.value += 1;
-    const isMatch = a.pairId === b.pairId && a.kind !== b.kind;
-    recordInlineAssignedAnswer("match", isMatch);
-    if (isMatch) {
-        matchCorrectAttemptsCount.value += 1;
-        matchMatchedPairIds.value = new Set([
-            ...matchMatchedPairIds.value,
-            a.pairId,
-        ]);
-        matchSelectedTileIds.value = [];
-        if (
-            matchMatchedPairIds.value.size >=
-            Math.min(
-                matchPairsTarget.value,
-                Math.floor(matchTiles.value.length / 2),
-            )
-        ) {
-            matchStop("completed");
-        }
-        return;
-    }
-
-    matchBusy.value = true;
-    await new Promise((r) => window.setTimeout(r, 550));
-    matchBusy.value = false;
-    matchSelectedTileIds.value = [];
+  matchBusy.value = true
+  await new Promise((r) => window.setTimeout(r, 550))
+  matchBusy.value = false
+  matchSelectedTileIds.value = []
 }
 
 function onDocumentMatchPointerDown(event: PointerEvent) {
-    if (matchSelectedTileIds.value.length === 0) return;
-    const target = event.target;
-    if (!(target instanceof Element)) return;
-    if (target.closest('[data-match-tile="true"]')) return;
-    if (target.closest('button,a,input,textarea,select,[role="button"]'))
-        return;
-    matchSelectedTileIds.value = [];
+  if (matchSelectedTileIds.value.length === 0) return
+  const target = event.target
+  if (!(target instanceof Element)) return
+  if (target.closest('[data-match-tile="true"]')) return
+  if (target.closest('button,a,input,textarea,select,[role="button"]')) return
+  matchSelectedTileIds.value = []
 }
 
 function learnSeed() {
-    const s = baseSeed.value;
-    if (s !== null) return s + learnRunCounter.value;
-    return createRandomSeed() ^ (learnRunCounter.value * 2654435761);
+  const s = baseSeed.value
+  if (s !== null) return s + learnRunCounter.value
+  return createRandomSeed() ^ (learnRunCounter.value * 2654435761)
 }
 
 const learnAttemptedCount = computed(
-    () => Object.keys(learnAnswersByQuestionId.value).length,
-);
+  () => Object.keys(learnAnswersByQuestionId.value).length,
+)
 const learnCorrectCount = computed(
-    () => Object.values(learnAnswersByQuestionId.value).filter((v) => v).length,
-);
+  () => Object.values(learnAnswersByQuestionId.value).filter((v) => v).length,
+)
 const learnIsFinished = computed(() => {
-    const total = learnQuestions.value.length;
-    return total > 0 && learnAttemptedCount.value >= total;
-});
+  const total = learnQuestions.value.length
+  return total > 0 && learnAttemptedCount.value >= total
+})
 
 const learnRatioText = computed(() => {
-    const total = learnQuestions.value.length;
-    if (total === 0) return "0/0";
-    return `${Math.min(learnAttemptedCount.value, total)}/${total}`;
-});
+  const total = learnQuestions.value.length
+  if (total === 0) return "0/0"
+  return `${Math.min(learnAttemptedCount.value, total)}/${total}`
+})
 
 const learnAccuracyText = computed(() => {
-    const attempted = learnAttemptedCount.value;
-    if (attempted <= 0) return "0%";
-    const pct = Math.round((learnCorrectCount.value / attempted) * 100);
-    return `${pct}% (${learnCorrectCount.value}/${attempted})`;
-});
+  const attempted = learnAttemptedCount.value
+  if (attempted <= 0) return "0%"
+  const pct = Math.round((learnCorrectCount.value / attempted) * 100)
+  return `${pct}% (${learnCorrectCount.value}/${attempted})`
+})
 
 const learnCurrentQuestion = computed(() => {
-    if (learnIsFinished.value) return null;
-    return learnQuestions.value[learnCursorIndex.value] ?? null;
-});
+  if (learnIsFinished.value) return null
+  return learnQuestions.value[learnCursorIndex.value] ?? null
+})
 
 const practiceQuestionLimit = computed(() => {
-    const terms = set.value?.terms.length ?? 1;
-    return Math.max(1, terms);
-});
+  const terms = set.value?.terms.length ?? 1
+  return Math.max(1, terms)
+})
 
 const practiceTimerText = computed(() => {
-    const seconds = Math.max(0, practiceSecondsRemaining.value);
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
-});
+  const seconds = Math.max(0, practiceSecondsRemaining.value)
+  const minutes = Math.floor(seconds / 60)
+  return `${minutes}:${String(seconds % 60).padStart(2, "0")}`
+})
 
 function enabledPracticeQuestionTypes(): LearnQuestionKind[] {
-    return (Object.keys(practiceQuestionTypes) as LearnQuestionKind[]).filter(
-        (kind) => practiceQuestionTypes[kind],
-    );
+  return (Object.keys(practiceQuestionTypes) as LearnQuestionKind[]).filter(
+    (kind) => practiceQuestionTypes[kind],
+  )
 }
 
 function clampPracticeQuestionCount() {
-    const next = Math.round(Number(practiceQuestionCount.value) || 1);
-    practiceQuestionCount.value = Math.min(
-        practiceQuestionLimit.value,
-        Math.max(1, next),
-    );
+  const next = Math.round(Number(practiceQuestionCount.value) || 1)
+  practiceQuestionCount.value = Math.min(
+    practiceQuestionLimit.value,
+    Math.max(1, next),
+  )
 }
 
 function togglePracticeQuestionType(kind: LearnQuestionKind) {
-    if (
-        practiceQuestionTypes[kind] &&
-        enabledPracticeQuestionTypes().length === 1
-    ) {
-        learnError.value = "Choose at least one question type.";
-        return;
-    }
-    practiceQuestionTypes[kind] = !practiceQuestionTypes[kind];
-    learnError.value = null;
-    practiceQuestionCount.value = Math.min(
-        practiceQuestionCount.value,
-        practiceQuestionLimit.value,
-    );
+  if (
+    practiceQuestionTypes[kind] &&
+    enabledPracticeQuestionTypes().length === 1
+  ) {
+    learnError.value = "Choose at least one question type."
+    return
+  }
+  practiceQuestionTypes[kind] = !practiceQuestionTypes[kind]
+  learnError.value = null
+  practiceQuestionCount.value = Math.min(
+    practiceQuestionCount.value,
+    practiceQuestionLimit.value,
+  )
 }
 
 function openPracticeSettings() {
-    practiceSettingsOpen.value = !practiceSettingsOpen.value;
-    if (practiceSettingsOpen.value) {
-        clampPracticeQuestionCount();
-    }
+  practiceSettingsOpen.value = !practiceSettingsOpen.value
+  if (practiceSettingsOpen.value) {
+    clampPracticeQuestionCount()
+  }
 }
 
 function clearPracticeTimer() {
-    if (practiceTimerHandle.value !== null) {
-        window.clearInterval(practiceTimerHandle.value);
-        practiceTimerHandle.value = null;
-    }
+  if (practiceTimerHandle.value !== null) {
+    window.clearInterval(practiceTimerHandle.value)
+    practiceTimerHandle.value = null
+  }
 }
 
 function expirePracticeSession() {
-    cancelPracticeAnswerFeedback();
-    clearPracticeTimer();
-    practiceTimedOut.value = true;
-    const answers = { ...learnAnswersByQuestionId.value };
-    for (const question of learnQuestions.value) {
-        if (answers[question.id] === undefined) answers[question.id] = false;
-    }
-    learnAnswersByQuestionId.value = answers;
+  cancelPracticeAnswerFeedback()
+  clearPracticeTimer()
+  practiceTimedOut.value = true
+  const answers = { ...learnAnswersByQuestionId.value }
+  for (const question of learnQuestions.value) {
+    if (answers[question.id] === undefined) answers[question.id] = false
+  }
+  learnAnswersByQuestionId.value = answers
 }
 
 function startPracticeTimer() {
-    clearPracticeTimer();
-    practiceTimedOut.value = false;
-    practiceSecondsRemaining.value = practiceTimeLimitMinutes.value * 60;
-    if (!practiceTimed.value) return;
-    practiceTimerHandle.value = window.setInterval(() => {
-        practiceSecondsRemaining.value -= 1;
-        if (practiceSecondsRemaining.value <= 0) expirePracticeSession();
-    }, 1000);
+  clearPracticeTimer()
+  practiceTimedOut.value = false
+  practiceSecondsRemaining.value = practiceTimeLimitMinutes.value * 60
+  if (!practiceTimed.value) return
+  practiceTimerHandle.value = window.setInterval(() => {
+    practiceSecondsRemaining.value -= 1
+    if (practiceSecondsRemaining.value <= 0) expirePracticeSession()
+  }, 1000)
 }
 
 function learnFindNextUnattempted(fromIndex: number) {
-    const list = learnQuestions.value;
-    if (list.length === 0) return null;
-    const answered = learnAnswersByQuestionId.value;
-    for (let step = 0; step < list.length; step += 1) {
-        const idx = (fromIndex + step) % list.length;
-        const q = list[idx];
-        if (!q) continue;
-        if (answered[q.id] === undefined) return idx;
-    }
-    return null;
+  const list = learnQuestions.value
+  if (list.length === 0) return null
+  const answered = learnAnswersByQuestionId.value
+  for (let step = 0; step < list.length; step += 1) {
+    const idx = (fromIndex + step) % list.length
+    const q = list[idx]
+    if (!q) continue
+    if (answered[q.id] === undefined) return idx
+  }
+  return null
 }
 
 function learnMarkAnswered(questionId: string, isCorrect: boolean) {
-    if (learnAnswersByQuestionId.value[questionId] === undefined) {
-        recordInlineAssignedAnswer("learn", isCorrect);
-    }
-    learnAnswersByQuestionId.value = {
-        ...learnAnswersByQuestionId.value,
-        [questionId]: isCorrect,
-    };
-    const next = learnFindNextUnattempted(learnCursorIndex.value + 1);
-    if (next === null) {
-        clearPracticeTimer();
-        return;
-    }
-    learnCursorIndex.value = next;
+  if (learnAnswersByQuestionId.value[questionId] === undefined) {
+    recordInlineAssignedAnswer("learn", isCorrect)
+  }
+  learnAnswersByQuestionId.value = {
+    ...learnAnswersByQuestionId.value,
+    [questionId]: isCorrect,
+  }
+  const next = learnFindNextUnattempted(learnCursorIndex.value + 1)
+  if (next === null) {
+    clearPracticeTimer()
+    return
+  }
+  learnCursorIndex.value = next
 }
 
 const {
-    practiceTrueFalseChoiceClass,
-    practiceMultipleChoiceClass,
-    practiceQuestionSurfaceClass,
+  practiceTrueFalseChoiceClass,
+  practiceMultipleChoiceClass,
+  practiceQuestionSurfaceClass,
 } = createPracticePresentation({
-    getQuestion: () => learnCurrentQuestion.value,
-    getChoiceFeedback: () => practiceAnswerFeedback.value,
-    getWrittenFeedback: () => practiceWrittenFeedback.value,
-});
+  neutralSurfaceClass:
+    "border-slate-200 bg-[#fbfcfd] dark:border-slate-800 dark:bg-slate-900",
+  getQuestion: () => learnCurrentQuestion.value,
+  getChoiceFeedback: () => practiceAnswerFeedback.value,
+  getWrittenFeedback: () => practiceWrittenFeedback.value,
+})
 
 function waitForFeedback(ms: number) {
-    return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+  return new Promise<void>((resolve) => window.setTimeout(resolve, ms))
 }
 
 function cancelPracticeAnswerFeedback() {
-    practiceAnswerTransitionId.value += 1;
-    practiceWrittenAbort.value?.abort();
-    practiceWrittenAbort.value = null;
-    practiceAnswerFeedback.value = null;
-    practiceWrittenFeedback.value = null;
-    lastPracticeWrittenInput.value = null;
-    practiceAnswerBusy.value = false;
-    learnIsNavigating.value = false;
+  practiceAnswerTransitionId.value += 1
+  practiceWrittenAbort.value?.abort()
+  practiceWrittenAbort.value = null
+  practiceAnswerFeedback.value = null
+  practiceWrittenFeedback.value = null
+  lastPracticeWrittenInput.value = null
+  practiceAnswerBusy.value = false
+  learnIsNavigating.value = false
 }
 
 async function submitPracticeChoice(
-    questionId: string,
-    selected: PracticeChoiceValue,
-    correct: PracticeChoiceValue,
+  questionId: string,
+  selected: PracticeChoiceValue,
+  correct: PracticeChoiceValue,
 ) {
-    if (practiceAnswerBusy.value) return;
-    const transitionId = ++practiceAnswerTransitionId.value;
-    const isCorrect = selected === correct;
-    practiceAnswerFeedback.value = { questionId, selected, correct };
-    practiceAnswerBusy.value = true;
+  if (practiceAnswerBusy.value) return
+  const transitionId = ++practiceAnswerTransitionId.value
+  const isCorrect = selected === correct
+  practiceAnswerFeedback.value = { questionId, selected, correct }
+  practiceAnswerBusy.value = true
 
-    await waitForFeedback((isCorrect ? 1000 : 1800) - 250);
-    if (transitionId !== practiceAnswerTransitionId.value) return;
+  await waitForFeedback((isCorrect ? 1000 : 1800) - 250)
+  if (transitionId !== practiceAnswerTransitionId.value) return
 
-    learnIsNavigating.value = true;
-    await waitForFeedback(250);
-    if (transitionId !== practiceAnswerTransitionId.value) return;
+  learnIsNavigating.value = true
+  await waitForFeedback(250)
+  if (transitionId !== practiceAnswerTransitionId.value) return
 
-    learnMarkAnswered(questionId, isCorrect);
-    practiceAnswerFeedback.value = null;
-    practiceAnswerBusy.value = false;
-    learnIsNavigating.value = false;
+  learnMarkAnswered(questionId, isCorrect)
+  practiceAnswerFeedback.value = null
+  practiceAnswerBusy.value = false
+  learnIsNavigating.value = false
 }
 
 function answerLearnTrueFalse(value: boolean) {
-    const q = learnCurrentQuestion.value;
-    if (!q || q.kind !== "true_false") return;
-    void submitPracticeChoice(q.id, value, q.answer);
+  const q = learnCurrentQuestion.value
+  if (!q || q.kind !== "true_false") return
+  void submitPracticeChoice(q.id, value, q.answer)
 }
 
 function answerLearnMultipleChoice(selectedIndex: number) {
-    const q = learnCurrentQuestion.value;
-    if (!q || q.kind !== "multiple_choice") return;
-    void submitPracticeChoice(q.id, selectedIndex, q.answerIndex);
+  const q = learnCurrentQuestion.value
+  if (!q || q.kind !== "multiple_choice") return
+  void submitPracticeChoice(q.id, selectedIndex, q.answerIndex)
 }
 
 async function answerLearnWritten(useAi = false) {
-    const q = learnCurrentQuestion.value;
-    if (
-        !q ||
-        q.kind !== "written" ||
-        !practiceWrittenAnswer.value.trim() ||
-        practiceAnswerBusy.value
-    )
-        return;
-    const input = {
-        questionId: q.id,
-        question: q.prompt,
-        referenceAnswer: q.answer,
-        studentAnswer: practiceWrittenAnswer.value.trim(),
-    };
-    if (defaultModelId.value === 'builtin:auto' && !useAi) {
-        practiceWrittenFeedback.value = { questionId: input.questionId, ...gradeWebPreviewWrittenAnswer(input) };
-        return;
+  const q = learnCurrentQuestion.value
+  if (
+    !q ||
+    q.kind !== "written" ||
+    !practiceWrittenAnswer.value.trim() ||
+    practiceAnswerBusy.value
+  )
+    return
+  const input = {
+    questionId: q.id,
+    question: q.prompt,
+    referenceAnswer: q.answer,
+    studentAnswer: practiceWrittenAnswer.value.trim(),
+  }
+  if (defaultModelId.value === "builtin:auto" && !useAi) {
+    practiceWrittenFeedback.value = {
+      questionId: input.questionId,
+      ...gradeWebPreviewWrittenAnswer(input),
     }
-    lastPracticeWrittenInput.value = input;
-    await runPracticeWrittenGrade(input);
+    return
+  }
+  lastPracticeWrittenInput.value = input
+  await runPracticeWrittenGrade(input)
 }
 
 async function runPracticeWrittenGrade(
-    input: WrittenAnswerGradeInput & { questionId: string },
+  input: WrittenAnswerGradeInput & { questionId: string },
 ) {
-    if (practiceAnswerBusy.value) return;
-    const question = learnCurrentQuestion.value;
-    if (
-        !question ||
-        question.kind !== "written" ||
-        question.id !== input.questionId
-    )
-        return;
+  if (practiceAnswerBusy.value) return
+  const question = learnCurrentQuestion.value
+  if (
+    !question ||
+    question.kind !== "written" ||
+    question.id !== input.questionId
+  )
+    return
 
-    const transitionId = ++practiceAnswerTransitionId.value;
-    const controller = new AbortController();
-    practiceWrittenAbort.value?.abort();
-    practiceWrittenAbort.value = controller;
-    practiceAnswerBusy.value = true;
-    practiceWrittenFeedback.value = null;
-    learnError.value = null;
+  const transitionId = ++practiceAnswerTransitionId.value
+  const controller = new AbortController()
+  practiceWrittenAbort.value?.abort()
+  practiceWrittenAbort.value = controller
+  practiceAnswerBusy.value = true
+  practiceWrittenFeedback.value = null
+  learnError.value = null
 
-    try {
-        let grade: WrittenAnswerGrade;
-        if (isWebPreview.value) {
-            await waitForFeedback(250);
-            grade = gradeWebPreviewWrittenAnswer(input);
-        } else {
-            if (!defaultModelId.value) {
-                aiRetryAction.value = "written";
-                aiError.value = aiErrorForMissingDefaultModel();
-                aiErrorOpen.value = true;
-                return;
-            }
-            grade = await gradeWrittenAnswer({
-                model: await getCachedChatModel(defaultModelId.value),
-                input,
-                abortSignal: controller.signal,
-            });
-        }
-
-        if (
-            controller.signal.aborted ||
-            transitionId !== practiceAnswerTransitionId.value
-        )
-            return;
-        practiceWrittenFeedback.value = {
-            questionId: input.questionId,
-            ...grade,
-        };
-    } catch (error) {
-        if (controller.signal.aborted) return;
-        aiRetryAction.value = "written";
-        aiError.value = normalizeAiError(error);
-        aiErrorOpen.value = true;
-    } finally {
-        if (practiceWrittenAbort.value === controller) {
-            practiceWrittenAbort.value = null;
-        }
-        if (
-            !controller.signal.aborted &&
-            transitionId === practiceAnswerTransitionId.value
-        ) {
-            practiceAnswerBusy.value = false;
-        }
+  try {
+    let grade: WrittenAnswerGrade
+    if (isWebPreview.value) {
+      await waitForFeedback(250)
+      grade = gradeWebPreviewWrittenAnswer(input)
+    } else {
+      if (!defaultModelId.value) {
+        aiRetryAction.value = "written"
+        aiError.value = aiErrorForMissingDefaultModel()
+        aiErrorOpen.value = true
+        return
+      }
+      grade = await gradeWrittenAnswer({
+        model: await getCachedChatModel(defaultModelId.value),
+        input,
+        abortSignal: controller.signal,
+      })
     }
+
+    if (
+      controller.signal.aborted ||
+      transitionId !== practiceAnswerTransitionId.value
+    )
+      return
+    practiceWrittenFeedback.value = {
+      questionId: input.questionId,
+      ...grade,
+    }
+  } catch (error) {
+    if (controller.signal.aborted) return
+    aiRetryAction.value = "written"
+    aiError.value = normalizeAiError(error)
+    aiErrorOpen.value = true
+  } finally {
+    if (practiceWrittenAbort.value === controller) {
+      practiceWrittenAbort.value = null
+    }
+    if (
+      !controller.signal.aborted &&
+      transitionId === practiceAnswerTransitionId.value
+    ) {
+      practiceAnswerBusy.value = false
+    }
+  }
 }
 
 async function retryPracticeWrittenAnswer() {
-    const input = lastPracticeWrittenInput.value;
-    if (!input) return;
-    await runPracticeWrittenGrade(input);
+  const input = lastPracticeWrittenInput.value
+  if (!input) return
+  await runPracticeWrittenGrade(input)
 }
 
 async function continueAfterWrittenFeedback() {
-    const feedback = practiceWrittenFeedback.value;
-    if (!feedback || practiceAnswerBusy.value) return;
-    const transitionId = ++practiceAnswerTransitionId.value;
-    practiceAnswerBusy.value = true;
-    learnIsNavigating.value = true;
-    await waitForFeedback(250);
-    if (transitionId !== practiceAnswerTransitionId.value) return;
-    learnMarkAnswered(feedback.questionId, feedback.isCorrect);
-    practiceWrittenAnswer.value = "";
-    practiceWrittenFeedback.value = null;
-    lastPracticeWrittenInput.value = null;
-    practiceAnswerBusy.value = false;
-    learnIsNavigating.value = false;
+  const feedback = practiceWrittenFeedback.value
+  if (!feedback || practiceAnswerBusy.value) return
+  const transitionId = ++practiceAnswerTransitionId.value
+  practiceAnswerBusy.value = true
+  learnIsNavigating.value = true
+  await waitForFeedback(250)
+  if (transitionId !== practiceAnswerTransitionId.value) return
+  learnMarkAnswered(feedback.questionId, feedback.isCorrect)
+  practiceWrittenAnswer.value = ""
+  practiceWrittenFeedback.value = null
+  lastPracticeWrittenInput.value = null
+  practiceAnswerBusy.value = false
+  learnIsNavigating.value = false
 }
 
-
 function parseLearnAugmentJson(raw: string): LearnQuestion[] {
-    if (typeof raw !== "string") return [];
-    const text = raw.trim();
-    if (!text) return [];
-    let data: any;
-    try {
-        data = JSON.parse(text);
-    } catch {
-        return [];
+  if (typeof raw !== "string") return []
+  const text = raw.trim()
+  if (!text) return []
+  let data: any
+  try {
+    data = JSON.parse(text)
+  } catch {
+    return []
+  }
+  const list = Array.isArray(data?.questions) ? data.questions : []
+  const out: LearnQuestion[] = []
+  for (let i = 0; i < list.length; i += 1) {
+    const q = list[i]
+    if (!q || typeof q !== "object") continue
+    if (q.kind === "true_false") {
+      const term = typeof q.term === "string" ? q.term.trim() : ""
+      const def = typeof q.definition === "string" ? q.definition.trim() : ""
+      const ans = typeof q.answer === "boolean" ? q.answer : null
+      if (!term || !def || ans === null) continue
+      out.push({
+        id: `ai:tf:${i}:${term}`,
+        kind: "true_false",
+        prompt: `True or False: "${term}" corresponds with "${def}".`,
+        answer: ans,
+        termId: "ai" as Uuid,
+      })
+      continue
     }
-    const list = Array.isArray(data?.questions) ? data.questions : [];
-    const out: LearnQuestion[] = [];
-    for (let i = 0; i < list.length; i += 1) {
-        const q = list[i];
-        if (!q || typeof q !== "object") continue;
-        if (q.kind === "true_false") {
-            const term = typeof q.term === "string" ? q.term.trim() : "";
-            const def =
-                typeof q.definition === "string" ? q.definition.trim() : "";
-            const ans = typeof q.answer === "boolean" ? q.answer : null;
-            if (!term || !def || ans === null) continue;
-            out.push({
-                id: `ai:tf:${i}:${term}`,
-                kind: "true_false",
-                prompt: `True or False: "${term}" corresponds with "${def}".`,
-                answer: ans,
-                termId: "ai" as Uuid,
-            });
-            continue;
-        }
-        if (q.kind === "multiple_choice") {
-            const term = typeof q.term === "string" ? q.term.trim() : "";
-            const choices = Array.isArray(q.choices)
-                ? q.choices
-                      .filter((c: any) => typeof c === "string")
-                      .map((c: string) => c.trim())
-                : [];
-            const answerIndex = Number.isFinite(q.answerIndex)
-                ? Math.floor(q.answerIndex)
-                : -1;
-            const unique = new Set(choices);
-            if (!term || choices.length !== 4) continue;
-            if (unique.size !== 4) continue;
-            if (answerIndex < 0 || answerIndex >= 4) continue;
+    if (q.kind === "multiple_choice") {
+      const term = typeof q.term === "string" ? q.term.trim() : ""
+      const choices = Array.isArray(q.choices)
+        ? q.choices
+            .filter((c: any) => typeof c === "string")
+            .map((c: string) => c.trim())
+        : []
+      const answerIndex = Number.isFinite(q.answerIndex)
+        ? Math.floor(q.answerIndex)
+        : -1
+      const unique = new Set(choices)
+      if (!term || choices.length !== 4) continue
+      if (unique.size !== 4) continue
+      if (answerIndex < 0 || answerIndex >= 4) continue
 
-            out.push({
-                id: `ai:mc:${i}:${term}`,
-                kind: "multiple_choice",
-                prompt: `What is the definition of "${term}"?`,
-                options: choices,
-                answerIndex,
-                termId: "ai" as Uuid,
-            });
-        }
+      out.push({
+        id: `ai:mc:${i}:${term}`,
+        kind: "multiple_choice",
+        prompt: `What is the definition of "${term}"?`,
+        options: choices,
+        answerIndex,
+        termId: "ai" as Uuid,
+      })
     }
-    return out;
+  }
+  return out
 }
 
 async function buildLearnQuestionsForSet(s: FlashcardSet) {
-    const seed = learnSeed();
-    const selectedTypes = enabledPracticeQuestionTypes();
-    const baseline = generateLearnQuestionsWithFallback(s.terms, {
-        seed,
-        maxQuestions: Math.min(
-            practiceQuestionCount.value,
-            practiceQuestionLimit.value,
-        ),
-        questionTypes: selectedTypes,
-        shuffle: practiceShuffle.value,
-    });
-    if (!learnHybridEnabled.value) return baseline;
-    if (!defaultModelId.value) return baseline;
-    if (isWebPreview.value) return baseline;
+  const seed = learnSeed()
+  const selectedTypes = enabledPracticeQuestionTypes()
+  const baseline = generateLearnQuestionsWithFallback(s.terms, {
+    seed,
+    maxQuestions: Math.min(
+      practiceQuestionCount.value,
+      practiceQuestionLimit.value,
+    ),
+    questionTypes: selectedTypes,
+    shuffle: practiceShuffle.value,
+  })
+  if (!learnHybridEnabled.value) return baseline
+  if (!defaultModelId.value) return baseline
+  if (isWebPreview.value) return baseline
 
-    learnBusy.value = true;
-    try {
-        const { resolveAiModel } =
-            await import("~/src/composables/ai/registry");
-        const model = await resolveAiModel([
-            defaultModelId.value,
-            ...fallbackModelIds.value,
-        ]);
-        const generated = await generatePracticeQuestionsText(model, {
-            title: s.title,
-            description: s.description,
-            terms: s.terms.map((t) => ({ front: t.front, back: t.back })),
-            count: 10,
-        });
-        const extra = parseLearnAugmentJson(generated).filter((question) =>
-            selectedTypes.includes(question.kind),
-        );
-        return mixPracticeQuestions(baseline, extra).slice(
-            0,
-            Math.min(practiceQuestionCount.value, practiceQuestionLimit.value),
-        );
-    } catch {
-        return baseline;
-    } finally {
-        learnBusy.value = false;
-    }
+  learnBusy.value = true
+  try {
+    const { resolveAiModel } = await import("~/src/composables/ai/registry")
+    const model = await resolveAiModel([
+      defaultModelId.value,
+      ...fallbackModelIds.value,
+    ])
+    const generated = await generatePracticeQuestionsText(model, {
+      title: s.title,
+      description: s.description,
+      terms: s.terms.map((t) => ({ front: t.front, back: t.back })),
+      count: 10,
+    })
+    const extra = parseLearnAugmentJson(generated).filter((question) =>
+      selectedTypes.includes(question.kind),
+    )
+    return mixPracticeQuestions(baseline, extra).slice(
+      0,
+      Math.min(practiceQuestionCount.value, practiceQuestionLimit.value),
+    )
+  } catch {
+    return baseline
+  } finally {
+    learnBusy.value = false
+  }
 }
 
 async function startLearnRun(options?: {
-    resetCounter?: boolean;
-    startTimer?: boolean;
+  resetCounter?: boolean
+  startTimer?: boolean
 }) {
-    cancelPracticeAnswerFeedback();
-    const s = set.value;
-    if (!s) return;
-    if (options?.resetCounter) learnRunCounter.value = 0;
-    learnError.value = null;
-    learnBusy.value = true;
-    try {
-        const list = await buildLearnQuestionsForSet(s);
-        learnQuestions.value = list;
-        learnCursorIndex.value = 0;
-        learnAnswersByQuestionId.value = {};
-        practiceWrittenAnswer.value = "";
-        if (options?.startTimer && list.length > 0) startPracticeTimer();
-    } catch {
-        learnError.value = "Failed to generate questions.";
-        learnQuestions.value = [];
-        learnCursorIndex.value = 0;
-        learnAnswersByQuestionId.value = {};
-    } finally {
-        learnBusy.value = false;
-    }
+  cancelPracticeAnswerFeedback()
+  const s = set.value
+  if (!s) return
+  if (options?.resetCounter) learnRunCounter.value = 0
+  learnError.value = null
+  learnBusy.value = true
+  try {
+    const list = await buildLearnQuestionsForSet(s)
+    learnQuestions.value = list
+    learnCursorIndex.value = 0
+    learnAnswersByQuestionId.value = {}
+    practiceWrittenAnswer.value = ""
+    if (options?.startTimer && list.length > 0) startPracticeTimer()
+  } catch {
+    learnError.value = "Failed to generate questions."
+    learnQuestions.value = []
+    learnCursorIndex.value = 0
+    learnAnswersByQuestionId.value = {}
+  } finally {
+    learnBusy.value = false
+  }
 }
 
 function currentPracticeProgress(): PracticeProgress | null {
-    const currentSet = set.value;
-    if (!currentSet || learnQuestions.value.length === 0) return null;
-    return {
-        setUpdatedAt: currentSet.updatedAt,
-        currentQuestionId: learnCurrentQuestion.value?.id ?? null,
-        questions: learnQuestions.value,
-        answersByQuestionId: learnAnswersByQuestionId.value,
-    };
+  const currentSet = set.value
+  if (!currentSet || learnQuestions.value.length === 0) return null
+  return {
+    setUpdatedAt: currentSet.updatedAt,
+    currentQuestionId: learnCurrentQuestion.value?.id ?? null,
+    questions: learnQuestions.value,
+    answersByQuestionId: learnAnswersByQuestionId.value,
+  }
 }
 
 function persistPracticeRun() {
-    if (!practiceProgressReady.value) return;
-    const currentSet = set.value;
-    const progress = currentPracticeProgress();
-    if (!currentSet || !progress) return;
-    const signature = JSON.stringify(progress);
-    if (signature === savedPracticeProgressSignature.value) return;
-    savedPracticeProgressSignature.value = signature;
-    void savePracticeProgress(
-        currentSet.id,
-        progress,
-        isWebPreview.value,
-    ).catch(() => {});
+  if (!practiceProgressReady.value) return
+  const currentSet = set.value
+  const progress = currentPracticeProgress()
+  if (!currentSet || !progress) return
+  const signature = JSON.stringify(progress)
+  if (signature === savedPracticeProgressSignature.value) return
+  savedPracticeProgressSignature.value = signature
+  void savePracticeProgress(currentSet.id, progress, isWebPreview.value).catch(
+    () => {},
+  )
 }
 
 async function initializePracticeRun(options?: { forceNew?: boolean }) {
-    const currentSet = set.value;
-    if (!currentSet) return;
-    practiceProgressReady.value = false;
-    const saved = await loadPracticeProgress(currentSet.id, isWebPreview.value);
-    if (
-        !options?.forceNew &&
-        saved &&
-        (isWebPreview.value || saved.setUpdatedAt === currentSet.updatedAt) &&
-        saved.questions.length > 0
-    ) {
-        const questionIds = new Set(
-            saved.questions.map((question) => question.id),
-        );
-        learnQuestions.value = saved.questions;
-        learnAnswersByQuestionId.value = Object.fromEntries(
-            Object.entries(saved.answersByQuestionId).filter(([questionId]) =>
-                questionIds.has(questionId),
-            ),
-        );
-        const savedIndex = saved.currentQuestionId
-            ? saved.questions.findIndex(
-                  (question) => question.id === saved.currentQuestionId,
-              )
-            : -1;
-        const firstUnansweredIndex = saved.questions.findIndex(
-            (question) =>
-                learnAnswersByQuestionId.value[question.id] === undefined,
-        );
-        learnCursorIndex.value =
-            savedIndex >= 0
-                ? savedIndex
-                : firstUnansweredIndex >= 0
-                  ? firstUnansweredIndex
-                  : 0;
-        savedPracticeProgressSignature.value = JSON.stringify(
-            currentPracticeProgress(),
-        );
-        practiceProgressReady.value = true;
-        return;
-    }
+  const currentSet = set.value
+  if (!currentSet) return
+  practiceProgressReady.value = false
+  const saved = await loadPracticeProgress(currentSet.id, isWebPreview.value)
+  if (
+    !options?.forceNew &&
+    saved &&
+    (isWebPreview.value || saved.setUpdatedAt === currentSet.updatedAt) &&
+    saved.questions.length > 0
+  ) {
+    const questionIds = new Set(saved.questions.map((question) => question.id))
+    learnQuestions.value = saved.questions
+    learnAnswersByQuestionId.value = Object.fromEntries(
+      Object.entries(saved.answersByQuestionId).filter(([questionId]) =>
+        questionIds.has(questionId),
+      ),
+    )
+    const savedIndex = saved.currentQuestionId
+      ? saved.questions.findIndex(
+          (question) => question.id === saved.currentQuestionId,
+        )
+      : -1
+    const firstUnansweredIndex = saved.questions.findIndex(
+      (question) => learnAnswersByQuestionId.value[question.id] === undefined,
+    )
+    learnCursorIndex.value =
+      savedIndex >= 0
+        ? savedIndex
+        : firstUnansweredIndex >= 0
+          ? firstUnansweredIndex
+          : 0
+    savedPracticeProgressSignature.value = JSON.stringify(
+      currentPracticeProgress(),
+    )
+    practiceProgressReady.value = true
+    return
+  }
 
-    await startLearnRun({ resetCounter: true });
-    savedPracticeProgressSignature.value = null;
-    practiceProgressReady.value = true;
-    persistPracticeRun();
+  await startLearnRun({ resetCounter: true })
+  savedPracticeProgressSignature.value = null
+  practiceProgressReady.value = true
+  persistPracticeRun()
 }
 
 function applyPracticeSettings() {
-    practiceSettingsOpen.value = false;
-    if (practiceSessionMode.value === "test") {
-        const currentSet = set.value;
-        if (!currentSet) return;
-        clampPracticeQuestionCount();
-        const query = new URLSearchParams({
-            types: enabledPracticeQuestionTypes().join(","),
-            count: String(practiceQuestionCount.value),
-            shuffle: practiceShuffle.value ? "1" : "0",
-            timed: practiceTimed.value ? "1" : "0",
-            minutes: String(practiceTimeLimitMinutes.value),
-            seed: String(learnSeed()),
-        });
-        if (isPublicSet.value) query.set("published", "1");
-        void router.push(`/set/${currentSet.id}-test?${query.toString()}`);
-        return;
-    }
-    learnRunCounter.value += 1;
-    void startLearnRun({ startTimer: true });
+  practiceSettingsOpen.value = false
+  if (practiceSessionMode.value === "test") {
+    const currentSet = set.value
+    if (!currentSet) return
+    clampPracticeQuestionCount()
+    const query = new URLSearchParams({
+      types: enabledPracticeQuestionTypes().join(","),
+      count: String(practiceQuestionCount.value),
+      shuffle: practiceShuffle.value ? "1" : "0",
+      timed: practiceTimed.value ? "1" : "0",
+      minutes: String(practiceTimeLimitMinutes.value),
+      seed: String(learnSeed()),
+    })
+    if (isPublicSet.value) query.set("published", "1")
+    void router.push(`/set/${currentSet.id}-test?${query.toString()}`)
+    return
+  }
+  learnRunCounter.value += 1
+  void startLearnRun({ startTimer: true })
 }
 
 const {
-    shuffleRun,
-    startRun,
-    restartRun,
-    resumeIncorrect,
-    toggleStarredOnly,
-    cancelFlashcardAnswerFeedback,
-    markRating,
-    markCorrect,
-    markIncorrect,
+  shuffleRun,
+  startRun,
+  restartRun,
+  resumeIncorrect,
+  toggleStarredOnly,
+  cancelFlashcardAnswerFeedback,
+  markRating,
+  markCorrect,
+  markIncorrect,
 } = createFlashcardRun({
-    state: {
-        runCounter,
-        cursorIndex,
-        order,
-        lastOrder,
-        answersByTermId,
-        completedTermIds,
-        answerAttemptsCount,
-        correctAttemptsCount,
-        retryTermIds,
-        starredOnly,
-        isFlipped,
-        isNavigating,
-        answerFeedback: flashcardAnswerFeedback,
-        answerBusy: flashcardAnswerBusy,
-        answerTransitionId: flashcardAnswerTransitionId,
-    },
-    hasSet: () => set.value !== null,
-    getStudyTermIds: () => studyTermIds.value,
-    getCurrentTermId: () => (currentTerm.value?.id as Uuid | undefined) ?? null,
-    getBaseSeed: () => baseSeed.value,
-    getStarredStudyCount: () => starredStudyCount.value,
-    onAnswer: (answer, termId, rating) => {
-        masteryByTermId.value = {
-            ...masteryByTermId.value,
-            [termId]: updateFlashcardMastery(
-                masteryByTermId.value[termId],
-                answer,
-            ),
-        };
-        recordInlineAssignedAnswer("flashcards", answer === "correct");
-        const setId = set.value?.id as Uuid | undefined;
-        if (setId && termId && smartReviewEnabled.value) {
-            cardReviews.value = {
-                ...cardReviews.value,
-                [termId]: recordCardReview(
-                    setId,
-                    termId,
-                    rating ?? (answer === "correct"),
-                    reviewOwnerId.value,
-                ),
-            };
-        }
-    },
-    focusViewer: () => nextTick(focusFlashcardViewer),
-});
+  state: {
+    runCounter,
+    cursorIndex,
+    order,
+    lastOrder,
+    answersByTermId,
+    completedTermIds,
+    answerAttemptsCount,
+    correctAttemptsCount,
+    retryTermIds,
+    starredOnly,
+    isFlipped,
+    isNavigating,
+    answerFeedback: flashcardAnswerFeedback,
+    answerBusy: flashcardAnswerBusy,
+    answerTransitionId: flashcardAnswerTransitionId,
+  },
+  hasSet: () => set.value !== null,
+  getStudyTermIds: () => studyTermIds.value,
+  getCurrentTermId: () => (currentTerm.value?.id as Uuid | undefined) ?? null,
+  getBaseSeed: () => baseSeed.value,
+  getStarredStudyCount: () => starredStudyCount.value,
+  onAnswer: (answer, termId, rating) => {
+    masteryByTermId.value = {
+      ...masteryByTermId.value,
+      [termId]: updateFlashcardMastery(masteryByTermId.value[termId], answer),
+    }
+    recordInlineAssignedAnswer("flashcards", answer === "correct")
+    const setId = set.value?.id as Uuid | undefined
+    if (setId && termId && smartReviewEnabled.value) {
+      cardReviews.value = {
+        ...cardReviews.value,
+        [termId]: recordCardReview(
+          setId,
+          termId,
+          rating ?? answer === "correct",
+          reviewOwnerId.value,
+        ),
+      }
+    }
+  },
+  focusViewer: () => nextTick(focusFlashcardViewer),
+})
 
 function shuffleFromFlashcardSettings() {
-    flashcardSettingsOpen.value = false;
-    const setId = set.value?.id as Uuid | undefined;
-    if (!setId) return;
-    shuffleEnabled.value = !shuffleEnabled.value;
-    saveFlashcardShuffleEnabled(
-        setId,
-        shuffleEnabled.value,
-        reviewOwnerId.value,
-    );
-    if (shuffleEnabled.value) {
-        shuffleRun();
-        return;
-    }
-    const currentId = currentTerm.value?.id as Uuid | undefined;
-    const normalOrder = [...studyTermIds.value];
-    order.value = normalOrder;
-    lastOrder.value = normalOrder;
-    cursorIndex.value = currentId
-        ? Math.max(0, normalOrder.indexOf(currentId))
-        : 0;
-    isFlipped.value = false;
-    nextTick(focusFlashcardViewer);
+  flashcardSettingsOpen.value = false
+  const setId = set.value?.id as Uuid | undefined
+  if (!setId) return
+  shuffleEnabled.value = !shuffleEnabled.value
+  saveFlashcardShuffleEnabled(setId, shuffleEnabled.value, reviewOwnerId.value)
+  if (shuffleEnabled.value) {
+    shuffleRun()
+    return
+  }
+  const currentId = currentTerm.value?.id as Uuid | undefined
+  const normalOrder = [...studyTermIds.value]
+  order.value = normalOrder
+  lastOrder.value = normalOrder
+  cursorIndex.value = currentId
+    ? Math.max(0, normalOrder.indexOf(currentId))
+    : 0
+  isFlipped.value = false
+  nextTick(focusFlashcardViewer)
 }
 
 function toggleStarredOnlyFromFlashcardSettings() {
-    flashcardSettingsOpen.value = false;
-    toggleStarredOnly();
+  flashcardSettingsOpen.value = false
+  toggleStarredOnly()
 }
 
 function restartFromFlashcardSettings() {
-    flashcardSettingsOpen.value = false;
-    restartAllFlashcards();
+  flashcardSettingsOpen.value = false
+  restartAllFlashcards()
 }
 
 function startConfiguredRun() {
-    if (shuffleEnabled.value) shuffleRun();
-    else startRun();
+  if (shuffleEnabled.value) shuffleRun()
+  else startRun()
 }
 
 function restartConfiguredRun() {
-    delete reviewRunSnapshots.value[reviewFilter.value];
-    restartRun();
-    if (shuffleEnabled.value) shuffleRun();
+  delete reviewRunSnapshots.value[reviewFilter.value]
+  restartRun()
+  if (shuffleEnabled.value) shuffleRun()
 }
 
 function selectFlashcardStudyFilter(filter: FlashcardStudyFilter) {
-    flashcardStudyFilter.value = filter;
-    flashcardSettingsOpen.value = false;
-    restartRun();
+  flashcardStudyFilter.value = filter
+  flashcardSettingsOpen.value = false
+  restartRun()
 }
 
 function restartAllFlashcards() {
-    flashcardStudyFilter.value = "all";
-    starredOnly.value = false;
-    reviewFilter.value = "all";
-    reviewRunSnapshots.value = {};
-    restartConfiguredRun();
+  flashcardStudyFilter.value = "all"
+  starredOnly.value = false
+  reviewFilter.value = "all"
+  reviewRunSnapshots.value = {}
+  restartConfiguredRun()
 }
 
 function closeFlashcardDisclosure(event: MouseEvent) {
-    if (event.target instanceof Element && event.target.closest('button')) {
-        (event.currentTarget as HTMLDetailsElement).open = false;
-    }
+  if (event.target instanceof Element && event.target.closest("button")) {
+    ;(event.currentTarget as HTMLDetailsElement).open = false
+  }
 }
 
 function toggleSmartReview() {
-    const setId = set.value?.id as Uuid | undefined;
-    if (!setId) return;
-    smartReviewEnabled.value = !smartReviewEnabled.value;
-    saveSmartReviewEnabled(
-        setId,
-        smartReviewEnabled.value,
-        reviewOwnerId.value,
-    );
-    flashcardSettingsOpen.value = false;
-    reviewRunSnapshots.value = {};
-    reviewFilter.value = "all";
-    startConfiguredRun();
+  const setId = set.value?.id as Uuid | undefined
+  if (!setId) return
+  smartReviewEnabled.value = !smartReviewEnabled.value
+  saveSmartReviewEnabled(setId, smartReviewEnabled.value, reviewOwnerId.value)
+  flashcardSettingsOpen.value = false
+  reviewRunSnapshots.value = {}
+  reviewFilter.value = "all"
+  startConfiguredRun()
 }
 
 function setReviewFilter(filter: "all" | ReviewBucket) {
-    if (filter === reviewFilter.value) return;
-    reviewRunSnapshots.value[reviewFilter.value] = {
-        order: [...order.value],
-        cursorIndex: cursorIndex.value,
-        answers: { ...answersByTermId.value },
-        completed: [...completedTermIds.value],
-        attempts: answerAttemptsCount.value,
-        correctAttempts: correctAttemptsCount.value,
-        retries: [...retryTermIds.value],
-    };
-    if (filter !== "all" && !smartReviewEnabled.value) {
-        const setId = set.value?.id as Uuid | undefined;
-        if (setId) {
-            smartReviewEnabled.value = true;
-            saveSmartReviewEnabled(setId, true, reviewOwnerId.value);
-        }
+  if (filter === reviewFilter.value) return
+  reviewRunSnapshots.value[reviewFilter.value] = {
+    order: [...order.value],
+    cursorIndex: cursorIndex.value,
+    answers: { ...answersByTermId.value },
+    completed: [...completedTermIds.value],
+    attempts: answerAttemptsCount.value,
+    correctAttempts: correctAttemptsCount.value,
+    retries: [...retryTermIds.value],
+  }
+  if (filter !== "all" && !smartReviewEnabled.value) {
+    const setId = set.value?.id as Uuid | undefined
+    if (setId) {
+      smartReviewEnabled.value = true
+      saveSmartReviewEnabled(setId, true, reviewOwnerId.value)
     }
-    reviewFilter.value = filter;
-    const saved = reviewRunSnapshots.value[filter];
-    // Empty snapshots have no progress to restore; cards may have become ready
-    // since this filter was last opened. Preserve nonempty runs as-is.
-    if (!saved || saved.order.length === 0) {
-        startConfiguredRun();
-        return;
-    }
-    order.value = [...saved.order];
-    cursorIndex.value = saved.cursorIndex;
-    answersByTermId.value = { ...saved.answers };
-    completedTermIds.value = new Set(
-        saved.completed ?? Object.keys(saved.answers),
-    );
-    answerAttemptsCount.value = saved.attempts;
-    correctAttemptsCount.value = saved.correctAttempts;
-    retryTermIds.value = new Set(saved.retries);
-    isFlipped.value = false;
-    nextTick(focusFlashcardViewer);
+  }
+  reviewFilter.value = filter
+  const saved = reviewRunSnapshots.value[filter]
+  // Empty snapshots have no progress to restore; cards may have become ready
+  // since this filter was last opened. Preserve nonempty runs as-is.
+  if (!saved || saved.order.length === 0) {
+    startConfiguredRun()
+    return
+  }
+  order.value = [...saved.order]
+  cursorIndex.value = saved.cursorIndex
+  answersByTermId.value = { ...saved.answers }
+  completedTermIds.value = new Set(
+    saved.completed ?? Object.keys(saved.answers),
+  )
+  answerAttemptsCount.value = saved.attempts
+  correctAttemptsCount.value = saved.correctAttempts
+  retryTermIds.value = new Set(saved.retries)
+  isFlipped.value = false
+  nextTick(focusFlashcardViewer)
 }
 
 async function loadStars(setId: Uuid) {
-    const storedGlobal = getGlobalSmartReviewEnabled(reviewOwnerId.value);
-    const globalEnabled =
-        storedGlobal ??
-        (isWebPreview.value
-            ? false
-            : (await loadAppSettingsOnce()).smartReviewEnabled);
-    if (storedGlobal === null)
-        saveGlobalSmartReviewEnabled(globalEnabled, reviewOwnerId.value);
-    smartReviewEnabled.value = resolveSmartReviewEnabled(
-        setId,
-        globalEnabled,
-        reviewOwnerId.value,
-    );
-    shuffleEnabled.value = isFlashcardShuffleEnabled(
-        setId,
-        reviewOwnerId.value,
-    );
-    cardReviews.value = getCardReviews(setId, reviewOwnerId.value);
-    if (isWebPreview.value) {
-        starredTermIds.value = new Set();
-        return;
-    }
-    try {
-        const db = await useTracerDb();
-        const ids = await createStarsRepo(db).listTermIds(setId);
-        starredTermIds.value = new Set(ids);
-    } catch {
-        starredTermIds.value = new Set();
-    }
+  const storedGlobal = getGlobalSmartReviewEnabled(reviewOwnerId.value)
+  const globalEnabled =
+    storedGlobal ??
+    (isWebPreview.value
+      ? false
+      : (await loadAppSettingsOnce()).smartReviewEnabled)
+  if (storedGlobal === null)
+    saveGlobalSmartReviewEnabled(globalEnabled, reviewOwnerId.value)
+  smartReviewEnabled.value = resolveSmartReviewEnabled(
+    setId,
+    globalEnabled,
+    reviewOwnerId.value,
+  )
+  shuffleEnabled.value = isFlashcardShuffleEnabled(setId, reviewOwnerId.value)
+  cardReviews.value = getCardReviews(setId, reviewOwnerId.value)
+  if (isWebPreview.value) {
+    starredTermIds.value = new Set()
+    return
+  }
+  try {
+    const db = await useTracerDb()
+    const ids = await createStarsRepo(db).listTermIds(setId)
+    starredTermIds.value = new Set(ids)
+  } catch {
+    starredTermIds.value = new Set()
+  }
 }
 
 async function toggleStar() {
-    const s = set.value;
-    const t = currentTerm.value;
-    if (!s || !t) return;
-    if (starBusy.value) return;
+  const s = set.value
+  const t = currentTerm.value
+  if (!s || !t) return
+  if (starBusy.value) return
 
-    const next = !starredTermIds.value.has(t.id as Uuid);
-    starBusy.value = true;
-    try {
-        if (!isWebPreview.value) {
-            const db = await useTracerDb();
-            await createStarsRepo(db).setStarred(
-                s.id as Uuid,
-                t.id as Uuid,
-                next,
-            );
-        }
-        const updated = new Set(starredTermIds.value);
-        if (next) updated.add(t.id as Uuid);
-        else updated.delete(t.id as Uuid);
-        starredTermIds.value = updated;
-        if (starredOnly.value && !next) {
-            startRun();
-        }
-    } finally {
-        starBusy.value = false;
+  const next = !starredTermIds.value.has(t.id as Uuid)
+  starBusy.value = true
+  try {
+    if (!isWebPreview.value) {
+      const db = await useTracerDb()
+      await createStarsRepo(db).setStarred(s.id as Uuid, t.id as Uuid, next)
     }
+    const updated = new Set(starredTermIds.value)
+    if (next) updated.add(t.id as Uuid)
+    else updated.delete(t.id as Uuid)
+    starredTermIds.value = updated
+    if (starredOnly.value && !next) {
+      startRun()
+    }
+  } finally {
+    starBusy.value = false
+  }
 }
 
 async function toggleTermStar(termId: Uuid) {
-    const s = set.value;
-    if (!s) return;
-    if (starBusy.value) return;
+  const s = set.value
+  if (!s) return
+  if (starBusy.value) return
 
-    const next = !starredTermIds.value.has(termId);
-    starBusy.value = true;
-    try {
-        if (!isWebPreview.value) {
-            const db = await useTracerDb();
-            await createStarsRepo(db).setStarred(s.id as Uuid, termId, next);
-        }
-        const updated = new Set(starredTermIds.value);
-        if (next) updated.add(termId);
-        else updated.delete(termId);
-        starredTermIds.value = updated;
-        if (starredOnly.value) {
-            startRun();
-        }
-    } finally {
-        starBusy.value = false;
+  const next = !starredTermIds.value.has(termId)
+  starBusy.value = true
+  try {
+    if (!isWebPreview.value) {
+      const db = await useTracerDb()
+      await createStarsRepo(db).setStarred(s.id as Uuid, termId, next)
     }
+    const updated = new Set(starredTermIds.value)
+    if (next) updated.add(termId)
+    else updated.delete(termId)
+    starredTermIds.value = updated
+    if (starredOnly.value) {
+      startRun()
+    }
+  } finally {
+    starBusy.value = false
+  }
 }
 
 function shouldIgnoreKey(e: KeyboardEvent) {
-    if (e.metaKey || e.ctrlKey || e.altKey) return true;
-    const el = e.target;
-    if (!(el instanceof HTMLElement)) return false;
-    const tag = el.tagName.toLowerCase();
-    if (tag === "input" || tag === "textarea" || tag === "select") return true;
-    if (el.isContentEditable) return true;
-    return false;
+  if (e.metaKey || e.ctrlKey || e.altKey) return true
+  const el = e.target
+  if (!(el instanceof HTMLElement)) return false
+  const tag = el.tagName.toLowerCase()
+  if (tag === "input" || tag === "textarea" || tag === "select") return true
+  if (el.isContentEditable) return true
+  return false
 }
 
 function onKeydown(e: KeyboardEvent) {
-    if (e.key === "Escape" && flashcardSettingsOpen.value) {
-        flashcardSettingsOpen.value = false;
-        flashcardSettingsButtonEl.value?.focus();
-        return;
-    }
-    if (e.key === "Escape" && termsFilterMenuOpen.value) {
-        termsFilterMenuOpen.value = false;
-        termsFilterButtonEl.value?.focus();
-        return;
-    }
-    if (shouldIgnoreKey(e)) return;
-    if (isExportOpen.value) return;
-    if (termsFilterMenuOpen.value || flashcardSettingsOpen.value) return;
-    if (mode.value !== "flashcards" || isFinished.value) return;
+  if (e.key === "Escape" && flashcardSettingsOpen.value) {
+    flashcardSettingsOpen.value = false
+    flashcardSettingsButtonEl.value?.focus()
+    return
+  }
+  if (e.key === "Escape" && termsFilterMenuOpen.value) {
+    termsFilterMenuOpen.value = false
+    termsFilterButtonEl.value?.focus()
+    return
+  }
+  if (shouldIgnoreKey(e)) return
+  if (isExportOpen.value) return
+  if (termsFilterMenuOpen.value || flashcardSettingsOpen.value) return
+  if (mode.value !== "flashcards" || isFinished.value) return
 
-    if ((e.key === " " || e.code === "Space") && e.target instanceof HTMLButtonElement && e.target !== viewerButtonEl.value && e.target !== mobileViewerButtonEl.value) return;
+  if (
+    (e.key === " " || e.code === "Space") &&
+    e.target instanceof HTMLButtonElement &&
+    e.target !== viewerButtonEl.value &&
+    e.target !== mobileViewerButtonEl.value
+  )
+    return
 
-    if (e.key === " " || e.code === "Space") {
-        e.preventDefault();
-        toggleFlip();
-        return;
-    }
-    if (smartReviewEnabled.value && /^[1-5]$/.test(e.key) && !e.altKey && !e.ctrlKey && !e.metaKey) {
-        if (e.repeat) return;
-        e.preventDefault();
-        markRating(Number(e.key) as 1 | 2 | 3 | 4 | 5);
-        return;
-    }
-    if (smartReviewEnabled.value && (e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
-    if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        goPrev();
-        return;
-    }
-    if (e.key === "ArrowRight") {
-        e.preventDefault();
-        goNext();
-        return;
-    }
+  if (e.key === " " || e.code === "Space") {
+    e.preventDefault()
+    toggleFlip()
+    return
+  }
+  if (
+    smartReviewEnabled.value &&
+    /^[1-5]$/.test(e.key) &&
+    !e.altKey &&
+    !e.ctrlKey &&
+    !e.metaKey
+  ) {
+    if (e.repeat) return
+    e.preventDefault()
+    markRating(Number(e.key) as 1 | 2 | 3 | 4 | 5)
+    return
+  }
+  if (
+    smartReviewEnabled.value &&
+    (e.key === "ArrowLeft" || e.key === "ArrowRight")
+  )
+    return
+  if (e.key === "ArrowLeft") {
+    e.preventDefault()
+    goPrev()
+    return
+  }
+  if (e.key === "ArrowRight") {
+    e.preventDefault()
+    goNext()
+    return
+  }
 }
 
 const matchIsRunning = computed(
-    () => matchStartedAtMs.value !== null && matchEndedAtMs.value === null,
-);
+  () => matchStartedAtMs.value !== null && matchEndedAtMs.value === null,
+)
 const matchIsFinished = computed(
-    () => matchStartedAtMs.value !== null && matchEndedAtMs.value !== null,
-);
-const matchMatchedPairsCount = computed(() => matchMatchedPairIds.value.size);
+  () => matchStartedAtMs.value !== null && matchEndedAtMs.value !== null,
+)
+const matchMatchedPairsCount = computed(() => matchMatchedPairIds.value.size)
 
 const matchTopline = computed(() => {
-    if (!matchIsRunning.value && !matchIsFinished.value) return "Ready";
-    const pairs = `${matchMatchedPairsCount.value}/${matchPairsTarget.value}`;
-    if (matchIsRunning.value)
-        return `Time: ${formatMatchTime(matchElapsedTimeMs.value)} · Matched: ${pairs}`;
-    return `Done · Matched: ${pairs}`;
-});
+  if (!matchIsRunning.value && !matchIsFinished.value) return "Ready"
+  const pairs = `${matchMatchedPairsCount.value}/${matchPairsTarget.value}`
+  if (matchIsRunning.value)
+    return `Time: ${formatMatchTime(matchElapsedTimeMs.value)} · Matched: ${pairs}`
+  return `Done · Matched: ${pairs}`
+})
 
 const matchAccuracyText = computed(() => {
-    const attempts = matchAttemptsCount.value;
-    if (attempts <= 0) return "0% (0/0)";
-    const pct = Math.round((matchCorrectAttemptsCount.value / attempts) * 100);
-    return `${pct}% (${matchCorrectAttemptsCount.value}/${attempts})`;
-});
+  const attempts = matchAttemptsCount.value
+  if (attempts <= 0) return "0% (0/0)"
+  const pct = Math.round((matchCorrectAttemptsCount.value / attempts) * 100)
+  return `${pct}% (${matchCorrectAttemptsCount.value}/${attempts})`
+})
 
 const matchTimeText = computed(() => {
-    return formatMatchTime(matchElapsedTimeMs.value);
-});
+  return formatMatchTime(matchElapsedTimeMs.value)
+})
 
 function newMsgId() {
-    const fn = (globalThis as any)?.crypto?.randomUUID;
-    if (typeof fn === "function") return fn.call((globalThis as any).crypto);
-    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const fn = (globalThis as any)?.crypto?.randomUUID
+  if (typeof fn === "function") return fn.call((globalThis as any).crypto)
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
 function scrollChatToBottom() {
-    const el = chatLogEl.value;
-    if (!el) return;
-    el.scrollTop = el.scrollHeight;
+  const el = chatLogEl.value
+  if (!el) return
+  el.scrollTop = el.scrollHeight
 }
 
 function currentSavedChatPayload(): SavedChatPayload {
-    return {
-        version: 1,
-        messages: chatMessages.value
-            .map((message) => ({
-                role: message.role,
-                content: message.fullContent ?? message.content,
-            }))
-            .filter((message) => message.content.trim().length > 0),
-    };
+  return {
+    version: 1,
+    messages: chatMessages.value
+      .map((message) => ({
+        role: message.role,
+        content: message.fullContent ?? message.content,
+      }))
+      .filter((message) => message.content.trim().length > 0),
+  }
 }
 
 async function ensureActiveChatSaved() {
-    const s = set.value;
-    const firstQuestion = firstChatQuestion.value;
-    if (!s || !firstQuestion || activeSavedChatId.value || isWebPreview.value)
-        return;
-    if (chatSaveBusy.value) return;
+  const s = set.value
+  const firstQuestion = firstChatQuestion.value
+  if (!s || !firstQuestion || activeSavedChatId.value || isWebPreview.value)
+    return
+  if (chatSaveBusy.value) return
 
-    const sessionVersion = chatSessionVersion;
-    const payload = currentSavedChatPayload();
-    chatSaveBusy.value = true;
-    try {
-        const db = await useTracerDb();
-        const saved = await createChatsRepo(db).create({
-            id: newMsgId() as Uuid,
-            setId: s.id,
-            title: normalizeGeneratedChatTitle(firstQuestion) || firstQuestion,
-            payload,
-        });
-        if (chatSessionVersion === sessionVersion) {
-            activeSavedChatId.value = saved.id;
-        }
-    } catch (err) {
-        chatError.value = toErrorMessage(err, t("chat.saveFailed"));
-    } finally {
-        chatSaveBusy.value = false;
+  const sessionVersion = chatSessionVersion
+  const payload = currentSavedChatPayload()
+  chatSaveBusy.value = true
+  try {
+    const db = await useTracerDb()
+    const saved = await createChatsRepo(db).create({
+      id: newMsgId() as Uuid,
+      setId: s.id,
+      title: normalizeGeneratedChatTitle(firstQuestion) || firstQuestion,
+      payload,
+    })
+    if (chatSessionVersion === sessionVersion) {
+      activeSavedChatId.value = saved.id
     }
+  } catch (err) {
+    chatError.value = toErrorMessage(err, t("chat.saveFailed"))
+  } finally {
+    chatSaveBusy.value = false
+  }
 }
 
 async function persistActiveSavedChat() {
-    const id = activeSavedChatId.value;
-    if (!id || isWebPreview.value) return;
-    const payload = currentSavedChatPayload();
-    try {
-        const db = await useTracerDb();
-        await createChatsRepo(db).updateMessages(id, payload);
-    } catch (err) {
-        chatError.value = toErrorMessage(err, t("chat.saveFailed"));
-    }
+  const id = activeSavedChatId.value
+  if (!id || isWebPreview.value) return
+  const payload = currentSavedChatPayload()
+  try {
+    const db = await useTracerDb()
+    await createChatsRepo(db).updateMessages(id, payload)
+  } catch (err) {
+    chatError.value = toErrorMessage(err, t("chat.saveFailed"))
+  }
 }
 
 function formatSavedChatDate(value: string) {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return new Intl.DateTimeFormat(language.value, {
-        dateStyle: "medium",
-        timeStyle: "short",
-    }).format(date);
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat(language.value, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date)
 }
 
 async function loadSavedChats() {
-    const s = set.value;
-    if (!s || isWebPreview.value) return;
-    chatHistoryBusy.value = true;
-    chatHistoryError.value = null;
-    try {
-        const db = await useTracerDb();
-        savedChats.value = await createChatsRepo(db).listBySet(s.id);
-    } catch (err) {
-        chatHistoryError.value = toErrorMessage(err, t("chat.historyFailed"));
-    } finally {
-        chatHistoryBusy.value = false;
-    }
+  const s = set.value
+  if (!s || isWebPreview.value) return
+  chatHistoryBusy.value = true
+  chatHistoryError.value = null
+  try {
+    const db = await useTracerDb()
+    savedChats.value = await createChatsRepo(db).listBySet(s.id)
+  } catch (err) {
+    chatHistoryError.value = toErrorMessage(err, t("chat.historyFailed"))
+  } finally {
+    chatHistoryBusy.value = false
+  }
 }
 
 async function openChatHistory() {
-    if (
-        !set.value ||
-        chatBusy.value ||
-        chatSaveBusy.value ||
-        isWebPreview.value
-    )
-        return;
-    chatHistoryOpen.value = true;
-    await loadSavedChats();
+  if (!set.value || chatBusy.value || chatSaveBusy.value || isWebPreview.value)
+    return
+  chatHistoryOpen.value = true
+  await loadSavedChats()
 }
 
 function closeChatHistory() {
-    if (chatDeleteBusy.value) return;
-    chatHistoryOpen.value = false;
-    chatDeleteTarget.value = null;
+  if (chatDeleteBusy.value) return
+  chatHistoryOpen.value = false
+  chatDeleteTarget.value = null
 }
 
 async function openSavedChat(id: Uuid) {
-    if (chatHistoryBusy.value || chatDeleteBusy.value || isWebPreview.value)
-        return;
-    chatHistoryBusy.value = true;
-    chatHistoryError.value = null;
-    try {
-        const db = await useTracerDb();
-        const repo = createChatsRepo(db);
-        const saved = await repo.get(id);
-        if (!saved) {
-            await loadSavedChats();
-            return;
-        }
-        await repo.touchOpened(id);
-
-        resetChat();
-        chatMessages.value = saved.payload.messages.map((message) => ({
-            id: newMsgId(),
-            role: message.role,
-            content: message.content,
-            fullContent: message.content,
-        }));
-        activeSavedChatId.value = saved.id;
-        lastChatText.value =
-            [...saved.payload.messages]
-                .reverse()
-                .find((message) => message.role === "user")?.content ?? null;
-        chatHistoryOpen.value = false;
-        await nextTick();
-        scrollChatToBottom();
-        chatTextareaEl.value?.focus();
-    } catch (err) {
-        chatHistoryError.value = toErrorMessage(err, t("chat.openFailed"));
-    } finally {
-        chatHistoryBusy.value = false;
+  if (chatHistoryBusy.value || chatDeleteBusy.value || isWebPreview.value)
+    return
+  chatHistoryBusy.value = true
+  chatHistoryError.value = null
+  try {
+    const db = await useTracerDb()
+    const repo = createChatsRepo(db)
+    const saved = await repo.get(id)
+    if (!saved) {
+      await loadSavedChats()
+      return
     }
+    await repo.touchOpened(id)
+
+    resetChat()
+    chatMessages.value = saved.payload.messages.map((message) => ({
+      id: newMsgId(),
+      role: message.role,
+      content: message.content,
+      fullContent: message.content,
+    }))
+    activeSavedChatId.value = saved.id
+    lastChatText.value =
+      [...saved.payload.messages]
+        .reverse()
+        .find((message) => message.role === "user")?.content ?? null
+    chatHistoryOpen.value = false
+    await nextTick()
+    scrollChatToBottom()
+    chatTextareaEl.value?.textareaRef?.focus()
+  } catch (err) {
+    chatHistoryError.value = toErrorMessage(err, t("chat.openFailed"))
+  } finally {
+    chatHistoryBusy.value = false
+  }
 }
 
 function requestDeleteChat(savedChat: SavedChatListItem) {
-    chatDeleteTarget.value = savedChat;
+  chatDeleteTarget.value = savedChat
 }
 
 function cancelDeleteChat() {
-    if (chatDeleteBusy.value) return;
-    chatDeleteTarget.value = null;
+  if (chatDeleteBusy.value) return
+  chatDeleteTarget.value = null
 }
 
 async function confirmDeleteChat() {
-    const target = chatDeleteTarget.value;
-    if (!target || chatDeleteBusy.value || isWebPreview.value) return;
-    chatDeleteBusy.value = true;
-    chatHistoryError.value = null;
-    try {
-        const db = await useTracerDb();
-        await createChatsRepo(db).delete(target.id);
-        savedChats.value = savedChats.value.filter(
-            (savedChat) => savedChat.id !== target.id,
-        );
-        if (activeSavedChatId.value === target.id) resetChat();
-        chatDeleteTarget.value = null;
-    } catch (err) {
-        chatHistoryError.value = toErrorMessage(err, t("chat.deleteFailed"));
-        chatDeleteTarget.value = null;
-    } finally {
-        chatDeleteBusy.value = false;
-    }
+  const target = chatDeleteTarget.value
+  if (!target || chatDeleteBusy.value || isWebPreview.value) return
+  chatDeleteBusy.value = true
+  chatHistoryError.value = null
+  try {
+    const db = await useTracerDb()
+    await createChatsRepo(db).delete(target.id)
+    savedChats.value = savedChats.value.filter(
+      (savedChat) => savedChat.id !== target.id,
+    )
+    if (activeSavedChatId.value === target.id) resetChat()
+    chatDeleteTarget.value = null
+  } catch (err) {
+    chatHistoryError.value = toErrorMessage(err, t("chat.deleteFailed"))
+    chatDeleteTarget.value = null
+  } finally {
+    chatDeleteBusy.value = false
+  }
 }
 
 function resetChat() {
-    chatSessionVersion += 1;
-    chatAbort.value?.abort();
-    chatAbort.value = null;
-    cancelChatRevealJobs();
-    chatMessages.value = [];
-    chatInput.value = "";
-    chatBusy.value = false;
-    chatSaveBusy.value = false;
-    chatError.value = null;
-    activeSavedChatId.value = null;
-    lastChatText.value = null;
+  chatSessionVersion += 1
+  chatAbort.value?.abort()
+  chatAbort.value = null
+  cancelChatRevealJobs()
+  chatMessages.value = []
+  chatInput.value = ""
+  chatBusy.value = false
+  chatSaveBusy.value = false
+  chatError.value = null
+  activeSavedChatId.value = null
+  lastChatText.value = null
 }
 
 function startNewChat() {
-    if (chatBusy.value || chatSaveBusy.value) return;
-    resetChat();
-    void nextTick(() => chatTextareaEl.value?.focus());
+  if (chatBusy.value || chatSaveBusy.value) return
+  resetChat()
+  void nextTick(() => chatTextareaEl.value?.textareaRef?.focus())
 }
 
 async function clearCurrentChat() {
-    if (chatBusy.value || chatSaveBusy.value) return;
-    const id = activeSavedChatId.value;
-    if (id && !isWebPreview.value) {
-        chatSaveBusy.value = true;
-        chatError.value = null;
-        try {
-            const db = await useTracerDb();
-            await createChatsRepo(db).delete(id);
-            savedChats.value = savedChats.value.filter(
-                (chat) => chat.id !== id,
-            );
-        } catch (err) {
-            chatError.value = toErrorMessage(err, t("chat.deleteFailed"));
-            chatSaveBusy.value = false;
-            return;
-        }
-        chatSaveBusy.value = false;
+  if (chatBusy.value || chatSaveBusy.value) return
+  const id = activeSavedChatId.value
+  if (id && !isWebPreview.value) {
+    chatSaveBusy.value = true
+    chatError.value = null
+    try {
+      const db = await useTracerDb()
+      await createChatsRepo(db).delete(id)
+      savedChats.value = savedChats.value.filter((chat) => chat.id !== id)
+    } catch (err) {
+      chatError.value = toErrorMessage(err, t("chat.deleteFailed"))
+      chatSaveBusy.value = false
+      return
     }
-    resetChat();
-    void nextTick(() => chatTextareaEl.value?.focus());
+    chatSaveBusy.value = false
+  }
+  resetChat()
+  void nextTick(() => chatTextareaEl.value?.textareaRef?.focus())
 }
 
 function onChatInputKeydown(e: KeyboardEvent) {
-    if (e.key !== "Enter") return;
-    if (e.shiftKey) return;
-    e.preventDefault();
-    void sendChat();
+  if (e.key !== "Enter") return
+  if (e.shiftKey) return
+  e.preventDefault()
+  void sendChat()
 }
 
 function toErrorMessage(err: unknown, fallback: string) {
-    if (typeof err === "string") return err;
-    if (err instanceof Error && typeof err.message === "string")
-        return err.message;
-    const maybe = err as any;
-    if (maybe && typeof maybe.message === "string") return maybe.message;
-    return fallback;
+  if (typeof err === "string") return err
+  if (err instanceof Error && typeof err.message === "string")
+    return err.message
+  const maybe = err as any
+  if (maybe && typeof maybe.message === "string") return maybe.message
+  return fallback
 }
 
 async function sendChat() {
-    const s = set.value;
-    if (!s) return;
-    if (chatBusy.value) return;
+  const s = set.value
+  if (!s) return
+  if (chatBusy.value) return
 
-    const text = chatInput.value.trim();
-    if (!text) return;
-    flushChatRevealJobs();
+  const text = chatInput.value.trim()
+  if (!text) return
+  flushChatRevealJobs()
 
+  if (
+    typeof navigator !== "undefined" &&
+    typeof navigator.onLine === "boolean" &&
+    navigator.onLine === false
+  ) {
+    lastChatText.value = text
+    showAiError(new Error("Failed to fetch"))
+    return
+  }
+
+  lastChatText.value = text
+  chatInput.value = ""
+  chatError.value = null
+  aiRetryAction.value = "chat"
+  aiError.value = null
+  aiErrorOpen.value = false
+
+  chatAbort.value?.abort()
+  const controller = new AbortController()
+  chatAbort.value = controller
+  const modelPromise =
+    !isWebPreview.value && defaultModelId.value
+      ? getCachedChatModel(defaultModelId.value)
+      : null
+
+  const userMsg: UiChatMessage = {
+    id: newMsgId(),
+    role: "user",
+    content: text,
+    fullContent: text,
+  }
+  chatMessages.value = [...chatMessages.value, userMsg]
+  const initialSavePromise = ensureActiveChatSaved()
+
+  const assistantMsg: UiChatMessage = {
+    id: newMsgId(),
+    role: "assistant",
+    content: "",
+    fullContent: "",
+  }
+  chatMessages.value = [...chatMessages.value, assistantMsg]
+  await nextTick()
+  scrollChatToBottom()
+
+  chatBusy.value = true
+  try {
+    const prior: ChatMessage[] = takeRecentChatMessages(
+      chatMessages.value.slice(0, -1).map((m) => ({
+        role: m.role,
+        content: m.fullContent ?? m.content,
+      })),
+    )
+    const system = chatSystemPrompt.value || buildGroundedChatSystemPrompt(s)
+
+    if (isWebPreview.value && !isPublicSet.value) {
+      for await (const chunk of streamWebPreviewMockChatAnswer({
+        set: s,
+        userMessage: text,
+        abortSignal: controller.signal,
+      })) {
+        enqueueChatReveal(assistantMsg.id, chunk)
+      }
+      finishChatRevealStream(assistantMsg.id)
+      return
+    }
+
+    if (!defaultModelId.value) {
+      aiError.value = aiErrorForMissingDefaultModel()
+      aiErrorOpen.value = true
+      return
+    }
+
+    const model = await (modelPromise ??
+      getCachedChatModel(defaultModelId.value))
+    const result = await streamGroundedChatText({
+      model,
+      system,
+      messages: prior,
+      builtinContext: {
+        context: JSON.stringify({
+          title: s.title,
+          description: s.description,
+          terms: s.terms.map(({ front, back }) => ({ front, back })),
+        }),
+        title: s.title,
+      },
+      sessionId: activeSavedChatId.value ?? undefined,
+      abortSignal: controller.signal,
+    })
+
+    for await (const chunk of result.textStream) {
+      enqueueChatReveal(assistantMsg.id, chunk)
+    }
+    finishChatRevealStream(assistantMsg.id)
+    await initialSavePromise
+    await persistActiveSavedChat()
+  } catch (err) {
+    if (controller.signal.aborted) return
+    finishChatRevealStream(assistantMsg.id)
+    // Keep partial output, but do not persist an empty assistant bubble.
     if (
-        typeof navigator !== "undefined" &&
-        typeof navigator.onLine === "boolean" &&
-        navigator.onLine === false
+      !chatMessages.value
+        .find((message) => message.id === assistantMsg.id)
+        ?.fullContent?.trim()
     ) {
-        lastChatText.value = text;
-        showAiError(new Error("Failed to fetch"));
-        return;
+      chatMessages.value = chatMessages.value.filter(
+        (message) => message.id !== assistantMsg.id,
+      )
     }
-
-    lastChatText.value = text;
-    chatInput.value = "";
-    chatError.value = null;
-    aiRetryAction.value = "chat";
-    aiError.value = null;
-    aiErrorOpen.value = false;
-
-    chatAbort.value?.abort();
-    const controller = new AbortController();
-    chatAbort.value = controller;
-    const modelPromise =
-        !isWebPreview.value && defaultModelId.value
-            ? getCachedChatModel(defaultModelId.value)
-            : null;
-
-    const userMsg: UiChatMessage = {
-        id: newMsgId(),
-        role: "user",
-        content: text,
-        fullContent: text,
-    };
-    chatMessages.value = [...chatMessages.value, userMsg];
-    const initialSavePromise = ensureActiveChatSaved();
-
-    const assistantMsg: UiChatMessage = {
-        id: newMsgId(),
-        role: "assistant",
-        content: "",
-        fullContent: "",
-    };
-    chatMessages.value = [...chatMessages.value, assistantMsg];
-    await nextTick();
-    scrollChatToBottom();
-
-    chatBusy.value = true;
-    try {
-        const prior: ChatMessage[] = takeRecentChatMessages(
-            chatMessages.value.slice(0, -1).map((m) => ({
-                role: m.role,
-                content: m.fullContent ?? m.content,
-            })),
-        );
-        const system =
-            chatSystemPrompt.value || buildGroundedChatSystemPrompt(s);
-
-        if (isWebPreview.value && !isPublicSet.value) {
-            for await (const chunk of streamWebPreviewMockChatAnswer({
-                set: s,
-                userMessage: text,
-                abortSignal: controller.signal,
-            })) {
-                enqueueChatReveal(assistantMsg.id, chunk);
-            }
-            finishChatRevealStream(assistantMsg.id);
-            return;
-        }
-
-        if (!defaultModelId.value) {
-            aiError.value = aiErrorForMissingDefaultModel();
-            aiErrorOpen.value = true;
-            return;
-        }
-
-        const model = await (modelPromise ??
-            getCachedChatModel(defaultModelId.value));
-        const result = await streamGroundedChatText({
-            model,
-            system,
-            messages: prior,
-            builtinContext: { context: JSON.stringify({ title: s.title, description: s.description, terms: s.terms.map(({ front, back }) => ({ front, back })) }), title: s.title },
-            sessionId: activeSavedChatId.value ?? undefined,
-            abortSignal: controller.signal,
-        });
-
-        for await (const chunk of result.textStream) {
-            enqueueChatReveal(assistantMsg.id, chunk);
-        }
-        finishChatRevealStream(assistantMsg.id);
-        await initialSavePromise;
-        await persistActiveSavedChat();
-    } catch (err) {
-        if (controller.signal.aborted) return;
-        finishChatRevealStream(assistantMsg.id);
-        // Keep partial output, but do not persist an empty assistant bubble.
-        if (!chatMessages.value.find(message => message.id === assistantMsg.id)?.fullContent?.trim()) {
-            chatMessages.value = chatMessages.value.filter(message => message.id !== assistantMsg.id);
-        }
-        await initialSavePromise;
-        await persistActiveSavedChat();
-        if (isAiErrorCandidate(err)) {
-            showAiError(err);
-            chatError.value = null;
-        } else {
-            chatError.value = toErrorMessage(err, "Failed to send message.");
-        }
-    } finally {
-        if (controller.signal.aborted) cancelChatRevealJobs();
-        if (chatAbort.value === controller) chatAbort.value = null;
-        if (!controller.signal.aborted) {
-            chatBusy.value = false;
-            await nextTick();
-            scrollChatToBottom();
-        }
+    await initialSavePromise
+    await persistActiveSavedChat()
+    if (isAiErrorCandidate(err)) {
+      showAiError(err)
+      chatError.value = null
+    } else {
+      chatError.value = toErrorMessage(err, "Failed to send message.")
     }
+  } finally {
+    if (controller.signal.aborted) cancelChatRevealJobs()
+    if (chatAbort.value === controller) chatAbort.value = null
+    if (!controller.signal.aborted) {
+      chatBusy.value = false
+      await nextTick()
+      scrollChatToBottom()
+    }
+  }
 }
 
 function openExport() {
-    isExportOpen.value = true;
+  isExportOpen.value = true
 }
 function closeExport() {
-    isExportOpen.value = false;
+  isExportOpen.value = false
 }
 
 async function openSetPage() {
-    let lockGateEvaluated = false;
-    let lockGateRequiresUnlock = false;
-    let lockGateStartupLockEnabled = false;
-    let lockGateUnlockedThisSession = false;
-    try {
-        if (isNestedSetRoute.value) {
-            busy.value = false;
-            return;
-        }
-
-        busy.value = true;
-        loadError.value = null;
-
-        if (isWebPreview.value) {
-            await initWebDemoSet();
-            return;
-        }
-
-        const idParam = route.params.id;
-        if (typeof idParam !== "string" || !idParam.trim()) {
-            busy.value = false;
-            loadError.value = "Missing set id.";
-            return;
-        }
-
-        const setId = idParam as Uuid;
-        const db = await useTracerDb();
-        const [
-            status,
-            profile,
-            settings,
-            loadedSet,
-            loadedLinkedFolder,
-            guide,
-            starredIds,
-            savedProgress,
-        ] = await Promise.all([
-            lockGetStatus(),
-            loadAppProfileOnce(),
-            loadAppSettingsOnce(),
-            createSetsRepo(db).get(setId),
-            createLinkedFoldersRepo(db).getBySetId(setId),
-            createStudyGuidesRepo(db).getBySetId(setId),
-            createStarsRepo(db)
-                .listTermIds(setId)
-                .catch(() => []),
-            createFlashcardProgressRepo(db)
-                .get(setId)
-                .catch(() => null),
-        ]);
-        if (!profile || !status.has_verifier) {
-            markLocked();
-            await router.replace("/first-run");
-            return;
-        }
-        reviewOwnerId.value = studyStorageOwner(profile) ?? profile.id;
-
-        defaultModelId.value = settings.defaultModelId;
-        fallbackModelIds.value = settings.fallbackModelIds;
-        learnHybridEnabled.value = settings.learnHybridEnabled;
-        flashcardsDefinitionFirst.value = settings.flashcardsDefinitionFirst;
-
-        lockGateEvaluated = true;
-        lockGateRequiresUnlock = status.requires_unlock;
-        lockGateStartupLockEnabled = settings.startupLockEnabled;
-        lockGateUnlockedThisSession = unlockedThisSession.value;
-        if (settings.startupLockEnabled && status.requires_unlock) {
-            if (!unlockedThisSession.value) {
-                markLocked();
-                await router.replace("/unlock");
-                return;
-            }
-        } else if (status.can_auto_unlock) {
-            markUnlocked();
-        }
-
-        if (mode.value === "chat" && !settings.defaultModelId) {
-            await router.replace({
-                path: "/settings",
-                query: {
-                    reason: "missing-default-model",
-                    from: route.fullPath,
-                },
-            });
-            return;
-        }
-        if (mode.value === "chat") warmChatModel();
-
-        set.value = loadedSet;
-        linkedFolder.value = loadedLinkedFolder;
-        studyGuideSetId.value = loadedSet && guide ? setId : null;
-        busy.value = false;
-
-        if (loadedSet) {
-            smartReviewEnabled.value = resolveSmartReviewEnabled(
-                setId,
-                settings.smartReviewEnabled,
-                reviewOwnerId.value,
-            );
-            saveGlobalSmartReviewEnabled(
-                settings.smartReviewEnabled,
-                reviewOwnerId.value,
-            );
-            shuffleEnabled.value = isFlashcardShuffleEnabled(
-                setId,
-                reviewOwnerId.value,
-            );
-            cardReviews.value = getCardReviews(setId, reviewOwnerId.value);
-            starredTermIds.value = new Set(starredIds);
-            savedFlashcardTermId.value = savedProgress?.currentTermId ?? null;
-            savedFlashcardCorrectTermIds.value =
-                savedProgress?.correctTermIds ?? [];
-            masteryByTermId.value = savedProgress?.masteryByTermId ?? {};
-            savedFlashcardProgressSignature.value = savedProgress
-                ? JSON.stringify(savedProgress)
-                : null;
-            if (mode.value === "flashcards") {
-                startRun({
-                    resetCounter: true,
-                    resumeTermId: savedProgress?.currentTermId,
-                    resumeCorrectTermIds: savedProgress?.correctTermIds,
-                });
-            }
-            if (mode.value === "learn") await initializePracticeRun();
-            resetMatchStateForRun();
-            if (mode.value === "match") matchPrepareTiles(loadedSet);
-        }
-        await nextTick();
-        if (mode.value === "chat") {
-            chatTextareaEl.value?.focus();
-        } else {
-            focusFlashcardViewer();
-        }
-
-        window.addEventListener("keydown", onKeydown);
-        window.addEventListener(
-            LINKED_FOLDER_STATUS_EVENT,
-            onLinkedFolderStatus,
-        );
-        document.addEventListener("pointerdown", onDocumentMatchPointerDown);
-        document.addEventListener(
-            "pointerdown",
-            onDocumentTermsFilterPointerDown,
-        );
-        document.addEventListener(
-            "pointerdown",
-            onDocumentFlashcardSettingsPointerDown,
-        );
-    } catch {
-        if (isPublicSet.value) {
-            busy.value = false;
-            loadError.value = t("public.loadFailed");
-            return;
-        }
-        const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__
-            ?.invoke;
-        if (tauriInvoke !== "function") {
-            await initWebDemoSet();
-            return;
-        }
-
-        if (
-            lockGateEvaluated &&
-            lockGateStartupLockEnabled &&
-            lockGateRequiresUnlock &&
-            !lockGateUnlockedThisSession
-        ) {
-            markLocked();
-            await router.replace("/unlock");
-            return;
-        }
-
-        busy.value = false;
-        if (!loadError.value) loadError.value = "Failed to open set.";
+  let lockGateEvaluated = false
+  let lockGateRequiresUnlock = false
+  let lockGateStartupLockEnabled = false
+  let lockGateUnlockedThisSession = false
+  try {
+    if (isNestedSetRoute.value) {
+      busy.value = false
+      return
     }
+
+    busy.value = true
+    loadError.value = null
+
+    if (isWebPreview.value) {
+      await initWebDemoSet()
+      return
+    }
+
+    const idParam = route.params.id
+    if (typeof idParam !== "string" || !idParam.trim()) {
+      busy.value = false
+      loadError.value = "Missing set id."
+      return
+    }
+
+    const setId = idParam as Uuid
+    const db = await useTracerDb()
+    const [
+      status,
+      profile,
+      settings,
+      loadedSet,
+      loadedLinkedFolder,
+      guide,
+      starredIds,
+      savedProgress,
+    ] = await Promise.all([
+      lockGetStatus(),
+      loadAppProfileOnce(),
+      loadAppSettingsOnce(),
+      createSetsRepo(db).get(setId),
+      createLinkedFoldersRepo(db).getBySetId(setId),
+      createStudyGuidesRepo(db).getBySetId(setId),
+      createStarsRepo(db)
+        .listTermIds(setId)
+        .catch(() => []),
+      createFlashcardProgressRepo(db)
+        .get(setId)
+        .catch(() => null),
+    ])
+    if (!profile || !status.has_verifier) {
+      markLocked()
+      await router.replace("/first-run")
+      return
+    }
+    reviewOwnerId.value = studyStorageOwner(profile) ?? profile.id
+
+    defaultModelId.value = settings.defaultModelId
+    fallbackModelIds.value = settings.fallbackModelIds
+    learnHybridEnabled.value = settings.learnHybridEnabled
+    flashcardsDefinitionFirst.value = settings.flashcardsDefinitionFirst
+
+    lockGateEvaluated = true
+    lockGateRequiresUnlock = status.requires_unlock
+    lockGateStartupLockEnabled = settings.startupLockEnabled
+    lockGateUnlockedThisSession = unlockedThisSession.value
+    if (settings.startupLockEnabled && status.requires_unlock) {
+      if (!unlockedThisSession.value) {
+        markLocked()
+        await router.replace("/unlock")
+        return
+      }
+    } else if (status.can_auto_unlock) {
+      markUnlocked()
+    }
+
+    if (mode.value === "chat" && !settings.defaultModelId) {
+      await router.replace({
+        path: "/settings",
+        query: {
+          reason: "missing-default-model",
+          from: route.fullPath,
+        },
+      })
+      return
+    }
+    if (mode.value === "chat") warmChatModel()
+
+    set.value = loadedSet
+    linkedFolder.value = loadedLinkedFolder
+    studyGuideSetId.value = loadedSet && guide ? setId : null
+    busy.value = false
+
+    if (loadedSet) {
+      smartReviewEnabled.value = resolveSmartReviewEnabled(
+        setId,
+        settings.smartReviewEnabled,
+        reviewOwnerId.value,
+      )
+      saveGlobalSmartReviewEnabled(
+        settings.smartReviewEnabled,
+        reviewOwnerId.value,
+      )
+      shuffleEnabled.value = isFlashcardShuffleEnabled(
+        setId,
+        reviewOwnerId.value,
+      )
+      cardReviews.value = getCardReviews(setId, reviewOwnerId.value)
+      starredTermIds.value = new Set(starredIds)
+      savedFlashcardTermId.value = savedProgress?.currentTermId ?? null
+      savedFlashcardCorrectTermIds.value = savedProgress?.correctTermIds ?? []
+      masteryByTermId.value = savedProgress?.masteryByTermId ?? {}
+      savedFlashcardProgressSignature.value = savedProgress
+        ? JSON.stringify(savedProgress)
+        : null
+      if (mode.value === "flashcards") {
+        startRun({
+          resetCounter: true,
+          resumeTermId: savedProgress?.currentTermId,
+          resumeCorrectTermIds: savedProgress?.correctTermIds,
+        })
+      }
+      if (mode.value === "learn") await initializePracticeRun()
+      resetMatchStateForRun()
+      if (mode.value === "match") matchPrepareTiles(loadedSet)
+    }
+    await nextTick()
+    if (mode.value === "chat") {
+      chatTextareaEl.value?.textareaRef?.focus()
+    } else {
+      focusFlashcardViewer()
+    }
+
+    window.addEventListener("keydown", onKeydown)
+    window.addEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus)
+    document.addEventListener("pointerdown", onDocumentMatchPointerDown)
+    document.addEventListener("pointerdown", onDocumentTermsFilterPointerDown)
+    document.addEventListener(
+      "pointerdown",
+      onDocumentFlashcardSettingsPointerDown,
+    )
+  } catch {
+    if (isPublicSet.value) {
+      busy.value = false
+      loadError.value = t("public.loadFailed")
+      return
+    }
+    const tauriInvoke = typeof (globalThis as any)?.__TAURI_INTERNALS__?.invoke
+    if (tauriInvoke !== "function") {
+      await initWebDemoSet()
+      return
+    }
+
+    if (
+      lockGateEvaluated &&
+      lockGateStartupLockEnabled &&
+      lockGateRequiresUnlock &&
+      !lockGateUnlockedThisSession
+    ) {
+      markLocked()
+      await router.replace("/unlock")
+      return
+    }
+
+    busy.value = false
+    if (!loadError.value) loadError.value = "Failed to open set."
+  }
 }
 
 async function onCloudSetChanged(event: Event) {
-    const detail = (event as CustomEvent<{ kind?: string; id?: string }>).detail;
-    if (isPublicSet.value || isNestedSetRoute.value || !set.value || detail?.kind !== "set") return;
-    if (detail.id && detail.id !== set.value.id) return;
-    try {
-        const current = await createSetsRepo(await useTracerDb()).get(set.value.id);
-        if (!current) {
-            set.value = null;
-            loadError.value = "This set is no longer available.";
-        } else if (current.cloudRevision !== set.value?.cloudRevision) set.value = current;
-    } catch { /* Continue studying the last readable cached version. */ }
+  const detail = (event as CustomEvent<{ kind?: string; id?: string }>).detail
+  if (
+    isPublicSet.value ||
+    isNestedSetRoute.value ||
+    !set.value ||
+    detail?.kind !== "set"
+  )
+    return
+  if (detail.id && detail.id !== set.value.id) return
+  try {
+    const current = await createSetsRepo(await useTracerDb()).get(set.value.id)
+    if (!current) {
+      set.value = null
+      loadError.value = "This set is no longer available."
+    } else if (current.cloudRevision !== set.value?.cloudRevision)
+      set.value = current
+  } catch {
+    /* Continue studying the last readable cached version. */
+  }
 }
 
 onMounted(async () => {
-    window.addEventListener("tracer:cloud-library-changed", onCloudSetChanged);
-    reviewClockTimer = setInterval(
-        () => (reviewClock.value = Date.now()),
-        30_000,
-    );
-    window.addEventListener("pagehide", onAssignedPageHide);
-    await openSetPage();
-    beginInlineAssignedMode(mode.value);
-});
+  window.addEventListener("tracer:cloud-library-changed", onCloudSetChanged)
+  reviewClockTimer = setInterval(() => (reviewClock.value = Date.now()), 30_000)
+  window.addEventListener("pagehide", onAssignedPageHide)
+  await openSetPage()
+  beginInlineAssignedMode(mode.value)
+})
 
 watch(mode, (next, previous) => {
-    if (next === previous || isNestedSetRoute.value) return;
-    finishInlineAssignedMode();
-    beginInlineAssignedMode(next);
-});
+  if (next === previous || isNestedSetRoute.value) return
+  finishInlineAssignedMode()
+  beginInlineAssignedMode(next)
+})
 
 onBeforeRouteLeave(() => {
-    finishInlineAssignedMode();
-});
+  finishInlineAssignedMode()
+})
 
 watch(
-    mode,
-    async (next, prev) => {
-        if (isNestedSetRoute.value) return;
+  mode,
+  async (next, prev) => {
+    if (isNestedSetRoute.value) return
 
-        flashcardSettingsOpen.value = false;
+    flashcardSettingsOpen.value = false
 
-        if (prev === "chat" && next !== "chat") {
-            chatAbort.value?.abort();
-            flushChatRevealJobs();
-            await persistActiveSavedChat();
-            resetChat();
-        }
-        if (next === "chat") warmChatModel();
+    if (prev === "chat" && next !== "chat") {
+      chatAbort.value?.abort()
+      flushChatRevealJobs()
+      await persistActiveSavedChat()
+      resetChat()
+    }
+    if (next === "chat") warmChatModel()
 
-        if (next === "flashcards" && prev !== "flashcards") {
-            startRun({
-                resetCounter: true,
-                resumeTermId: savedFlashcardTermId.value,
-                resumeCorrectTermIds: savedFlashcardCorrectTermIds.value,
-            });
-        }
-        if (
-            next === "learn" &&
-            prev !== "learn" &&
-            !practiceProgressReady.value
-        ) {
-            await initializePracticeRun();
-        }
-        if (prev === "learn" && next !== "learn") {
-            clearPracticeTimer();
-        }
-        if (next === "match" && prev !== "match") {
-            resetMatchStateForRun();
-            if (set.value) matchPrepareTiles(set.value);
-        }
-        // Reset match state and stopwatch when navigating away from match mode
-        if (prev === "match" && next !== "match") {
-            resetMatchStateForRun();
-            matchMemoryMode.value = false;
-        }
-        await nextTick();
-        if (next === "chat") {
-            chatTextareaEl.value?.focus();
-            scrollChatToBottom();
-        } else {
-            focusFlashcardViewer();
-        }
-    },
-    { flush: "post" },
-);
+    if (next === "flashcards" && prev !== "flashcards") {
+      startRun({
+        resetCounter: true,
+        resumeTermId: savedFlashcardTermId.value,
+        resumeCorrectTermIds: savedFlashcardCorrectTermIds.value,
+      })
+    }
+    if (next === "learn" && prev !== "learn" && !practiceProgressReady.value) {
+      await initializePracticeRun()
+    }
+    if (prev === "learn" && next !== "learn") {
+      clearPracticeTimer()
+    }
+    if (next === "match" && prev !== "match") {
+      resetMatchStateForRun()
+      if (set.value) matchPrepareTiles(set.value)
+    }
+    // Reset match state and stopwatch when navigating away from match mode
+    if (prev === "match" && next !== "match") {
+      resetMatchStateForRun()
+      matchMemoryMode.value = false
+    }
+    await nextTick()
+    if (next === "chat") {
+      chatTextareaEl.value?.textareaRef?.focus()
+      scrollChatToBottom()
+    } else {
+      focusFlashcardViewer()
+    }
+  },
+  { flush: "post" },
+)
 
 watch(
-    () =>
-        [
-            order.value[cursorIndex.value] ?? null,
-            allStudyTermIds.value
-                .filter((id) => answersByTermId.value[id] === "correct")
-                .join("\u0000"),
-            JSON.stringify(masteryByTermId.value),
-        ] as const,
-    ([termId]) => {
-        if (!termId || mode.value !== "flashcards") return;
-        persistFlashcardProgress(termId as Uuid);
-    },
-    { flush: "post" },
-);
+  () =>
+    [
+      order.value[cursorIndex.value] ?? null,
+      allStudyTermIds.value
+        .filter((id) => answersByTermId.value[id] === "correct")
+        .join("\u0000"),
+      JSON.stringify(masteryByTermId.value),
+    ] as const,
+  ([termId]) => {
+    if (!termId || mode.value !== "flashcards") return
+    persistFlashcardProgress(termId as Uuid)
+  },
+  { flush: "post" },
+)
 
 watch(
-    () => {
-        const progress = currentPracticeProgress();
-        return progress ? JSON.stringify(progress) : null;
-    },
-    () => persistPracticeRun(),
-    { flush: "post" },
-);
+  () => {
+    const progress = currentPracticeProgress()
+    return progress ? JSON.stringify(progress) : null
+  },
+  () => persistPracticeRun(),
+  { flush: "post" },
+)
 
 watch(language, async () => {
-    if (isPublicSet.value || !isWebPreview.value || isNestedSetRoute.value)
-        return;
-    await initWebDemoSet({ forceNewPractice: true });
-});
+  if (isPublicSet.value || !isWebPreview.value || isNestedSetRoute.value) return
+  await initWebDemoSet({ forceNewPractice: true })
+})
 
 watch(learnCurrentQuestion, () => {
-    practiceWrittenAnswer.value = "";
-});
+  practiceWrittenAnswer.value = ""
+})
 
 watch(practiceTimed, (enabled) => {
-    if (!enabled) clearPracticeTimer();
-});
+  if (!enabled) clearPracticeTimer()
+})
 
 watch(
-    isNestedSetRoute,
-    async (isNested, wasNested) => {
-        if (isNested || !wasNested) return;
-        await openSetPage();
-    },
-    { flush: "post" },
-);
+  isNestedSetRoute,
+  async (isNested, wasNested) => {
+    if (isNested || !wasNested) return
+    await openSetPage()
+  },
+  { flush: "post" },
+)
 
 onBeforeUnmount(() => {
-    window.removeEventListener("tracer:cloud-library-changed", onCloudSetChanged);
-    if (reviewClockTimer) clearInterval(reviewClockTimer);
-    finishInlineAssignedMode();
-    window.removeEventListener("pagehide", onAssignedPageHide);
-    cancelFlashcardMotion();
-    cancelFlashcardAnswerFeedback();
-    cancelPracticeAnswerFeedback();
-    flushChatRevealJobs();
-    void persistActiveSavedChat();
-    resetChat();
-    clearPracticeTimer();
-    clearMatchTimer();
-    window.removeEventListener("keydown", onKeydown);
-    window.removeEventListener(
-        LINKED_FOLDER_STATUS_EVENT,
-        onLinkedFolderStatus,
-    );
-    document.removeEventListener("pointerdown", onDocumentMatchPointerDown);
-    document.removeEventListener(
-        "pointerdown",
-        onDocumentTermsFilterPointerDown,
-    );
-    document.removeEventListener(
-        "pointerdown",
-        onDocumentFlashcardSettingsPointerDown,
-    );
-});
+  window.removeEventListener("tracer:cloud-library-changed", onCloudSetChanged)
+  if (reviewClockTimer) clearInterval(reviewClockTimer)
+  finishInlineAssignedMode()
+  window.removeEventListener("pagehide", onAssignedPageHide)
+  cancelFlashcardMotion()
+  cancelFlashcardAnswerFeedback()
+  cancelPracticeAnswerFeedback()
+  flushChatRevealJobs()
+  void persistActiveSavedChat()
+  resetChat()
+  clearPracticeTimer()
+  clearMatchTimer()
+  window.removeEventListener("keydown", onKeydown)
+  window.removeEventListener(LINKED_FOLDER_STATUS_EVENT, onLinkedFolderStatus)
+  document.removeEventListener("pointerdown", onDocumentMatchPointerDown)
+  document.removeEventListener("pointerdown", onDocumentTermsFilterPointerDown)
+  document.removeEventListener(
+    "pointerdown",
+    onDocumentFlashcardSettingsPointerDown,
+  )
+})
 </script>
 
 <style scoped>
 .study-mode-bar {
-    justify-content: center;
-    justify-content: safe center;
+  justify-content: center;
+  justify-content: safe center;
 }
 
 .study-panel {
-    min-height: clamp(324px, 52.2vh, 576px);
-    max-height: min(70.2vh, 684px);
-    overflow: auto;
+  height: clamp(324px, 52.2vh, 576px);
+  min-height: clamp(324px, 52.2vh, 576px);
+  max-height: min(70.2vh, 684px);
+  overflow: auto;
 }
 
 .study-panel--chat {
-    min-height: clamp(28rem, 68dvh, 46rem);
-    max-height: none;
-    overflow: visible;
+  min-height: clamp(28rem, 68dvh, 46rem);
+  max-height: none;
+  overflow: visible;
 }
 
 .study-panel--practice {
-    overflow: visible;
+  overflow: visible;
 }
 
 .study-panel--chat [role="log"] {
-    min-height: clamp(18rem, 44dvh, 31rem);
-    max-height: min(60dvh, 38rem);
+  min-height: clamp(18rem, 44dvh, 31rem);
+  max-height: min(60dvh, 38rem);
 }
 
 .mobile-settings-item {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    text-align: start;
-    font-size: 0.875rem;
-    color: rgb(15 23 42);
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  text-align: start;
+  font-size: 0.875rem;
+  color: rgb(15 23 42);
 }
 
 .mobile-settings-item:hover {
-    background: rgb(248 250 252);
+  background: rgb(248 250 252);
 }
 
 .mobile-settings-item:disabled {
-    opacity: 0.5;
+  opacity: 0.5;
 }
 
 .mobile-flashcard-action {
-    display: inline-flex;
-    height: 3rem;
-    min-width: 0;
-    align-items: center;
-    justify-content: center;
-    border-width: 1px;
-    border-radius: 0.75rem;
-    background: white;
-    font-size: 1.5rem;
-    line-height: 1;
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+  display: inline-flex;
+  height: 3rem;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  border-width: 1px;
+  border-radius: 0.75rem;
+  background: white;
+  font-size: 1.5rem;
+  line-height: 1;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
 }
 
 .mobile-flashcard-action:disabled {
-    opacity: 0.4;
+  opacity: 0.4;
 }
 
 .mobile-flashcard-card {
-    min-height: clamp(22rem, 57dvh, 38rem);
+  min-height: clamp(22rem, 57dvh, 38rem);
 }
 
 .dark .mobile-settings-item {
-    color: rgb(248 250 252);
+  color: rgb(248 250 252);
 }
 
 .dark .mobile-settings-item:hover {
-    background: rgb(15 23 42);
+  background: rgb(15 23 42);
 }
 
 .dark .mobile-flashcard-action {
-    background: rgb(2 6 23);
+  background: rgb(2 6 23);
 }
 
 @media (max-width: 639px) {
-    .study-panel {
-        min-height: 0;
-        max-height: none;
-        overflow: visible;
-    }
+  .study-panel {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
 
-    .study-panel--chat {
-        min-height: clamp(24rem, 65dvh, 40rem);
-    }
+  .study-panel--chat {
+    min-height: clamp(24rem, 65dvh, 40rem);
+  }
 }
 
 @keyframes flip {
-    0% {
-        transform: scaleY(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scaleY(0);
-        opacity: 0;
-    }
-    100% {
-        transform: scaleY(1);
-        opacity: 1;
-    }
+  0% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
 }
 
 @keyframes slideLeft {
-    0% {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    100% {
-        transform: translateX(-10%);
-        opacity: 0;
-    }
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-10%);
+    opacity: 0;
+  }
 }
 
 @keyframes slideRight {
-    0% {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    100% {
-        transform: translateX(10%);
-        opacity: 0;
-    }
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(10%);
+    opacity: 0;
+  }
 }
 
 .animate-flip {
-    animation: flip 0.32s ease-in-out;
+  animation: flip 0.32s ease-in-out;
 }
 
 .animate-slide-left {
-    animation: slideLeft 0.25s ease-in-out;
+  animation: slideLeft 0.25s ease-in-out;
 }
 
 .animate-slide-right {
-    animation: slideRight 0.25s ease-in-out;
+  animation: slideRight 0.25s ease-in-out;
 }
 
 @keyframes cardSwipeLeft {
-    0% { transform: translateX(0); opacity: 1; }
-    49% { transform: translateX(-18%); opacity: 0; }
-    50% { transform: translateX(18%); opacity: 0; }
-    100% { transform: translateX(0); opacity: 1; }
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  49% {
+    transform: translateX(-18%);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(18%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes cardSwipeRight {
-    0% { transform: translateX(0); opacity: 1; }
-    49% { transform: translateX(18%); opacity: 0; }
-    50% { transform: translateX(-18%); opacity: 0; }
-    100% { transform: translateX(0); opacity: 1; }
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  49% {
+    transform: translateX(18%);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(-18%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
-.animate-card-swipe-left { animation: cardSwipeLeft 0.25s ease-in-out; }
-.animate-card-swipe-right { animation: cardSwipeRight 0.25s ease-in-out; }
+.animate-card-swipe-left {
+  animation: cardSwipeLeft 0.25s ease-in-out;
+}
+.animate-card-swipe-right {
+  animation: cardSwipeRight 0.25s ease-in-out;
+}
 
 @media (prefers-reduced-motion: reduce) {
-    .animate-card-swipe-left,
-    .animate-card-swipe-right { animation: none; }
+  .animate-card-swipe-left,
+  .animate-card-swipe-right {
+    animation: none;
+  }
 }
 
 .flashcard-side-image {
-    display: block;
-    width: auto;
-    height: auto;
-    max-width: min(12rem, 27.5%);
-    max-height: 9rem;
-    object-fit: contain;
-    border-radius: 22%;
-    clip-path: inset(0 round 22%);
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(12rem, 27.5%);
+  max-height: 9rem;
+  object-fit: contain;
+  border-radius: 22%;
+  clip-path: inset(0 round 22%);
 }
 
 .flashcard-content-row {
-    gap: 0;
+  gap: 0;
 }
 
 .flashcard-content-row--paired {
-    gap: clamp(1.5rem, 12.5%, 6rem);
+  gap: clamp(1.5rem, 12.5%, 6rem);
 }
 
 .flashcard-side-text {
-    min-width: 0;
-    max-width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .flashcard-side-text--paired {
-    max-width: min(34rem, 60%);
+  max-width: min(34rem, 60%);
+}
+</style>
+
+<style scoped>
+@media (min-width: 1200px) {
+  .set-page {
+    max-width: min(56rem, calc(100vw - 440px));
+    position: relative;
+    left: -72px;
+  }
+  .study-mode-navigation {
+    position: fixed;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 180px;
+    z-index: 20;
+  }
+  .study-mode-bar {
+    flex-direction: column;
+    overflow: visible;
+  }
+}
+.study-panel--chat {
+  height: clamp(324px, 52.2vh, 576px);
+  min-height: 0;
+  max-height: none;
+  overflow: auto;
+}
+.study-panel--chat [role="log"] {
+  min-height: 0;
+  max-height: none;
+}
+@media (max-width: 639px) {
+  .study-panel--chat {
+    height: calc(100dvh - 14.5rem);
+    min-height: 324px;
+  }
 }
 </style>

@@ -1,7 +1,61 @@
 /* biome-ignore-all lint/suspicious/noUnknownAtRules: Tailwind directives */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-weight-normal: 450;
+  --font-weight-medium: 525;
+  --font-weight-bold: 725;
+}
+
+@theme static {
+  --color-custom-secondary-50: oklch(92.7% 0.048 62.277);
+  --color-custom-secondary-100: oklch(88.6% 0.078 63.109);
+  --color-custom-secondary-200: oklch(84.8% 0.106 62.303);
+  --color-custom-secondary-300: oklch(81.2% 0.129 58.893);
+  --color-custom-secondary-400: oklch(77.8% 0.145 51.091);
+  --color-custom-secondary-500: oklch(74.4% 0.159 37.583);
+  --color-custom-secondary-600: oklch(70.6% 0.186 24.443);
+  --color-custom-secondary-700: oklch(65.6% 0.233 16.849);
+  --color-custom-secondary-800: oklch(58.3% 0.233 13.297);
+  --color-custom-secondary-900: oklch(47.7% 0.191 12.182);
+  --color-custom-secondary-950: oklch(33.9% 0.136 12.635);
+  --color-custom-success-50: oklch(100% 0 0);
+  --color-custom-success-100: oklch(98.5% 0.022 156.234);
+  --color-custom-success-200: oklch(95% 0.079 156.073);
+  --color-custom-success-300: oklch(90% 0.172 154.648);
+  --color-custom-success-400: oklch(84% 0.224 151.416);
+  --color-custom-success-500: oklch(77.2% 0.214 149.816);
+  --color-custom-success-600: oklch(69.6% 0.193 149.633);
+  --color-custom-success-700: oklch(61.4% 0.169 150.067);
+  --color-custom-success-800: oklch(52.5% 0.142 150.835);
+  --color-custom-success-900: oklch(43.1% 0.114 151.812);
+  --color-custom-success-950: oklch(33% 0.085 152.934);
+}
+
+@layer base {
+  body {
+    font-weight: 450;
+    letter-spacing: 0.02em;
+  }
+}
+
+:root {
+  --ui-radius: 0.25rem;
+  --ui-primary: black;
+}
+
+:root, .light {
+  --ui-secondary: var(--ui-color-secondary-600);
+}
+
+.dark {
+  --ui-secondary: var(--ui-color-secondary-600);
+  --ui-primary: white;
+}
+@custom-variant dark (&:where(.dark, .dark *));
+@config "../../tailwind.config.ts";
 
 /* Shared desktop/web layouts respond to available space, including small
    desktop windows. Safe-area spacing also works in mobile standalone browsers. */
@@ -80,6 +134,33 @@ html.dark .tracer-library-scroll::-webkit-scrollbar-thumb {
 
   .tracer-practice-choice {
     @apply inline-flex min-h-12 items-center justify-center rounded-xl border px-4 py-3 text-sm font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950;
+  }
+
+  .tracer-practice-choice--true-false {
+    padding-block: 2rem !important;
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .tracer-practice-choice--multiple-choice {
+    padding-block: 1.25rem !important;
+    border-radius: 1rem !important;
+  }
+
+  .tracer-practice-choice--true {
+    color: #047857 !important;
+  }
+
+  .tracer-practice-choice--false {
+    color: #b91c1c !important;
+  }
+
+  html.dark .tracer-practice-choice--true {
+    color: #6ee7b7 !important;
+  }
+
+  html.dark .tracer-practice-choice--false {
+    color: #fca5a5 !important;
   }
 
   .tracer-panel {
@@ -298,3 +379,103 @@ html.dark .tracer-library-scroll::-webkit-scrollbar-thumb {
   .smart-review-rating__button { @apply hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md; transition: translate 160ms ease, border-color 160ms ease, box-shadow 160ms ease, scale 120ms ease; }
 }
 @media (prefers-reduced-motion: reduce) { .smart-review-rating__button { transition: none; } .smart-review-rating__button:hover { translate: none; } }
+
+:root { --tracer-control-height: max(40px, calc(var(--tracer-leading-sm) + 16px)); --tracer-radius-control: 12px; --tracer-radius-surface: 24px; --ui-radius: 0.25rem; }
+.tracer-workspace-content.has-sidebar { padding-left:68px; }
+.tracer-back-with-sidebar { left:24px; }
+@media(max-width:767px) { .tracer-back-with-sidebar { left:16px !important; } }
+/* Shared action geometry is independent of old page-specific button classes. */
+[data-slot="base"]:where(button,a):not(:where([role="checkbox"],[role="switch"],[role="radio"])) {
+  min-height:var(--tracer-control-height); padding:8px 14px; justify-content:center; text-align:center; align-items:center; gap:8px;
+  border-radius:var(--tracer-radius-control); font-size:var(--tracer-text-sm); line-height:var(--tracer-leading-sm); font-weight:525;
+  box-shadow:none;
+}
+[data-slot="base"]:where(button,a) > svg { width:20px; height:20px; flex-shrink:0; }
+[data-slot="base"][aria-label]:has(>svg:only-child) { min-width:40px; padding:9px; }
+[data-slot="base"]:where(input,textarea), [role="combobox"] { border-radius:var(--tracer-radius-control); }
+input[data-slot="base"], button.tracer-select[data-slot="base"] {
+  box-sizing:border-box; height:var(--tracer-control-height); min-height:var(--tracer-control-height);
+  font-size:var(--tracer-text-sm); line-height:var(--tracer-leading-sm); padding:8px 14px;
+}
+button.tracer-select[data-slot="base"] { padding-right:42px; justify-content:flex-start; text-align:left; border:0; }
+[data-slot="root"]:has(> [data-slot="leading"]) > input[data-slot="base"] { padding-inline-start:42px; }
+[data-slot="root"]:has(> [data-slot="trailing"]) > input[data-slot="base"], #account-password { padding-inline-end:48px; }
+
+textarea[data-slot="base"] { padding:12px 14px; }
+.tracer-panel, .tracer-result-surface, .tracer-page section:where([class*="rounded"]), .tracer-page article:where([class*="rounded"]) {
+  border-radius:var(--tracer-radius-surface); border:0; box-shadow:none; background:var(--ui-bg-muted);
+}
+.tracer-page > .tracer-panel, .tracer-page .tracer-panel { padding:20px; }
+[data-slot="content"][role="dialog"], .tracer-chat-panel { border-radius:var(--tracer-radius-surface); border:0; }
+[data-slot="root"]:has(> [data-slot="header"]):has(> [data-slot="body"]) { border-radius:var(--tracer-radius-surface); }
+.auth-primary { display:flex; justify-content:center; align-items:center; margin-top:16px; min-height:var(--tracer-control-height); }
+.tracer-icon-button { width:40px; height:40px; min-width:40px; padding:9px !important; }
+.tracer-chat-panel > header, .tracer-chat-panel > form { border:0; }
+.tracer-chat-panel [data-slot="base"]:where(textarea) { padding-right:56px; padding-bottom:14px; }
+@media(prefers-reduced-motion:reduce) { .page-enter-from, .page-leave-to { opacity:1; } }
+
+:where(button,a,input,textarea,[role="combobox"]) { scroll-margin-top:80px; scroll-margin-bottom:80px; }
+
+html { scroll-padding-top:80px; }
+.tracer-page-toolbar, .tracer-page header { align-items:center; }
+
+.smart-review-rating__button[data-slot="base"] { min-height:64px; padding:10px 6px; gap:3px; background:var(--ui-bg); box-shadow:inset 0 0 0 1px var(--ui-border); border-radius:var(--tracer-radius-control); }
+.smart-review-rating__button[data-slot="base"]:hover { background:var(--ui-bg-elevated); box-shadow:inset 0 0 0 1px var(--ui-primary); }
+.synth-source-row { box-shadow:inset 0 0 0 1px var(--ui-border-muted); }
+
+/* Secondary actions and fields retain contrast on both surface tones. */
+:root { --tracer-soft-action:#e8ebef; --tracer-field:#e9edf2; }
+html.dark { --tracer-soft-action:#303d53; --tracer-field:#29374d; }
+[data-slot="base"]:where(input,textarea), button.tracer-select[data-slot="base"] { background:var(--tracer-field); }
+.library-card__actions [data-slot="base"]:where(button,a) { background:transparent !important; }
+.tracer-page .tracer-panel { padding:20px 24px; }
+@media(max-width:640px) { .tracer-workspace-content.has-sidebar { padding-left:68px; } }
+
+html.dark .tracer-sidebar { --nav-yellow-bg:#514321 !important; --nav-yellow-text:#ffdf91 !important; --nav-orange-bg:#58382b !important; --nav-orange-text:#ffc2a0 !important; --nav-purple-bg:#443b64 !important; --nav-purple-text:#d3c9ff !important; }
+html.dark .tracer-sidebar .nav-item-active { background:#393453; color:#f3efff; }
+
+.settings-language-trigger[data-slot="base"] {
+  justify-content: space-between;
+}
+
+/* Keep secondary actions distinct but quiet against both light and dark surfaces. */
+[data-slot="base"].bg-primary\/10:where(button, a) {
+  background-color: color-mix(in srgb, var(--ui-primary) 5%, transparent);
+}
+[data-slot="base"].bg-primary\/10:where(button, a):not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--ui-primary) 9%, transparent);
+}
+
+/* Compact Settings rows while keeping their horizontal alignment. */
+.tracer-page.settings-page .tracer-panel { padding: 14px 24px; }
+
+/* Sidebar hover and selection follow each icon group in either theme. */
+html.dark .tracer-sidebar .nav-item-yellow:is(:hover, .nav-item-active),
+html.dark .tracer-sidebar .recent-sets a:is(:hover, .router-link-exact-active) { background:#39311c; color:#ffdf91; }
+html.dark .tracer-sidebar .nav-item-orange:is(:hover, .nav-item-active) { background:#3b2b26; color:#ffc2a0; }
+html.dark .tracer-sidebar .nav-item-purple:is(:hover, .nav-item-active) { background:#302d43; color:#d3c9ff; }
+
+/* Study settings keep the frequently used controls together. */
+.flashcard-settings-menu { display:grid; grid-template-columns:1fr 1fr; padding:8px; gap:4px; }
+.flashcard-settings-menu > * { grid-column:1 / -1; }
+.flashcard-settings-menu > button:nth-child(1) { grid-column:1; grid-row:1; }
+.flashcard-settings-menu > button:nth-child(3) { grid-column:2; grid-row:1; }
+.flashcard-settings-menu > button:nth-child(2) { grid-row:20; border-top:1px solid var(--ui-border); padding-top:12px; }
+.flashcard-settings-menu > button { border-radius:var(--tracer-radius-control); min-height:40px; }
+.tracer-fullscreen-study .tracer-result-surface { width:100%; min-height:50dvh; }
+.tracer-fullscreen-study .match-start { min-height:55dvh; }
+.study-panel .match-start { min-height:36dvh; }
+
+/* Disabled actions stay soft but retain readable labels. Answer feedback keeps its colors. */
+button[data-slot="base"]:disabled:not(.tracer-practice-choice):not([aria-pressed]) {
+  opacity: 1;
+  background-color: #f1f5f9;
+  border-color: transparent;
+  color: #64748b;
+  box-shadow: none;
+}
+html.dark button[data-slot="base"]:disabled:not(.tracer-practice-choice):not([aria-pressed]) {
+  background-color: #1e293b;
+  border-color: transparent;
+  color: #94a3b8;
+}

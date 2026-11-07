@@ -3,7 +3,7 @@
     <div class="tracer-page mx-auto max-w-[980px] px-8 py-10">
       <LoadingSpinner v-if="loading" screen />
 
-      <div v-else-if="loadError" class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
+      <div v-else-if="loadError" class="rounded-[var(--tracer-radius-surface)] border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
         <div class="mt-4 flex flex-wrap gap-2">
           <AppButton variant="white" @click="loadManagement">{{ t('classroom.retry') }}</AppButton>
@@ -19,24 +19,24 @@
           <AppButton variant="white" to="/teacher">{{ t('classroom.backToDashboard') }}</AppButton>
         </header>
 
-        <section class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="class-information-title">
+        <section class="mt-8 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="class-information-title">
           <h2 id="class-information-title" class="text-2xl font-semibold">{{ t('classroom.classInformation') }}</h2>
           <form class="mt-6 grid gap-5 sm:grid-cols-2" @submit.prevent="saveClassInformation">
             <label>
               <span class="text-sm font-medium">{{ t('classroom.className') }}</span>
-              <input v-model="classForm.name" required maxlength="120" :placeholder="t('classroom.classNamePlaceholder')" class="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950" />
+              <UInput v-model="classForm.name" required maxlength="120" :placeholder="t('classroom.classNamePlaceholder')" class="w-full mt-2" />
             </label>
             <label>
               <span class="text-sm font-medium">{{ t('classroom.subject') }}</span>
-              <input v-model="classForm.subject" maxlength="120" :placeholder="t('classroom.subjectPlaceholder')" class="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950" />
+              <UInput v-model="classForm.subject" maxlength="120" :placeholder="t('classroom.subjectPlaceholder')" class="w-full mt-2" />
             </label>
             <label>
               <span class="text-sm font-medium">{{ t('classroom.section') }}</span>
-              <input v-model="classForm.section" maxlength="80" :placeholder="t('classroom.sectionPlaceholder')" class="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950" />
+              <UInput v-model="classForm.section" maxlength="80" :placeholder="t('classroom.sectionPlaceholder')" class="w-full mt-2" />
             </label>
             <label>
               <span class="text-sm font-medium">{{ t('classroom.schoolYear') }}</span>
-              <input v-model="classForm.schoolYear" maxlength="40" :placeholder="t('classroom.schoolYearPlaceholder')" class="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950" />
+              <UInput v-model="classForm.schoolYear" maxlength="40" :placeholder="t('classroom.schoolYearPlaceholder')" class="w-full mt-2" />
             </label>
             <div class="flex flex-wrap items-center gap-3 sm:col-span-2">
               <AppButton type="submit" size="lg" :busy="saveBusy" :disabled="!classForm.name.trim()">
@@ -48,7 +48,7 @@
           </form>
         </section>
 
-        <section class="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="manage-assignments-title">
+        <section class="mt-8 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="manage-assignments-title">
           <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-6 py-5 dark:border-slate-800">
             <div>
               <h2 id="manage-assignments-title" class="text-2xl font-semibold">{{ t('classroom.assignedMaterials') }}</h2>
@@ -69,21 +69,21 @@
                   </p>
                 </div>
               </div>
-              <button
+              <UButton color="primary" variant="soft"
                 type="button"
-                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-red-600 bg-white text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30"
+                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-red-600 bg-white text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30"
                 :aria-label="`${t('classroom.removeMaterial')}: ${assignment.title}`"
                 @click="requestAssignmentRemoval(assignment)"
               >
                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" />
                 </svg>
-              </button>
+              </UButton>
             </li>
           </ul>
         </section>
 
-        <section class="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="manage-students-title">
+        <section class="mt-8 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="manage-students-title">
           <div class="border-b border-slate-200 px-6 py-5 dark:border-slate-800">
             <div>
               <h2 id="manage-students-title" class="text-2xl font-semibold">{{ t('classroom.manageStudents') }}</h2>
@@ -95,16 +95,16 @@
           <ul v-else class="divide-y divide-slate-200 dark:divide-slate-800">
             <li v-for="member in members" :key="member.userId" class="flex items-center justify-between gap-4 px-6 py-4">
               <p class="min-w-0 truncate font-semibold">{{ member.displayName }}</p>
-              <button
+              <UButton color="primary" variant="soft"
                 type="button"
-                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-red-600 bg-white text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30"
+                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-red-600 bg-white text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30"
                 :aria-label="`${t('classroom.removeStudent')}: ${member.displayName}`"
                 @click="requestStudentRemoval(member)"
               >
                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" />
                 </svg>
-              </button>
+              </UButton>
             </li>
           </ul>
         </section>

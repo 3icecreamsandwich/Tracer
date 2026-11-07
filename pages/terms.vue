@@ -15,7 +15,7 @@
     <section aria-labelledby="terms-content">
       <h2 id="terms-content" class="text-xl font-semibold text-slate-950 dark:text-white">Your content and public sets</h2>
       <p class="mt-3">You keep responsibility for your private study content. Do not upload or publish material you do not have permission to use, or material that is unlawful, harmful, or violates another person’s rights.</p>
-      <p class="mt-3">Publishing a set makes that snapshot publicly viewable through Tracer’s public catalog. You can remove your own publication while your account is active. If you delete your account, published snapshots remain available with the publisher name replaced by <code class="rounded bg-slate-100 px-1 py-0.5 text-sm text-slate-950 dark:bg-slate-800 dark:text-white">&lt;unknown&gt;</code>. See the <NuxtLink class="font-medium underline underline-offset-4" to="/privacy">Privacy Policy</NuxtLink> for more about retention.</p>
+      <p class="mt-3">Publishing a set makes that snapshot publicly viewable through Tracer’s public catalog. You can remove your own publication while your account is active. If you delete your account, published snapshots remain available with the publisher name replaced by <code class="rounded-[var(--tracer-radius-control)] bg-slate-100 px-1 py-0.5 text-sm text-slate-950 dark:bg-slate-800 dark:text-white">&lt;unknown&gt;</code>. See the <NuxtLink class="font-medium underline underline-offset-4" to="/privacy">Privacy Policy</NuxtLink> for more about retention.</p>
     </section>
 
     <section aria-labelledby="terms-ai">

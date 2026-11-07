@@ -107,3 +107,9 @@ it('cancels a stalled event reader promptly on abort',async()=>{
  await expect(pending).rejects.toMatchObject({name:'TimeoutError'})
  expect(cancelled).toBe(true)
 })
+
+it('accepts prompt-only generation and rejects an empty generation request', () => {
+ const request = parseBuiltinRequest({...ids, operation:'generate', input:{sources:[], instructions:'Create a study guide and flashcards about cell biology'}})
+ expect(builtinPrompt(request).prompt).toContain('established subject knowledge')
+ expect(() => parseBuiltinRequest({...ids,operation:'generate',input:{sources:[],instructions:'   '}})).toThrow(BuiltinAiError)
+})

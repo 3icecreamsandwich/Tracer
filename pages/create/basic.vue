@@ -1,5 +1,6 @@
 <template>
   <main>
+    <CreateModeSwitcher />
     <AiErrorModal
       :open="factCheckAiErrorOpen"
       :error="factCheckAiError"
@@ -8,66 +9,54 @@
       @close="closeFactCheckAiError"
       @retry="retryFactCheck"
     />
-    <div class="tracer-page mx-auto max-w-3xl px-5 py-8 sm:px-8">
+    <div class="tracer-page mx-auto max-w-3xl px-5 pb-24 pt-4 sm:px-8">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex min-w-0 items-center gap-4">
-          <CreateModeIcon name="basic" class="h-14 w-14 shrink-0" />
-          <h1 class="text-3xl font-semibold">{{ t('home.basic') }}</h1>
+          <CreateModeIcon name="basic" class="h-10 w-10 shrink-0" />
+          <h1 class="text-2xl font-semibold">{{ t('home.basic') }}</h1>
         </div>
 
         <div class="flex shrink-0 flex-wrap items-center gap-2">
-          <button
+          <UButton color="primary" variant="soft" aria-label="Delete all inputs" :disabled="busy || factCheckBusy" @click="clearInputsOpen = true"><AppIcon name="trash" /></UButton>
+          <UButton color="primary" variant="soft" aria-label="Import" :disabled="busy || factCheckBusy" @click="openImport"><AppIcon name="file-input" /></UButton>
+          <UButton color="primary" variant="soft" :disabled="busy || factCheckBusy" @click="onFactCheck"><LoadingSpinner v-if="factCheckBusy" size="sm" :label="t('factCheck.loading')" /><template v-else>{{ t('factCheck.title') }}</template></UButton>
+          <UButton color="primary" variant="solid"
             type="button"
-            class="tracer-button tracer-button--white tracer-button--md"
-            :disabled="busy || factCheckBusy"
-            @click="onFactCheck"
-          >
-            <LoadingSpinner v-if="factCheckBusy" size="sm" :label="t('factCheck.loading')" />
-            <template v-else>{{ t('factCheck.title') }}</template>
-          </button>
-          <button
-            type="button"
-            class="tracer-button tracer-button--white tracer-button--md"
-            :disabled="busy || factCheckBusy"
-            @click="openImport"
-          >
-            {{ t('common.import') }}
-          </button>
-          <button
-            type="button"
-            class="tracer-button tracer-button--dark tracer-button--md"
+
             :disabled="busy || factCheckBusy"
             @click="onCreate"
-          >
+           size="md">
             <LoadingSpinner v-if="busy" size="sm" />
             <template v-else>{{ t('common.create') }}</template>
-          </button>
+          </UButton>
         </div>
       </div>
 
-      <div class="mt-7 space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <div class="basic-metadata mt-4 space-y-3 p-4">
         <div>
           <label class="block text-sm font-medium" for="set-title">{{ t('create.title') }}</label>
-          <input
+          <UInput
             id="set-title"
             ref="titleEl"
             v-model="title"
             type="text"
             autocomplete="off"
-            class="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            class="w-full"
           />
         </div>
 
         <div>
           <label class="block text-sm font-medium" for="set-description">{{ t('create.description') }}</label>
-          <textarea
+          <UTextarea
             id="set-description"
             v-model="description"
-            rows="2"
-            class="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :rows="2"
+            class="w-full mt-1 resize-y"
           />
         </div>
       </div>
+
+      <AppDialog :open="clearInputsOpen" title="Delete all inputs?" close-label="Cancel" @close="clearInputsOpen = false"><p>Your current Basic draft will be cleared.</p><div class="mt-4 flex gap-2"><UButton color="error" @click="clearInputs">Delete all inputs</UButton><UButton variant="ghost" @click="clearInputsOpen = false">Cancel</UButton></div></AppDialog>
 
       <LazyFactCheckPanel
         v-if="factCheckBusy || factCheckResponse"
@@ -76,7 +65,7 @@
         :response="factCheckResponse"
       />
 
-      <div class="mt-8 space-y-4">
+      <div class="mt-4 space-y-3">
         <h2 class="text-sm font-medium text-slate-700 dark:text-slate-200">{{ t('create.cards') }}</h2>
 
         <p v-if="formError" class="text-sm text-red-700 dark:text-red-300">
@@ -86,36 +75,36 @@
         <div
           v-for="(card, idx) in cards"
           :key="card.key"
-          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+          class="basic-card p-4"
         >
           <div class="flex items-start justify-between gap-3">
             <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.card', { number: idx + 1 }) }}</p>
 
-            <button
+            <UButton color="primary" variant="soft"
               v-if="cards.length > 1"
               type="button"
-              class="rounded-xl border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               :disabled="busy"
               @click="removeCard(idx)"
             >
               {{ t('common.remove') }}
-            </button>
+            </UButton>
           </div>
 
-          <div class="mt-3 space-y-3">
+          <div class="basic-card-fields mt-3 grid gap-4 sm:grid-cols-2">
             <div>
               <label class="block text-sm font-medium" :for="`term-${card.key}`">{{ t('create.term') }}</label>
               <div class="mt-1 flex min-h-9 items-center gap-2">
-                <button
+                <UButton color="primary" variant="soft"
                   v-if="!card.frontImage"
                   type="button"
-                  class="tracer-button tracer-button--white tracer-button--md"
+
                   :disabled="busy"
                   :aria-label="`Add image to term for card ${idx + 1}`"
                   @click="openImagePicker(card.key, 'frontImage')"
-                >
-                  {{ t('create.addImage') }}
-                </button>
+                 size="md">
+                  <AppIcon name="image-plus" />
+                </UButton>
                 <p
                   v-else
                   class="truncate text-xs font-medium text-slate-600 dark:text-slate-300"
@@ -124,14 +113,14 @@
                   {{ card.frontImage.filename }}
                 </p>
                 <label v-if="card.frontImage" class="text-xs font-medium text-slate-600 dark:text-slate-300" :for="`term-image-alt-${card.key}`">Image description</label>
-                <input
+                <UInput
                   v-if="card.frontImage"
                   :id="`term-image-alt-${card.key}`"
                   v-model="card.frontImage.altText"
                   type="text"
                   maxlength="500"
                   placeholder="Describe this image for screen readers"
-                  class="w-full max-w-sm rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
+                  class="w-full max-w-sm"
                 />
                 <input
                   :id="imageInputId(card.key, 'frontImage')"
@@ -141,12 +130,12 @@
                   @change="onImagePicked($event, card.key, 'frontImage')"
                 />
               </div>
-              <input
+              <UInput
                 :id="`term-${card.key}`"
                 v-model="card.front"
                 type="text"
                 autocomplete="off"
-                class="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                class="w-full mt-2"
                 @keydown="onCardKeydown($event, idx)"
               />
             </div>
@@ -154,16 +143,16 @@
             <div>
               <label class="block text-sm font-medium" :for="`definition-${card.key}`">{{ t('create.definition') }}</label>
               <div class="mt-1 flex min-h-9 items-center gap-2">
-                <button
+                <UButton color="primary" variant="soft"
                   v-if="!card.backImage"
                   type="button"
-                  class="tracer-button tracer-button--white tracer-button--md"
+
                   :disabled="busy"
                   :aria-label="`Add image to definition for card ${idx + 1}`"
                   @click="openImagePicker(card.key, 'backImage')"
-                >
-                  {{ t('create.addImage') }}
-                </button>
+                 size="md">
+                  <AppIcon name="image-plus" />
+                </UButton>
                 <p
                   v-else
                   class="truncate text-xs font-medium text-slate-600 dark:text-slate-300"
@@ -172,14 +161,14 @@
                   {{ card.backImage.filename }}
                 </p>
                 <label v-if="card.backImage" class="text-xs font-medium text-slate-600 dark:text-slate-300" :for="`definition-image-alt-${card.key}`">Image description</label>
-                <input
+                <UInput
                   v-if="card.backImage"
                   :id="`definition-image-alt-${card.key}`"
                   v-model="card.backImage.altText"
                   type="text"
                   maxlength="500"
                   placeholder="Describe this image for screen readers"
-                  class="w-full max-w-sm rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
+                  class="w-full max-w-sm"
                 />
                 <input
                   :id="imageInputId(card.key, 'backImage')"
@@ -189,11 +178,11 @@
                   @change="onImagePicked($event, card.key, 'backImage')"
                 />
               </div>
-              <textarea
+              <UTextarea
                 :id="`definition-${card.key}`"
                 v-model="card.back"
-                rows="2"
-                class="mt-2 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                :rows="2"
+                class="w-full mt-2 resize-y"
                 @keydown="onCardKeydown($event, idx)"
               />
             </div>
@@ -201,14 +190,15 @@
         </div>
 
         <div class="pt-2">
-          <button
+          <UButton color="primary" variant="soft"
             type="button"
-            class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            class="inline-flex items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
             :disabled="busy"
+            aria-label="Add card"
             @click="appendCardAndFocus(cards.length)"
           >
             +
-          </button>
+          </UButton>
         </div>
       </div>
     </div>
@@ -223,19 +213,19 @@
     >
       <div class="mt-3">
         <label class="sr-only" for="import-cards">{{ t('create.cards') }} · {{ t('common.import') }}</label>
-        <textarea
+        <UTextarea
           id="import-cards"
           ref="importTextareaEl"
           v-model="importText"
-          rows="10"
+          :rows="10"
           :placeholder="'term\tdefinition\nterm\tdefinition'"
-          class="w-full resize-y rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          class="w-full"
         />
       </div>
       <p v-if="importError" class="mt-3 text-sm text-red-700 dark:text-red-300">
         {{ importError }}
       </p>
-      <div v-else-if="importPreview" class="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
+      <div v-else-if="importPreview" class="mt-3 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="font-medium text-slate-900 dark:text-white">{{ importPreview.rows.length }} card{{ importPreview.rows.length === 1 ? '' : 's' }} ready to import</p>
         <ul class="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
           <li v-for="row in importPreview.rows.slice(0, 3)" :key="`${row.front}\u0000${row.back}`" class="truncate">
@@ -244,14 +234,14 @@
         </ul>
       </div>
       <div class="mt-4 flex flex-wrap gap-2">
-        <button
+        <UButton color="primary" variant="soft"
           type="button"
-          class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           :disabled="busy || !importText.trim()"
           @click="importFromText"
         >
           {{ t('common.import') }} {{ t('create.cards') }}
-        </button>
+        </UButton>
       </div>
     </BaseModal>
 
@@ -294,6 +284,12 @@ type CardImageSide = 'frontImage' | 'backImage'
 const router = useRouter()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 
+const clearInputsOpen = ref(false)
+function clearInputs() {
+  title.value = ''; description.value = ''
+  cards.value = [{ key: crypto.randomUUID(), front: '', back: '' }]
+  formError.value = null; clearInputsOpen.value = false
+}
 const title = ref('')
 const description = ref('')
 const cards = ref<DraftCardRow[]>([{ key: crypto.randomUUID(), front: '', back: '' }])
@@ -310,8 +306,8 @@ const duplicateReviewOpen = ref(false)
 const duplicateIssues = ref<DuplicateCardIssue[]>([])
 let duplicateReviewContinuation: (() => void) | null = null
 
-const titleEl = ref<HTMLInputElement | null>(null)
-const importTextareaEl = ref<HTMLTextAreaElement | null>(null)
+const titleEl = ref<{ inputRef: HTMLInputElement } | null>(null)
+const importTextareaEl = ref<{ textareaRef: HTMLTextAreaElement } | null>(null)
 
 const {
   busy: factCheckBusy,
@@ -479,7 +475,7 @@ async function onImagePicked(e: Event, cardKey: string, side: CardImageSide) {
 function openImport() {
   importError.value = null
   isImportOpen.value = true
-  nextTick(() => importTextareaEl.value?.focus())
+  nextTick(() => importTextareaEl.value?.textareaRef?.focus())
 }
 
 function closeImport() {
@@ -580,7 +576,7 @@ async function onCreate(skipDuplicateReview = false) {
 
 function focusTitleIfUntouched() {
   // Startup can finish after the user has already begun entering cards.
-  if (document.activeElement === document.body && !title.value) titleEl.value?.focus()
+  if (document.activeElement === document.body && !title.value) titleEl.value?.inputRef?.focus()
 }
 
 onMounted(async () => {
@@ -622,3 +618,14 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.basic-card-fields > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-content:start; }
+.basic-card-fields > div > label { grid-column:1 / -1; }
+.basic-card-fields > div > .mt-1 { grid-column:2; grid-row:2; margin-top:0; }
+.basic-card-fields > div > .mt-2 { grid-column:1; grid-row:2; margin-top:0; }
+.basic-metadata,.basic-card { border-radius:var(--tracer-radius-surface); background:var(--ui-bg-muted); }
+.basic-metadata :deep(input),.basic-metadata :deep(textarea),.basic-card :deep(input:not([type=file])),.basic-card :deep(textarea) { background:var(--tracer-field); box-shadow:inset 0 0 0 1px var(--ui-border-muted); }
+.basic-card-fields :deep(input:not([type=file])) { height:64px; }
+.basic-card-fields > div > .mt-1 { align-self:center; }
+</style>

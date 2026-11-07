@@ -32,7 +32,7 @@ const assignClassPageSource = readFileSync(fileURLToPath(assignClassPageUrl), 'u
 const dashboardPageSource = readFileSync(fileURLToPath(dashboardPageUrl), 'utf8')
 const studentClassPageSource = readFileSync(fileURLToPath(studentClassPageUrl), 'utf8')
 const homePageSource = readFileSync(
-  fileURLToPath(new URL('../../pages/index.vue', import.meta.url)),
+  fileURLToPath(new URL('../../pages/library.vue', import.meta.url)),
   'utf8',
 )
 const classroomComposableSource = readFileSync(
@@ -174,12 +174,12 @@ describe('classroom data mapping', () => {
 })
 
 describe('shared app dialog', () => {
-  it('captures Escape at the window so fullscreen handling cannot strand the dialog', () => {
+  it('uses the framework dialog for focus and dismissal while preserving the shared modal stack', () => {
     expect(appDialogSource).toContain('<BaseModal')
     const modalSource = readFileSync(new URL('../../components/BaseModal.vue', import.meta.url), 'utf8')
-    expect(modalSource).toContain("window.addEventListener('keydown', onWindowKeydown, true)")
-    expect(modalSource).toMatch(/onWindowKeydown[\s\S]*event\.key !== 'Escape'[\s\S]*close\(\)/)
-    expect(modalSource).not.toContain('stopPropagation')
+    expect(modalSource).toContain('<UModal')
+    expect(modalSource).toContain('registerModal(modalId)')
+    expect(modalSource).toContain(':dismissible="!busy"')
   })
 })
 

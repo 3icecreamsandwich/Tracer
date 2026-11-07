@@ -10,13 +10,13 @@
     <form class="space-y-4" @submit.prevent="submit">
       <label class="block">
         <span class="text-sm font-medium">{{ t('classroom.className') }}</span>
-        <input
+        <UInput
           v-model="name"
           data-autofocus
           required
           maxlength="120"
           autocomplete="off"
-          class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-950 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+          class="w-full mt-1.5"
           :placeholder="t('classroom.classNamePlaceholder')"
         />
       </label>
@@ -24,21 +24,21 @@
       <div class="grid gap-4 sm:grid-cols-2">
         <label class="block">
           <span class="text-sm font-medium">{{ t('classroom.subject') }}</span>
-          <input
+          <UInput
             v-model="subject"
             maxlength="120"
             autocomplete="off"
-            class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-950 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            class="w-full mt-1.5"
             :placeholder="t('classroom.subjectPlaceholder')"
           />
         </label>
         <label class="block">
           <span class="text-sm font-medium">{{ t('classroom.section') }}</span>
-          <input
+          <UInput
             v-model="section"
             maxlength="80"
             autocomplete="off"
-            class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-950 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            class="w-full mt-1.5"
             :placeholder="t('classroom.sectionPlaceholder')"
           />
         </label>
@@ -46,11 +46,11 @@
 
       <label class="block">
         <span class="text-sm font-medium">{{ t('classroom.schoolYear') }}</span>
-        <input
+        <UInput
           v-model="schoolYear"
           maxlength="40"
           autocomplete="off"
-          class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-950 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+          class="w-full mt-1.5"
           :placeholder="t('classroom.schoolYearPlaceholder')"
         />
       </label>

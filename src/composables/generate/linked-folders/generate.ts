@@ -188,14 +188,21 @@ export async function generateLinkedFolderContent(input: {
   incremental?: boolean
   onRawOutput?: (raw: string) => void
 }): Promise<LinkedFolderGeneratedContent> {
+  if (!input.sources.length && !input.instructions?.trim()) throw new Error('Enter a prompt or add source files.')
   if (isBuiltinModel(input.model)) {
     const { builtinGenerate } = await import('../../ai/builtin/client')
-    const raw = await builtinGenerate({ operation: 'generate', input: { sources: input.sources, instructions: input.instructions, incremental: input.incremental } })
+    // Keep prompt-only creation compatible with hosted gateways that still
+    // require one text source. This is explicitly a topic, never an attachment.
+    const sources: ExtractedGenerateSource[] = input.sources.length ? input.sources : [{
+      id: 'prompt-topic', filename: 'Requested study topic', kind: 'text', method: 'text',
+      text: `No files were uploaded. Use established subject knowledge about the requested topic: ${input.instructions!.trim()}`
+    }]
+    const raw = await builtinGenerate({ operation: 'generate', input: { sources, instructions: input.instructions, incremental: input.incremental } })
     const parsed = parseBatchOutput(raw)
     input.onRawOutput?.(raw)
     return { ...parsed, rawOutput: raw }
   }
-  const batches = batchGenerateSources(input.sources)
+  const batches = input.sources.length ? batchGenerateSources(input.sources) : [[]]
   const rawBatches = new Array<string>(batches.length)
   // Linked folders often create several batches at once. Keep provider calls
   // sequential so low-RPM accounts are not rate-limited by a burst of requests.

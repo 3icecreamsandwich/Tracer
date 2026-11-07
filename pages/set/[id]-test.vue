@@ -10,7 +10,7 @@
     <main class="tracer-fullscreen-study bg-white text-slate-950 dark:bg-slate-950 dark:text-slate-50">
         <header
             data-tauri-drag-region
-            class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-3 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:px-6"
+            class="sticky top-0 z-30 bg-white/95 px-3 py-4 backdrop-blur dark:bg-slate-950/95 sm:px-6"
         >
             <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                 <div class="justify-self-start">
@@ -26,7 +26,7 @@
                 <div class="flex items-center justify-self-end gap-3">
                     <span
                         v-if="testTimed && !testSubmitted"
-                        class="rounded-md bg-amber-50 px-2.5 py-2 text-sm font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
+                        class="rounded-[var(--tracer-radius-control)] bg-amber-50 px-2.5 py-2 text-sm font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
                     >
                         {{ timerText }}
                     </span>
@@ -56,7 +56,7 @@
 
             <div
                 v-else-if="loadError"
-                class="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-900/70 dark:bg-red-950/30 dark:text-red-200"
+                class="rounded-[var(--tracer-radius-surface)] border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-900/70 dark:bg-red-950/30 dark:text-red-200"
             >
                 {{ loadError }}
             </div>
@@ -90,27 +90,27 @@
                         </div>
 
                         <div class="flex flex-col gap-2 sm:min-w-52">
-                            <button
+                            <UButton color="primary" variant="solid"
                                 type="button"
-                                class="tracer-button tracer-button--dark tracer-button--lg"
+
                                 @click="restartTest"
-                            >
+                             size="lg">
                                 Restart test
-                            </button>
-                            <button
+                            </UButton>
+                            <UButton color="primary" variant="soft"
                                 type="button"
-                                class="tracer-button tracer-button--white tracer-button--lg"
+
                                 @click="scrollToAnswerResults"
-                            >
+                             size="lg">
                                 See what you got wrong ↓
-                            </button>
+                            </UButton>
                         </div>
                     </div>
                 </section>
 
                 <p
                     v-if="formError"
-                    class="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 dark:border-red-900/70 dark:bg-red-950/30 dark:text-red-200"
+                    class="mb-5 rounded-[var(--tracer-radius-control)] border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 dark:border-red-900/70 dark:bg-red-950/30 dark:text-red-200"
                     role="alert"
                 >
                     {{ formError }}
@@ -124,7 +124,7 @@
                     <article
                         v-for="(question, index) in testQuestions"
                         :key="question.id"
-                        class="rounded-2xl border p-5 shadow-sm transition sm:p-7"
+                        class="rounded-[var(--tracer-radius-surface)] border p-5 shadow-sm transition sm:p-7"
                         :class="questionCardClass(question)"
                     >
                         <div class="flex items-start justify-between gap-4">
@@ -157,36 +157,36 @@
                             v-if="question.kind === 'true_false'"
                             class="mt-8 grid grid-cols-2 gap-3"
                         >
-                            <button
+                            <UButton color="primary" variant="soft"
                                 v-for="choice in [true, false]"
                                 :key="String(choice)"
                                 type="button"
-                                class="min-h-14 rounded-xl border px-4 py-3 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-default dark:focus-visible:ring-offset-slate-950"
+                                class="min-h-14 rounded-[var(--tracer-radius-control)] border px-4 py-3 text-base font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-default dark:focus-visible:ring-offset-slate-950"
                                 :class="choiceClass(question, choice)"
                                 :disabled="testSubmitted"
                                 :aria-pressed="responseFor(question.id) === choice"
                                 @click="setResponse(question.id, choice)"
                             >
                                 {{ choice ? t("common.true") : t("common.false") }}
-                            </button>
+                            </UButton>
                         </div>
 
                         <div
                             v-else-if="question.kind === 'multiple_choice'"
                             class="mt-8 grid gap-3"
                         >
-                            <button
+                            <UButton color="primary" variant="soft"
                                 v-for="(option, optionIndex) in question.options"
                                 :key="`${question.id}:${optionIndex}`"
                                 type="button"
-                                class="min-h-14 rounded-xl border px-4 py-3 text-left text-sm font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-default dark:focus-visible:ring-offset-slate-950"
+                                class="min-h-14 rounded-[var(--tracer-radius-control)] border px-4 py-3 text-left text-sm font-semibold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:cursor-default dark:focus-visible:ring-offset-slate-950"
                                 :class="choiceClass(question, optionIndex)"
                                 :disabled="testSubmitted"
                                 :aria-pressed="responseFor(question.id) === optionIndex"
                                 @click="setResponse(question.id, optionIndex)"
                             >
                                 <MarkdownRenderer :markdown="option" variant="compact" />
-                            </button>
+                            </UButton>
                         </div>
 
                         <div v-else class="mt-8">
@@ -197,19 +197,19 @@
                                 Your answer
                             </label>
                             <div class="flex items-end gap-2">
-                                <textarea
+                                <UTextarea
                                     :id="`test-written-${index}`"
                                     :value="writtenDraftFor(question.id)"
-                                    rows="1"
-                                    class="h-12 w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-default disabled:opacity-70 dark:bg-slate-950 dark:text-white dark:focus:ring-amber-900"
+                                    :rows="1"
+                                    class="w-full resize-none"
                                     :class="writtenAnswerClass(question)"
                                     :disabled="testSubmitted || testGradingBusy"
                                     placeholder="Type your answer…"
                                     @input="onWrittenDraftInput(question.id, $event)"
                                 />
-                                <button
+                                <UButton color="primary" variant="soft"
                                     type="button"
-                                    class="inline-flex h-12 shrink-0 items-center rounded-xl border border-amber-500 bg-amber-400 px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                                    class="inline-flex h-12 shrink-0 items-center rounded-[var(--tracer-radius-control)] border border-amber-500 bg-amber-400 px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
                                     :disabled="
                                         testSubmitted ||
                                         testGradingBusy ||
@@ -223,11 +223,11 @@
                                             ? "Saved"
                                             : "Save"
                                     }}
-                                </button>
+                                </UButton>
                             </div>
                             <div
                                 v-if="testSubmitted && writtenGradeFor(question.id)"
-                                class="mt-3 rounded-lg border px-4 py-3 text-sm"
+                                class="mt-3 rounded-[var(--tracer-radius-surface)] border px-4 py-3 text-sm"
                                 :class="
                                     writtenGradeFor(question.id)?.isCorrect
                                         ? 'border-emerald-300 bg-emerald-50/80 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100'
@@ -252,7 +252,7 @@
                 </div>
 
                 <div v-else-if="!testSubmitted" class="mt-10 flex flex-col items-center">
-                    <button
+                    <UButton color="primary" variant="soft"
                         type="button"
                         class="min-w-52 rounded-full border border-orange-500 bg-orange-400 px-8 py-3.5 text-base font-semibold text-slate-950 shadow-sm transition hover:bg-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-slate-950"
                         :disabled="
@@ -263,7 +263,7 @@
                     >
                         <LoadingSpinner v-if="testGradingBusy" size="sm" label="Grading…" />
                         <template v-else>Submit test</template>
-                    </button>
+                    </UButton>
                     <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
                         {{
                             testGradingBusy
@@ -289,20 +289,20 @@
               Your answers and current test progress will be lost.
           </p>
           <div class="mt-5 flex flex-wrap justify-end gap-2">
-              <button
+              <UButton color="primary" variant="soft"
                   type="button"
-                  class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                  class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
                   @click="quitTestOpen = false"
               >
                   {{ t("common.cancel") }}
-              </button>
-              <button
+              </UButton>
+              <UButton color="primary" variant="soft"
                   type="button"
-                  class="inline-flex items-center rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-offset-slate-950"
+                  class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-red-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-500 dark:focus-visible:ring-offset-slate-950"
                   @click="confirmQuitTest"
               >
                   Quit test
-              </button>
+              </UButton>
           </div>
         </BaseModal>
     </main>

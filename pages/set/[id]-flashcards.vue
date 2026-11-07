@@ -3,7 +3,7 @@
         <!-- Header with Back button and progress -->
         <div
             data-tauri-drag-region
-            class="border-b border-slate-200 bg-white px-3 py-4 dark:border-slate-800 dark:bg-slate-950 select-none sm:px-6"
+            class="bg-white px-3 py-4 dark:bg-slate-950 select-none sm:px-6"
         >
             <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                 <BackButton class="justify-self-start" native-window-controls-safe compact-on-mobile />
@@ -18,7 +18,7 @@
                         <button
                             ref="flashcardSettingsButtonEl"
                             type="button"
-                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :aria-label="t('set.flashcardSettings')"
                             :title="t('set.flashcardSettings')"
                             :aria-expanded="flashcardSettingsOpen"
@@ -33,7 +33,7 @@
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.8"
-                                class="h-4 w-4"
+                                class="h-5 w-5"
                             >
                                 <path
                                     stroke-linecap="round"
@@ -46,82 +46,12 @@
 
                         <div
                             v-if="flashcardSettingsOpen"
-                            class="absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                            class="flashcard-settings-menu absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:bg-slate-950 dark:shadow-black/30"
                             role="menu"
                             :aria-label="t('set.flashcardSettings')"
                         >
-                            <button
-                                type="button"
-                                role="menuitemcheckbox"
-                                :aria-checked="shuffleEnabled"
-                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
-                                :disabled="totalCount === 0"
-                                @click="shuffleFromFlashcardSettings"
-                            >
-                                <span>{{ t("set.shuffle") }}</span>
-                                <span class="w-4 text-center" aria-hidden="true">{{ shuffleEnabled ? "✓" : "" }}</span>
-                            </button>
-                            <button
-                                type="button"
-                                role="menuitemcheckbox"
-                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 dark:text-slate-50 dark:hover:bg-slate-900"
-                                :aria-checked="smartReviewEnabled"
-                                @click="toggleSmartReview"
-                            >
-                                <span>Smart Review</span><span aria-hidden="true">{{ smartReviewEnabled ? "✓" : "" }}</span>
-                            </button>
-                            <button
-                                type="button"
-                                role="menuitemcheckbox"
-                                :aria-checked="starredOnly"
-                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
-                                :disabled="
-                                    starredStudyCount === 0 && !starredOnly
-                                "
-                                @click="toggleStarredOnlyFromFlashcardSettings"
-                            >
-                                <span>{{ t("set.starredOnly") }}</span>
-                                <span
-                                    class="w-4 text-center"
-                                    aria-hidden="true"
-                                    >{{ starredOnly ? "✓" : "" }}</span
-                                >
-                            </button>
-                            <div class="my-1 border-t border-slate-200 dark:border-slate-800" />
-                            <button
-                                v-for="filter in (['learning', 'mastered', 'all'] as const)"
-                                :key="filter"
-                                type="button"
-                                role="menuitemradio"
-                                :aria-checked="flashcardStudyFilter === filter"
-                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 dark:text-slate-50 dark:hover:bg-slate-900"
-                                @click="selectFlashcardStudyFilter(filter)"
-                            >
-                                <span>{{ filter === 'all' ? t('set.filterAll') : t(`set.${filter}`) }}</span>
-                                <span class="w-4 text-center" aria-hidden="true">{{ flashcardStudyFilter === filter ? '✓' : '' }}</span>
-                            </button>
-                            <button
-                                type="button"
-                                role="menuitem"
-                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
-                                :disabled="allStudyTermIds.length === 0"
-                                @click="restartFromFlashcardSettings"
-                            >
-                                {{ t("common.restart") }}
-                            </button>
-                            <div
-                                class="my-1 border-t border-slate-200 dark:border-slate-800"
-                            />
-                            <button
-                                type="button"
-                                role="menuitem"
-                                class="flex w-full items-center px-3 py-2 text-start text-sm text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 disabled:opacity-50 dark:text-slate-50 dark:hover:bg-slate-900"
-                                :disabled="flashcardFrontPreferenceBusy"
-                                @click="togglePreferredFlashcardFront"
-                            >
-                                {{ preferredFlashcardFrontOptionLabel }}
-                            </button>
-                        </div>
+<FlashcardSettingsMenu :shuffle="shuffleEnabled" :starred="starredOnly" :smart-review="smartReviewEnabled" :selected="flashcardStudyFilter" :empty="totalCount === 0" :front-busy="flashcardFrontPreferenceBusy" :star-disabled="starredStudyCount === 0 && !starredOnly" :restart-disabled="allStudyTermIds.length === 0" :shuffle-label="t('set.shuffle')" :front-label="preferredFlashcardFrontOptionLabel" :starred-label="t('set.starredOnly')" :restart-label="t('common.restart')" :filters="(['learning', 'mastered', 'all'] as const).map(value => ({ value, label: value === 'all' ? t('set.filterAll') : t(`set.${value}`) }))" @shuffle="shuffleFromFlashcardSettings" @front="togglePreferredFlashcardFront" @star="toggleStarredOnlyFromFlashcardSettings" @smart="toggleSmartReview" @filter="selectFlashcardStudyFilter" @restart="restartFromFlashcardSettings" />
+</div>
                     </div>
                 </div>
             </div>
@@ -131,12 +61,12 @@
         <div class="tracer-fullscreen-content flex-1 flex flex-col items-center justify-center px-6 py-8">
             <div v-if="smartReviewEnabled" class="mb-6 text-center select-none">
                 <div v-if="smartReviewEnabled" class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
-                    <button v-for="filter in reviewFilters" :key="filter.value" type="button"
+                    <UButton color="primary" variant="soft" v-for="filter in reviewFilters" :key="filter.value" type="button"
                         class="rounded-full border px-3 py-1 transition-colors"
-                        :class="reviewFilter === filter.value ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200' : 'border-slate-200 text-slate-600 hover:border-amber-300 dark:border-slate-700 dark:text-slate-300'"
+                        :class="reviewFilter === filter.value ? 'border-transparent bg-slate-950 text-white dark:bg-white dark:text-slate-950' : 'border-slate-200 text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:text-slate-300'"
                         @click="setReviewFilter(filter.value)">
                         {{ filter.value === 'due' && filter.count > 0 ? t('set.reviewReadyNow') : filter.label }} ({{ filter.count }})
-                    </button>
+                    </UButton>
                     <p
                         v-if="dueCount === 0 && nextReviewText"
                         class="w-full pt-1 text-slate-500 dark:text-slate-400"
@@ -170,26 +100,26 @@
                     <div
                         class="mt-6 flex flex-wrap justify-center gap-2 select-none"
                     >
-                        <button
+                        <UButton color="primary" variant="soft"
                             v-if="hasIncorrectCards"
                             type="button"
-                            class="inline-flex items-center rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
                             @click="resumeIncorrect"
                         >
                             {{ t("set.resumeIncorrect") }}
-                        </button>
-                        <button
+                        </UButton>
+                        <UButton color="primary" variant="soft"
                             type="button"
-                            class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :disabled="allStudyTermIds.length === 0"
                             @click="restartAllFlashcards"
                         >
                             {{ t("common.restart") }}
-                        </button>
+                        </UButton>
                         <NuxtLink
                             v-if="set"
                             :to="backToSetPath"
-                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
                             {{ t("set.backToSet") }}
                         </NuxtLink>
@@ -199,31 +129,29 @@
 
             <div
                 v-else-if="totalCount === 0"
-                class="w-full max-w-2xl rounded-lg border border-orange-200 bg-orange-50 p-8 text-center text-orange-900 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-100"
+                class="w-full max-w-2xl rounded-[var(--tracer-radius-surface)] border border-orange-200 bg-orange-50 p-8 text-center text-orange-900 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-100"
             >
                 <p>{{ t("set.noCards") }}</p>
-                <button
+                <UButton color="primary" variant="soft"
                     type="button"
-                    class="mt-4 inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
+                    class="mt-4 inline-flex items-center rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
                     @click="restartAllFlashcards"
                 >
                     {{ t("common.restart") }}
-                </button>
+                </UButton>
             </div>
 
             <!-- Card -->
             <div v-else class="w-full flex flex-col items-center">
-                <div class="relative w-[calc(100%-2rem)] sm:w-[75vw]">
+                <div class="relative w-[calc(100%-2rem)] sm:w-[75vw]" :class="{ 'animate-card-swipe-left': isNavigating === 'next', 'animate-card-swipe-right': isNavigating === 'prev' }">
 <button
                     ref="viewerButtonEl"
                     type="button"
-                    class="relative flex touch-pan-y flex-col items-center justify-center w-full min-h-64 h-[55dvh] sm:h-[60vh] rounded-lg px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                    class="relative flex touch-pan-y flex-col items-center justify-center w-full min-h-64 h-[55dvh] sm:h-[60vh] rounded-[var(--tracer-radius-control)] px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
                     :class="[
                         flashcardSurfaceClass,
                         {
                             'animate-flip': isFlipping,
-                            'animate-card-swipe-left': isNavigating === 'next',
-                            'animate-card-swipe-right': isNavigating === 'prev',
                         },
                     ]"
                     :disabled="totalCount === 0 || flashcardAnswerBusy"
@@ -234,7 +162,7 @@
                 >
                     <span
                         v-if="isCurrentRetry"
-                        class="absolute top-4 right-4 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100"
+                        class="absolute top-4 right-4 rounded-[var(--tracer-radius-control)] border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100"
                     >
                         {{ t("set.tryAgain") }}
                     </span>
@@ -248,7 +176,7 @@
                         }}
                     </p>
                     <div
-                        class="flashcard-content-row mt-4 flex w-full flex-row items-center justify-center overflow-y-auto text-center text-4xl font-medium text-slate-900 dark:text-slate-50"
+                        class="flashcard-content-row mt-4 flex w-full flex-row items-center justify-center overflow-y-auto text-center text-4xl font-normal text-slate-900 dark:text-slate-50"
                         :class="{
                             'flashcard-content-row--paired':
                                 viewerImage && viewerHasText,
@@ -274,12 +202,12 @@
                         </div>
                     </div>
                 </button>
-<FlashcardStar :starred="isCurrentStarred" :disabled="!currentTerm || starBusy" @toggle="toggleStar" />
+<FlashcardStar bottom :class="{ 'animate-flip': isFlipping }" :starred="isCurrentStarred" :disabled="!currentTerm || starBusy" @toggle="toggleStar" />
 </div>
 
                 <div
                     v-if="isStarredOnlyEmpty"
-                    class="mt-4 w-full max-w-2xl rounded-md border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    class="mt-4 w-full max-w-2xl rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-200"
                 >
                     {{ t("set.noStarred") }}
                 </div>
@@ -291,78 +219,82 @@
                     class="mt-6 hidden w-[75vw] flex-wrap items-center justify-between gap-3 sm:flex"
                 >
                     <div class="flex flex-wrap gap-3">
-                        <button
+                        <UButton color="primary" variant="soft"
                             type="button"
-                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-amber-600 shadow-sm hover:border-amber-200 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-orange-700 shadow-sm hover:border-orange-200 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:text-orange-400 dark:hover:bg-orange-950/30"
                             :disabled="
                                 totalCount === 0 ||
                                 cursorIndex === 0 ||
                                 (flashcardAnswerBusy || !!isNavigating || isFlipping)
                             "
-                            @click="goPrev"
+                            :class="{ '!opacity-100': (isNavigating || isFlipping) && cursorIndex > 0 }" style="color: var(--color-orange-700)"
+                                            @click="goPrev"
                         >
                             ← {{ t("set.previous") }}
-                        </button>
+                        </UButton>
 
-                        <button
+                        <UButton color="primary" variant="soft"
                             type="button"
-                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :disabled="
                                 totalCount === 0 ||
                                 (flashcardAnswerBusy || !!isNavigating || isFlipping)
                             "
-                            @click="goNext"
+                            :class="{ '!opacity-100': isNavigating || isFlipping }"
+                                            @click="goNext"
                         >
                             {{ t("set.next") }} →
-                        </button>
+                        </UButton>
                     </div>
 
                     <div class="flex flex-wrap gap-3">
 
-                        <button
+                        <UButton color="primary" variant="soft"
                             type="button"
-                            class="inline-flex h-10 items-center justify-center rounded-xl border border-[#C14D4D] bg-white px-3 text-sm font-semibold text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                            class="inline-flex h-10 items-center justify-center rounded-[var(--tracer-radius-control)] border border-[#C14D4D] bg-white px-3 text-sm font-semibold text-[#C14D4D] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                             :disabled="!currentTerm || flashcardAnswerBusy"
                             @click="markIncorrect"
                         >
                             {{ t("set.missed") }}
-                        </button>
+                        </UButton>
 
-                        <button
+                        <UButton color="primary" variant="soft"
                             type="button"
-                            class="inline-flex h-10 items-center justify-center rounded-xl border border-[#2D8210] bg-white px-3 text-sm font-semibold text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
+                            class="inline-flex h-10 items-center justify-center rounded-[var(--tracer-radius-control)] border border-[#2D8210] bg-white px-3 text-sm font-semibold text-[#2D8210] shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
                             :disabled="!currentTerm || flashcardAnswerBusy"
                             @click="markCorrect"
                         >
                             {{ t("set.gotIt") }}
-                        </button>
+                        </UButton>
                     </div>
                 </div>
 
                 <SmartReviewRating class="sm:hidden w-[calc(100%-2rem)]" v-if="smartReviewEnabled" :disabled="!currentTerm || flashcardAnswerBusy" @rate="markRating" />
                                 <div v-else
                     class="mt-4 grid w-[calc(100%-2rem)] grid-cols-4 gap-2 sm:hidden">
-                    <button
+                    <UButton color="primary" variant="soft"
                         type="button"
                         class="mobile-fullscreen-action text-slate-700 dark:text-slate-200"
                         :disabled="totalCount === 0 || cursorIndex === 0 || (flashcardAnswerBusy || !!isNavigating || isFlipping)"
                         :aria-label="t('set.previous')"
                         :title="t('set.previous')"
-                        @click="goPrev"
+                        :class="{ '!opacity-100': (isNavigating || isFlipping) && cursorIndex > 0 }" style="color: var(--color-orange-700)"
+                                            @click="goPrev"
                     >
                         <span aria-hidden="true">←</span>
-                    </button>
-                    <button
+                    </UButton>
+                    <UButton color="primary" variant="soft"
                         type="button"
                         class="mobile-fullscreen-action text-slate-700 dark:text-slate-200"
                         :disabled="totalCount === 0 || (flashcardAnswerBusy || !!isNavigating || isFlipping)"
                         :aria-label="t('set.next')"
                         :title="t('set.next')"
-                        @click="goNext"
+                        :class="{ '!opacity-100': isNavigating || isFlipping }"
+                                            @click="goNext"
                     >
                         <span aria-hidden="true">→</span>
-                    </button>
-                    <button
+                    </UButton>
+                    <UButton color="primary" variant="soft"
                         type="button"
                         class="mobile-fullscreen-action border-red-400 text-red-500"
                         :disabled="!currentTerm || flashcardAnswerBusy"
@@ -371,8 +303,8 @@
                         @click="markIncorrect"
                     >
                         <span aria-hidden="true">×</span>
-                    </button>
-                    <button
+                    </UButton>
+                    <UButton color="primary" variant="soft"
                         type="button"
                         class="mobile-fullscreen-action border-green-500 text-green-600"
                         :disabled="!currentTerm || flashcardAnswerBusy"
@@ -381,7 +313,7 @@
                         @click="markCorrect"
                     >
                         <span aria-hidden="true">✓</span>
-                    </button>
+                    </UButton>
                 </div>
             </div>
         </div>
@@ -762,7 +694,7 @@ const flashcardSurfaceClass = computed(() => {
     if (flashcardAnswerFeedback.value === "incorrect") {
         return "border-2 border-red-700 bg-red-50/70 hover:bg-red-50/70 focus-visible:ring-red-300 dark:border-red-500 dark:bg-red-950/30 dark:hover:bg-red-950/30 dark:focus-visible:ring-red-800";
     }
-    return "border border-amber-500/70 bg-amber-50/20 hover:bg-amber-50/30 focus-visible:ring-amber-300 dark:border-amber-600/45 dark:bg-amber-950/5 dark:hover:bg-amber-950/10 dark:focus-visible:ring-amber-800";
+    return "border border-transparent bg-slate-50 hover:bg-slate-100 focus-visible:ring-slate-400 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500";
 });
 
 const isCurrentStarred = computed(() => {

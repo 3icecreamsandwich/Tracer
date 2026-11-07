@@ -9,7 +9,7 @@
             <NuxtLink
               :to="linkedSetUrl"
               data-testid="linked-set-link"
-              class="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-1 font-medium text-orange-700 underline decoration-orange-400 decoration-1 underline-offset-2 transition hover:bg-orange-100 hover:text-orange-800 focus-visible:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:bg-orange-950/25 dark:text-orange-300 dark:hover:bg-orange-950/45"
+              class="inline-flex items-center gap-1 rounded-[var(--tracer-radius-control)] bg-orange-50 px-2 py-1 font-medium text-orange-700 underline decoration-orange-400 decoration-1 underline-offset-2 transition hover:bg-orange-100 hover:text-orange-800 focus-visible:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:bg-orange-950/25 dark:text-orange-300 dark:hover:bg-orange-950/45"
             >
               {{ setTitle }}
             </NuxtLink>
@@ -18,16 +18,16 @@
 
         <NuxtLink
           :to="linkedSetUrl"
-          class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+          class="inline-flex items-center gap-2 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
         >
           {{ t('studyGuide.goToSet') }}
-          <svg aria-hidden="true" viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4h5v5M9 11l7-7M16 11v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h4" /></svg>
+          <svg aria-hidden="true" viewBox="0 0 20 20" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4h5v5M9 11l7-7M16 11v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h4" /></svg>
         </NuxtLink>
       </div>
 
       <div
         v-if="isWebPreview"
-        class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
+        class="mt-4 rounded-[var(--tracer-radius-surface)] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
         role="status"
         aria-live="polite"
       >
@@ -43,7 +43,7 @@
 
         <div
           v-else
-          class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+          class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
         >
           <MarkdownRenderer :markdown="displayMarkdown" />
         </div>

@@ -10,7 +10,7 @@
     <form @submit.prevent="submit">
       <label class="block">
         <span class="text-sm font-medium">{{ t('classroom.classCode') }}</span>
-        <input
+        <UInput
           v-model="code"
           data-autofocus
           required
@@ -18,7 +18,7 @@
           autocomplete="off"
           autocapitalize="characters"
           spellcheck="false"
-          class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-center font-mono text-xl font-semibold uppercase tracking-[0.12em] text-slate-950 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+          class="w-full mt-1.5"
           :placeholder="t('classroom.codePlaceholder')"
         />
       </label>

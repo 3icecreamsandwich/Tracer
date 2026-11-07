@@ -1,7 +1,7 @@
 <template>
   <section
     v-if="busy || response"
-    class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+    class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
     :aria-label="t('factCheck.title')"
   >
     <div>
@@ -11,13 +11,13 @@
     </div>
 
     <div
-      class="mt-4 max-h-[420px] overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
+      class="mt-4 max-h-[420px] overflow-y-auto rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
       role="log"
       aria-live="polite"
     >
       <div class="flex justify-start">
         <div
-          class="max-w-[85%] rounded-lg px-3 py-2"
+          class="max-w-[85%] rounded-[var(--tracer-radius-surface)] px-3 py-2"
           :class="busy && !response
             ? ''
             : 'border border-slate-200 bg-slate-50 shadow-sm dark:border-slate-700 dark:bg-slate-900'"

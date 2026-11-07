@@ -3,7 +3,7 @@
         <!-- Header with Back button and progress -->
         <div
             data-tauri-drag-region
-            class="border-b border-slate-200 bg-white px-3 py-4 dark:border-slate-800 dark:bg-slate-950 sm:px-6"
+            class="bg-white px-3 py-4 dark:bg-slate-950 sm:px-6"
         >
             <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                 <BackButton class="justify-self-start" native-window-controls-safe compact-on-mobile />
@@ -23,9 +23,9 @@
             </p>
 
             <!-- Results -->
-            <div v-if="matchIsFinished" class="w-full max-w-2xl select-none">
+            <div v-if="matchIsFinished" class="w-full max-w-5xl select-none">
                 <div
-                    class="tracer-result-surface p-8 text-center"
+                    class="tracer-result-surface flex min-h-[50vh] flex-col items-center justify-center p-8 text-center"
                 >
                     <h2
                         class="text-2xl font-semibold text-slate-900 dark:text-slate-50"
@@ -47,18 +47,18 @@
                     </p>
 
                     <div class="mt-6 flex flex-wrap justify-center gap-2">
-                        <button
+                        <UButton color="primary" variant="soft"
                             type="button"
-                            class="inline-flex items-center rounded-xl border border-orange-600 bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-orange-600 bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                             :disabled="!set || set.terms.length === 0"
                             @click="restartMatchRun"
                         >
                             {{ t("set.playAgain") }}
-                        </button>
+                        </UButton>
                         <NuxtLink
                             v-if="set"
                             :to="backToSetPath"
-                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         >
                             {{ t("set.backToSet") }}
                         </NuxtLink>
@@ -88,12 +88,12 @@
             <!-- Game grid -->
             <div v-else class="w-full max-w-3xl">
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                    <button
+                    <UButton color="primary" variant="soft"
                         v-for="tile in matchTiles"
                         :key="tile.id"
                         type="button"
                         data-match-tile="true"
-                        class="h-16 w-full rounded-md border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:h-28 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="h-16 w-full rounded-[var(--tracer-radius-control)] border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:h-28 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :class="matchTileClass(tile)"
                         :disabled="matchTileDisabled(tile) || matchBusy"
                         @click.stop="onMatchTileClick(tile)"
@@ -108,18 +108,18 @@
                                 variant="tile"
                             />
                         </span>
-                    </button>
+                    </UButton>
                 </div>
 
                 <div class="flex justify-center">
-                    <button
+                    <UButton color="primary" variant="soft"
                         type="button"
-                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :disabled="!set || set.terms.length === 0"
                         @click="restartMatchRun"
                     >
                         {{ t("common.restart") }}
-                    </button>
+                    </UButton>
                 </div>
             </div>
         </div>
@@ -408,9 +408,9 @@ function matchTileClass(tile: MatchTile) {
         return "border-amber-500 bg-amber-50 text-slate-900 ring-1 ring-amber-200 dark:border-amber-600 dark:bg-amber-950/25 dark:text-slate-50 dark:ring-amber-900/60";
     }
     if (revealed) {
-        return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50";
+        return "border-slate-200 bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50";
     }
-    return "border-slate-200 bg-slate-100 text-transparent hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900/70 dark:hover:bg-slate-800";
+    return "border-slate-200 bg-slate-100 text-transparent hover:bg-slate-200 dark:bg-slate-900/70 dark:hover:bg-slate-800";
 }
 
 function matchFindTile(id: string) {

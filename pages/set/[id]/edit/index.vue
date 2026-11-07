@@ -15,47 +15,47 @@
         </div>
 
         <div class="flex shrink-0 flex-wrap items-center gap-2">
-          <button
+          <UButton color="primary" variant="soft"
             v-if="!isPublishedEdit"
             type="button"
-            class="tracer-button tracer-button--white tracer-button--md"
+
             :disabled="busy || factCheckBusy || !setId"
             @click="onFactCheck"
-          >
+           size="md">
             <LoadingSpinner v-if="factCheckBusy" size="sm" :label="t('factCheck.loading')" />
             <template v-else>{{ t('factCheck.title') }}</template>
-          </button>
-          <button
+          </UButton>
+          <UButton color="primary" variant="soft"
             v-if="!isPublishedEdit"
             type="button"
-            class="inline-flex items-center rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
+            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-red-900/40 dark:bg-slate-950 dark:text-red-200 dark:hover:bg-red-950/40 dark:focus-visible:ring-red-500 dark:focus-visible:ring-offset-slate-950"
             :disabled="busy || factCheckBusy || !setId"
             @click="openDelete"
           >
             {{ t('common.delete') }}
-          </button>
-          <button
+          </UButton>
+          <UButton color="primary" variant="solid"
             type="button"
-            class="tracer-button tracer-button--dark tracer-button--md"
+
             :disabled="busy || factCheckBusy || !setId"
             @click="onUpdate()"
-          >
+           size="md">
             <LoadingSpinner v-if="busy" size="sm" />
             <template v-else>{{ isPublishedEdit ? 'Publish changes' : t('common.update') }}</template>
-          </button>
+          </UButton>
         </div>
       </div>
 
       <p v-if="draftRecovered" role="status" class="mt-4 text-sm text-amber-700 dark:text-amber-300">
         Recovered an unsaved draft. Review it before saving.
-        <button type="button" class="underline" :disabled="busy" @click="discardRecoveredDraft">Discard draft</button>
+        <UButton color="primary" variant="soft" type="button" class="underline" :disabled="busy" @click="discardRecoveredDraft">Discard draft</UButton>
       </p>
-      <section v-if="publication && !isWebPreview" class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-200 bg-orange-50/50 p-4 dark:border-orange-900 dark:bg-orange-950/20">
-        <p class="flex-1 text-sm text-slate-600 dark:text-slate-300">{{ t('public.editHint') }}</p>
+      <section v-if="publication && !isWebPreview" class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[var(--tracer-radius-surface)] border border-orange-200 bg-orange-50/50 p-4 dark:border-orange-900 dark:bg-orange-950/20">
+
         <AppButton variant="white" :busy="busy" :disabled="factCheckBusy" @click="onUpdate(false, true)"><AppIcon name="publish" />{{ t('public.updateVersion') }}</AppButton>
         <p v-if="publicationMessage" role="status" class="w-full text-sm">{{ publicationMessage }}</p>
       </section>
-      <p v-if="publicationLookupFailed" role="status" class="mt-4 text-sm text-slate-500">{{ t('public.loadFailed') }} <button type="button" class="underline" @click="loadPublication">{{ t('common.retry') }}</button></p>
+      <p v-if="publicationLookupFailed" role="status" class="mt-4 text-sm text-slate-500">{{ t('public.loadFailed') }} <UButton color="primary" variant="soft" type="button" class="underline" @click="loadPublication">{{ t('common.retry') }}</UButton></p>
 
       <p v-if="loadError" class="mt-6 text-sm text-red-700 dark:text-red-300">
         {{ loadError }}
@@ -65,56 +65,56 @@
       <fieldset v-else :disabled="busy || factCheckBusy" class="mt-6 min-w-0 space-y-4">
         <p
           v-if="isWebPreview"
-          class="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100"
+          class="rounded-[var(--tracer-radius-control)] border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100"
         >
           Changes in this demo are not saved.
         </p>
 
         <div>
           <label class="block text-sm font-medium" for="set-title">{{ t('create.title') }}</label>
-          <input
+          <UInput
             id="set-title"
             ref="titleEl"
             v-model="title"
             type="text"
             autocomplete="off"
-            class="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            class="w-full"
           />
         </div>
 
         <div>
           <label class="block text-sm font-medium" for="set-description">{{ t('create.description') }}</label>
-          <textarea
+          <UTextarea
             id="set-description"
             ref="descriptionEl"
             v-model="description"
-            rows="2"
-            class="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+            :rows="2"
+            class="w-full"
           />
         </div>
 
         <fieldset>
           <legend class="block text-sm font-medium">Set icon</legend>
           <div class="mt-2 grid grid-cols-5 gap-3 sm:grid-cols-9">
-            <button
+            <UButton color="primary" variant="soft"
               v-for="(option, index) in setIconOptions"
               :key="option.key"
               type="button"
-              class="aspect-square rounded-2xl border-2 bg-white p-1.5 transition hover:-translate-y-0.5 hover:border-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:bg-slate-950"
+              class="aspect-square rounded-[var(--tracer-radius-control)] border-2 bg-white p-1.5 transition hover:-translate-y-0.5 hover:border-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:bg-slate-950"
               :class="iconKey === option.key ? 'border-orange-500 ring-2 ring-orange-100 dark:ring-orange-950' : 'border-transparent'"
               :aria-label="`Choose set icon ${index + 1}`"
               :aria-pressed="iconKey === option.key"
               @click="iconKey = option.key"
             >
               <SetIcon :name="option.key" :tone="iconKey === option.key ? iconTone : 'original'" class="h-full w-full transition" />
-            </button>
+            </UButton>
           </div>
         </fieldset>
 
         <fieldset>
           <legend class="block text-sm font-medium">Icon color</legend>
           <div class="mt-2 flex flex-wrap items-center gap-3">
-            <button
+            <UButton color="primary" variant="soft"
               v-for="tone in setIconToneOptions"
               :key="tone.key"
               type="button"
@@ -126,7 +126,7 @@
               :title="tone.label"
               @click="iconTone = tone.key"
             />
-            <div class="ml-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
+            <div class="ml-1 flex items-center gap-2 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
               <SetIcon :name="iconKey" :tone="iconTone" class="h-10 w-10 transition" />
               <span class="text-sm font-medium text-slate-700 dark:text-slate-200">{{ setIconToneOptions.find((tone) => tone.key === iconTone)?.label }}</span>
             </div>
@@ -154,35 +154,35 @@
             <div
               v-for="(card, idx) in cards"
               :key="card.key"
-              class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+              class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             >
               <div class="flex items-start justify-between gap-3">
                 <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.card', { number: idx + 1 }) }}</p>
-                <button
+                <UButton color="primary" variant="soft"
                   v-if="cards.length > 1"
                   type="button"
-                  class="rounded-xl border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                  class="rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                   :disabled="busy"
                   @click="removeCard(idx)"
                 >
                   {{ t('common.remove') }}
-                </button>
+                </UButton>
               </div>
 
               <div class="mt-3 space-y-3">
                 <div>
                   <label class="block text-sm font-medium" :for="`term-${card.key}`">{{ t('create.term') }}</label>
                   <div class="mt-1 flex min-h-9 items-center gap-2">
-                    <button
+                    <UButton color="primary" variant="soft"
                       v-if="!card.frontImage"
                       type="button"
-                      class="tracer-button tracer-button--white tracer-button--md"
+
                       :disabled="busy"
                       :aria-label="`Add image to term for card ${idx + 1}`"
                       @click="openImagePicker(card.key, 'frontImage')"
-                    >
+                     size="md">
                       {{ t('create.addImage') }}
-                    </button>
+                    </UButton>
                     <template v-else>
                       <p
                         class="truncate text-xs font-medium text-slate-600 dark:text-slate-300"
@@ -191,23 +191,23 @@
                         {{ card.frontImage.filename }}
                       </p>
                       <label class="text-xs font-medium text-slate-600 dark:text-slate-300" :for="`term-image-alt-${card.key}`">Image description</label>
-                      <input
+                      <UInput
                         :id="`term-image-alt-${card.key}`"
                         v-model="card.frontImage.altText"
                         type="text"
                         maxlength="500"
                         placeholder="Describe this image for screen readers"
-                        class="w-full max-w-sm rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
+                        class="w-full max-w-sm"
                       />
-                      <button
+                      <UButton color="primary" variant="soft"
                         type="button"
-                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :disabled="busy"
                         :aria-label="`Remove image from term for card ${idx + 1}`"
                         @click="removeImage(card.key, 'frontImage')"
                       >
                         x
-                      </button>
+                      </UButton>
                     </template>
                     <input
                       :id="imageInputId(card.key, 'frontImage')"
@@ -217,12 +217,12 @@
                       @change="onImagePicked($event, card.key, 'frontImage')"
                     />
                   </div>
-                  <input
+                  <UInput
                     :id="`term-${card.key}`"
                     v-model="card.front"
                     type="text"
                     autocomplete="off"
-                    class="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    class="w-full mt-2"
                     @keydown="onCardKeydown($event, idx)"
                   />
                 </div>
@@ -230,16 +230,16 @@
                 <div>
                   <label class="block text-sm font-medium" :for="`definition-${card.key}`">{{ t('create.definition') }}</label>
                   <div class="mt-1 flex min-h-9 items-center gap-2">
-                    <button
+                    <UButton color="primary" variant="soft"
                       v-if="!card.backImage"
                       type="button"
-                      class="tracer-button tracer-button--white tracer-button--md"
+
                       :disabled="busy"
                       :aria-label="`Add image to definition for card ${idx + 1}`"
                       @click="openImagePicker(card.key, 'backImage')"
-                    >
+                     size="md">
                       {{ t('create.addImage') }}
-                    </button>
+                    </UButton>
                     <template v-else>
                       <p
                         class="truncate text-xs font-medium text-slate-600 dark:text-slate-300"
@@ -248,23 +248,23 @@
                         {{ card.backImage.filename }}
                       </p>
                       <label class="text-xs font-medium text-slate-600 dark:text-slate-300" :for="`definition-image-alt-${card.key}`">Image description</label>
-                      <input
+                      <UInput
                         :id="`definition-image-alt-${card.key}`"
                         v-model="card.backImage.altText"
                         type="text"
                         maxlength="500"
                         placeholder="Describe this image for screen readers"
-                        class="w-full max-w-sm rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
+                        class="w-full max-w-sm"
                       />
-                      <button
+                      <UButton color="primary" variant="soft"
                         type="button"
-                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                         :disabled="busy"
                         :aria-label="`Remove image from definition for card ${idx + 1}`"
                         @click="removeImage(card.key, 'backImage')"
                       >
                         x
-                      </button>
+                      </UButton>
                     </template>
                     <input
                       :id="imageInputId(card.key, 'backImage')"
@@ -274,11 +274,11 @@
                       @change="onImagePicked($event, card.key, 'backImage')"
                     />
                   </div>
-                  <textarea
+                  <UTextarea
                     :id="`definition-${card.key}`"
                     v-model="card.back"
-                    rows="2"
-                    class="mt-2 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    :rows="2"
+                    class="w-full mt-2 resize-y"
                     @keydown="onCardKeydown($event, idx)"
                   />
                 </div>
@@ -287,14 +287,14 @@
           </div>
 
           <div class="pt-4">
-            <button
+            <UButton color="primary" variant="soft"
               type="button"
-              class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="inline-flex items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               :disabled="busy"
               @click="appendCardAndFocus(cards.length)"
             >
               +
-            </button>
+            </UButton>
           </div>
         </div>
       </fieldset>
@@ -311,22 +311,22 @@
         This deletes the set and its study guide from your account on all devices.
       </p>
       <div class="mt-4 flex flex-wrap justify-end gap-2">
-        <button
+        <UButton color="primary" variant="soft"
           type="button"
-          class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           :disabled="busy"
           @click="closeDelete"
         >
           {{ t('common.cancel') }}
-        </button>
-        <button
+        </UButton>
+        <UButton color="primary" variant="soft"
           type="button"
-          class="inline-flex items-center rounded-xl border border-red-600 bg-white px-4 py-2.5 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
+          class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-red-600 bg-white px-4 py-2.5 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30 dark:focus-visible:ring-offset-slate-950"
           :disabled="busy"
           @click="onDelete"
         >
           {{ t('common.delete') }}
-        </button>
+        </UButton>
       </div>
     </BaseModal>
 
@@ -406,9 +406,9 @@ let draftWrites = Promise.resolve()
 let savedDraft = ''
 const title = ref('')
 const description = ref('')
-const descriptionEl = ref<HTMLTextAreaElement | null>(null)
+const descriptionEl = ref<{ textareaRef: HTMLTextAreaElement } | null>(null)
 function resizeDescription() {
-  const el = descriptionEl.value
+  const el = descriptionEl.value?.textareaRef
   if (!el) return
   el.style.height = 'auto'
   el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`
@@ -430,7 +430,7 @@ const fallbackModelIds = ref<string[]>([])
 const loadError = ref<string | null>(null)
 const formError = ref<string | null>(null)
 const deleteOpen = ref(false)
-const titleEl = ref<HTMLInputElement | null>(null)
+const titleEl = ref<{ inputRef: HTMLInputElement } | null>(null)
 const duplicateReviewOpen = ref(false)
 const duplicateIssues = ref<DuplicateCardIssue[]>([])
 let duplicateReviewContinuation: (() => void) | null = null
@@ -708,7 +708,7 @@ async function loadSet() {
     }
     initialLoading.value = false
     await nextTick()
-    titleEl.value?.focus()
+    titleEl.value?.inputRef?.focus()
   } catch (err) {
     loadError.value = toErrorMessage(err, 'Failed to load set.')
   } finally {
@@ -743,7 +743,7 @@ async function loadPublishedSet() {
 
     initialLoading.value = false
     await nextTick()
-    titleEl.value?.focus()
+    titleEl.value?.inputRef?.focus()
   } catch (err) {
     loadError.value = toErrorMessage(
       err,
@@ -763,7 +763,7 @@ async function initWebDemoSet() {
   busy.value = false
   initialLoading.value = false
   await nextTick()
-  titleEl.value?.focus()
+  titleEl.value?.inputRef?.focus()
 }
 
 watch(language, async () => {

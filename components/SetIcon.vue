@@ -1,6 +1,6 @@
 <template>
   <span
-    class="inline-flex shrink-0 items-center justify-center rounded-xl p-2"
+    class="inline-flex shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] p-2"
     :style="setIconToneStyle(tone)"
     aria-hidden="true"
   >

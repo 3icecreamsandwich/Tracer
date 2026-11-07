@@ -45,6 +45,11 @@ export function navigateBack(
   path: string,
   historyState: unknown,
 ) {
+  if (/^\/set\/[^/]+-(?:flashcards|learn|match|test)\/?$/.test(path)) {
+    void router.push(fallbackBackTarget(path))
+    return
+  }
+
   if (hasInAppBackEntry(historyState)) {
     router.back()
     return

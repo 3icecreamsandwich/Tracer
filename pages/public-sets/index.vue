@@ -1,15 +1,15 @@
 <template>
-  <main class="tracer-page mx-auto max-w-[1440px] px-6 py-10 sm:px-8">
+  <main class="tracer-page mx-auto max-w-6xl px-6 py-8">
     <h1 class="text-center text-4xl font-bold tracking-tight">{{ t('public.catalog') }}</h1>
     <div class="mx-auto mt-6 max-w-4xl">
       <div class="flex gap-3">
         <label class="sr-only" for="catalog-search">{{ t('public.search') }}</label>
-        <input
+        <UInput
           id="catalog-search"
           v-model="search"
           type="search"
           :placeholder="t('public.search')"
-          class="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:border-slate-700 dark:bg-slate-950"
+          class="w-full min-w-0 flex-1"
         />
         <AppButton
           variant="white"
@@ -23,7 +23,7 @@
       <fieldset v-if="filtersOpen" id="catalog-filters" class="mt-4">
         <legend class="mb-2 text-sm text-slate-500">{{ t('public.filterHint') }}</legend>
         <div class="flex flex-wrap gap-2">
-          <button
+          <UButton color="primary" variant="soft"
             v-for="tag in PUBLIC_SET_TAGS"
             :key="tag"
             type="button"
@@ -35,7 +35,7 @@
             @click="toggle(tag)"
           >
             {{ t(`public.tag.${tag}`) }}
-          </button>
+          </UButton>
           <AppButton v-if="tags.length" variant="white" @click="tags = []">{{
             t('public.clear')
           }}</AppButton>
@@ -49,35 +49,20 @@
     >
       {{ t(search || tags.length ? 'public.noResults' : 'public.empty') }}
     </p>
-    <ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <li v-for="item in items" :key="item.id">
-        <NuxtLink
-          :to="`/public-sets/${item.id}`"
-          @pointerenter="prefetchPublishedSet(item.id)"
-          @focus="prefetchPublishedSet(item.id)"
-          class="flex h-56 flex-col rounded-2xl border border-slate-300 bg-white p-5 transition hover:border-orange-400 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:border-slate-700 dark:bg-slate-950"
-        >
-          <h2 class="line-clamp-2 text-xl font-semibold">{{ item.title }}</h2>
-          <p class="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-300">
-            {{ item.description }}
-          </p>
-          <p class="mt-3 text-xs text-slate-500">
-            {{ t('public.cards', { count: item.card_count }) }}
-          </p>
-          <div class="mt-auto flex items-center gap-2 pt-4">
-            <span
-              aria-hidden="true"
-              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white"
-              >{{ item.publisher_name.slice(0, 1).toUpperCase() }}</span
-            ><div class="min-w-0">
-              <div class="flex items-center gap-1.5">
-                <span class="truncate text-sm font-semibold">{{ item.publisher_name }}</span>
-                <span v-if="item.publisher_is_dev" class="relative top-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900" title="Tracer developer"><AppIcon name="crown" :size="15" :stroke-width="2.4" /> DEV</span>
-              </div>
-              <p v-if="item.publisher_username" class="truncate text-xs text-slate-500">@{{ item.publisher_username }}</p>
-            </div>
-          </div>
-        </NuxtLink>
+    <div v-if="!search.trim() && !tags.length" class="mt-8 space-y-8">
+      <section v-for="section in popularSections" :key="section.tag" :aria-label="t(`public.tag.${section.tag}`)">
+        <h2 class="text-xl font-semibold">{{ t(`public.tag.${section.tag}`) }}</h2>
+        <ul class="mt-3 flex gap-4 overflow-x-auto pb-3">
+          <li v-for="item in section.items" :key="item.id" class="w-64 shrink-0" @pointerenter="prefetchPublishedSet(item.id)" @focusin="prefetchPublishedSet(item.id)">
+            <LibraryCard kind="set" :title="item.title" :description="item.description" :author="item.publisher_name" :to="`/public-sets/${item.id}`" />
+          </li>
+        </ul>
+      </section>
+      <h2 v-if="popularSections.length" class="text-xl font-semibold">More sets</h2>
+    </div>
+    <ul class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <li v-for="item in remainingItems" :key="item.id" @pointerenter="prefetchPublishedSet(item.id)" @focusin="prefetchPublishedSet(item.id)">
+        <LibraryCard kind="set" :title="item.title" :description="item.description" :author="item.publisher_name" :to="`/public-sets/${item.id}`" />
       </li>
     </ul>
     <div ref="sentinel" class="flex min-h-24 flex-col items-center justify-center gap-3 py-6">
@@ -96,6 +81,8 @@ import { useAppLanguage } from '~/src/composables/language'
 import {
   PUBLIC_SET_TAGS,
   listPublishedSets,
+  listPopularPublishedSets,
+  type PopularPublishedSet,
   prefetchPublishedSet,
   type PublishedSetSummary,
   type PublicSetTag,
@@ -108,6 +95,17 @@ const items = ref<PublishedSetSummary[]>([]),
   busy = ref(false),
   error = ref(false),
   hasMore = ref(true)
+const popular = ref<PopularPublishedSet[]>([])
+const popularSections = computed(() => {
+  const groups = new Map<PublicSetTag, PopularPublishedSet[]>()
+  for (const item of popular.value) groups.set(item.topic, [...(groups.get(item.topic) ?? []), item])
+  return [...groups].map(([tag, items]) => ({ tag, items }))
+})
+const remainingItems = computed(() => {
+  if (search.value.trim() || tags.value.length) return items.value
+  const featured = new Set(popular.value.map(item => item.id))
+  return items.value.filter(item => !featured.has(item.id))
+})
 const sentinel = ref<HTMLElement | null>(null)
 let generation = 0,
   timer: ReturnType<typeof setTimeout> | undefined,
@@ -154,6 +152,7 @@ watch([search, tags], () => {
   }, 300)
 })
 onMounted(() => {
+  void listPopularPublishedSets().then(rows => { popular.value = rows }).catch(() => {})
   observer = new IntersectionObserver(
     (entries) => {
       if (entries.some((e) => e.isIntersecting) && !error.value) void loadMore()

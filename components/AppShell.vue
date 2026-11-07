@@ -8,17 +8,20 @@
       @pointerdown="onWindowDrag"
     />
 
-    <div v-if="!hideFloatingBackButton" class="tracer-back-control fixed bottom-6 left-6 z-50">
+    <div v-if="!hideFloatingBackButton" :class="{ 'tracer-back-with-sidebar': !hideNavbar }" class="tracer-back-control fixed bottom-6 left-6 z-50">
       <BackButton />
     </div>
 
-    <div class="flex-1">
-      <div v-if="creationNavigationError" role="alert" class="mx-auto mt-4 max-w-3xl rounded-xl border border-orange-300 bg-orange-50 p-4 text-orange-950 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-50">
+    <div class="tracer-workspace flex flex-1 min-w-0">
+      <AppSidebar v-if="!hideNavbar" />
+      <div class="tracer-workspace-content flex-1 min-w-0" :class="{ 'has-sidebar': !hideNavbar }">
+      <div v-if="creationNavigationError" role="alert" class="mx-auto mt-4 max-w-3xl rounded-[var(--tracer-radius-surface)] border border-orange-300 bg-orange-50 p-4 text-orange-950 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-50">
         <p class="font-semibold">Could not open the creation page.</p>
         <p class="mt-1 break-words text-sm">{{ creationNavigationError.message }}</p>
         <a :href="creationNavigationError.path" class="mt-3 inline-block font-semibold underline">Reload this page and try again</a>
       </div>
       <slot />
+      </div>
     </div>
 
     <LazyFloatingPageChat v-if="!hideFloatingChat" />
@@ -36,6 +39,9 @@
  import { useTestSessionState } from '~/src/composables/test-session'
  import { redactSensitiveText } from '~/src/composables/security/redact'
 
+ import { releaseOrphanedScrollLock } from '~/src/composables/modal-stack'
+ import { useRecentLibrary } from '~/src/composables/recent-library'
+ const { record } = useRecentLibrary()
  const route = useRoute()
  const isDesktop = ref(false)
  async function onWindowDrag(event: PointerEvent) {
@@ -67,7 +73,7 @@
  function onGlobalKeydown(event: KeyboardEvent) {
    // Cancel the native window action without stopping propagation so Escape
    // still closes Tracer dialogs, menus, and other transient UI.
-   if (shouldPreventFullscreenExit(event)) event.preventDefault()
+   if (shouldPreventFullscreenExit(event) && !document.querySelector('[data-dismissable-layer]')) event.preventDefault()
 
    const action = resolveAppShortcut(event, route.path)
    if (!action) return
@@ -105,18 +111,20 @@
 
  let stopStudyTracking: (() => void) | undefined
  onMounted(() => {
+   releaseOrphanedScrollLock()
    removeNavigationErrorHandler = router.onError((error, to) => {
      if (!/^\/create\/(basic|generate|synthesize)\/?$/.test(to.path)) return
      const message = redactSensitiveText(error instanceof Error ? error.message : String(error))
      console.error('[Tracer] Creation page navigation failed:', redactSensitiveText(error instanceof Error ? error.stack ?? message : message))
      creationNavigationError.value = { path: router.resolve(to.fullPath).href, message }
    })
-   removeNavigationSuccessHandler = router.afterEach((_to, _from, error) => {
-     if (!error) creationNavigationError.value = null
+   removeNavigationSuccessHandler = router.afterEach((to, _from, error) => {
+     if (!error) { creationNavigationError.value = null; record(to.path) }
    })
+   record(router.currentRoute.value.path)
    isDesktop.value = hasTauriRuntime()
    window.addEventListener('keydown', onGlobalKeydown, { capture: true })
-   stopStudyTracking = startStudyStreakTracking(() => isStudyRoute.value)
+   stopStudyTracking = startStudyStreakTracking(() => isStudyRoute.value || (/^\/(?:set|public-sets)\/[^/]+\/?$/.test(route.path) && route.query.mode !== 'chat'))
  })
 
  onBeforeUnmount(() => {

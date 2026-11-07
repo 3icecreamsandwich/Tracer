@@ -340,3 +340,17 @@ export async function updateOwnedPublishedSet(
   clearPublishedSetCache()
   return data.id as string
 }
+
+export type PopularPublishedSet = PublishedSetSummary & { topic: PublicSetTag }
+export async function listPopularPublishedSets(): Promise<PopularPublishedSet[]> {
+  const { data, error } = await getPublicSupabaseClient().rpc('popular_published_sets')
+  if (error) throw error
+  return (data ?? []) as PopularPublishedSet[]
+}
+export async function recordPublishedSetOpen(id: string): Promise<void> {
+  const key = 'tracer:public-catalog-device'
+  let device = localStorage.getItem(key)
+  if (!device) { device = crypto.randomUUID(); localStorage.setItem(key, device) }
+  const { error } = await getPublicSupabaseClient().rpc('record_published_set_open', { p_set_id: id, p_device_id: device })
+  if (error) throw error
+}

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const generateTextMock = vi.hoisted(() => vi.fn())
+const builtinGenerateMock = vi.hoisted(() => vi.fn())
+vi.mock('../../src/composables/ai/builtin/client', () => ({ builtinGenerate: builtinGenerateMock }))
 
 vi.mock('ai', () => ({
   generateText: generateTextMock
@@ -238,4 +240,22 @@ describe('linked-folder generation', () => {
     expect(onRawOutput).not.toHaveBeenCalled()
   })
 
+})
+
+
+const promptOnlyOutput = '```study_guide_md\n# Cells\nCells are the basic units of life.\n```\n```flashcards_tsv\nCell\tThe basic unit of life\n```'
+it('generates from a prompt without creating an empty BYOK batch result',async()=>{
+  generateTextMock.mockReset();generateTextMock.mockResolvedValueOnce({text:promptOnlyOutput,finishReason:'stop'})
+  const result=await generateLinkedFolderContent({model:{},sources:[],instructions:'Teach cell biology'})
+  expect(result.terms).toHaveLength(1)
+  expect(result.studyGuideMarkdown).toContain('Cells')
+  expect(generateTextMock.mock.calls[0][0].prompt).toContain('established subject knowledge')
+})
+it('supports prompt-only generation through an existing hosted built-in gateway',async()=>{
+  builtinGenerateMock.mockReset();builtinGenerateMock.mockResolvedValueOnce(promptOnlyOutput)
+  const result=await generateLinkedFolderContent({model:{provider:'tracer.builtin'},sources:[],instructions:'Teach cell biology'})
+  expect(result.terms).toHaveLength(1)
+  const request=builtinGenerateMock.mock.calls[0][0]
+  expect(request.input.sources[0]).toMatchObject({kind:'text',method:'text'})
+  expect(request.input.sources[0].text).toContain('No files were uploaded')
 })

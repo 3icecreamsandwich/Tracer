@@ -1,5 +1,5 @@
 <template>
-  <button
+  <UButton color="primary" variant="soft"
     type="button"
     :disabled="isDisabled"
     :aria-label="props.label ?? t('common.back')"
@@ -9,7 +9,7 @@
   >
     <CreateChevron class="-ml-1" :direction="language === 'ar' ? 'right' : 'left'" />
     <span :class="compactOnMobile ? 'hidden sm:inline' : ''">{{ props.label ?? t('common.back') }}</span>
-  </button>
+  </UButton>
 </template>
 
 <script setup lang="ts">

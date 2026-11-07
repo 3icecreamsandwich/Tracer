@@ -8,21 +8,21 @@
         <form class="mt-6 space-y-4" @submit.prevent="createAccount">
           <div>
             <label class="block text-sm font-medium" for="child-name">Name</label>
-            <input id="child-name" v-model="name" autocomplete="name" required class="auth-input" :disabled="busy" />
+            <UInput id="child-name" v-model="name" autocomplete="name" required class="w-full" :disabled="busy" />
           </div>
           <div>
             <label class="block text-sm font-medium" for="child-email">Email</label>
-            <input id="child-email" v-model="email" type="email" autocomplete="email" required class="auth-input" :disabled="busy" />
+            <UInput id="child-email" v-model="email" type="email" autocomplete="email" required class="w-full" :disabled="busy" />
           </div>
           <div>
             <label class="block text-sm font-medium" for="child-password">Password</label>
-            <input id="child-password" v-model="password" type="password" autocomplete="new-password" minlength="8" required class="auth-input" :disabled="busy" />
+            <UInput id="child-password" v-model="password" type="password" autocomplete="new-password" minlength="8" required class="w-full" :disabled="busy" />
           </div>
           <label class="flex items-start gap-3 text-sm leading-5 text-slate-700 dark:text-slate-200">
-            <input v-model="acceptedTerms" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 accent-slate-900" :disabled="busy" />
+            <UCheckbox v-model="acceptedTerms"  class="mt-0.5 h-5 w-5 shrink-0 rounded-[var(--tracer-radius-control)] border-slate-300 accent-slate-900" :disabled="busy" />
             <span>I agree to the <NuxtLink to="/terms" class="underline">Terms of Service</NuxtLink> and <NuxtLink to="/privacy" class="underline">Privacy Policy</NuxtLink>.</span>
           </label>
-          <button type="submit" class="auth-primary" :disabled="busy">{{ busy ? 'Creating…' : 'Create account' }}</button>
+          <UButton color="primary" variant="soft" type="submit" class="auth-primary" :disabled="busy">{{ busy ? 'Creating…' : 'Create account' }}</UButton>
         </form>
       </template>
       <p v-if="message" class="mt-4 text-sm text-emerald-700 dark:text-emerald-300" role="status">{{ message }}</p>

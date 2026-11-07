@@ -19,7 +19,7 @@ async function fixture(context:BrowserContext,page:Page,scenario='recover') {
  rows.set(`${owner}:preferences:app`,{owner_id:owner,kind:'preferences',id:'app',revision:1,deleted:false,payload:{aiMode:'builtin',defaultModelId:null,fallbackModelIds:[]}})
  rows.set(`${owner}:set:${setId}`,{owner_id:owner,kind:'set',id:setId,revision:1,deleted:false,payload:{id:setId,title:'Built-in water fixture',description:'Water is H2O.',terms:[{id:'t1',front:'Water',back:'H2O'}],folderId:null,createdAt:'2026-01-01',updatedAt:'2026-01-01'}})
  await installCloudLibraryFixture(context,owner,rows)
- await page.goto('first-run');await expect(page.getByRole('heading',{name:'Sets',exact:true})).toBeVisible()
+ await page.goto('first-run');await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible()
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message))
  return {rows,errors}
 }

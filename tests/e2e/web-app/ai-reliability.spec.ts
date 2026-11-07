@@ -21,7 +21,7 @@ async function fixture(context: BrowserContext, page: Page) {
     payload: { id: setId, title: 'AI reliability fixture', description: '', terms: [{ id: 't1', front: 'Water', back: 'H2O' }], folderId: null, createdAt: '2026-01-01', updatedAt: '2026-01-01' } })
   await installCloudLibraryFixture(context, owner, rows)
   await page.goto('first-run')
-  await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
   await page.goto('settings')
   await page.getByRole('button', { name: 'Configure AI', exact: true }).click()
   const primary = page.getByRole('listitem').filter({ hasText: 'Ollama Cloud' }).getByRole('button', { name: 'Move model up' })

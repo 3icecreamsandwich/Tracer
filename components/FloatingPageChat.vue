@@ -3,7 +3,7 @@
         <section
             v-if="panelOpen"
             ref="panelEl"
-            class="tracer-chat-panel fixed bottom-24 right-6 z-[70] flex h-[min(34rem,calc(100vh-8rem))] w-[min(26rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/15 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/40"
+            class="tracer-chat-panel fixed bottom-24 right-6 z-[70] flex h-[min(34rem,calc(100vh-8rem))] w-[min(26rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white shadow-xl shadow-slate-900/15 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/40"
             role="dialog"
             aria-label="Chat with Tracer"
         >
@@ -11,12 +11,7 @@
                 class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800"
             >
                 <div class="flex min-w-0 items-center gap-2.5">
-                    <img
-                        :src="chatIconUrl"
-                        alt=""
-                        class="h-10 w-10 rounded-xl bg-amber-50 p-1.5 object-contain dark:bg-amber-950/40"
-                        aria-hidden="true"
-                    />
+                    <StudyModeArtwork name="chat" :size="24" />
                     <h2
                         class="truncate text-base font-semibold text-slate-900 dark:text-slate-50"
                     >
@@ -24,23 +19,23 @@
                     </h2>
                 </div>
                 <div class="flex shrink-0 items-center gap-1">
-                    <button
+                    <UButton color="primary" variant="soft"
                         type="button"
-                        class="inline-flex h-8 items-center justify-center rounded-lg px-3 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
+                        class="inline-flex h-8 items-center justify-center rounded-[var(--tracer-radius-control)] px-3 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
                         :disabled="messages.length === 0 && !error && !busy"
                         @click="clearChat"
                     >
                         Clear
-                    </button>
-                    <button
+                    </UButton>
+                    <UButton color="primary" variant="soft"
                         type="button"
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-[var(--tracer-radius-control)] text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-50"
                         aria-label="Close chat"
                         @click="closePanel"
                     >
                         <svg
                             viewBox="0 0 24 24"
-                            class="h-4 w-4"
+                            class="h-5 w-5"
                             aria-hidden="true"
                         >
                             <path
@@ -51,13 +46,13 @@
                                 stroke-width="2"
                             />
                         </svg>
-                    </button>
+                    </UButton>
                 </div>
             </header>
 
             <div
                 ref="messagesEl"
-                class="m-3 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-xl bg-slate-50 p-4 text-sm text-slate-900 dark:bg-slate-900/60 dark:text-slate-50"
+                class="m-3 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-[var(--tracer-radius-surface)] bg-slate-50 p-4 text-sm text-slate-900 dark:bg-slate-900/60 dark:text-slate-50"
                 aria-live="polite"
             >
                 <div
@@ -78,7 +73,7 @@
                     "
                 >
                     <div
-                        class="max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
+                        class="max-w-[85%] rounded-[var(--tracer-radius-surface)] px-4 py-3 text-sm leading-relaxed"
                         :class="
                             message.role === 'assistant' && !message.content
                                 ? ''
@@ -123,24 +118,24 @@
                 @submit.prevent="sendMessage"
             >
                 <div class="relative">
-                    <textarea
+                    <UTextarea
                         ref="inputEl"
                         v-model="input"
-                        rows="2"
-                        class="block max-h-28 min-h-[76px] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 pb-12 pt-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                        :rows="2"
+                        class="w-full"
                         placeholder="Ask about this page…"
                         aria-label="Chat message"
                         :disabled="busy"
                         @keydown="onInputKeydown"
                     />
-                    <button
+                    <UButton color="primary" variant="solid"
                         type="submit"
                         aria-label="Send message"
-                        class="absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-950"
+                        class="tracer-icon-button absolute bottom-2 right-2"
                         :disabled="busy || !input.trim()"
                     >
                         <svg aria-hidden="true" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
-                    </button>
+                    </UButton>
                 </div>
             </form>
         </section>
@@ -153,19 +148,13 @@
             aria-label="Chat with Tracer"
             @click="togglePanel"
         >
-            <img
-                :src="chatIconUrl"
-                alt=""
-                class="h-7 w-7 object-contain"
-                aria-hidden="true"
-            />
+            <StudyModeArtwork name="chat" :size="24" />
         </button>
     </div>
 </template>
 
 <script setup lang="ts">
 import { isWebPreviewRuntime } from "~/src/composables/platform/web";
-import chatIconUrl from "~/assets/icons/study-modes/chat.png";
 import type { ChatMessage } from "~/src/composables/ai/chat";
 import { createChatRevealQueue } from "~/src/composables/ai/chat-reveal";
 import { createSettingsRepo, useTracerDb } from "~/src/composables/db";
@@ -188,7 +177,7 @@ const messages = ref<FloatingMessage[]>([]);
 const panelEl = ref<HTMLElement | null>(null);
 const triggerEl = ref<HTMLElement | null>(null);
 const messagesEl = ref<HTMLElement | null>(null);
-const inputEl = ref<HTMLTextAreaElement | null>(null);
+const inputEl = ref<{ textareaRef: HTMLTextAreaElement } | null>(null);
 const activeRequest = shallowRef<AbortController | null>(null);
 let messageSequence = 0;
 let cachedModel: { id: string; model: any } | null = null;
@@ -213,14 +202,14 @@ function clearChat() {
     error.value = null;
     missingModel.value = false;
     busy.value = false;
-    void nextTick(() => inputEl.value?.focus());
+    void nextTick(() => inputEl.value?.textareaRef?.focus());
 }
 
 function togglePanel() {
     panelOpen.value = !panelOpen.value;
     if (panelOpen.value) {
         void getDefaultModel().catch(() => {});
-        void nextTick(() => inputEl.value?.focus());
+        void nextTick(() => inputEl.value?.textareaRef?.focus());
     }
 }
 

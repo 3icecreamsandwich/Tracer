@@ -1,7 +1,9 @@
 <template>
+  <UApp>
   <AppShell>
-    <NuxtPage :transition="{ name: 'page', mode: 'out-in' }" />
+    <NuxtPage :keepalive="{ include: ['basic', 'generate', 'synthesize'], max: 3 }" />
   </AppShell>
+  </UApp>
 </template>
 
 <script setup lang="ts">

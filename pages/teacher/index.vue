@@ -3,7 +3,7 @@
     <div class="tracer-page mx-auto max-w-[1180px] px-8 py-10">
       <LoadingSpinner v-if="loading" screen />
 
-      <div v-else-if="loadError" class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
+      <div v-else-if="loadError" class="rounded-[var(--tracer-radius-surface)] border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
         <AppButton
           v-if="loadErrorCode === 'signed_out'"
@@ -17,8 +17,8 @@
       </div>
 
       <section v-else-if="classes.length === 0" class="flex min-h-[calc(100vh-10rem)] items-center justify-center">
-        <div class="w-full max-w-xl rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-950 text-2xl text-white dark:bg-white dark:text-slate-950" aria-hidden="true">＋</div>
+        <div class="w-full max-w-xl rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-10 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-[var(--tracer-radius-surface)] bg-slate-950 text-2xl text-white dark:bg-white dark:text-slate-950" aria-hidden="true">＋</div>
           <h1 class="mt-5 text-4xl font-semibold">{{ t('classroom.noClassesTitle') }}</h1>
           <AppButton class="mt-6" size="lg" @click="createOpen = true">
             {{ t('classroom.createClass') }}
@@ -39,16 +39,16 @@
 
         <div class="mt-8 flex flex-wrap items-center gap-3">
           <label class="text-sm font-medium" for="dashboard-class">{{ t('classroom.class') }}</label>
-          <select
+          <TracerSelect
             id="dashboard-class"
             v-model="selectedClassId"
-            class="min-w-64 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950"
+            class="min-w-64 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950"
           >
             <option v-for="classroom in classes" :key="classroom.id" :value="classroom.id">{{ classroom.name }}</option>
-          </select>
+          </TracerSelect>
         </div>
 
-        <section class="mt-7 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="class-overview-title">
+        <section class="mt-7 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="class-overview-title">
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 id="class-overview-title" class="text-2xl font-semibold">{{ selectedClass?.name }}</h2>
@@ -60,15 +60,15 @@
           </div>
 
           <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <article class="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+            <article class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
               <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('classroom.meanAccuracy') }}</p>
               <p class="mt-2 text-3xl font-semibold">{{ formatPercent(progressSummary.meanAccuracy) }}</p>
             </article>
-            <article class="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+            <article class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
               <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('classroom.scoreSpread') }}</p>
               <p class="mt-2 text-3xl font-semibold">{{ formatPoints(progressSummary.spread) }}</p>
             </article>
-            <article class="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+            <article class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
               <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('classroom.participation') }}</p>
               <p class="mt-2 text-3xl font-semibold">{{ progressSummary.completedCount }}/{{ progressSummary.expectedCount }}</p>
             </article>
@@ -76,9 +76,9 @@
         </section>
 
         <div class="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="activity-title">
+          <section class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="activity-title">
             <h2 id="activity-title" class="text-xl font-semibold">{{ t('classroom.recentActivity') }}</h2>
-            <div v-if="recentProgress.length === 0" class="mt-5 rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            <div v-if="recentProgress.length === 0" class="mt-5 rounded-[var(--tracer-radius-surface)] border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {{ t('classroom.noActivity') }}
             </div>
             <ul v-else class="mt-4 divide-y divide-slate-200 dark:divide-slate-800">
@@ -95,7 +95,7 @@
             </ul>
           </section>
 
-          <aside class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900" :aria-label="t('classroom.classActions')">
+          <aside class="rounded-[var(--tracer-radius-control)] border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900" :aria-label="t('classroom.classActions')">
             <h2 class="text-lg font-semibold">{{ t('classroom.classActions') }}</h2>
             <div class="mt-4 grid gap-3">
               <AppButton v-if="selectedClass" block variant="white" :to="`/teacher/classes/${selectedClass.id}/assign`">{{ t('classroom.assignSet') }} <CreateChevron /></AppButton>
@@ -105,16 +105,16 @@
           </aside>
         </div>
 
-        <section class="mt-7 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="assigned-materials-title">
+        <section class="mt-7 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="assigned-materials-title">
           <h2 id="assigned-materials-title" class="text-xl font-semibold">{{ t('classroom.assignedMaterials') }}</h2>
-          <p v-if="assignments.length === 0" class="mt-5 rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+          <p v-if="assignments.length === 0" class="mt-5 rounded-[var(--tracer-radius-control)] border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
             {{ t('classroom.noAssignedMaterials') }}
           </p>
           <ul v-else class="mt-5 grid gap-3 sm:grid-cols-2">
             <li v-for="assignment in assignments" :key="assignment.id">
-              <button
+              <UButton color="primary" variant="soft"
                 type="button"
-                class="group flex min-h-[86px] w-full items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-wait disabled:opacity-70 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                class="group flex min-h-[86px] w-full items-center gap-4 rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-wait disabled:opacity-70 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-slate-700 dark:hover:bg-slate-900"
                 :disabled="openingAssignmentId !== null"
                 @click="openAssignedMaterial(assignment)"
               >
@@ -128,7 +128,7 @@
                 </span>
                 <span v-if="openingAssignmentId === assignment.id" class="shrink-0 text-lg" aria-hidden="true">…</span>
                 <CreateChevron v-else />
-              </button>
+              </UButton>
             </li>
           </ul>
           <p v-if="assignmentOpenError" class="mt-3 text-sm text-red-700 dark:text-red-300" role="alert">{{ assignmentOpenError }}</p>
@@ -180,7 +180,7 @@ const loading = ref(true)
 const loadError = ref<string | null>(null)
 const loadErrorCode = ref<ClassroomErrorCode | null>(null)
 const classes = ref<Classroom[]>([])
-const selectedClassId = ref('')
+const selectedClassId = ref(typeof useRoute().query.class === 'string' ? String(useRoute().query.class) : '')
 const memberCount = ref(0)
 const assignmentCount = ref(0)
 const assignments = ref<ClassroomAssignment[]>([])

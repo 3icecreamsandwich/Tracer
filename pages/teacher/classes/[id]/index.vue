@@ -3,7 +3,7 @@
     <div class="tracer-page mx-auto max-w-[1180px] px-8 py-10">
 
       <LoadingSpinner v-if="loading" screen />
-      <div v-else-if="loadError" class="mt-6 rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
+      <div v-else-if="loadError" class="mt-6 rounded-[var(--tracer-radius-surface)] border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
         <AppButton class="mt-4" variant="white" @click="loadDetail">{{ t('classroom.retry') }}</AppButton>
       </div>
@@ -17,34 +17,34 @@
         </header>
 
         <div class="mt-8 grid gap-3 sm:grid-cols-[220px_minmax(0,1fr)_180px]">
-          <select
+          <TracerSelect
             :value="classroom.id"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950"
+            class="rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950"
             :aria-label="t('classroom.class')"
             @change="changeClass"
           >
             <option v-for="item in classes" :key="item.id" :value="item.id">{{ item.name }}</option>
-          </select>
+          </TracerSelect>
           <label class="relative block">
             <span class="sr-only">{{ t('classroom.searchStudents') }}</span>
-            <input
+            <UInput
               v-model="search"
               type="search"
-              class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950"
+              class="w-full"
               :placeholder="t('classroom.searchStudents')"
             />
           </label>
-          <select
+          <TracerSelect
             v-model="sort"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950"
+            class="rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950"
             :aria-label="t('classroom.sortStudents')"
           >
             <option value="name">{{ t('classroom.sortByName') }}</option>
             <option value="joined">{{ t('classroom.sortByJoined') }}</option>
-          </select>
+          </TracerSelect>
         </div>
 
-        <section class="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="roster-title">
+        <section class="mt-8 overflow-hidden rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="roster-title">
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-5 dark:border-slate-800">
             <h2 id="roster-title" class="text-xl font-semibold">{{ t('classroom.studentRoster') }}</h2>
             <span class="text-sm text-slate-500 dark:text-slate-400">{{ t('classroom.studentCount', { count: filteredMembers.length }) }}</span>

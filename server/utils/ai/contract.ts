@@ -18,7 +18,7 @@ const schema = z.discriminatedUnion('operation', [
   z.object({ operation: z.literal('chat'), input: z.object({ messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: text.min(1) }).strict()).min(1).max(8), context: z.string().max(30_000), title: z.string().max(500).optional(), route: z.string().max(1000).optional() }).strict() }),
   z.object({ operation: z.literal('fact-check'), input: z.object({ draft: z.object({ title: z.string().max(500), description: text.nullable().optional(), cards: z.array(card).min(1).max(500) }).strict(), language }).strict() }),
   z.object({ operation: z.literal('grade'), input: z.object({ question: text, referenceAnswer: text, studentAnswer: text }).strict() }),
-  z.object({ operation: z.literal('generate'), input: z.object({ sources: z.array(source).min(1).max(100), instructions: z.string().max(4000).optional(), incremental: z.boolean().optional() }).strict() }),
+  z.object({ operation: z.literal('generate'), input: z.object({ sources: z.array(source).max(100), instructions: z.string().max(4000).optional(), incremental: z.boolean().optional() }).strict() }),
   z.object({ operation: z.literal('synthesize'), input: z.object({ inputTsv: text.min(1), theme: z.string().max(1000).optional() }).strict() }),
   z.object({ operation: z.literal('practice'), input: z.object({ title:z.string().max(500), description:text.nullable(), terms:z.array(card).min(1).max(500), count:z.number().int().min(1).max(10) }).strict() }),
 ])
@@ -35,6 +35,7 @@ export function parseBuiltinRequest(value: unknown): BuiltinRequest {
   const bytes = new TextEncoder().encode(JSON.stringify(prompt)).length
   if (bytes > 60_000) throw new BuiltinAiError('input_too_large', 'This AI action is too large. Use fewer cards or source pages.', 413)
   if (request.operation === 'generate') {
+    if (!request.input.sources.length && !request.input.instructions?.trim()) throw new BuiltinAiError('invalid_request', 'Enter a prompt or add source files.', 400)
     if (request.input.sources.some(source => source.kind === 'pdf' && !source.pageCount)) throw new BuiltinAiError('invalid_request','PDF page counts are required. Select the files again.',400)
     try { assertGenerateSourceLimits({pdfPages:request.input.sources.reduce((sum,source)=>sum+(source.kind==='pdf'?source.pageCount||0:0),0),imageCount:request.input.sources.filter(source=>source.kind==='image').length}) }
     catch { throw new BuiltinAiError('input_too_large','Built-in AI supports up to 15 PDF pages and 5 images per action.',413) }

@@ -1,5 +1,6 @@
 <template>
   <main>
+    <CreateModeSwitcher />
     <AiErrorModal :open="aiErrorOpen" :error="aiError" from="/create/generate" @close="closeAiError" />
     <BaseModal
       :open="Boolean(parseFailureOpen)"
@@ -16,53 +17,53 @@
           None of the selected files produced readable text. Generation was not started.
         </p>
       </div>
-      <ul class="mt-4 max-h-64 space-y-2 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
+      <ul class="mt-4 max-h-64 space-y-2 overflow-auto rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
         <li v-for="failure in parseFailures" :key="failure.id" class="grid gap-1">
           <span class="font-medium text-slate-900 dark:text-slate-50">{{ failure.filename }}</span>
           <span class="text-slate-600 dark:text-slate-300">{{ failure.reason }}</span>
         </li>
       </ul>
       <div class="mt-4 flex flex-wrap justify-end gap-2">
-        <button
+        <UButton color="primary" variant="soft"
           v-if="parseFailureCanContinue"
           type="button"
-          class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+          class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
           :disabled="busy || parseBusy"
           @click="continueAfterParseFailures"
         >
           {{ t('common.continue') }}
-        </button>
+        </UButton>
       </div>
     </BaseModal>
-    <div class="tracer-page mx-auto max-w-3xl px-5 py-8 sm:px-8">
-      <div class="tracer-page-toolbar sticky top-16 z-20 flex flex-wrap items-center justify-between gap-4 rounded-md bg-white/95 py-2 backdrop-blur dark:bg-slate-950/95">
+    <div class="tracer-page mx-auto max-w-3xl px-5 pb-24 pt-4 sm:px-8">
+      <div class="tracer-page-toolbar sticky top-16 z-20 flex flex-wrap items-center justify-between gap-4 rounded-[var(--tracer-radius-surface)] bg-white/95 py-2 backdrop-blur dark:bg-slate-950/95">
         <div class="flex min-w-0 items-center gap-4">
-          <CreateModeIcon name="generate" class="h-14 w-14 shrink-0" />
-          <h1 class="text-3xl font-semibold">{{ t('home.generate') }}</h1>
+          <CreateModeIcon name="generate" class="h-10 w-10 shrink-0" />
+          <h1 class="text-2xl font-semibold">{{ t('home.generate') }}</h1>
         </div>
 
         <div class="shrink-0 flex flex-wrap items-center justify-end gap-2">
-          <button
+          <UButton color="primary" variant="soft"
             type="button"
-            class="tracer-button tracer-button--white tracer-button--md"
+
             :disabled="operationBusy || ingestBusy || isWebPreview"
             @click="onLinkFolder"
-          >
+           size="md">
             <LoadingSpinner v-if="linkBusy" size="sm" :label="t('create.linkingFolder')" />
             <template v-else>
               <AppIcon name="add-folder" class="mr-1.5" :size="17" />
               {{ t('create.linkFolder') }}
             </template>
-          </button>
-          <button
+          </UButton>
+          <UButton color="primary" variant="solid"
             type="button"
-            class="tracer-button tracer-button--dark tracer-button--md"
+
             :disabled="generateDisabled"
             @click="onGenerate"
-          >
+           size="md">
             <LoadingSpinner v-if="busy || parseBusy" size="sm" :label="generateButtonLabel" :show-label="false" />
             {{ generateButtonLabel }}
-          </button>
+          </UButton>
           <p
             v-if="generateProgressLabel"
             class="w-full text-right text-xs text-slate-500 dark:text-slate-400"
@@ -76,7 +77,7 @@
 
       <div
         v-if="isWebPreview"
-        class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
+        class="mt-4 rounded-[var(--tracer-radius-surface)] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
         role="status"
         aria-live="polite"
       >
@@ -84,35 +85,36 @@
       </div>
 
       <div class="mt-6 space-y-6">
-        <p class="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-100">
-          Files and instructions used here are sent to your selected AI provider to create study content. Do not upload sensitive information unless you are comfortable sharing it with that provider.
+        <p class="rounded-[var(--tracer-radius-control)] border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-100">
+          Prompts and files are sent to your selected AI provider.
         </p>
         <section
-          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+          class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
           aria-label="Generate inputs"
         >
           <div class="grid gap-4">
             <div>
               <label class="block text-sm font-medium" for="gen-title">{{ t('create.title') }} ({{ t('common.optional') }})</label>
-              <input
+              <UInput
                 id="gen-title"
                 v-model="title"
                 type="text"
                 autocomplete="off"
                 :placeholder="t('create.generatedSetPlaceholder')"
-                class="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                class="w-full mt-1"
                 :disabled="operationBusy || isWebPreview"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium" for="gen-instructions">{{ t('create.instructions') }} ({{ t('common.optional') }})</label>
-              <textarea
+              <label class="block text-sm font-medium" for="gen-instructions">Prompt</label>
+              <UTextarea
                 id="gen-instructions"
+                maxlength="4000"
                 v-model="instructions"
-                rows="3"
+                :rows="3"
                 :placeholder="t('create.instructionsPlaceholder')"
-                class="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                class="w-full mt-1 resize-y"
                 :disabled="operationBusy || isWebPreview"
               />
             </div>
@@ -127,24 +129,24 @@
                 </div>
 
                 <div class="shrink-0 flex flex-wrap gap-2">
-                  <button
+                  <UButton color="primary" variant="soft"
                     type="button"
-                    class="tracer-button tracer-button--white tracer-button--md"
+
                     :disabled="operationBusy || isWebPreview || ingestBusy"
                     @click="openPicker"
-                  >
+                   size="md">
                     <LoadingSpinner v-if="ingestBusy" size="sm" :label="t('create.checking')" />
                     <template v-else>{{ t('create.chooseFiles') }}</template>
-                  </button>
-                  <button
+                  </UButton>
+                  <UButton color="primary" variant="soft"
                     v-if="pickedAny"
                     type="button"
-                    class="tracer-button tracer-button--white tracer-button--md"
+
                     :disabled="operationBusy || isWebPreview || ingestBusy"
                     @click="clearPicked"
-                  >
+                   size="md">
                     {{ t('common.clear') }}
-                  </button>
+                  </UButton>
                 </div>
               </div>
 
@@ -159,19 +161,19 @@
 
               <div class="mt-4 grid gap-3 sm:grid-cols-3">
                 <div
-                  class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
                   <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.pdfPages') }}</p>
                   <p class="mt-1 font-medium">{{ totalPdfPages }}/{{ sourceLimits.pdfPages }}</p>
                 </div>
                 <div
-                  class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
                   <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.images') }}</p>
                   <p class="mt-1 font-medium">{{ pickedImages.length }}/{{ sourceLimits.images }}</p>
                 </div>
                 <div
-                  class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
                   <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('create.files') }}</p>
                   <p class="mt-1 font-medium">{{ pickedCount }}</p>
@@ -191,29 +193,29 @@
 
         <section
           v-if="rawOutput"
-          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+          class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
           aria-label="AI output"
         >
           <div class="flex items-start justify-between gap-4">
             <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-50">{{ t('create.aiOutput') }}</h2>
 
             <div class="shrink-0 flex flex-wrap gap-2">
-              <button
+              <UButton color="primary" variant="soft"
                 type="button"
-                class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                 :disabled="!rawOutput"
                 @click="copyRaw"
               >
                 <AppIcon name="copy" class="mr-1 inline-block align-middle" />{{ t('common.copy') }}
-              </button>
-              <button
+              </UButton>
+              <UButton color="primary" variant="soft"
                 type="button"
-                class="tracer-button tracer-button--white tracer-button--md"
+
                 :disabled="!rawOutput"
                 @click="selectAllRaw"
-              >
+               size="md">
                 {{ t('common.selectAll') }}
-              </button>
+              </UButton>
             </div>
           </div>
 
@@ -223,12 +225,12 @@
 
           <div class="mt-4">
             <label class="sr-only" for="gen-raw-output">{{ t('create.rawOutput') }}</label>
-            <textarea
+            <UTextarea
               id="gen-raw-output"
               ref="rawTextareaEl"
               readonly
-              rows="10"
-              class="w-full resize-y rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              :rows="10"
+              class="w-full"
               :value="rawOutput"
               @focus="selectAllRaw"
             />
@@ -299,7 +301,7 @@ const formError = ref<string | null>(null)
 
 const rawOutput = ref<string | null>(null)
 const rawMessage = ref<string | null>(null)
-const rawTextareaEl = ref<HTMLTextAreaElement | null>(null)
+const rawTextareaEl = ref<{ textareaRef: HTMLTextAreaElement } | null>(null)
 const fileInputEl = ref<HTMLInputElement | null>(null)
 
 const aiError = ref<AiErrorUx | null>(null)
@@ -417,7 +419,7 @@ const generateProgressLabel = computed(() => {
 
 const generateDisabled = computed(() => {
   if (operationBusy.value || ingestBusy.value || isWebPreview.value) return true
-  if (!pickedAny.value) return true
+  if (!pickedAny.value && !instructions.value.trim()) return true
   if (totalPdfPages.value > sourceLimits.value.pdfPages) return true
   if (pickedImages.value.length > sourceLimits.value.images) return true
   return false
@@ -651,7 +653,7 @@ async function saveGeneratedOutput(
   } finally {
     busy.value = false
     await nextTick()
-    if (rawOutput.value) rawTextareaEl.value?.focus()
+    if (rawOutput.value) rawTextareaEl.value?.textareaRef?.focus()
   }
 
   return
@@ -663,8 +665,8 @@ function validateGenerateInput() {
     return false
   }
 
-  if (!pickedAny.value) {
-    formError.value = 'Choose at least one PDF or image.'
+  if (!pickedAny.value && !instructions.value.trim()) {
+    formError.value = 'Enter a prompt or choose a PDF or image.'
     return false
   }
 
@@ -705,6 +707,12 @@ async function onGenerate() {
   )
   parseBusy.value = true
   try {
+    if (!pickedAny.value) {
+      parseBusy.value = false
+      await saveGeneratedOutput([], pendingGenerateModelContext.value)
+      pendingGenerateModelContext.value = null
+      return
+    }
     const result = await extractGenerateSources(selectedGenerateSources(), {}, {
       // Generate should still help with vocabulary lists when a photo is not
       // machine-readable. The model receives an explicit extraction note.

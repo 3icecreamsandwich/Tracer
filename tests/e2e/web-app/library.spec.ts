@@ -33,10 +33,15 @@ async function signInFixture(context: BrowserContext, page: Page, userId = owner
   await context.route('**/auth/v1/**', route => route.fulfill({ json: user }))
   await context.route('**/rest/v1/**', route => route.fulfill({ json: route.request().url().includes('user_roles') ? [{ role }] : [] }))
   await context.route('**/api/web/credentials', route => route.fulfill({ json: { openai: false, anthropic: false, gemini: false, ollama_cloud: false, openai_compat: false } }))
+  await context.route('**/api/ai/usage', route => route.fulfill({ json: { limit:65, used:0, reserved:0, remaining:65, resetsAt:'2026-12-01T00:00:00Z', available:true, throttled:false, retryAfter:0 } }))
   const cloud = await installCloudLibraryFixture(context, userId, cloudRows)
   await beforeHome?.()
   await page.goto('first-run')
-  await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
+  await page.getByRole('link', { name: 'Sets & Guides', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Sets & Guides', exact: true })).toBeVisible()
+  await page.mouse.move(800, 80)
+  await expect(page.getByRole('complementary', { name:'Study navigation' })).toHaveCSS('width','68px')
   return cloud
 }
 
@@ -47,7 +52,7 @@ async function createSet(page: Page) {
   const definitions = page.locator('textarea[id^="definition-"]')
   await terms.nth(0).fill('Browser')
   await definitions.nth(0).fill('Runs Tracer on a phone or laptop')
-  await page.getByRole('button', { name: '+', exact: true }).click()
+  await page.getByRole('button', { name: 'Add card', exact: true }).click()
   await terms.nth(1).fill('Desktop')
   await definitions.nth(1).fill('Shares the same study logic')
   await page.getByRole('button', { name: 'Create', exact: true }).click()
@@ -111,7 +116,7 @@ test('authentication defaults to sign in and skips browser profile editing', asy
   await expect(page.getByRole('button', { name: 'Need an account? Sign up', exact: true })).toBeVisible()
 
   await signInFixture(context, page)
-  await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Sets & Guides', exact: true })).toBeVisible()
   await expect(page.getByLabel('Name', { exact: true })).toHaveCount(0)
 })
 
@@ -120,11 +125,11 @@ test('creation pages stay open without a configured AI model', async ({ context,
   await context.addInitScript(() => Object.freeze(Object.prototype))
   await signInFixture(context, page)
   for (const path of ['basic', 'generate', 'synthesize']) {
-    await page.locator(`a[href="${basePath}create/${path}"]`).click()
+    await page.getByRole('complementary', {name:'Study navigation'}).locator(`a[href="${basePath}create/${path}"]`).click()
     await expect(page.locator('main h1')).toBeVisible()
     await expect(page).toHaveURL(new RegExp(`/create/${path}$`))
     await page.goBack()
-    await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Sets & Guides', exact: true })).toBeVisible()
   }
 })
 
@@ -133,15 +138,15 @@ test('creation and set actions use shared primary buttons', async ({ context, pa
   for (const [path, label] of [['basic', 'Create'], ['synthesize', 'Create'], ['generate', 'Generate']]) {
     await page.goto(`create/${path}`)
     const action = page.getByRole('button', { name: label, exact: true }).first()
-    await expect(action).toHaveClass(/tracer-button--dark/)
-    await expect(action).toHaveCSS('background-color', 'rgb(2, 6, 23)')
+    await expect(action).toHaveAttribute('data-slot', 'base')
+    await expect(action).toHaveCSS('background-color', 'rgb(0, 0, 0)')
   }
   const setPath = await createSet(page)
   await page.goto(setPath)
-  await expect(page.getByRole('link', { name: 'Edit', exact: true })).toHaveClass(/tracer-button--white/)
-  await expect(page.getByRole('button', { name: 'Share', exact: true })).toHaveClass(/tracer-button--dark/)
+  await expect(page.getByRole('link', { name: 'Edit', exact: true })).toHaveAttribute('data-slot', 'base')
+  await expect(page.getByRole('button', { name: 'Share', exact: true })).toHaveAttribute('data-slot', 'base')
   await page.getByRole('link', { name: 'Edit', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Update', exact: true })).toHaveClass(/tracer-button--dark/)
+  await expect(page.getByRole('button', { name: 'Update', exact: true })).toHaveAttribute('data-slot', 'base')
 })
 
 test('creation navigation reports a failed module load and offers recovery', async ({ context, page }) => {
@@ -173,17 +178,21 @@ test('dropping on the top, middle, or bottom of a folder moves the set into it',
   await signInFixture(context, page, owner, rows)
   const folder = page.locator('[data-root-entry-kind="folder"]').filter({ hasText: 'Drop target' }).locator('[data-root-entry-hit]')
   for (const [index, fraction] of [0.1, 0.5, 0.9].entries()) {
-    const source = page.getByText(`Drop set ${index}`, { exact: true })
+    const source = page.locator('main [data-home-library-item]').filter({ hasText: `Drop set ${index}` })
     const sourceBox = await source.boundingBox()
     const folderBox = await folder.boundingBox()
     if (!sourceBox || !folderBox) throw new Error('Missing drag geometry')
     await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2)
     await page.mouse.down()
     await page.mouse.move(folderBox.x + folderBox.width / 2, folderBox.y + folderBox.height * fraction, { steps: 10 })
+    await expect(page.getByRole('status', { name: 'Moving 1 item' })).toBeVisible()
+    await expect(folder).toHaveClass(/folder-card--target/)
     await page.mouse.up()
     await expect.poll(() => rows.get(`${owner}:set:drop-set-${index}`)?.payload.folderId).toBe(folderId)
-    await expect(page.locator(`#folder-contents-${folderId}`).getByText(`Drop set ${index}`, { exact: true })).toBeVisible()
   }
+  await page.getByRole('button', { name: 'Open folder Drop target' }).click()
+  await expect(page).toHaveURL(/\/folder\/drop-folder/)
+  for (let index = 0; index < 3; index++) await expect(page.locator('main').getByText(`Drop set ${index}`, { exact: true })).toBeVisible()
 })
 
 test('dragging a set near the library edges scrolls until the pointer moves away', async ({ context, page }) => {
@@ -194,17 +203,15 @@ test('dragging a set near the library edges scrolls until the pointer moves away
       payload: { id, title: `Scroll set ${index}`, terms: [], folderId: null, createdAt: '2026-01-01', updatedAt: '2026-01-01' } })
   }
   await signInFixture(context, page, owner, rows)
-  const panel = page.locator('.tracer-library-scroll')
-  await expect(panel.getByText('Scroll set 0', { exact: true })).toBeVisible()
-  const first = await panel.getByText('Scroll set 0', { exact: true }).boundingBox()
-  const bounds = await panel.boundingBox()
-  if (!first || !bounds) throw new Error('Missing library geometry')
+  await page.setViewportSize({ width: 1100, height: 650 })
+  const first = await page.locator('[data-home-library-item]').filter({ hasText: 'Scroll set 0' }).boundingBox()
+  if (!first) throw new Error('Missing library geometry')
   await page.mouse.move(first.x + 15, first.y + first.height / 2)
   await page.mouse.down()
-  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height - 5, { steps: 8 })
-  await expect.poll(() => panel.evaluate(el => el.scrollTop)).toBeGreaterThan(80)
-  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + 5, { steps: 4 })
-  await expect.poll(() => panel.evaluate(el => el.scrollTop)).toBe(0)
+  await page.mouse.move(600, 645, { steps: 8 })
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(80)
+  await page.mouse.move(600, 5, { steps: 4 })
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
   await page.mouse.up()
 })
 
@@ -355,7 +362,7 @@ test('switching accounts does not expose another browser library', async ({ cont
   await signInFixture(context, page, '00000000-0000-4000-8000-000000000002')
   await expect(page.getByText('Persistent web set', { exact: true })).toHaveCount(0)
   await page.reload()
-  await expect(page.getByRole('heading', { name: 'Sets', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Sets & Guides', exact: true })).toBeVisible()
   await expect(page.getByText('Persistent web set', { exact: true })).toHaveCount(0)
 })
 
@@ -456,20 +463,19 @@ test('failed preference saves restore the previous toggle state', async ({ conte
   await expect(smart).toBeEnabled()
 })
 
-test('a single folder click and keyboard activation toggle its contents', async ({ context, page }) => {
+test('a single folder click and keyboard activation open its page', async ({ context, page }) => {
   await signInFixture(context, page)
   await page.getByRole('button', { name: 'Add Folder', exact: true }).click()
   const name = page.getByRole('textbox', { name: 'Folder name', exact: true })
   await name.fill('Single click folder')
   await name.press('Enter')
-  const folder = page.getByRole('button', { name: 'Select folder Single click folder', exact: true })
-  await expect(folder).toHaveAttribute('aria-expanded', 'true')
+  const folder = page.getByRole('button', { name: 'Open folder Single click folder', exact: true })
   await folder.click()
-  await expect(folder).toHaveAttribute('aria-expanded', 'false')
-  await folder.click()
-  await expect(folder).toHaveAttribute('aria-expanded', 'true')
-  await folder.press('Enter')
-  await expect(folder).toHaveAttribute('aria-expanded', 'false')
+  await expect(page).toHaveURL(/\/folder\//)
+  await expect(page.getByRole('heading', { name: 'Single click folder', exact: true })).toBeVisible()
+  await page.getByRole('link', { name: 'Back to library' }).click()
+  await page.getByRole('button', { name: 'Open folder Single click folder', exact: true }).press('Enter')
+  await expect(page.getByRole('heading', { name: 'Single click folder', exact: true })).toBeVisible()
 })
 
 
@@ -493,4 +499,76 @@ test('classroom loading starts while the first library read is delayed', async (
     await expect.poll(() => libraryPending).toBe(true)
     await expect.poll(() => classesRequested).toBe(true)
   } finally { releaseLibrary() }
+})
+
+
+test('a folder page moves a multi-selection to the library through either edge', async ({ context, page }) => {
+  const rows = new Map<string, any>()
+  const folderId = 'move-folder'
+  rows.set(`${owner}:folder:${folderId}`, { owner_id: owner, kind: 'folder', id: folderId, revision: 1, deleted: false,
+    payload: { id: folderId, name: 'Move folder', sortOrder: 0, createdAt: '2026-01-01', updatedAt: '2026-01-01' } })
+  for (let index = 0; index < 3; index++) {
+    const id = `move-set-${index}`
+    rows.set(`${owner}:set:${id}`, { owner_id: owner, kind: 'set', id, revision: 1, deleted: false,
+      payload: { id, title: `Move set ${index}`, terms: [], folderId, createdAt: '2026-01-01', updatedAt: '2026-01-01' } })
+  }
+  await signInFixture(context, page, owner, rows)
+  await page.getByRole('button', { name: 'Open folder Move folder' }).click()
+  await expect(page).toHaveURL(/\/folder\/move-folder/)
+  await expect(page.getByRole('heading', { name: 'Move folder', exact: true })).toBeVisible()
+  const first = page.locator('[data-home-library-item]').filter({ hasText: 'Move set 0' })
+  const second = page.locator('[data-home-library-item]').filter({ hasText: 'Move set 1' })
+  await first.click({ modifiers: ['Meta'] })
+  await second.click({ modifiers: ['Meta'] })
+  const source = await first.boundingBox()
+  if (!source) throw new Error('Missing source card')
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(source.x + source.width / 2 + 20, source.y + source.height / 2, { steps: 4 })
+  await expect(page.getByRole('status', { name: 'Moving 2 items' })).toBeVisible()
+  await expect(page.locator('.folder-move-zone')).toHaveCount(2)
+  await page.mouse.move((page.viewportSize()?.width ?? 1280) - 20, source.y + source.height / 2, { steps: 8 })
+  await expect(page.locator('.folder-move-zone--right')).toHaveClass(/folder-move-zone--active/)
+  await page.mouse.up()
+  await expect.poll(() => rows.get(`${owner}:set:move-set-0`)?.payload.folderId).toBeNull()
+  await expect.poll(() => rows.get(`${owner}:set:move-set-1`)?.payload.folderId).toBeNull()
+  await expect(first).toHaveCount(0)
+  const third = page.locator('[data-home-library-item]').filter({ hasText: 'Move set 2' })
+  const thirdBox = await third.boundingBox()
+  if (!thirdBox) throw new Error('Missing remaining card')
+  await page.mouse.move(thirdBox.x + thirdBox.width / 2, thirdBox.y + thirdBox.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(20, thirdBox.y + thirdBox.height / 2, { steps: 8 })
+  await expect(page.getByRole('status', { name: 'Moving 1 item' })).toBeVisible()
+  await expect(page.locator('.folder-move-zone--left')).toHaveClass(/folder-move-zone--active/)
+  await page.mouse.up()
+  await expect.poll(() => rows.get(`${owner}:set:move-set-2`)?.payload.folderId).toBeNull()
+  await page.getByRole('link', { name: 'Back to library' }).click()
+  await expect(page.getByText('Move set 0', { exact: true })).toBeVisible()
+})
+
+test('a study guide can be dragged out of its folder', async ({ context, page }) => {
+  const rows = new Map<string, any>()
+  const folderId = 'guide-folder', setId = 'guide-set'
+  rows.set(`${owner}:folder:${folderId}`, { owner_id: owner, kind: 'folder', id: folderId, revision: 1, deleted: false,
+    payload: { id: folderId, name: 'Guides folder', sortOrder: 0, createdAt: '2026-01-01', updatedAt: '2026-01-01' } })
+  rows.set(`${owner}:set:${setId}`, { owner_id: owner, kind: 'set', id: setId, revision: 1, deleted: false,
+    payload: { id: setId, title: 'Guide source', terms: [], folderId, createdAt: '2026-01-01', updatedAt: '2026-01-01' } })
+  rows.set(`${owner}:guide:${setId}`, { owner_id: owner, kind: 'guide', id: setId, revision: 1, deleted: false,
+    payload: { id: 'guide-id', setId, markdown: '# Notes', createdAt: '2026-01-01' } })
+  await signInFixture(context, page, owner, rows)
+  await page.getByRole('button', { name: 'Study guides', exact: true }).click()
+  await page.getByRole('button', { name: 'Open folder Guides folder' }).click()
+  const guide = page.locator('[data-home-library-item]').filter({ hasText: 'Study guide · Guide source' })
+  await expect(guide).toBeVisible()
+  const box = await guide.boundingBox()
+  if (!box) throw new Error('Missing guide card')
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(20, box.y + box.height / 2, { steps: 8 })
+  await expect(page.getByRole('status', { name: 'Moving 1 item' })).toBeVisible()
+  await page.mouse.up()
+  await expect.poll(() => rows.get(`${owner}:set:${setId}`)?.payload.folderId).toBeNull()
+  await page.getByRole('link', { name: 'Back to library' }).click()
+  await expect(page.locator('main').getByText('Study guide · Guide source', { exact: true })).toBeVisible()
 })

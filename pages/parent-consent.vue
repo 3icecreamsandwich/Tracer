@@ -7,16 +7,16 @@
         <template v-if="status === 'pending'">
           <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">You are signed in as the parent or guardian. Review the request, then confirm your consent below. No child account exists yet.</p>
           <label class="mt-5 flex items-start gap-3 text-sm leading-5 text-slate-700 dark:text-slate-200">
-            <input v-model="consentConfirmed" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 accent-slate-900" :disabled="busy" />
+            <UCheckbox v-model="consentConfirmed"  class="mt-0.5 h-5 w-5 shrink-0 rounded-[var(--tracer-radius-control)] border-slate-300 accent-slate-900" :disabled="busy" />
             <span>I am the parent or guardian and consent to creating one Tracer account for this child.</span>
           </label>
-          <button type="button" class="auth-primary mt-5" :disabled="busy || !consentConfirmed" @click="approve">
+          <UButton color="primary" variant="soft" type="button" class="auth-primary mt-5" :disabled="busy || !consentConfirmed" @click="approve">
             {{ busy ? 'Approving…' : 'Approve and create account link' }}
-          </button>
+          </UButton>
         </template>
         <template v-else-if="status === 'approved'">
           <p class="mt-4 text-sm text-emerald-700 dark:text-emerald-300">Consent is approved. The next page creates one child account; it can only be used once.</p>
-          <button v-if="childSetupUrl" type="button" class="auth-primary mt-5" @click="beginChildSetup">Continue to child account setup</button>
+          <UButton color="primary" variant="soft" v-if="childSetupUrl" type="button" class="auth-primary mt-5" @click="beginChildSetup">Continue to child account setup</UButton>
         </template>
         <p v-else-if="status === 'rejected'" class="mt-4 text-sm text-red-600 dark:text-red-400">This consent request was not approved.</p>
         <p v-else class="mt-4 text-sm text-slate-600 dark:text-slate-300">We could not find an active consent request for this email.</p>

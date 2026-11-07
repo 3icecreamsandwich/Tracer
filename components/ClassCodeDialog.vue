@@ -6,7 +6,7 @@
     :close-label="t('common.close')"
     @close="emit('close')"
   >
-    <div class="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-8 text-center dark:border-slate-800 dark:bg-slate-900">
+    <div class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 px-5 py-8 text-center dark:border-slate-800 dark:bg-slate-900">
       <p class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
         {{ t('classroom.classCode') }}
       </p>

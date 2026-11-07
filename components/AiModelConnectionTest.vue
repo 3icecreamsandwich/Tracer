@@ -1,13 +1,13 @@
 <template>
   <div class="mt-2">
-    <button
+    <UButton color="primary" variant="soft"
       type="button"
-      class="rounded border border-slate-200 px-2 py-1 text-xs disabled:opacity-40 dark:border-slate-800"
+      class="rounded-[var(--tracer-radius-control)] border border-slate-200 px-2 py-1 text-xs disabled:opacity-40 dark:border-slate-800"
       :disabled="!configured || testing"
       :aria-busy="testing"
       :aria-label="`Test connection for ${label}`"
       @click="testConnection"
-    >{{ testing ? 'Testing…' : 'Test connection' }}</button>
+    >{{ testing ? 'Testing…' : 'Test connection' }}</UButton>
     <p v-if="message" role="status" class="mt-1 text-xs text-slate-600 dark:text-slate-300">{{ message }}</p>
   </div>
 </template>

@@ -1,6 +1,6 @@
 <template>
   <span
-    class="inline-flex shrink-0 items-center justify-center rounded-xl p-2.5"
+    class="inline-flex shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] p-2.5"
     :class="modeStyles[name]"
     aria-hidden="true"
   >
@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import Layers from '@lucide/vue/dist/esm/icons/layers.mjs'
 import Pencil from '@lucide/vue/dist/esm/icons/pencil.mjs'
-import WandSparkles from '@lucide/vue/dist/esm/icons/wand-sparkles.mjs'
+import Sparkles from '@lucide/vue/dist/esm/icons/sparkles.mjs'
 
 type CreateMode = 'basic' | 'synthesize' | 'generate'
 
@@ -20,12 +20,12 @@ defineProps<{ name: CreateMode }>()
 const modeIcons = {
   basic: Pencil,
   synthesize: Layers,
-  generate: WandSparkles,
+  generate: Sparkles,
 }
 
 const modeStyles = {
-  basic: 'bg-amber-100 text-amber-600 dark:bg-amber-300 dark:text-amber-600',
-  synthesize: 'bg-orange-200 text-orange-600 dark:bg-orange-600 dark:text-orange-200',
-  generate: 'bg-rose-200 text-rose-600 dark:bg-rose-600 dark:text-rose-200',
+  basic: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100',
+  synthesize: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100',
+  generate: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100',
 }
 </script>

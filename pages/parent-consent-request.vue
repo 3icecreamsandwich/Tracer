@@ -5,8 +5,8 @@
       <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">Ask a parent or guardian to enter their own email address. We will send them a secure link to review this request. Do not enter the child’s email here.</p>
       <form class="mt-6 space-y-4" @submit.prevent="submit">
         <label class="block text-sm font-medium" for="parent-email">Parent or guardian email</label>
-        <input id="parent-email" v-model="parentEmail" type="email" autocomplete="email" required class="auth-input" />
-        <button type="submit" class="auth-primary" :disabled="busy || !configured">{{ busy ? 'Sending…' : 'Email parent' }}</button>
+        <UInput id="parent-email" v-model="parentEmail" type="email" autocomplete="email" required class="w-full" />
+        <UButton color="primary" variant="soft" type="submit" class="auth-primary" :disabled="busy || !configured">{{ busy ? 'Sending…' : 'Email parent' }}</UButton>
       </form>
       <p v-if="message" class="mt-4 text-sm text-emerald-700 dark:text-emerald-300" role="status">{{ message }}</p>
       <p v-if="error" class="mt-4 text-sm text-red-600 dark:text-red-400" role="alert">{{ error }}</p>

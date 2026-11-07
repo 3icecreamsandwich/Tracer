@@ -2,7 +2,7 @@
   <main class="min-h-[calc(100vh-4rem)] bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
     <div class="tracer-page mx-auto max-w-[980px] px-8 py-10">
       <LoadingSpinner v-if="loading" screen />
-      <div v-else-if="loadError" class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
+      <div v-else-if="loadError" class="rounded-[var(--tracer-radius-surface)] border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
         <AppButton class="mt-4" variant="white" @click="loadClassPage">{{ t('classroom.retry') }}</AppButton>
       </div>
@@ -19,15 +19,15 @@
         <section class="mt-9" aria-labelledby="recent-sets-title">
           <h2 id="recent-sets-title" class="text-3xl font-semibold">{{ t('classroom.recentSets') }}</h2>
 
-          <p v-if="assignments.length === 0" class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+          <p v-if="assignments.length === 0" class="mt-6 rounded-[var(--tracer-radius-control)] border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
             {{ t('classroom.noRecentSets') }}
           </p>
           <ul v-else class="mt-6 space-y-3">
             <li v-for="assignment in assignments" :key="assignment.id">
-              <article class="flex min-h-[88px] flex-wrap items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <button
+              <article class="flex min-h-[88px] flex-wrap items-center gap-5 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <UButton color="primary" variant="soft"
                   type="button"
-                  class="flex min-w-0 flex-1 items-center gap-5 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-4 dark:focus-visible:ring-offset-slate-950"
+                  class="flex min-w-0 flex-1 items-center gap-5 rounded-[var(--tracer-radius-control)] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-4 dark:focus-visible:ring-offset-slate-950"
                   :disabled="openingAssignmentId === assignment.id"
                   @click="openAssignmentMaterial(assignment)"
                 >
@@ -40,7 +40,7 @@
                     </span>
                     <span v-if="assignment.description" class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">{{ assignment.description }}</span>
                   </span>
-                </button>
+                </UButton>
                 <div v-if="assignment.kind === 'set'" class="flex flex-wrap gap-2">
                   <AppButton
                     v-for="mode in studyModes"

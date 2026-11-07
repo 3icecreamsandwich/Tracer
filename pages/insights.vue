@@ -2,44 +2,44 @@
   <main class="min-h-[calc(100vh-4rem)] bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
     <div class="tracer-page mx-auto max-w-[1180px] px-8 py-10">
       <header class="flex flex-wrap items-end justify-between gap-4">
-        <div><h1 class="text-4xl font-semibold">Insights</h1><p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Your study progress across sets and topics.</p></div>
-        <AppButton variant="white" to="/">Back to library</AppButton>
+        <div><h1 class="text-4xl font-semibold">Insights</h1></div>
+        <AppButton variant="white" to="/library">Back to library</AppButton>
       </header>
-      <p v-if="error" class="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300" role="alert">{{ error }} <button class="underline" @click="load">Retry</button></p>
+      <p v-if="error" class="mt-6 rounded-[var(--tracer-radius-control)] border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300" role="alert">{{ error }} <UButton color="primary" variant="soft" class="underline" @click="load">Retry</UButton></p>
       <LoadingSpinner v-if="loading" class="mt-8" centered />
       <template v-else>
         <section class="mt-8 flex flex-wrap items-end gap-4" aria-label="Insight filters">
           <label class="grid gap-1 text-sm font-medium">Topic (folder)
-            <select v-model="folderId" class="min-w-48 rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-950"><option value="">All topics</option><option v-for="folder in folders" :key="folder.id" :value="folder.id">{{ folder.name }}</option></select>
+            <TracerSelect v-model="folderId" class="min-w-48 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-950"><option value="">All topics</option><option v-for="folder in folders" :key="folder.id" :value="folder.id">{{ folder.name }}</option></TracerSelect>
           </label>
           <label class="grid gap-1 text-sm font-medium">Set
-            <select v-model="setId" class="min-w-48 rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-950"><option value="">All sets</option><option v-for="set in filteredSets" :key="set.id" :value="set.id">{{ set.title }}</option></select>
+            <TracerSelect v-model="setId" class="min-w-48 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-950"><option value="">All sets</option><option v-for="set in filteredSets" :key="set.id" :value="set.id">{{ set.title }}</option></TracerSelect>
           </label>
-          <span class="pb-2 text-xs text-slate-500 dark:text-slate-400">Topics follow your library folders. Study history is saved in this device's Tracer database.</span>
+
         </section>
         <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <article v-for="metric in metrics" :key="metric.label" class="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">{{ metric.label }}</p><p class="mt-2 text-3xl font-semibold">{{ metric.value }}</p></article>
+          <article v-for="metric in metrics" :key="metric.label" class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">{{ metric.label }}</p><p class="mt-2 text-3xl font-semibold">{{ metric.value }}</p></article>
         </div>
         <div class="mt-7 grid gap-6 lg:grid-cols-2">
-          <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="time-title">
+          <section class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="time-title">
             <h2 id="time-title" class="text-xl font-semibold">Study time · last 7 days</h2>
-            <p class="mt-1 text-sm text-slate-500">Minutes of active study sessions</p>
+
             <div class="mt-6 flex h-44 items-end gap-2" role="img" :aria-label="timeDescription"><div v-for="day in days" :key="day.key" class="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"><span class="text-xs">{{ day.minutes }}</span><div class="w-full max-w-12 rounded-t bg-[#C75F5F]" :style="{ height: `${Math.max(day.minutes ? 5 : 1, day.minutes / maxMinutes * 120)}px` }"/><span class="text-xs text-slate-500">{{ day.label }}</span></div></div>
           </section>
-          <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="accuracy-title">
+          <section class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="accuracy-title">
             <h2 id="accuracy-title" class="text-xl font-semibold">Accuracy · last 7 days</h2>
-            <p class="mt-1 text-sm text-slate-500">Correct answers out of attempts</p>
+
             <div class="mt-6 flex h-44 items-end gap-2" role="img" :aria-label="accuracyDescription"><div v-for="day in days" :key="day.key" class="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"><span class="text-xs">{{ day.attempted ? `${day.accuracy}%` : '—' }}</span><div class="w-full max-w-12 rounded-t bg-slate-700 dark:bg-slate-300" :style="{ height: `${day.attempted ? Math.max(5, day.accuracy / 100 * 120) : 1}px` }"/><span class="text-xs text-slate-500">{{ day.label }}</span></div></div>
           </section>
         </div>
-        <section class="mt-7 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="tips-title">
-          <div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="tips-title" class="text-xl font-semibold">Study suggestions</h2><p class="mt-1 text-sm text-slate-500">Updated weekly for the current selection, or on request</p></div><AppButton variant="white" :disabled="tipsBusy" @click="refreshTips(true)">{{ tipsBusy ? 'Generating…' : 'Refresh tips' }}</AppButton></div>
+        <section class="mt-7 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="tips-title">
+          <div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="tips-title" class="text-xl font-semibold">Study suggestions</h2></div><AppButton variant="white" :disabled="tipsBusy" @click="refreshTips(true)">{{ tipsBusy ? 'Generating…' : 'Refresh tips' }}</AppButton></div>
           <p v-if="tipsError" class="mt-3 text-sm text-amber-700 dark:text-amber-300">{{ tipsError }}</p>
           <p v-else-if="tipsStatus" class="mt-3 text-sm text-slate-500 dark:text-slate-400" role="status">{{ tipsStatus }}</p>
-          <ul class="mt-5 grid gap-3 sm:grid-cols-2"><li v-for="tip in tips" :key="tip" class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed dark:border-slate-800 dark:bg-slate-900">{{ tip }}</li></ul>
+          <ul class="mt-5 grid gap-3 sm:grid-cols-2"><li v-for="tip in tips" :key="tip" class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed dark:border-slate-800 dark:bg-slate-900">{{ tip }}</li></ul>
           <p v-if="!selected.length" class="mt-4 text-sm text-slate-500">No recorded sessions for this selection yet. Study time and accuracy will appear after a session.</p>
         </section>
-        <section v-if="recentSessions.length" class="mt-7 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="recent-insights-title">
+        <section v-if="recentSessions.length" class="mt-7 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="recent-insights-title">
           <h2 id="recent-insights-title" class="text-xl font-semibold">Recent study</h2>
           <ul class="mt-3 divide-y divide-slate-200 dark:divide-slate-800">
             <li v-for="session in recentSessions" :key="session.id" class="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
@@ -55,6 +55,8 @@
 <script setup lang="ts">
 import { createFoldersRepo, createProfileRepo, createSetsRepo, createSettingsRepo, useTracerDb, type FlashcardSetListItem, type SetFolder } from '~/src/composables/db'
 import { listStudySessions, type StudySession } from '~/src/composables/study-insights'
+import { useStudyStreak } from '~/src/composables/study-streak'
+const streak = useStudyStreak()
 const loading = ref(true), error = ref(''), folderId = ref(''), setId = ref(''), tipsBusy = ref(false), tipsError = ref(''), tipsStatus = ref('')
 const folders = ref<SetFolder[]>([]), sets = ref<FlashcardSetListItem[]>([]), sessions = ref<StudySession[]>([]), tips = ref<string[]>([])
 const tipsOwner = ref('guest')
@@ -65,7 +67,11 @@ const recentSessions = computed(() => selected.value.slice(0, 5))
 function setTitle(id: string) { return sets.value.find(set => set.id === id)?.title || 'Set no longer in library' }
 function formatDate(value: string) { return new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) }
 function formatDuration(seconds: number) { return seconds < 60 ? `${seconds} sec` : `${Math.round(seconds / 60)} min` }
-const total = computed(() => selected.value.reduce((a, s) => ({ seconds: a.seconds + s.durationSeconds, correct: a.correct + s.correct, attempted: a.attempted + s.attempted }), { seconds: 0, correct: 0, attempted: 0 }))
+const total = computed(() => {
+  const result = selected.value.reduce((a, s) => ({ seconds: a.seconds + s.durationSeconds, correct: a.correct + s.correct, attempted: a.attempted + s.attempted }), { seconds: 0, correct: 0, attempted: 0 })
+  if (!setId.value && !folderId.value) result.seconds = Object.values(streak.days.value).reduce((sum, seconds) => sum + seconds, 0)
+  return result
+})
 const metrics = computed(() => [
   { label: 'Accuracy', value: total.value.attempted ? `${Math.round(total.value.correct / total.value.attempted * 100)}%` : '—' },
   { label: 'Study time', value: total.value.seconds >= 3600 ? `${(total.value.seconds / 3600).toFixed(1)} h` : formatDuration(total.value.seconds) },
@@ -77,7 +83,7 @@ const days = computed(() => Array.from({ length: 7 }, (_, index) => {
   const next = new Date(date); next.setDate(next.getDate() + 1)
   const rows = selected.value.filter(s => { const time = new Date(s.endedAt).getTime(); return time >= date.getTime() && time < next.getTime() })
   const attempted = rows.reduce((n, s) => n + s.attempted, 0)
-  return { key: date.toISOString(), label: date.toLocaleDateString(undefined, { weekday: 'short' }), minutes: Number((rows.reduce((n, s) => n + s.durationSeconds, 0) / 60).toFixed(1)), attempted, accuracy: attempted ? Math.round(rows.reduce((n, s) => n + s.correct, 0) / attempted * 100) : 0 }
+  return { key: date.toISOString(), label: date.toLocaleDateString(undefined, { weekday: 'short' }), minutes: Number(((!setId.value && !folderId.value ? (streak.days.value[date.toLocaleDateString('en-CA')] ?? 0) : rows.reduce((n, s) => n + s.durationSeconds, 0)) / 60).toFixed(1)), attempted, accuracy: attempted ? Math.round(rows.reduce((n, s) => n + s.correct, 0) / attempted * 100) : 0 }
 }))
 const maxMinutes = computed(() => Math.max(1, ...days.value.map(d => d.minutes)))
 const timeDescription = computed(() => days.value.map(d => `${d.label}: ${d.minutes} minutes`).join(', '))

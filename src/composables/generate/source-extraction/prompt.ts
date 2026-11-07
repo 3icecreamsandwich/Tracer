@@ -32,7 +32,7 @@ export function buildGenerateTextPrompt(input: {
   })
 
   return [
-    'You are creating study materials from extracted source text.',
+    input.sources.length ? 'You are creating study materials from extracted source text.' : 'Create a complete study guide and flashcards about the topic requested by the user, using established subject knowledge. Do not claim to have read any source files.',
     input.incremental
       ? 'Create only additional study-guide content and flashcards for these newly added sources. Do not return a title or description.'
       : '',

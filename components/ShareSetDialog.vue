@@ -10,13 +10,13 @@
             <label for="share-terms" class="sr-only">{{
                 t("public.share")
             }}</label>
-            <textarea
+            <UTextarea
                 id="share-terms"
                 ref="textEl"
                 readonly
                 :value="tsv"
-                rows="10"
-                class="w-full rounded-2xl border border-slate-300 bg-slate-50 p-4 font-mono text-sm dark:border-slate-700 dark:bg-slate-900"
+                :rows="10"
+                class="w-full"
             />
         </template>
         <p v-else class="text-sm text-slate-600 dark:text-slate-300">
@@ -60,7 +60,7 @@
                     {{ t("public.tags") }}
                 </legend>
                 <div class="flex flex-wrap gap-2">
-                    <button
+                    <UButton color="primary" variant="soft"
                         v-for="tag in PUBLIC_SET_TAGS"
                         :key="tag"
                         type="button"
@@ -74,24 +74,13 @@
                         @click="toggle(tag)"
                     >
                         {{ t(`public.tag.${tag}`) }}
-                    </button>
+                    </UButton>
                 </div>
             </fieldset>
             <label
                 class="flex cursor-pointer items-center justify-between gap-4 text-sm font-medium"
                 >{{ t("public.allowCopying")
-                }}<span class="relative inline-flex"
-                    ><input
-                        v-model="copying"
-                        :disabled="publishing"
-                        type="checkbox"
-                        role="switch"
-                        class="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0" /><span
-                        aria-hidden="true"
-                        class="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-orange-600 peer-focus-visible:ring-2 peer-focus-visible:ring-orange-500 peer-focus-visible:ring-offset-2 dark:bg-slate-700" /><span
-                        aria-hidden="true"
-                        class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" /></span
-            ></label>
+                }}<USwitch v-model="copying" :disabled="publishing" :aria-label="t('public.allowCopying')" /></label>
         </div>
         <p v-if="message" role="status" class="mt-4 text-sm">{{ message }}</p>
         <p
@@ -137,7 +126,7 @@ const tags = ref<PublicSetTag[]>([]),
     message = ref(""),
     error = ref(""),
     publishedId = ref("");
-const textEl = ref<HTMLTextAreaElement | null>(null);
+const textEl = ref<{ textareaRef: HTMLTextAreaElement } | null>(null);
 const tsv = computed(
     () =>
         props.set?.terms
@@ -170,7 +159,7 @@ async function copy() {
         await navigator.clipboard.writeText(tsv.value);
         message.value = t("public.copied");
     } catch {
-        textEl.value?.select();
+        textEl.value?.textareaRef?.select();
         error.value = t("public.copyFailed");
     }
 }

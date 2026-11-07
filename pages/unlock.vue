@@ -6,33 +6,33 @@
       <form class="mt-6 space-y-4" @submit.prevent="onUnlock">
         <div>
           <label class="block text-sm font-medium">{{ t('auth.password') }}</label>
-          <input
+          <UInput
             v-model="password"
             type="password"
             autocomplete="current-password"
-            class="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50"
+            class="w-full mt-1"
           />
         </div>
 
         <p v-if="error" class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
 
-        <button
+        <UButton color="primary" variant="soft"
           type="submit"
-          class="w-full rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+          class="w-full rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2 text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           :disabled="busy"
         >
           <LoadingSpinner v-if="busy" size="sm" />
           <template v-else>{{ t('auth.unlock') }}</template>
-        </button>
+        </UButton>
       </form>
 
-      <button
-        class="mt-6 w-full rounded border border-red-300 px-4 py-2 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
+      <UButton color="primary" variant="soft"
+        class="mt-6 w-full rounded-[var(--tracer-radius-control)] border border-red-300 px-4 py-2 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
         :disabled="busy"
         @click="openResetConfirmation"
       >
         {{ t('settings.resetTracer') }}
-      </button>
+      </UButton>
     </div>
 
     <ResetTracerDialog

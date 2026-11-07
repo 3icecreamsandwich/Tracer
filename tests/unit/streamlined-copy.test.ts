@@ -16,8 +16,8 @@ describe('streamlined non-settings copy', () => {
     const destination = source('../../components/HomeDestinationLink.vue')
 
     expect(home).not.toMatch(/home\.(?:subtitle|chooseMode|basicHint|synthesizeHint|generateHint)/)
-    expect(home).toContain('id="home-sets" class="text-3xl font-semibold"')
-    expect(home).toContain('id="home-create" class="text-3xl font-semibold"')
+    expect(home).toContain('Recently used')
+    expect(home).not.toContain('home-create')
     expect(basic).not.toContain("t('create.basicDescription')")
     expect(generate).not.toContain("t('create.generateDescription')")
     expect(synthesize).not.toMatch(/create\.(?:synthesizeDescription|themeHint)/)
@@ -25,8 +25,8 @@ describe('streamlined non-settings copy', () => {
     expect(destination).not.toContain('description')
   })
 
-  it('keeps settings descriptions and essential destructive confirmations', () => {
-    const settings = source('../../pages/settings.vue')
+  it('keeps essential destructive confirmations', () => {
+    const settings = source('../../components/DeleteAccountDialog.vue')
     const manage = source('../../pages/teacher/classes/[id]/manage.vue')
     const edit = source('../../pages/set/[id]/edit/index.vue')
 

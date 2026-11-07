@@ -1,23 +1,23 @@
 <template>
   <AppDialog :open="open" :title="error?.title ?? 'Something went wrong'" :description="error?.message" :close-label="t('common.close')" @close="$emit('close')">
       <div class="mt-4 flex flex-wrap gap-2">
-        <NuxtLink
+        <UButton color="primary" variant="solid"
           v-if="settingsHref"
           :to="settingsHref"
-          class="tracer-button tracer-button--dark tracer-button--md"
+          class=""
           @click="$emit('close')"
         >
           {{ t('nav.settings') }}
-        </NuxtLink>
+        </UButton>
 
-        <button
+        <UButton color="primary" variant="soft"
           v-if="showRetry"
           type="button"
-          class="tracer-button tracer-button--white tracer-button--md"
+
           @click="$emit('retry')"
-        >
+         size="md">
           {{ t('common.retry') }}
-        </button>
+        </UButton>
       </div>
   </AppDialog>
 </template>

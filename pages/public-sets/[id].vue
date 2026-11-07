@@ -3,5 +3,7 @@
 </template>
 <script setup lang="ts">
 import SetViewer from '~/pages/set/[id].vue'
+import { recordPublishedSetOpen } from '~/src/composables/published-sets'
 const route = useRoute()
+onMounted(() => { void recordPublishedSetOpen(String(route.params.id)).catch(() => {}) })
 </script>

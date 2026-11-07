@@ -2,7 +2,7 @@
   <main class="min-h-[calc(100vh-4rem)] bg-white pb-32 text-slate-950 dark:bg-slate-950 dark:text-white">
     <div class="tracer-page mx-auto max-w-[1280px] px-8 py-10">
       <LoadingSpinner v-if="loading" screen />
-      <div v-else-if="loadError" class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
+      <div v-else-if="loadError" class="rounded-[var(--tracer-radius-surface)] border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">{{ loadError }}</p>
         <AppButton class="mt-4" variant="white" @click="loadPage">{{ t('classroom.retry') }}</AppButton>
       </div>
@@ -16,22 +16,22 @@
           <AppButton variant="white" to="/teacher">{{ t('classroom.backToDashboard') }}</AppButton>
         </header>
 
-        <p v-if="successMessage" class="mt-7 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200" role="status">
+        <p v-if="successMessage" class="mt-7 rounded-[var(--tracer-radius-control)] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200" role="status">
           {{ successMessage }}
         </p>
 
         <div class="mt-8 grid items-start gap-7 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-          <section class="min-h-[calc(100vh-17rem)] rounded-xl border border-slate-200 bg-white p-[26px] shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="assign-library-title">
+          <section class="min-h-[calc(100vh-17rem)] rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-[26px] shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="assign-library-title">
             <h2 id="assign-library-title" class="text-3xl font-semibold">{{ t('classroom.chooseAssignment') }}</h2>
 
-            <div class="mt-7 grid w-full max-w-[360px] grid-cols-2 rounded-[14px] border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-950" role="tablist" :aria-label="t('home.libraryType')">
+            <div class="mt-7 grid w-full max-w-[360px] grid-cols-2 rounded-[var(--tracer-radius-surface)] border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-950" role="tablist" :aria-label="t('home.libraryType')">
               <button
                 v-for="tab in libraryTabs"
                 :key="tab.value"
                 type="button"
                 role="tab"
                 :aria-selected="activeKind === tab.value"
-                class="h-10 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                class="h-10 rounded-[var(--tracer-radius-control)] px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
                 :class="activeKind === tab.value ? 'bg-neutral-800 text-white shadow-sm dark:bg-slate-700' : 'text-slate-950 hover:bg-slate-50 dark:text-white dark:hover:bg-slate-900'"
                 @click="activeKind = tab.value"
               >
@@ -40,15 +40,15 @@
             </div>
 
             <div class="tracer-library-scroll mt-7 max-h-[490px] overflow-y-auto overscroll-contain pe-1" tabindex="0" :aria-label="t('classroom.chooseAssignment')">
-              <p v-if="visibleItems.length === 0 && folders.length === 0" class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+              <p v-if="visibleItems.length === 0 && folders.length === 0" class="rounded-[var(--tracer-radius-control)] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
                 {{ t('classroom.noAssignableItems') }}
               </p>
               <div v-else class="space-y-3">
                 <div v-for="group in assignmentGroups" :key="group.folder?.id ?? 'root'">
-                  <button
+                  <UButton color="primary" variant="soft"
                     v-if="group.folder"
                     type="button"
-                    class="flex min-h-12 w-full items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-left shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:hover:bg-slate-900"
+                    class="flex min-h-12 w-full items-center gap-3 rounded-[var(--tracer-radius-control)] border border-slate-200 px-3 py-2 text-left shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:hover:bg-slate-900"
                     :aria-expanded="expandedFolderIds.has(group.folder.id)"
                     :aria-controls="`assign-folder-${group.folder.id}`"
                     @click="toggleFolder(group.folder.id)"
@@ -57,13 +57,13 @@
                     <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ group.folder.name }}</span>
                     <span class="text-sm text-slate-500 dark:text-slate-400">{{ group.items.length }}</span>
                     <svg aria-hidden="true" viewBox="0 0 20 20" class="h-6 w-6 shrink-0 text-slate-500 transition-transform" :class="{ 'rotate-90': expandedFolderIds.has(group.folder.id) }" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 4 6 6-6 6" /></svg>
-                  </button>
+                  </UButton>
                   <ul v-if="!group.folder || expandedFolderIds.has(group.folder.id)" :id="group.folder ? `assign-folder-${group.folder.id}` : undefined" class="space-y-3" :class="group.folder ? 'ms-6 mt-2 border-s border-slate-200 ps-3 dark:border-slate-800' : ''">
                 <li v-for="item in group.items" :key="itemKey(item)">
-                  <button
+                  <UButton color="primary" variant="soft"
                     type="button"
                     :disabled="isAlreadyAssigned(item)"
-                    class="group flex min-h-[82px] w-full items-center gap-5 rounded-lg border p-4 text-left shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                    class="group flex min-h-[82px] w-full items-center gap-5 rounded-[var(--tracer-radius-control)] border p-4 text-left shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
                     :class="isAlreadyAssigned(item)
                       ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60 dark:border-slate-800 dark:bg-slate-900'
                       : selectedKey === itemKey(item)
@@ -84,9 +84,9 @@
                       {{ t('classroom.alreadyAssigned') }}
                     </span>
                     <span class="flex h-6 w-6 items-center justify-center rounded-full border" :class="selectedKey === itemKey(item) ? 'border-slate-950 bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-950' : 'border-slate-300 dark:border-slate-700'" aria-hidden="true">
-                      <svg v-if="selectedKey === itemKey(item)" viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 10 3 3 7-7" /></svg>
+                      <svg v-if="selectedKey === itemKey(item)" viewBox="0 0 20 20" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 10 3 3 7-7" /></svg>
                     </span>
-                  </button>
+                  </UButton>
                 </li>
                   </ul>
                 </div>
@@ -94,10 +94,10 @@
             </div>
           </section>
 
-          <section class="rounded-xl border border-slate-200 bg-white p-[26px] shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="assign-create-title">
+          <section class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-[26px] shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="assign-create-title">
             <h2 id="assign-create-title" class="text-3xl font-semibold">{{ t('home.create') }}</h2>
             <div class="mt-8 grid gap-3">
-              <NuxtLink v-for="mode in createModes" :key="mode.to" :to="mode.to" class="group flex min-h-[70px] items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900">
+              <NuxtLink v-for="mode in createModes" :key="mode.to" :to="mode.to" class="group flex min-h-[70px] items-center gap-4 rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900">
                 <CreateModeIcon :name="mode.name" class="h-12 w-12" />
                 <span class="min-w-0 flex-1 text-lg font-semibold">{{ t(mode.label) }}</span>
                 <CreateChevron />
@@ -108,7 +108,7 @@
       </template>
     </div>
 
-    <div v-if="selectedItem" class="fixed bottom-6 end-24 z-40 max-w-[min(28rem,calc(100vw-8rem))] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+    <div v-if="selectedItem" class="fixed bottom-6 end-24 z-40 max-w-[min(28rem,calc(100vw-8rem))] rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-950">
       <p v-if="assignError" class="mb-3 px-2 text-sm text-red-700 dark:text-red-300" role="alert">{{ assignError }}</p>
       <AppButton size="lg" :busy="assignBusy" @click="assignSelected">
         {{ t('classroom.assign') }}
