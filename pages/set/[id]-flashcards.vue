@@ -221,13 +221,12 @@
                     <div class="flex flex-wrap gap-3">
                         <UButton color="primary" variant="soft"
                             type="button"
-                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-orange-700 shadow-sm hover:border-orange-200 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:text-orange-400 dark:hover:bg-orange-950/30"
+                            class="flashcard-navigation flashcard-navigation--previous inline-flex items-center rounded-[var(--tracer-radius-control)] !border-[#FF7043] bg-white px-4 py-2 text-sm font-semibold !text-[#FF7043] shadow-sm hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:!opacity-100 dark:bg-slate-950 dark:!text-[#FF7043] dark:hover:bg-orange-950/30"
                             :disabled="
                                 totalCount === 0 ||
                                 cursorIndex === 0 ||
-                                (flashcardAnswerBusy || !!isNavigating || isFlipping)
+                                flashcardAnswerBusy
                             "
-                            :class="{ '!opacity-100': (isNavigating || isFlipping) && cursorIndex > 0 }" style="color: var(--color-orange-700)"
                                             @click="goPrev"
                         >
                             ← {{ t("set.previous") }}
@@ -235,12 +234,11 @@
 
                         <UButton color="primary" variant="soft"
                             type="button"
-                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                            class="flashcard-navigation inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:!opacity-100 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                             :disabled="
                                 totalCount === 0 ||
-                                (flashcardAnswerBusy || !!isNavigating || isFlipping)
+                                flashcardAnswerBusy
                             "
-                            :class="{ '!opacity-100': isNavigating || isFlipping }"
                                             @click="goNext"
                         >
                             {{ t("set.next") }} →
@@ -274,22 +272,20 @@
                     class="mt-4 grid w-[calc(100%-2rem)] grid-cols-4 gap-2 sm:hidden">
                     <UButton color="primary" variant="soft"
                         type="button"
-                        class="mobile-fullscreen-action text-slate-700 dark:text-slate-200"
-                        :disabled="totalCount === 0 || cursorIndex === 0 || (flashcardAnswerBusy || !!isNavigating || isFlipping)"
+                        class="flashcard-navigation flashcard-navigation--previous mobile-fullscreen-action !text-[#FF7043] disabled:!opacity-100 dark:!text-[#FF7043]"
+                        :disabled="totalCount === 0 || cursorIndex === 0 || flashcardAnswerBusy"
                         :aria-label="t('set.previous')"
                         :title="t('set.previous')"
-                        :class="{ '!opacity-100': (isNavigating || isFlipping) && cursorIndex > 0 }" style="color: var(--color-orange-700)"
                                             @click="goPrev"
                     >
                         <span aria-hidden="true">←</span>
                     </UButton>
                     <UButton color="primary" variant="soft"
                         type="button"
-                        class="mobile-fullscreen-action text-slate-700 dark:text-slate-200"
-                        :disabled="totalCount === 0 || (flashcardAnswerBusy || !!isNavigating || isFlipping)"
+                        class="flashcard-navigation mobile-fullscreen-action text-slate-700 dark:text-slate-200 disabled:!opacity-100"
+                        :disabled="totalCount === 0 || flashcardAnswerBusy"
                         :aria-label="t('set.next')"
                         :title="t('set.next')"
-                        :class="{ '!opacity-100': isNavigating || isFlipping }"
                                             @click="goNext"
                     >
                         <span aria-hidden="true">→</span>
@@ -1191,7 +1187,7 @@ onBeforeUnmount(() => {
 }
 
 .mobile-fullscreen-action:disabled {
-    opacity: 0.4;
+    opacity: 1;
 }
 
 .dark .mobile-fullscreen-action {

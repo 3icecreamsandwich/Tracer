@@ -479,3 +479,17 @@ html.dark button[data-slot="base"]:disabled:not(.tracer-practice-choice):not([ar
   border-color: transparent;
   color: #94a3b8;
 }
+
+button.flashcard-navigation:disabled {
+  opacity: 1 !important;
+  background-color: white !important;
+  border-color: #e2e8f0;
+}
+html.dark button.flashcard-navigation:disabled {
+  background-color: #020617 !important;
+  border-color: #1e293b;
+}
+button.flashcard-navigation--previous {
+  color: #ff7043 !important;
+  border-color: transparent !important;
+}

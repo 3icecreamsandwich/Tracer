@@ -495,6 +495,8 @@
                     </div>
                   </button>
                   <FlashcardStar
+                    bottom
+                    :class="{ 'animate-flip': isFlipping, 'animate-card-swipe-left': isNavigating === 'next', 'animate-card-swipe-right': isNavigating === 'prev' }"
                     :starred="isCurrentStarred"
                     :disabled="!currentTerm || starBusy"
                     @toggle="toggleStar"
@@ -511,19 +513,12 @@
                     color="primary"
                     variant="soft"
                     type="button"
-                    class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
+                    class="mobile-flashcard-action flashcard-navigation flashcard-navigation--previous text-slate-700 dark:text-slate-200"
                     :disabled="
                       cursorIndex === 0 ||
-                      flashcardAnswerBusy ||
-                      !!isNavigating ||
-                      isFlipping
+                      flashcardAnswerBusy
                     "
                     :aria-label="t('set.previous')"
-                    :class="{
-                      '!opacity-100':
-                        (isNavigating || isFlipping) && cursorIndex > 0,
-                    }"
-                    style="color: var(--color-orange-700)"
                     @click="goPrev"
                   >
                     <span aria-hidden="true">←</span>
@@ -532,12 +527,11 @@
                     color="primary"
                     variant="soft"
                     type="button"
-                    class="mobile-flashcard-action text-slate-700 dark:text-slate-200"
+                    class="mobile-flashcard-action flashcard-navigation text-slate-700 dark:text-slate-200"
                     :disabled="
-                      flashcardAnswerBusy || !!isNavigating || isFlipping
+                      flashcardAnswerBusy
                     "
                     :aria-label="t('set.next')"
-                    :class="{ '!opacity-100': isNavigating || isFlipping }"
                     @click="goNext"
                   >
                     <span aria-hidden="true">→</span>
@@ -857,6 +851,8 @@
                     </div>
                   </button>
                   <FlashcardStar
+                    bottom
+                    :class="{ 'animate-flip': isFlipping, 'animate-card-swipe-left': isNavigating === 'next', 'animate-card-swipe-right': isNavigating === 'prev' }"
                     :starred="isCurrentStarred"
                     :disabled="!currentTerm || starBusy"
                     @toggle="toggleStar"
@@ -877,19 +873,12 @@
                       color="primary"
                       variant="soft"
                       type="button"
-                      class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      class="flashcard-navigation flashcard-navigation--previous inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                       :disabled="
                         totalCount === 0 ||
                         cursorIndex === 0 ||
-                        flashcardAnswerBusy ||
-                        !!isNavigating ||
-                        isFlipping
+                        flashcardAnswerBusy
                       "
-                      :class="{
-                        '!opacity-100':
-                          (isNavigating || isFlipping) && cursorIndex > 0,
-                      }"
-                      style="color: var(--color-orange-700)"
                       @click="goPrev"
                     >
                       ← {{ t("set.previous") }}
@@ -899,14 +888,11 @@
                       color="primary"
                       variant="soft"
                       type="button"
-                      class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                      class="flashcard-navigation inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                       :disabled="
                         totalCount === 0 ||
-                        flashcardAnswerBusy ||
-                        !!isNavigating ||
-                        isFlipping
+                        flashcardAnswerBusy
                       "
-                      :class="{ '!opacity-100': isNavigating || isFlipping }"
                       @click="goNext"
                     >
                       {{ t("set.next") }} →
