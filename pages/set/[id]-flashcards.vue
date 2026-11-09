@@ -77,53 +77,12 @@
             </div>
 
             <!-- Results -->
-            <div v-if="isFinished" class="w-full max-w-2xl select-none">
+            <div v-if="isFinished" class="w-full max-w-6xl select-none">
                 <div
-                    class="tracer-result-surface p-8 text-center select-none"
+                    class="text-center select-none"
                 >
-                    <h2
-                        class="text-2xl font-semibold text-slate-900 dark:text-slate-50"
-                    >
-                        {{ t("common.results") }}
-                    </h2>
-                    <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
-                        {{ t("set.accuracy") }}
-                        <span class="font-medium">{{ accuracyText }}</span>
-                    </p>
-                    <p
-                        class="mt-2 text-sm text-slate-600 dark:text-slate-300 select-none"
-                    >
-                        {{ t("set.correct") }} {{ correctCount }} ·
-                        {{ t("set.attempted") }} {{ attemptedCount }}
-                    </p>
+                    <StudyResultOverview mode="flashcards" :set-id="set?.id" :published="isPublishedSet" :correct="[...new Set(order)].filter(id => answersByTermId[id] === 'correct').length" :attempted="[...new Set(order)].filter(id => answersByTermId[id] !== undefined).length" :total="totalCount" :missed="(set?.terms ?? []).filter(term => order.includes(term.id) && answersByTermId[term.id] === 'incorrect')"  :back-to="backToSetPath" @restart="restartAllFlashcards" :resume="hasIncorrectCards" @resume="resumeIncorrect" />
 
-                    <div
-                        class="mt-6 flex flex-wrap justify-center gap-2 select-none"
-                    >
-                        <UButton color="primary" variant="soft"
-                            v-if="hasIncorrectCards"
-                            type="button"
-                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
-                            @click="resumeIncorrect"
-                        >
-                            {{ t("set.resumeIncorrect") }}
-                        </UButton>
-                        <UButton color="primary" variant="soft"
-                            type="button"
-                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                            :disabled="allStudyTermIds.length === 0"
-                            @click="restartAllFlashcards"
-                        >
-                            {{ t("common.restart") }}
-                        </UButton>
-                        <NuxtLink
-                            v-if="set"
-                            :to="backToSetPath"
-                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        >
-                            {{ t("set.backToSet") }}
-                        </NuxtLink>
-                    </div>
                 </div>
             </div>
 
@@ -495,6 +454,8 @@ async function loadSavedFlashcardProgress(setId: Uuid) {
     }
 }
 
+let flashcardProgressWrite = Promise.resolve()
+
 function persistFlashcardProgress(termId: Uuid) {
     const setId = set.value?.id as Uuid | undefined;
     if (!setId) return;
@@ -504,7 +465,7 @@ function persistFlashcardProgress(termId: Uuid) {
     const progress = {
         currentTermId: termId,
         correctTermIds,
-        masteryByTermId: masteryByTermId.value,
+        masteryByTermId: { ...masteryByTermId.value },
     };
     const signature = JSON.stringify(progress);
     if (savedFlashcardProgressSignature.value === signature) return;
@@ -515,8 +476,11 @@ function persistFlashcardProgress(termId: Uuid) {
         saveWebFlashcardProgress(setId, progress);
         return;
     }
-    void useTracerDb()
-        .then((db) => createFlashcardProgressRepo(db).save(setId, progress))
+    flashcardProgressWrite = flashcardProgressWrite
+        .then(async () => {
+            const db = await useTracerDb();
+            await createFlashcardProgressRepo(db).save(setId, progress);
+        })
         .catch(() => {});
 }
 
@@ -811,6 +775,7 @@ function selectFlashcardStudyFilter(filter: FlashcardStudyFilter) {
 }
 
 function restartAllFlashcards() {
+  cancelFlashcardMotion()
     flashcardStudyFilter.value = "all";
     starredOnly.value = false;
     reviewFilter.value = 'all';
@@ -887,8 +852,7 @@ const {
         if (id) completedTermIds.value = new Set(completedTermIds.value).add(id);
     },
     onFinish: () => {
-        const id = order.value[cursorIndex.value];
-        if (id && !smartReviewEnabled.value) completedTermIds.value = new Set(order.value);
+        completedTermIds.value = new Set(order.value);
     },
     isBusy: () => flashcardAnswerBusy.value,
 });
@@ -1244,17 +1208,17 @@ onBeforeUnmount(() => {
 }
 
 @keyframes cardSwipeLeft {
-    0% { transform: translateX(0); opacity: 1; }
-    49% { transform: translateX(-18%); opacity: 0; }
-    50% { transform: translateX(18%); opacity: 0; }
-    100% { transform: translateX(0); opacity: 1; }
+  0% { transform:translateX(0); opacity:1; }
+  45% { transform:translateX(-12%); opacity:.04; }
+  55% { transform:translateX(12%); opacity:.04; }
+  100% { transform:translateX(0); opacity:1; }
 }
 
 @keyframes cardSwipeRight {
-    0% { transform: translateX(0); opacity: 1; }
-    49% { transform: translateX(18%); opacity: 0; }
-    50% { transform: translateX(-18%); opacity: 0; }
-    100% { transform: translateX(0); opacity: 1; }
+  0% { transform:translateX(0); opacity:1; }
+  45% { transform:translateX(12%); opacity:.04; }
+  55% { transform:translateX(-12%); opacity:.04; }
+  100% { transform:translateX(0); opacity:1; }
 }
 
 .animate-card-swipe-left { animation: cardSwipeLeft 0.25s ease-in-out; }

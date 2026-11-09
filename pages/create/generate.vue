@@ -75,6 +75,8 @@
         </div>
       </div>
 
+      <p class="mt-4 text-sm text-slate-600 dark:text-slate-400">Ran out of usage? <a href="https://docs.google.com/forms/d/1CH-rdYNHYnsAdiDxbdfZIoAkVE6pYZ0tzP8t0fcyn00/" target="_blank" rel="noopener noreferrer" class="font-medium underline underline-offset-2">Request a set.</a></p>
+
       <div
         v-if="isWebPreview"
         class="mt-4 rounded-[var(--tracer-radius-surface)] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"

@@ -71,6 +71,7 @@ export function createFlashcardMotion(options: FlashcardMotionOptions) {
     navigationSwapTimeout = null
     navigationEndTimeout = null
     options.setNavigating(null)
+    options.setFlipping(false)
   }
 
   return {

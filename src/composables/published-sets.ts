@@ -354,3 +354,12 @@ export async function recordPublishedSetOpen(id: string): Promise<void> {
   const { error } = await getPublicSupabaseClient().rpc('record_published_set_open', { p_set_id: id, p_device_id: device })
   if (error) throw error
 }
+
+export async function unpublishSet(id: string): Promise<void> {
+  const { db, user } = await publishingSession()
+  if (!user) throw new Error('Sign in to unpublish this set.')
+  const { data, error } = await db.from('published_sets').delete().eq('id', id).eq('publisher_id', user.id).select('id').maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('The published set was not found or you do not own it.')
+  clearPublishedSetCache()
+}

@@ -107,37 +107,13 @@
       <LoadingSpinner v-if="learnBusy" screen label="Preparing questions…" />
 
       <!-- Results -->
-      <div v-else-if="learnIsFinished" class="w-full max-w-5xl select-none">
+      <div v-else-if="learnIsFinished" class="w-full max-w-6xl select-none">
         <div
-          class="tracer-result-surface flex min-h-[50vh] flex-col items-center justify-center p-8 text-center"
+          class="flex flex-col items-center justify-center text-center"
         >
-          <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-50">
-            {{ t("common.results") }}
-          </h2>
-          <p
-            v-if="practiceTimedOut"
-            class="mt-3 text-sm font-semibold text-amber-700 dark:text-amber-300"
-          >
-            Time is up. Unanswered questions were counted as missed.
-          </p>
-          <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
-            {{ t("set.accuracy") }}
-            <span class="font-medium">{{ learnAccuracyText }}</span>
-          </p>
-          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Correct: {{ learnCorrectCount }} · Attempted:
-            {{ learnAttemptedCount }}
-          </p>
+          <StudyResultOverview mode="learn" :set-id="set?.id" :published="isPublishedSet" :correct="learnCorrectCount" :attempted="learnAttemptedCount" :total="learnQuestions.length" :missed="(set?.terms ?? []).filter(term => learnQuestions.some(question => question.termId === term.id && learnAnswersByQuestionId[question.id] === false))"  :back-to="backToSetPath" @restart="applyPracticeSettings" :resume="learnQuestions.some(question => learnAnswersByQuestionId[question.id] === false)" @resume="reviewMissedPractice" />
+<p v-if="practiceTimedOut" class="mt-2 text-sm text-amber-700 dark:text-amber-300">Time is up. Unanswered questions were counted as missed.</p>
 
-          <div class="mt-6 flex flex-wrap justify-center gap-2">
-            <NuxtLink
-              v-if="set"
-              :to="backToSetPath"
-              class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-            >
-              {{ t("set.backToSet") }}
-            </NuxtLink>
-          </div>
         </div>
       </div>
 
@@ -182,23 +158,23 @@
                 color="primary"
                 variant="soft"
                 type="button"
-                class="tracer-practice-choice tracer-practice-choice--true-false tracer-practice-choice--true"
+                class="tracer-practice-choice tracer-practice-choice--true-false"
                 :class="practiceTrueFalseChoiceClass(true)"
                 :disabled="learnBusy || practiceAnswerBusy"
                 @click="answerLearnTrueFalse(true)"
               >
-                {{ t("common.true") }}
+                {{ t("common.true") }} <span v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && (practiceAnswerFeedback.correct === true || practiceAnswerFeedback.selected === true)" :aria-label="practiceAnswerFeedback.correct === true ? 'Correct answer' : 'Incorrect answer'">{{ practiceAnswerFeedback.correct === true ? '✓' : '×' }}</span>
               </UButton>
               <UButton
                 color="primary"
                 variant="soft"
                 type="button"
-                class="tracer-practice-choice tracer-practice-choice--true-false tracer-practice-choice--false"
+                class="tracer-practice-choice tracer-practice-choice--true-false"
                 :class="practiceTrueFalseChoiceClass(false)"
                 :disabled="learnBusy || practiceAnswerBusy"
                 @click="answerLearnTrueFalse(false)"
               >
-                {{ t("common.false") }}
+                {{ t("common.false") }} <span v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && (practiceAnswerFeedback.correct === false || practiceAnswerFeedback.selected === false)" :aria-label="practiceAnswerFeedback.correct === false ? 'Correct answer' : 'Incorrect answer'">{{ practiceAnswerFeedback.correct === false ? '✓' : '×' }}</span>
               </UButton>
             </template>
 
@@ -216,7 +192,7 @@
                 :disabled="learnBusy || practiceAnswerBusy"
                 @click="answerLearnMultipleChoice(idx)"
               >
-                <MarkdownRenderer :markdown="opt" variant="compact" />
+                <MarkdownRenderer :markdown="opt" variant="compact" /><span v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && (practiceAnswerFeedback.correct === idx || practiceAnswerFeedback.selected === idx)" :aria-label="practiceAnswerFeedback.correct === idx ? 'Correct answer' : 'Incorrect answer'">{{ practiceAnswerFeedback.correct === idx ? '✓' : '×' }}</span>
               </UButton>
             </template>
             <form
@@ -505,7 +481,7 @@ const learnIsFinished = computed(() => {
 const learnRatioText = computed(() => {
   const total = learnQuestions.value.length
   if (total === 0) return "0/0"
-  return `${Math.min(learnAttemptedCount.value, total)}/${total}`
+  return `${Math.min(learnAttemptedCount.value + (learnIsFinished.value ? 0 : 1), total)}/${total}`
 })
 
 const learnAccuracyText = computed(() => {
@@ -798,6 +774,15 @@ async function retryPracticeWrittenAnswer() {
   await runPracticeWrittenGrade(input)
 }
 
+function handlePracticeEnter(event: KeyboardEvent) {
+  if (event.key !== 'Enter' || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return
+  if (practiceWrittenFeedback.value && !practiceAnswerBusy.value) {
+    if (event.target instanceof HTMLElement && event.target.closest('button,a,input,select')) return
+    event.preventDefault(); void continueAfterWrittenFeedback()
+  }
+  else if (event.target instanceof HTMLTextAreaElement && event.target.id === "fullscreen-written-answer" && !practiceAnswerBusy.value) { event.preventDefault(); void answerLearnWritten(defaultModelId.value === 'builtin:auto') }
+}
+
 async function continueAfterWrittenFeedback() {
   const feedback = practiceWrittenFeedback.value
   if (!feedback || practiceAnswerBusy.value) return
@@ -968,6 +953,19 @@ function persistPracticeRun() {
   )
 }
 
+function reviewMissedPractice() {
+  const missed = learnQuestions.value.filter(question => learnAnswersByQuestionId.value[question.id] === false)
+  if (!missed.length) return
+  cancelPracticeAnswerFeedback()
+  clearPracticeTimer()
+  practiceTimedOut.value = false
+  learnQuestions.value = missed
+  learnAnswersByQuestionId.value = {}
+  learnCursorIndex.value = 0
+  practiceWrittenAnswer.value = ""
+  persistPracticeRun()
+}
+
 async function initializePracticeRun() {
   const currentSet = set.value
   if (!currentSet) return
@@ -976,7 +974,8 @@ async function initializePracticeRun() {
   if (
     saved &&
     (isWebPreview.value || saved.setUpdatedAt === currentSet.updatedAt) &&
-    saved.questions.length > 0
+    saved.questions.length > 0 &&
+    saved.questions.some(question => saved.answersByQuestionId[question.id] === undefined)
   ) {
     const questionIds = new Set(saved.questions.map((question) => question.id))
     learnQuestions.value = saved.questions
@@ -1078,6 +1077,7 @@ watch(practiceTimed, (enabled) => {
 })
 
 onMounted(async () => {
+  window.addEventListener("keydown", handlePracticeEnter)
   window.addEventListener("pagehide", onPageHide)
   try {
     const idParam = route.params.id
@@ -1156,6 +1156,7 @@ onBeforeRouteLeave(() => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener("keydown", handlePracticeEnter)
   finishClassroomPractice()
   window.removeEventListener("pagehide", onPageHide)
   cancelPracticeAnswerFeedback()

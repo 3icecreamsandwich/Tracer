@@ -46,6 +46,11 @@ export function navigateBack(
   historyState: unknown,
 ) {
   if (/^\/set\/[^/]+-(?:flashcards|learn|match|test)\/?$/.test(path)) {
+    const previous = (historyState as { back?: unknown } | null)?.back
+    if (typeof previous === 'string' && previous.split('?')[0] === fallbackBackTarget(path)) {
+      router.back()
+      return
+    }
     void router.push(fallbackBackTarget(path))
     return
   }

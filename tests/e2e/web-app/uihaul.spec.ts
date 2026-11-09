@@ -347,3 +347,153 @@ test('fullscreen written answers sit at the bottom with a soft disabled check bu
   expect(colors.color).toBe('rgb(100, 116, 139)')
   expect(colors.background).toBe('rgb(241, 245, 249)')
 })
+
+test('home study shortcut has set page in back and forward history', async ({ context, page }) => {
+  await seed(context, page)
+  const card = page.locator('main .library-card').filter({ hasText: 'Biology 2' })
+  await card.getByRole('link', { name: 'Flashcards' }).click()
+  await expect(page).toHaveURL(/-flashcards$/)
+  await page.getByRole('button', { name: 'Back', exact: true }).click()
+  await expect(page).toHaveURL(/\/set\/00000000-0000-4000-8000-000000000082$/)
+  await page.keyboard.press('Meta+]')
+  await expect(page).toHaveURL(/-flashcards$/)
+  await page.keyboard.press('Meta+[')
+  await expect(page).toHaveURL(/\/set\/00000000-0000-4000-8000-000000000082$/)
+  await expect(page.getByRole('heading', { name: 'Biology 2', exact: true, level: 1 })).toBeVisible()
+  await page.keyboard.press('Meta+[')
+  await expect(page).toHaveURL(/\/$/)
+})
+
+test('completed flashcards share the result overview inline and fullscreen', async ({ context, page }) => {
+  await seed(context, page)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/set/00000000-0000-4000-8000-000000000082')
+  await page.locator('.study-panel:visible').getByRole('button', { name: 'Got it', exact: true }).click()
+  await expect(page.locator('.study-panel:visible').getByRole('heading', { name: 'Good job!' })).toBeVisible()
+  await expect(page.locator('.study-panel:visible').getByRole('img', { name: /1 correct/ })).toBeVisible()
+  await page.goto('/set/00000000-0000-4000-8000-000000000081-flashcards')
+  await page.getByRole('button', { name: 'Got it', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Good job!' })).toBeVisible()
+  await expect(page.getByRole('img', { name: /1 correct/ })).toBeVisible()
+})
+
+test('a missing private study guide can be generated and reopened', async ({ context, page }) => {
+  await seed(context, page)
+  await context.route('**/api/ai/requests', route => route.fulfill({ contentType: 'text/event-stream', body: 'data: {"type":"result","text":"# Cell guide\\n\\nA cell is the basic unit of life."}\n\ndata: {"type":"done","usage":{}}\n\n' }))
+  await page.goto('/set/00000000-0000-4000-8000-000000000082')
+  await page.getByRole('link', { name: 'Study guide', exact: true }).first().click()
+  await expect(page.getByRole('heading', { name: 'No study guide yet' })).toBeVisible()
+  await page.getByRole('button', { name: 'Generate one' }).click()
+  await expect(page.getByRole('heading', { name: 'Cell guide' })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Cell guide' })).toBeVisible()
+})
+
+test('first-run uses a roomy form and unobtrusive secondary controls', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/first-run')
+  await expect(page.getByRole('heading', { name: 'Setup Tracer' })).toBeVisible()
+  await expect(page.getByLabel('Email or username')).toBeVisible()
+  const form = page.locator('main > .tracer-page')
+  expect((await form.boundingBox())!.width).toBeGreaterThan(500)
+  await expect(page.getByRole('button', { name: 'Show password' })).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+  await expect(page.getByRole('button', { name: /Need an account/ })).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+})
+
+test('practice and match use the shared result overview', async ({ context, page }) => {
+  await seed(context, page)
+  await page.goto('/set/00000000-0000-4000-8000-000000000083-learn')
+  await page.getByRole('button', { name: 'Practice settings', exact: true }).click()
+  const settings = page.getByRole('dialog', { name: 'Practice and test settings' })
+  await settings.getByRole('button', { name: 'Multiple choice', exact: true }).click()
+  await settings.getByRole('button', { name: 'Written', exact: true }).click()
+  await settings.getByRole('button', { name: 'Restart practice', exact: true }).click()
+  await page.getByRole('button', { name: 'True', exact: true }).click()
+  await expect(page.locator('.result-overview')).toBeVisible()
+  await expect(page.locator('.result-overview').getByRole('img')).toBeVisible()
+  await page.goto('/set/00000000-0000-4000-8000-000000000084-match')
+  await page.getByRole('button', { name: 'Start', exact: true }).click()
+  const tiles = page.locator('[data-match-tile="true"]')
+  await expect(tiles).toHaveCount(2)
+  await tiles.nth(0).click(); await tiles.nth(1).click()
+  await expect(page.locator('.result-overview')).toBeVisible()
+  await expect(page.locator('.result-overview').getByRole('img')).toBeVisible()
+})
+
+test('submitted tests use the shared result overview', async ({ context, page }) => {
+  await seed(context, page)
+  await page.goto('/set/00000000-0000-4000-8000-000000000085-test?types=true_false&count=1&seed=1')
+  await page.getByRole('button', { name: 'True', exact: true }).click()
+  await page.getByRole('button', { name: 'Submit test', exact: true }).click()
+  await expect(page.locator('.result-overview')).toBeVisible()
+  await expect(page.locator('.result-overview').getByRole('img')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Restart test' })).toBeVisible()
+})
+
+test('published set edit offers an owner-confirmed unpublish action', async ({ context, page }) => {
+  await seed(context, page)
+  const id = '00000000-0000-4000-8000-000000000099'
+  let removed = false
+  await context.route('**/rest/v1/published_sets?**', route => {
+    if (route.request().method() === 'DELETE') { removed = true; return route.fulfill({ json: { id } }) }
+    return route.fulfill({ json: { id, title: 'Published fixture', description: null, publisher_name: 'Owner', publisher_username: 'owner', publisher_is_dev: false, tags: [], allow_copying: true, card_count: 1, terms: [{ id: 'term', front: 'Term', back: 'Definition' }], created_at: '2026-01-01', updated_at: '2026-01-01', icon_key: null, icon_tone: null } })
+  })
+  await page.goto(`/set/${id}/edit?published=1`)
+  await page.getByRole('button', { name: 'Unpublish', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Unpublish set?' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('button', { name: 'Unpublish', exact: true }).click()
+  await expect.poll(() => removed).toBe(true)
+  await expect(page).toHaveURL(/\/public-sets$/)
+})
+
+test('written Practice uses Enter to check and then advance, with a current-question counter', async ({ context, page }) => {
+  await seed(context, page)
+  await page.goto('/set/demo-learn')
+  await page.getByRole('button', { name: 'Practice settings', exact: true }).click()
+  const menu = page.getByRole('dialog', { name: 'Practice and test settings' })
+  await menu.getByRole('button', { name: 'Multiple choice', exact: true }).click()
+  await menu.getByRole('button', { name: 'True / false', exact: true }).click()
+  await menu.getByRole('button', { name: 'Restart practice', exact: true }).click()
+  const answer = page.locator('#fullscreen-written-answer')
+  await expect(answer).toBeVisible()
+  await expect(page.locator('main').getByText('1/2', { exact: true })).toBeVisible()
+  await answer.fill('an answer')
+  await answer.press('Enter')
+  await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeVisible()
+  await page.keyboard.press('Enter')
+  await expect(page.locator('main').getByText('2/2', { exact: true })).toBeVisible()
+  await expect(answer).toBeEnabled()
+})
+
+test('flashcard navigation slides out and back in on both study surfaces', async ({ context, page }) => {
+  await seed(context, page)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  for (const path of ['/set/demo', '/set/demo-flashcards']) {
+    await page.evaluate(() => localStorage.removeItem('tracer:flashcard-progress:demo'))
+    await page.goto(path)
+    const next = page.locator('.flashcard-navigation:not(.flashcard-navigation--previous):visible').first()
+    await expect(next).toBeEnabled()
+    const frames = await next.evaluate(async button => {
+      button.click()
+      const start = performance.now()
+      const samples: { x: number; opacity: number }[] = []
+      await new Promise<void>(resolve => {
+        const sample = () => {
+          const card = Array.from(document.querySelectorAll<HTMLElement>('.animate-card-swipe-left')).find(el => el.getBoundingClientRect().width > 0)
+          if (card) {
+            const style = getComputedStyle(card)
+            samples.push({ x: new DOMMatrixReadOnly(style.transform).m41, opacity: Number(style.opacity) })
+          }
+          if (performance.now() - start < 320) requestAnimationFrame(sample)
+          else resolve()
+        }
+        requestAnimationFrame(sample)
+      })
+      return samples
+    })
+    expect(frames.some(frame => frame.x < -5)).toBe(true)
+    expect(frames.some(frame => frame.x > 5)).toBe(true)
+    expect(Math.min(...frames.map(frame => frame.opacity))).toBeLessThan(0.2)
+  }
+})

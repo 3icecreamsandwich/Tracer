@@ -64,47 +64,14 @@
             <template v-else>
                 <section
                     v-if="testSubmitted"
-                    class="tracer-result-surface mb-10 p-6 sm:p-8"
-                    aria-labelledby="test-results-title"
+                    class="mb-10"
+                    aria-label="Test results"
                 >
-                    <div class="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
-                        <div>
-                            <p class="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                                Test complete
-                            </p>
-                            <h2
-                                id="test-results-title"
-                                class="mt-2 text-5xl font-semibold tracking-tight text-slate-950 dark:text-white"
-                            >
-                                {{ accuracyPercent }}%
-                            </h2>
-                            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                                {{ correctCount }}/{{ testQuestions.length }} correct
-                            </p>
-                            <p
-                                v-if="testTimedOut"
-                                class="mt-2 text-sm font-medium text-amber-700 dark:text-amber-300"
-                            >
-                                Time expired. Unanswered questions were counted as incorrect.
-                            </p>
-                        </div>
+                    <div class="grid gap-6">
+                        <StudyResultOverview mode="test" :set-id="set?.id" :correct="correctCount" :attempted="answeredCount" :total="testQuestions.length" :missed="(set?.terms ?? []).filter(term => testQuestions.some(question => question.termId === term.id && hasResponse(question.id) && !questionIsCorrect(question)))"  :back-to="`/set/${set?.id}`" @restart="restartTest" />
+<p v-if="testTimedOut" class="mt-2 text-sm text-amber-700 dark:text-amber-300">Time expired. Unanswered questions were counted as incorrect.</p>
 
-                        <div class="flex flex-col gap-2 sm:min-w-52">
-                            <UButton color="primary" variant="solid"
-                                type="button"
-
-                                @click="restartTest"
-                             size="lg">
-                                Restart test
-                            </UButton>
-                            <UButton color="primary" variant="soft"
-                                type="button"
-
-                                @click="scrollToAnswerResults"
-                             size="lg">
-                                See what you got wrong ↓
-                            </UButton>
-                        </div>
+                        <button type="button" class="mt-4 text-sm underline" @click="scrollToAnswerResults">See what you got wrong ↓</button>
                     </div>
                 </section>
 

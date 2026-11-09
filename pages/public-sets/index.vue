@@ -53,7 +53,7 @@
       <section v-for="section in popularSections" :key="section.tag" :aria-label="t(`public.tag.${section.tag}`)">
         <h2 class="text-xl font-semibold">{{ t(`public.tag.${section.tag}`) }}</h2>
         <ul class="mt-3 flex gap-4 overflow-x-auto pb-3">
-          <li v-for="item in section.items" :key="item.id" class="w-64 shrink-0" @pointerenter="prefetchPublishedSet(item.id)" @focusin="prefetchPublishedSet(item.id)">
+          <li v-for="item in section.items" :key="item.id" class="w-full shrink-0 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]" @pointerenter="prefetchPublishedSet(item.id)" @focusin="prefetchPublishedSet(item.id)">
             <LibraryCard kind="set" :title="item.title" :description="item.description" :author="item.publisher_name" :to="`/public-sets/${item.id}`" />
           </li>
         </ul>

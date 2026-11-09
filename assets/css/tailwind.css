@@ -467,14 +467,14 @@ html.dark .tracer-sidebar .nav-item-purple:is(:hover, .nav-item-active) { backgr
 .study-panel .match-start { min-height:36dvh; }
 
 /* Disabled actions stay soft but retain readable labels. Answer feedback keeps its colors. */
-button[data-slot="base"]:disabled:not(.tracer-practice-choice):not([aria-pressed]) {
+button[data-slot="base"]:disabled:not(.tracer-practice-choice):not([data-match-tile]):not([aria-pressed]) {
   opacity: 1;
   background-color: #f1f5f9;
   border-color: transparent;
   color: #64748b;
   box-shadow: none;
 }
-html.dark button[data-slot="base"]:disabled:not(.tracer-practice-choice):not([aria-pressed]) {
+html.dark button[data-slot="base"]:disabled:not(.tracer-practice-choice):not([data-match-tile]):not([aria-pressed]) {
   background-color: #1e293b;
   border-color: transparent;
   color: #94a3b8;

@@ -34,6 +34,23 @@ describe('flashcard motion', () => {
     expect(flipping).toBe(false)
   })
 
+  it('cancels pending movement before a restart resets the cursor', () => {
+    vi.useFakeTimers()
+    let cursor = 0
+    let flipping = false
+    const motion = createFlashcardMotion({
+      getFlipCardCount: () => 3, getNavigationCardCount: () => 3,
+      getCursorIndex: () => cursor, setCursorIndex: value => { cursor = value },
+      getFlipped: () => false, setFlipped: () => {},
+      getFlipping: () => flipping, setFlipping: value => { flipping = value },
+      setNavigating: () => {}, isBusy: () => false,
+    })
+    motion.goNext(); motion.cancel(); cursor = 0
+    vi.advanceTimersByTime(FLASHCARD_NAVIGATION_DURATION_MS)
+    expect(cursor).toBe(0)
+    expect(flipping).toBe(false)
+  })
+
   it('swaps halfway through a sideways navigation and blocks overlapping moves', () => {
     vi.useFakeTimers()
     let cursor = 0

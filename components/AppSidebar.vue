@@ -2,7 +2,7 @@
   <aside :class="{ 'is-expanded': expanded }" class="tracer-sidebar" aria-label="Study navigation" @mouseenter="expanded = true" @mouseleave="expanded = false" @focusin="expanded = true" @focusout="expanded = false">
     <nav class="sidebar-nav">
       <div v-for="item in visibleLinks" :key="item.to" class="nav-entry">
-        <NuxtLink :to="item.to" :aria-label="item.to === '/' ? 'Home' : item.label" :aria-current="isActive(item.to) ? 'page' : undefined" class="nav-item" :class="[`nav-item-${item.tone}`, { 'nav-item-active': isActive(item.to) }]">
+        <NuxtLink :to="item.to" :external="item.to.startsWith('https://')" :aria-label="item.to === '/' ? 'Home' : item.label" :aria-current="isActive(item.to) ? 'page' : undefined" class="nav-item" :class="[`nav-item-${item.tone}`, { 'nav-item-active': isActive(item.to) }]">
           <span class="nav-icon"><SidebarGlyph :name="item.icon" /></span><span class="nav-label">{{ item.label }}</span>
         </NuxtLink>
         <div v-if="item.to === '/library' || item.to === '/classes'" class="recent-sets" :aria-hidden="!expanded">
@@ -42,6 +42,7 @@ const links = [
   { label: 'Basic', to: '/create/basic', icon: 'basic', tone: 'orange' },
   { label: 'Synthesize', to: '/create/synthesize', icon: 'synthesize', tone: 'orange' },
   { label: 'Generate', to: '/create/generate', icon: 'generate', tone: 'orange' },
+  { label: 'Request a set', to: 'https://docs.google.com/forms/d/1CH-rdYNHYnsAdiDxbdfZIoAkVE6pYZ0tzP8t0fcyn00/', icon: 'request', tone: 'green' },
   { label: 'Dashboard', to: '/teacher', icon: 'dashboard', tone: 'purple' },
   { label: 'Insights', to: '/insights', icon: 'insights', tone: 'purple' },
   { label: 'Public sets', to: '/public-sets', icon: 'public', tone: 'purple' },
@@ -295,4 +296,13 @@ const links = [
 :global(.dark) .nav-item-orange .nav-icon { background:#58382b; color:#ffc2a0; }
 :global(.dark) .nav-item-purple .nav-icon { background:#443b64; color:#d3c9ff; }
 :global(.dark) .nav-item-active { background:#393453; color:#f3efff; }
+</style>
+
+<style scoped>
+
+.nav-item-green .nav-icon { background:#d1fae5; color:#059669; }
+.nav-item-green .nav-icon :deep(svg) { width:18px; height:18px; }
+:global(html.dark) .nav-item-green .nav-icon { background:#064e3b; color:#6ee7b7; }
+.nav-item-green:hover { background:#d1fae5; }
+:global(html.dark) .nav-item-green:hover { background:#064e3b; }
 </style>

@@ -139,6 +139,7 @@ const en: Messages = {
   'auth.firstRunTitle': 'Setup Tracer',
   'auth.name': 'Name',
   'auth.email': 'Email',
+  'auth.emailOrUsername': 'Email or username',
   'auth.confirmPassword': 'Confirm password',
 }
 

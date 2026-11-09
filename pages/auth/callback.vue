@@ -2,7 +2,7 @@
   <main class="tracer-page mx-auto max-w-md px-5 py-16">
     <h1 class="text-2xl font-semibold">{{ t('auth.firstRunTitle') }}</h1>
     <p v-if="error" class="mt-4 text-sm text-red-700 dark:text-red-300" role="alert">{{ error }}</p>
-    <LoadingSpinner v-else class="mt-5" />
+    <LoadingSpinner v-else screen />
     <NuxtLink v-if="error" to="/first-run" class="mt-5 inline-block underline">{{ t('auth.signInEmail') }}</NuxtLink>
   </main>
 </template>

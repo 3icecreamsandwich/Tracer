@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { hasTauriRuntime } from '../tauri'
-import { browserStorageKey } from '../platform/web'
+import { appUrl, browserStorageKey } from '../platform/web'
 
 type MemoryStorage = {
   getItem(key: string): string | null
@@ -16,6 +16,7 @@ const memoryStorage: MemoryStorage = {
 }
 
 let client: SupabaseClient | null = null
+let runtimeConfig: SupabaseClientConfig | null = null
 
 export type SupabaseClientConfig = {
   url: string
@@ -23,8 +24,10 @@ export type SupabaseClientConfig = {
 }
 
 export function getSupabaseConfig(): SupabaseClientConfig | null {
-  const url = String(import.meta.env.VITE_SUPABASE_URL ?? '').trim()
-  const publishableKey = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '').trim()
+  const buildUrl = String(import.meta.env.VITE_SUPABASE_URL ?? '').trim()
+  const buildKey = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '').trim()
+  const url = buildUrl && buildKey ? buildUrl : String(runtimeConfig?.url ?? '').trim()
+  const publishableKey = buildUrl && buildKey ? buildKey : String(runtimeConfig?.publishableKey ?? '').trim()
   if (!url || !publishableKey) return null
   try {
     const parsed = new URL(url)
@@ -39,6 +42,19 @@ export function getSupabaseConfig(): SupabaseClientConfig | null {
     return null
   }
   return { url: url.replace(/\/$/, ''), publishableKey }
+}
+
+export async function loadSupabaseRuntimeConfig(): Promise<boolean> {
+  if (isSupabaseConfigured()) return true
+  if (hasTauriRuntime() || typeof window === 'undefined') return false
+  try {
+    const response = await fetch(appUrl('/api/web/config'), { cache: 'no-store' })
+    if (!response.ok) return false
+    const value = await response.json() as Partial<SupabaseClientConfig>
+    if (typeof value.url !== 'string' || typeof value.publishableKey !== 'string' || value.publishableKey.startsWith('sb_secret_')) return false
+    runtimeConfig = { url: value.url, publishableKey: value.publishableKey }
+    return isSupabaseConfigured()
+  } catch { return false }
 }
 
 export function isSupabaseConfigured(): boolean {

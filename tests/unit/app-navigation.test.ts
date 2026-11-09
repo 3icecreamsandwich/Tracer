@@ -48,6 +48,8 @@ describe('app navigation', () => {
     navigateBack(router, '/set/demo-match', { back: '/set/demo-learn' })
     expect(router.push).toHaveBeenLastCalledWith('/set/demo')
     expect(router.back).toHaveBeenCalledOnce()
+    navigateBack(router, '/set/demo-flashcards', { back: '/set/demo' })
+    expect(router.back).toHaveBeenCalledTimes(2)
     expect(fallbackBackTarget('/set/demo-test')).toBe('/set/demo')
     expect(fallbackBackTarget('/study-guide/demo')).toBe('/')
     expect(hasInAppBackEntry({ back: 'https://example.com' })).toBe(false)

@@ -23,46 +23,12 @@
             </p>
 
             <!-- Results -->
-            <div v-if="matchIsFinished" class="w-full max-w-5xl select-none">
+            <div v-if="matchIsFinished" class="w-full max-w-6xl select-none">
                 <div
-                    class="tracer-result-surface flex min-h-[50vh] flex-col items-center justify-center p-8 text-center"
+                    class="flex flex-col items-center justify-center text-center"
                 >
-                    <h2
-                        class="text-2xl font-semibold text-slate-900 dark:text-slate-50"
-                    >
-                        {{ t("common.results") }}
-                    </h2>
-                    <p class="mt-4 text-lg text-slate-700 dark:text-slate-200">
-                        {{ t("set.accuracy") }}
-                        <span class="font-medium">{{ matchAccuracyText }}</span>
-                    </p>
-                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                        {{ t("set.matched") }} {{ matchMatchedPairsCount }}/{{
-                            matchPairsTarget
-                        }}
-                        · {{ t("set.attempts") }} {{ matchAttemptsCount }}
-                    </p>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                        {{ t("set.time") }} {{ matchTimeText }}
-                    </p>
+                    <StudyResultOverview mode="match" :set-id="set?.id" :published="isPublishedSet" :correct="matchCorrectAttemptsCount" :attempted="matchAttemptsCount" :total="matchAttemptsCount" :missed="(set?.terms ?? []).filter(term => matchMissedCounts[term.id]).sort((a, b) => (matchMissedCounts[b.id] ?? 0) - (matchMissedCounts[a.id] ?? 0))"  :back-to="backToSetPath" @restart="restartMatchRun" :time="matchTimeText" />
 
-                    <div class="mt-6 flex flex-wrap justify-center gap-2">
-                        <UButton color="primary" variant="soft"
-                            type="button"
-                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-orange-600 bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
-                            :disabled="!set || set.terms.length === 0"
-                            @click="restartMatchRun"
-                        >
-                            {{ t("set.playAgain") }}
-                        </UButton>
-                        <NuxtLink
-                            v-if="set"
-                            :to="backToSetPath"
-                            class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
-                        >
-                            {{ t("set.backToSet") }}
-                        </NuxtLink>
-                    </div>
 
                     <MatchLeaderboard
                         :assignment-id="assignedAssignmentId"
@@ -204,7 +170,8 @@ const matchElapsedTimeMs = ref(0);
 const matchTimerHandle = shallowRef<number | null>(null);
 const matchSelectedTileIds = ref<string[]>([]);
 const matchMatchedPairIds = ref<Set<Uuid>>(new Set());
-const matchAttemptsCount = ref(0);
+const matchAttemptsCount = ref(0)
+const matchMissedCounts = ref<Record<string, number>>({});
 const matchCorrectAttemptsCount = ref(0);
 const matchLeaderboard = ref<AssignedMatchLeaderboardEntry[]>([]);
 const matchLeaderboardLoading = ref(false);
@@ -325,7 +292,8 @@ function resetMatchStateForRun() {
     matchBusy.value = false;
     matchSelectedTileIds.value = [];
     matchMatchedPairIds.value = new Set();
-    matchAttemptsCount.value = 0;
+    matchMissedCounts.value = {}
+  matchAttemptsCount.value = 0;
     matchCorrectAttemptsCount.value = 0;
     matchStartedAtMs.value = null;
     matchEndedAtMs.value = null;
@@ -399,10 +367,10 @@ function matchTileClass(tile: MatchTile) {
     const selected = matchSelectedTileIds.value.includes(tile.id);
     const revealed = matchIsTileRevealed(tile);
     if (matched) {
-        return "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100";
+        return "!border-emerald-600 !bg-emerald-50 !text-emerald-950 !opacity-100 ring-2 ring-emerald-200 dark:!border-emerald-500 dark:!bg-emerald-950/40 dark:!text-emerald-100";
     }
     if (selected && matchBusy.value) {
-        return "border-red-800 bg-red-100 text-red-950 ring-2 ring-red-500/70 dark:border-red-500 dark:bg-red-950/60 dark:text-red-50 dark:ring-red-700/80";
+        return "!border-red-600 !bg-red-50 !text-red-950 !opacity-100 ring-2 ring-red-200 dark:border-red-500 dark:bg-red-950/60 dark:text-red-50 dark:ring-red-700/80";
     }
     if (selected) {
         return "border-amber-500 bg-amber-50 text-slate-900 ring-1 ring-amber-200 dark:border-amber-600 dark:bg-amber-950/25 dark:text-slate-50 dark:ring-amber-900/60";
@@ -458,11 +426,15 @@ async function onMatchTileClick(tile: MatchTile) {
                 Math.floor(matchTiles.value.length / 2),
             )
         ) {
+            matchBusy.value = true;
+            await new Promise((resolve) => window.setTimeout(resolve, 450));
+            matchBusy.value = false;
             matchStop("completed");
         }
         return;
     }
 
+  matchMissedCounts.value = { ...matchMissedCounts.value, [a.pairId]: (matchMissedCounts.value[a.pairId] ?? 0) + 1, [b.pairId]: (matchMissedCounts.value[b.pairId] ?? 0) + 1 }
     matchBusy.value = true;
     await new Promise((r) => window.setTimeout(r, 550));
     matchBusy.value = false;

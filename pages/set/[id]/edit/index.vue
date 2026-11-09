@@ -1,5 +1,10 @@
 <template>
   <main>
+    <BaseModal :open="unpublishOpen" title="Unpublish set?" close-label="Close" :busy="unpublishBusy" @close="unpublishOpen = false">
+      <p class="text-sm text-slate-600 dark:text-slate-300">This removes the set from the public catalog.</p>
+      <p v-if="unpublishError" role="alert" class="mt-3 text-sm text-red-600">{{ unpublishError }}</p>
+      <div class="mt-5 flex justify-end gap-2"><AppButton variant="white" :disabled="unpublishBusy" @click="unpublishOpen = false">Cancel</AppButton><AppButton variant="danger" :busy="unpublishBusy" @click="confirmUnpublish">Unpublish</AppButton></div>
+    </BaseModal>
     <AiErrorModal
       :open="factCheckAiErrorOpen"
       :error="factCheckAiError"
@@ -15,6 +20,7 @@
         </div>
 
         <div class="flex shrink-0 flex-wrap items-center gap-2">
+          <UButton v-if="(publication || isPublishedEdit) && !isWebPreview" color="error" variant="soft" :disabled="busy || initialLoading" @click="unpublishOpen = true">Unpublish</UButton>
           <UButton color="primary" variant="soft"
             v-if="!isPublishedEdit"
             type="button"
@@ -61,7 +67,7 @@
         {{ loadError }}
       </p>
 
-      <LoadingSpinner v-else-if="initialLoading" class="mt-6" />
+      <LoadingSpinner v-else-if="initialLoading" screen />
       <fieldset v-else :disabled="busy || factCheckBusy" class="mt-6 min-w-0 space-y-4">
         <p
           v-if="isWebPreview"
@@ -346,6 +352,7 @@ import {
   getPublicationSettings,
   updateOwnedPublishedSet,
   updatePublishedSet,
+  unpublishSet,
   type PublicationSettings,
 } from '~/src/composables/published-sets'
 
@@ -390,6 +397,19 @@ const setId = computed<Uuid | null>(() => {
   return typeof raw === 'string' && raw.trim() ? (raw as Uuid) : null
 })
 
+const unpublishOpen = ref(false), unpublishBusy = ref(false), unpublishError = ref('')
+async function confirmUnpublish() {
+  const id = isPublishedEdit.value ? setId.value : publication.value?.id
+  if (!id || unpublishBusy.value) return
+  unpublishBusy.value = true; unpublishError.value = ''
+  try {
+    await unpublishSet(id)
+    unpublishOpen.value = false; publication.value = null
+    if (isPublishedEdit.value) await router.push('/public-sets')
+    else publicationMessage.value = 'Set unpublished.'
+  } catch (error) { unpublishError.value = error instanceof Error ? error.message : 'Could not unpublish the set.' }
+  finally { unpublishBusy.value = false }
+}
 const publication = ref<PublicationSettings | null>(null)
 const publicationMessage = ref('')
 const publicationLookupFailed = ref(false)

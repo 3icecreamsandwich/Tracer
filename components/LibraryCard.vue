@@ -10,8 +10,8 @@
       <span class="library-card__author"><UAvatar :alt="author || 'Tracer'" size="xs" /><span class="truncate">{{ author || 'Tracer' }}</span></span>
       <span class="library-card__actions" @pointerdown.stop @click.stop>
         <template v-if="kind === 'set' && setId">
-          <UButton :to="`/set/${setId}-flashcards`" color="primary" variant="ghost" square aria-label="Flashcards"><StudyModeArtwork name="cards" :size="22" /></UButton>
-          <UButton :to="`/set/${setId}-learn`" color="primary" variant="ghost" square aria-label="Practice"><StudyModeArtwork name="practice" :size="22" /></UButton>
+          <UButton :to="`/set/${setId}-flashcards`" color="primary" variant="ghost" square aria-label="Flashcards" @click="openStudy($event, 'flashcards')"><StudyModeArtwork name="cards" :size="22" /></UButton>
+          <UButton :to="`/set/${setId}-learn`" color="primary" variant="ghost" square aria-label="Practice" @click="openStudy($event, 'learn')"><StudyModeArtwork name="practice" :size="22" /></UButton>
           <UButton :to="`/set/${setId}?tab=chat`" color="primary" variant="ghost" square aria-label="Chat"><StudyModeArtwork name="chat" :size="22" /></UButton>
         </template>
         <AppIcon v-else-if="kind === 'class'" name="classes" />
@@ -23,6 +23,13 @@
 </template>
 <script setup lang="ts">
 const props = defineProps<{ title: string; to?: string; description?: string | null; author?: string; kind?: 'set' | 'study-guide' | 'folder' | 'class'; setId?: string; previews?: string[]; selected?: boolean }>()
+const router = useRouter()
+async function openStudy(event: MouseEvent, mode: 'flashcards' | 'learn') {
+  if (!props.setId || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  event.preventDefault()
+  await router.push(`/set/${props.setId}`)
+  await router.push(`/set/${props.setId}-${mode}`)
+}
 const excerpt = computed(() => {
   const words = props.description?.trim().split(/\s+/) ?? []
   return words.slice(0, 15).join(' ') + (words.length > 15 ? '…' : '')

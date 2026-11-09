@@ -269,6 +269,14 @@ export async function cancelPendingEmailVerification(pending: PendingEmailVerifi
 }
 
 export async function signInWithEmail(email: string, password: string, captchaToken?: string): Promise<Session> {
+  const client = getSupabaseClient()
+  if (!email.includes('@') || email.trim().startsWith('@')) {
+    const result = await client.functions.invoke('username-sign-in', { body: { username: email.trim(), password, captchaToken } })
+    if (result.error || !result.data?.session) throw normalizeAuthError(new Error('Invalid login credentials'))
+    const restored = await client.auth.setSession({ access_token: result.data.session.access_token, refresh_token: result.data.session.refresh_token })
+    if (restored.error || !restored.data.session) throw normalizeAuthError(restored.error ?? new Error('Invalid login credentials'))
+    return restored.data.session
+  }
   const { data, error } = await getSupabaseClient().auth.signInWithPassword({
     email: email.trim(),
     password,

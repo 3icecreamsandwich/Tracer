@@ -1,7 +1,7 @@
 <template>
-  <main class="min-h-screen bg-white text-neutral-950 dark:bg-slate-950 dark:text-slate-50">
-    <div class="tracer-page mx-auto w-full max-w-[437px] px-8 pb-12 pt-11">
-      <h1 class="inline-block bg-gradient-to-r from-red-600 via-orange-500 to-orange-400
+  <main class="flex min-h-screen items-center justify-center bg-white text-neutral-950 dark:bg-slate-950 dark:text-slate-50">
+    <div class="tracer-page mx-auto w-full max-w-xl px-8 pb-12 pt-11">
+      <h1 v-if="stage !== 'finishing'" class="inline-block bg-gradient-to-r from-red-600 via-orange-500 to-orange-400
                bg-clip-text text-[32px] font-bold leading-tight text-transparent">{{ t('auth.firstRunTitle') }}</h1>
 
       <template v-if="stage === 'account'">
@@ -68,8 +68,8 @@
             <UInput id="account-name" v-model="name" autocomplete="name" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium" for="account-email">{{ t('auth.email') }}</label>
-            <UInput id="account-email" v-model="email" type="email" autocomplete="email" class="w-full" />
+            <label class="block text-sm font-medium" for="account-email">{{ t(mode === 'signin' ? 'auth.emailOrUsername' : 'auth.email') }}</label>
+            <UInput id="account-email" v-model="email" :type="mode === 'signup' ? 'email' : 'text'" :autocomplete="mode === 'signup' ? 'email' : 'username'" class="w-full" />
           </div>
           <div>
             <label class="block text-sm font-medium" for="account-password">{{ t('auth.accountPassword') }}</label>
@@ -83,7 +83,7 @@
               />
               <UButton color="primary" variant="soft"
                 type="button"
-                class="absolute bottom-0 right-0 flex h-10 w-11 items-center justify-center rounded-r-[10px] text-neutral-500 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-neutral-500 dark:text-slate-400 dark:hover:text-white"
+                class="absolute bottom-0 right-0 !bg-transparent hover:!bg-transparent shadow-none flex h-10 w-11 items-center justify-center rounded-r-[10px] text-neutral-500 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-neutral-500 dark:text-slate-400 dark:hover:text-white"
                 :aria-label="t(showAccountPassword ? 'auth.hidePassword' : 'auth.showPassword')"
                 :aria-pressed="showAccountPassword"
                 @click="showAccountPassword = !showAccountPassword"
@@ -131,7 +131,7 @@
           </UButton>
         </form>
 
-        <UButton color="primary" variant="soft" type="button" class="mt-2 w-full justify-center text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-950 dark:text-slate-300 dark:hover:text-white" :disabled="busy" @click="toggleMode">
+        <UButton color="primary" variant="soft" type="button" class="mt-2 w-full !bg-transparent hover:!bg-transparent shadow-none justify-center text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-950 dark:text-slate-300 dark:hover:text-white" :disabled="busy" @click="toggleMode">
           {{ mode === 'signup' ? t('auth.haveAccount') : t('auth.needAccount') }}
         </UButton>
         <NuxtLink v-if="mode === 'signup'" to="/parent-consent-request" class="mt-3 block text-center text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-950 dark:text-slate-300 dark:hover:text-white">
@@ -265,7 +265,7 @@ import { useLockSession } from '../src/composables/lock-session'
 import { useAppLanguage } from '../src/composables/language'
 import { hasTauriRuntime } from '../src/composables/tauri'
 import { appUrl, browserStorageKey } from '../src/composables/platform/web'
-import { getSupabaseClient } from '../src/composables/auth/client'
+import { getSupabaseClient, loadSupabaseRuntimeConfig } from '../src/composables/auth/client'
 
 definePageMeta({ hideNavbar: true, hideFloatingChat: true })
 
@@ -273,7 +273,7 @@ const router = useRouter()
 const { markUnlocked } = useLockSession()
 const { language, t } = useAppLanguage()
 
-const configured = isSupabaseConfigured()
+const configured = ref(isSupabaseConfigured())
 const stage = ref<'account' | 'verify' | 'local' | 'finishing'>('account')
 const mode = ref<'signup' | 'signin'>('signin')
 const accountRole = ref<AccountRole>('student')
@@ -538,7 +538,8 @@ onBeforeUnmount(() => {
 
 onMounted(async () => {
   if (!hasTauriRuntime()) {
-    if (!configured) return
+    configured.value = await loadSupabaseRuntimeConfig()
+    if (!configured.value) return
     const { data } = await getSupabaseClient().auth.getSession()
     if (!data.session) return
     const existing = await createProfileRepo(await useTracerDb()).get()

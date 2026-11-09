@@ -2,8 +2,8 @@
   <main class="tracer-page mx-auto max-w-6xl px-6 py-8">
     <header class="mb-6 flex items-center justify-between gap-3"><h1 class="text-2xl font-bold">Home</h1><UButton to="/create/basic" color="primary">Create</UButton></header>
     <div class="mb-8 grid grid-cols-2 gap-4">
-      <UCard><div class="flex items-center justify-between gap-3"><div><p class="text-sm text-muted">Study streak</p><p class="mt-1 text-3xl font-bold">{{ currentStreak }} <span class="text-sm font-medium">days</span></p></div><div class="hidden sm:flex gap-1" aria-label="This week"><span v-for="day in week" :key="day.key" :title="`${day.key}: ${Math.floor(day.seconds / 60)} min`" class="h-8 w-2 rounded-full" :class="day.complete ? 'bg-primary' : 'bg-accented'" /></div></div></UCard>
-      <UCard><p class="text-sm text-muted">Study time today</p><p class="mt-1 text-3xl font-bold">{{ Math.floor(today / 60) }} <span class="text-sm font-medium">min</span></p><UProgress class="mt-3" :model-value="today" :max="dailyGoalSeconds" color="primary" aria-label="Daily study goal" /></UCard>
+      <UCard><div class="flex items-center justify-between gap-3"><div><p class="text-sm text-muted">Study streak</p><p class="mt-1 text-3xl font-bold">{{ currentStreak }} <span class="text-sm font-medium">days</span></p></div><div class="hidden sm:flex gap-1" aria-label="This week"><span v-for="day in week" :key="day.key" :title="`${day.key}: ${Math.floor(day.seconds / 60)} min`" class="h-8 w-2 rounded-full" :class="day.seconds > 0 ? 'bg-[#F67B80]' : 'bg-accented'" /></div></div></UCard>
+      <UCard><p class="text-sm text-muted">Study time today</p><p class="mt-1 text-3xl font-bold">{{ Math.floor(today / 60) }} <span class="text-sm font-medium">min</span></p><UProgress class="mt-3 study-time-progress" :model-value="today" :max="dailyGoalSeconds" color="primary" aria-label="Daily study goal" /></UCard>
     </div>
     <div class="mb-4 flex items-center justify-between"><h2 class="text-lg font-semibold">Recently used</h2><UButton to="/library" variant="link" color="primary">View library</UButton></div>
     <LoadingSpinner v-if="loading" centered />
@@ -67,3 +67,7 @@ async function load() {
 }
 onMounted(load)
 </script>
+
+<style scoped>
+.study-time-progress :deep([data-slot="indicator"]) { background-color: #F67B80; }
+</style>

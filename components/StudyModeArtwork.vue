@@ -8,7 +8,9 @@
   </svg>
 </template>
 <script setup lang="ts">
+import { studyModeColor } from '~/src/composables/study-mode-colors'
+
 const props = withDefaults(defineProps<{ name: string; size?: number }>(), { size:24 })
-const color = computed(() => props.name === 'practice' || props.name === 'learn' ? '#ed6266' : props.name === 'cards' || props.name === 'flashcards' ? '#e8b64d' : '#e78a24')
+const color = computed(() => studyModeColor(props.name))
 </script>
 <style scoped>.study-mode-artwork { display:block; flex-shrink:0; }</style>

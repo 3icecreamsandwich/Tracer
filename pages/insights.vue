@@ -6,7 +6,7 @@
         <AppButton variant="white" to="/library">Back to library</AppButton>
       </header>
       <p v-if="error" class="mt-6 rounded-[var(--tracer-radius-control)] border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300" role="alert">{{ error }} <UButton color="primary" variant="soft" class="underline" @click="load">Retry</UButton></p>
-      <LoadingSpinner v-if="loading" class="mt-8" centered />
+      <LoadingSpinner v-if="loading" screen />
       <template v-else>
         <section class="mt-8 flex flex-wrap items-end gap-4" aria-label="Insight filters">
           <label class="grid gap-1 text-sm font-medium">Topic (folder)

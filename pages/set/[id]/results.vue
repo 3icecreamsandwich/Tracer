@@ -2,33 +2,9 @@
   <main>
     <div class="tracer-page mx-auto max-w-2xl px-5 py-10 sm:px-8">
       <div class="tracer-result-surface p-6 sm:p-8">
-        <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-50">{{ t('common.results') }}</h1>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-          {{ modeLabel }} · {{ t('set.accuracy') }} <span class="font-medium">{{ accuracyText }}</span>
-        </p>
+        <StudyResultOverview :mode="mode" :set-id="setId" :inline="true" :correct="correct" :attempted="attempted" :total="attempted"  :restart-to="restartHref" />
 
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-          Correct: {{ correct }} · Attempted: {{ attempted }}
-        </p>
 
-        <div class="mt-6 flex flex-wrap gap-2">
-          <AppButton :to="restartHref">
-            {{ t('common.restart') }} {{ modeLabel }}
-          </AppButton>
-
-          <AppButton replace :to="`/set/${setId}?mode=flashcards`" variant="white">
-            {{ t('set.flashcards') }}
-          </AppButton>
-          <AppButton replace :to="`/set/${setId}?mode=learn`" variant="white">
-            {{ t('set.learn') }}
-          </AppButton>
-          <AppButton replace :to="`/set/${setId}?mode=match`" variant="white">
-            {{ t('set.match') }}
-          </AppButton>
-          <AppButton replace :to="`/set/${setId}?mode=chat`" variant="white">
-            {{ t('set.chat') }}
-          </AppButton>
-        </div>
       </div>
     </div>
   </main>

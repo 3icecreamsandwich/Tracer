@@ -17,7 +17,7 @@
       <UButton v-for="tab in libraryTabs" :key="tab.value" color="primary" :variant="activeLibraryKind === tab.value ? 'solid' : 'ghost'" :aria-pressed="activeLibraryKind === tab.value" @click="activeLibraryKind = tab.value">{{ t(tab.label) }}</UButton>
     </nav>
     <p v-if="loadError" role="alert" class="mb-4 text-error">{{ loadError }} <UButton color="primary" variant="soft" @click="loadHomeList">Retry</UButton></p>
-    <LoadingSpinner v-if="busy || (isClassesPage && classroomBusy)" centered />
+    <LoadingSpinner v-if="busy || (isClassesPage && classroomBusy)" screen />
     <template v-else-if="isClassesPage">
       <p v-if="classroomError" role="alert" class="text-error">{{ classroomError }}</p>
       <div v-else-if="!classrooms.length" class="library-empty">{{ t('home.noClasses') }}</div>
@@ -66,7 +66,7 @@
   </main>
 </template>
 <script setup lang="ts">
-import { isWebPreviewRuntime } from "~/src/composables/platform/web";
+import { appUrl, isWebPreviewRuntime } from "~/src/composables/platform/web";
 import { prefetchPublicCatalog } from '~/src/composables/published-sets'
 import { redactSensitiveText } from '~/src/composables/security/redact'
 import { syncPrivateSets } from '~/src/composables/private-set-sync'
@@ -141,8 +141,26 @@ const items = ref<HomeListItem[]>([])
 type LibraryKind = 'set' | 'study-guide' | 'class'
 
 const isClassesPage = computed(() => route.path === '/classes')
-const isFolderPage = computed(() => route.path.startsWith('/folder/'))
-const activeFolderId = computed(() => isFolderPage.value && typeof route.params.id === 'string' ? route.params.id as Uuid : null)
+const dragView = ref<{ folderId: Uuid | null } | null>(null)
+const isFolderPage = computed(() => dragView.value ? !!dragView.value.folderId : route.path.startsWith('/folder/'))
+const activeFolderId = computed(() => dragView.value ? dragView.value.folderId : route.path.startsWith('/folder/') && typeof route.params.id === 'string' ? route.params.id as Uuid : null)
+let dragOriginFolderId: Uuid | null = null
+let dragOriginalUrl = ''
+let navigationTimer: ReturnType<typeof setTimeout> | null = null
+let navigationTarget: string | null = null
+function clearDragNavigation() { if (navigationTimer) clearTimeout(navigationTimer); navigationTimer = null; navigationTarget = null }
+function scheduleDragNavigation(target: Uuid | null, delay: number) {
+  const key = target ?? 'root'
+  if (navigationTarget === key) return
+  clearDragNavigation(); navigationTarget = key
+  navigationTimer = setTimeout(() => {
+    if (!dragState.active) return
+    dragView.value = { folderId: target }; dragState.dropFolderId = target; dragState.overRoot = !target; rootDropTarget.value = null
+    const path = target ? `/folder/${encodeURIComponent(target)}` : '/library'
+    const query = activeLibraryKind.value === 'study-guide' ? '?kind=study-guide' : ''
+    window.history.replaceState(window.history.state, '', appUrl(`${path}${query}`))
+  }, delay)
+}
 const activeFolder = computed(() => folders.value.find(folder => folder.id === activeFolderId.value) ?? null)
 const viewportWidth = ref(0)
 const viewportHeight = ref(0)
@@ -833,15 +851,18 @@ function onItemPointerDown(item: HomeListItem, event: PointerEvent) {
 
 function updateDropTarget(clientX: number, clientY: number) {
   if (isFolderPage.value) {
-    dragState.dropFolderId = null
-    dragState.overRoot = clientX <= 52 || clientX >= window.innerWidth - 52
+    const edge = clientX <= 52 || clientX >= window.innerWidth - 52
+    dragState.dropFolderId = edge ? null : activeFolderId.value
+    dragState.overRoot = edge
     rootDropTarget.value = null
+    if (edge) scheduleDragNavigation(null, 300); else clearDragNavigation()
     return
   }
   const elements = document.elementsFromPoint(clientX, clientY)
   const rootHit = rootHitAt(clientX, clientY)
   const rootInsertion = rootHit?.key.kind === 'set'
   if (rootInsertion) {
+    clearDragNavigation()
     dragState.dropFolderId = null
     dragState.overRoot = true
     rootDropTarget.value = { anchor: rootHit.key, placement: rootHit.placement }
@@ -855,12 +876,14 @@ function updateDropTarget(clientX: number, clientY: number) {
       dragState.dropFolderId = folderId
       dragState.overRoot = false
       rootDropTarget.value = null
+      scheduleDragNavigation(folderId, 1500)
       return
     }
   }
 
+  clearDragNavigation()
   dragState.dropFolderId = null
-  dragState.overRoot = elements.some(
+  dragState.overRoot = (dragOriginFolderId !== null && (clientX <= 52 || clientX >= window.innerWidth - 52)) || elements.some(
     (element) => element.closest('[data-root-drop-zone]') !== null
   )
   rootDropTarget.value = dragState.overRoot
@@ -873,6 +896,9 @@ function startPointerDrag(candidate: PointerCandidate) {
     replaceSelectedSets(new Set([candidate.setId]))
     selectionAnchorId.value = candidate.setId
   }
+  dragOriginalUrl = window.location.href
+  dragOriginFolderId = activeFolderId.value
+  dragView.value = { folderId: activeFolderId.value }
   dragState.active = true
   document.documentElement.classList.add('library-dragging')
   dragState.setIds = [...selectedSetIds.value]
@@ -940,6 +966,10 @@ function onWindowPointerMove(event: PointerEvent) {
 }
 
 function resetDragState() {
+  clearDragNavigation()
+  if (dragOriginalUrl) window.history.replaceState(window.history.state, '', dragOriginalUrl)
+  dragOriginalUrl = ''
+  dragView.value = null
   document.documentElement.classList.remove('library-dragging')
   stopDragAutoScroll()
   dragState.active = false
@@ -999,6 +1029,8 @@ function onWindowPointerUp(event: PointerEvent) {
   const dropFolderId = dragState.dropFolderId
   const overRoot = dragState.overRoot
   const rootTarget = rootDropTarget.value
+  const viewedFolder = overRoot && isFolderPage.value ? null : (dragView.value?.folderId ?? null)
+  const originalFolder = dragOriginFolderId
   if (wasDragging) {
     event.preventDefault()
     suppressNextSetClickId = candidate.setId
@@ -1011,10 +1043,12 @@ function onWindowPointerUp(event: PointerEvent) {
   resetDragState()
 
   if (!wasDragging) return
-  if (dropFolderId) {
-    void moveSelectedSets(draggedSetIds, dropFolderId)
-  } else if (overRoot) {
-    void moveSelectedSets(draggedSetIds, null, rootTarget)
+  const destination = dropFolderId ?? (overRoot ? null : viewedFolder)
+  if (dropFolderId || overRoot || viewedFolder !== originalFolder) {
+    void (async () => {
+      await moveSelectedSets(draggedSetIds, destination, rootTarget)
+      if (viewedFolder !== originalFolder) await router.push({ path: viewedFolder ? `/folder/${viewedFolder}` : '/library', query: activeLibraryKind.value === 'study-guide' ? { kind: 'study-guide' } : {} })
+    })()
   }
 }
 

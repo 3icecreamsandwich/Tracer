@@ -191,7 +191,7 @@
                 </div>
 
                 <NuxtLink
-                  v-if="studyGuideSetId"
+                  v-if="set"
                   :to="studyGuideUrl"
                   class="group rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                 >
@@ -396,36 +396,8 @@
                 v-if="isFinished"
                 class="flex flex-1 flex-col items-center justify-center px-4 text-center"
               >
-                <h2
-                  class="text-xl font-semibold text-slate-950 dark:text-white"
-                >
-                  {{ t("common.results") }}
-                </h2>
-                <p class="mt-3 text-slate-700 dark:text-slate-200">
-                  {{ t("set.accuracy") }}
-                  <span class="font-semibold">{{ accuracyText }}</span>
-                </p>
-                <div class="mt-5 flex flex-wrap justify-center gap-2">
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    v-if="hasIncorrectCards"
-                    type="button"
-                    class="rounded-[var(--tracer-radius-control)] bg-orange-600 px-4 py-2 text-sm font-medium text-white"
-                    @click="resumeIncorrect"
-                  >
-                    {{ t("set.resumeIncorrect") }}
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    type="button"
-                    class="rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-slate-950"
-                    @click="restartAllFlashcards"
-                  >
-                    {{ t("common.restart") }}
-                  </UButton>
-                </div>
+                <StudyResultOverview mode="flashcards" :inline="true" :published="isPublicSet" :set-id="set?.id" :correct="[...new Set(order)].filter(id => answersByTermId[id] === 'correct').length" :attempted="[...new Set(order)].filter(id => answersByTermId[id] !== undefined).length" :total="totalCount" :missed="(set?.terms ?? []).filter(term => order.includes(term.id) && answersByTermId[term.id] === 'incorrect')"  @restart="restartAllFlashcards" :resume="hasIncorrectCards" @resume="resumeIncorrect" />
+
               </div>
               <div
                 v-else-if="totalCount === 0"
@@ -654,6 +626,15 @@
                       />
                     </div>
                   </div>
+                  <NuxtLink
+                    v-if="set"
+                    :to="fullscreenModePath('flashcards')"
+                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                    :aria-label="t('set.fullscreen')"
+                    :title="t('set.fullscreen')"
+                  >
+                    <AppIcon name="fullscreen" :size="16" :stroke-width="1.7" />
+                  </NuxtLink>
                 </div>
               </div>
 
@@ -693,76 +674,8 @@
               </div>
 
               <div v-if="isFinished" class="mt-4 select-none">
-                <h2
-                  class="text-lg font-semibold text-slate-900 dark:text-slate-50"
-                >
-                  {{ t("common.results") }}
-                </h2>
-                <p class="mt-2 text-sm text-slate-700 dark:text-slate-200">
-                  {{ t("set.accuracy") }}
-                  <span class="font-medium">{{ accuracyText }}</span>
-                </p>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                  {{ t("set.correct") }} {{ correctCount }} ·
-                  {{ t("set.attempted") }}
-                  {{ attemptedCount }}
-                </p>
+                <StudyResultOverview mode="flashcards" :inline="true" :published="isPublicSet" :set-id="set?.id" :correct="[...new Set(order)].filter(id => answersByTermId[id] === 'correct').length" :attempted="[...new Set(order)].filter(id => answersByTermId[id] !== undefined).length" :total="totalCount" :missed="(set?.terms ?? []).filter(term => order.includes(term.id) && answersByTermId[term.id] === 'incorrect')"  @restart="restartAllFlashcards" :resume="hasIncorrectCards" @resume="resumeIncorrect" />
 
-                <div class="mt-4 flex flex-wrap gap-2">
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    v-if="hasIncorrectCards"
-                    type="button"
-                    class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
-                    @click="resumeIncorrect"
-                  >
-                    {{ t("set.resumeIncorrect") }}
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    type="button"
-                    class="inline-flex items-center rounded-[var(--tracer-radius-control)] bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-                    :disabled="allStudyTermIds.length === 0"
-                    @click="restartAllFlashcards"
-                  >
-                    {{ t("common.restart") }}
-                  </UButton>
-                  <!-- <NuxtLink
-                    :to="`/set/${set.id}/results?mode=flashcards&correct=${correctCount}&attempted=${attemptedCount}`"
-                    class="tracer-button tracer-button--dark tracer-button--md"
-                  >
-                    Open results page
-                  </NuxtLink>  -->
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    replace
-                    :to="setModePath('chat')"
-                    class=""
-                  >
-                    {{ t("set.chat") }}
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    replace
-                    :to="setModePath('learn')"
-                    class=""
-                  >
-                    {{ t("set.learn") }}
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    replace
-                    :to="setModePath('match')"
-                    class=""
-                  >
-                    {{ t("set.match") }}
-                  </UButton>
-                </div>
               </div>
 
               <div
@@ -932,16 +845,7 @@
             >
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p
-                    class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                  >
-                    {{ t("set.learn") }}
-                  </p>
-                  <p
-                    class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
-                  >
-                    {{ t("set.learnInstructions") }}
-                  </p>
+                  <p class="text-lg font-medium text-slate-900 dark:text-slate-50">{{ t("set.learn") }}</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                   <p
@@ -980,11 +884,11 @@
                   <NuxtLink
                     v-if="set"
                     :to="fullscreenModePath('learn')"
-                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
                     :aria-label="t('set.fullscreen')"
                     :title="t('set.fullscreen')"
                   >
-                    ⛶
+                    <AppIcon name="fullscreen" :size="16" :stroke-width="1.7" />
                   </NuxtLink>
                 </div>
               </div>
@@ -1035,74 +939,9 @@
                 v-else-if="learnIsFinished"
                 class="tracer-result-surface mt-4 flex flex-1 flex-col justify-center select-none p-5"
               >
-                <h2
-                  class="text-lg font-semibold text-slate-900 dark:text-slate-50"
-                >
-                  {{ t("common.results") }}
-                </h2>
-                <p
-                  v-if="practiceTimedOut"
-                  class="mt-2 text-sm font-semibold text-orange-700 dark:text-orange-300"
-                >
-                  Time is up. Unanswered questions were counted as missed.
-                </p>
-                <p class="mt-2 text-sm text-slate-700 dark:text-slate-200">
-                  {{ t("set.accuracy") }}
-                  <span class="font-medium">{{ learnAccuracyText }}</span>
-                </p>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                  {{ t("set.correct") }}
-                  {{ learnCorrectCount }} ·
-                  {{ t("set.attempted") }}
-                  {{ learnAttemptedCount }}
-                </p>
+                <StudyResultOverview mode="learn" :inline="true" :published="isPublicSet" :set-id="set?.id" :correct="learnCorrectCount" :attempted="learnAttemptedCount" :total="learnQuestions.length" :missed="(set?.terms ?? []).filter(term => learnQuestions.some(question => question.termId === term.id && learnAnswersByQuestionId[question.id] === false))"  @restart="initializePracticeRun({ forceNew: true })" :resume="learnQuestions.some(question => learnAnswersByQuestionId[question.id] === false)" @resume="reviewMissedPractice" />
+<p v-if="practiceTimedOut" class="mt-2 text-sm text-amber-700 dark:text-amber-300">Time is up. Unanswered questions were counted as missed.</p>
 
-                <div class="mt-4 flex flex-wrap gap-2">
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    v-if="set"
-                    type="button"
-                    class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900 shadow-sm hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
-                    @click="
-                      initializePracticeRun({
-                        forceNew: true,
-                      })
-                    "
-                  >
-                    Restart
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    v-if="set"
-                    replace
-                    :to="setModePath('flashcards')"
-                    class=""
-                  >
-                    {{ t("set.flashcards") }}
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    v-if="set"
-                    replace
-                    :to="setModePath('chat')"
-                    class=""
-                  >
-                    {{ t("set.chat") }}
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    v-if="set"
-                    replace
-                    :to="setModePath('match')"
-                    class=""
-                  >
-                    {{ t("set.match") }}
-                  </UButton>
-                </div>
               </div>
 
               <div v-else class="mt-4 flex flex-1 flex-col">
@@ -1150,23 +989,23 @@
                         color="primary"
                         variant="soft"
                         type="button"
-                        class="tracer-practice-choice tracer-practice-choice--true-false tracer-practice-choice--true"
+                        class="tracer-practice-choice tracer-practice-choice--true-false"
                         :class="practiceTrueFalseChoiceClass(true)"
                         :disabled="learnBusy || practiceAnswerBusy"
                         @click="answerLearnTrueFalse(true)"
                       >
-                        True
+                        True <span v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && (practiceAnswerFeedback.correct === true || practiceAnswerFeedback.selected === true)" :aria-label="practiceAnswerFeedback.correct === true ? 'Correct answer' : 'Incorrect answer'">{{ practiceAnswerFeedback.correct === true ? '✓' : '×' }}</span>
                       </UButton>
                       <UButton
                         color="primary"
                         variant="soft"
                         type="button"
-                        class="tracer-practice-choice tracer-practice-choice--true-false tracer-practice-choice--false"
+                        class="tracer-practice-choice tracer-practice-choice--true-false"
                         :class="practiceTrueFalseChoiceClass(false)"
                         :disabled="learnBusy || practiceAnswerBusy"
                         @click="answerLearnTrueFalse(false)"
                       >
-                        False
+                        False <span v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && (practiceAnswerFeedback.correct === false || practiceAnswerFeedback.selected === false)" :aria-label="practiceAnswerFeedback.correct === false ? 'Correct answer' : 'Incorrect answer'">{{ practiceAnswerFeedback.correct === false ? '✓' : '×' }}</span>
                       </UButton>
                     </template>
 
@@ -1186,7 +1025,7 @@
                         :disabled="learnBusy || practiceAnswerBusy"
                         @click="answerLearnMultipleChoice(idx)"
                       >
-                        <MarkdownRenderer :markdown="opt" variant="compact" />
+                        <MarkdownRenderer :markdown="opt" variant="compact" /><span v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && (practiceAnswerFeedback.correct === idx || practiceAnswerFeedback.selected === idx)" :aria-label="practiceAnswerFeedback.correct === idx ? 'Correct answer' : 'Incorrect answer'">{{ practiceAnswerFeedback.correct === idx ? '✓' : '×' }}</span>
                       </UButton>
                     </template>
                     <form
@@ -1313,13 +1152,13 @@
                     color="primary"
                     variant="soft"
                     type="button"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-lg font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-lg font-light text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                     :disabled="chatBusy || chatSaveBusy || !set"
                     :aria-label="t('chat.new')"
                     :title="t('chat.new')"
                     @click="startNewChat"
                   >
-                    <span aria-hidden="true" class="text-2xl leading-none"
+                    <span aria-hidden="true" class="text-xl font-light leading-none"
                       >+</span
                     >
                   </UButton>
@@ -1418,29 +1257,20 @@
             <section
               v-else-if="mode === 'match'"
               aria-label="Match"
-              class="study-panel flex flex-col rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+              class="study-panel study-panel--match flex flex-col rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950"
             >
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p
-                    class="text-sm font-medium text-slate-900 dark:text-slate-50"
-                  >
-                    {{ t("set.match") }}
-                  </p>
-                  <p
-                    class="mt-1 hidden text-xs font-medium text-slate-500 sm:block dark:text-slate-400"
-                  >
-                    {{ t("set.matchInstructions") }}
-                  </p>
+                  <p class="text-lg font-medium text-slate-900 dark:text-slate-50">{{ t("set.match") }}</p>
                 </div>
                 <NuxtLink
                   v-if="set"
                   :to="fullscreenModePath('match')"
-                  class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-base text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
                   :aria-label="t('set.fullscreen')"
                   :title="t('set.fullscreen')"
                 >
-                  ⛶
+                    <AppIcon name="fullscreen" :size="16" :stroke-width="1.7" />
                 </NuxtLink>
               </div>
 
@@ -1455,67 +1285,8 @@
                 v-if="matchIsFinished"
                 class="tracer-result-surface mt-4 flex flex-1 flex-col justify-center select-none p-5"
               >
-                <h2
-                  class="text-lg font-semibold text-slate-900 dark:text-slate-50"
-                >
-                  {{ t("common.results") }}
-                </h2>
-                <p class="mt-2 text-sm text-slate-700 dark:text-slate-200">
-                  {{ t("set.accuracy") }}
-                  <span class="font-medium">{{ matchAccuracyText }}</span>
-                </p>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                  {{ t("set.matched") }}
-                  {{ matchMatchedPairsCount }}/{{ matchPairsTarget }} ·
-                  {{ t("set.attempts") }}
-                  {{ matchAttemptsCount }}
-                </p>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                  {{ t("set.time") }} {{ matchTimeText }}
-                </p>
+                <StudyResultOverview mode="match" :inline="true" :published="isPublicSet" :set-id="set?.id" :correct="matchCorrectAttemptsCount" :attempted="matchAttemptsCount" :total="matchAttemptsCount" :missed="(set?.terms ?? []).filter(term => matchMissedCounts[term.id]).sort((a, b) => (matchMissedCounts[b.id] ?? 0) - (matchMissedCounts[a.id] ?? 0))"  @restart="restartMatchRun" :time="matchTimeText" />
 
-                <div class="mt-4 flex flex-wrap gap-2">
-                  <UButton
-                    color="primary"
-                    variant="solid"
-                    type="button"
-                    :disabled="!set || set.terms.length === 0"
-                    @click="restartMatchRun"
-                    size="md"
-                  >
-                    {{ t("set.playAgain") }}
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    v-if="set"
-                    replace
-                    :to="setModePath('flashcards')"
-                    class=""
-                  >
-                    {{ t("set.flashcards") }}
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    v-if="set"
-                    replace
-                    :to="setModePath('learn')"
-                    class=""
-                  >
-                    {{ t("set.learn") }}
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    variant="soft"
-                    v-if="set"
-                    replace
-                    :to="setModePath('chat')"
-                    class=""
-                  >
-                    Chat
-                  </UButton>
-                </div>
                 <MatchLeaderboard
                   :assignment-id="assignedAssignmentId"
                   :entries="matchLeaderboard"
@@ -1525,13 +1296,11 @@
                 />
               </div>
 
-              <div v-else class="mt-4 flex flex-1 flex-col">
-                <p
-                  v-if="matchIsRunning"
-                  class="mb-3 text-center text-sm font-medium tabular-nums text-slate-600 dark:text-slate-300"
-                >
-                  {{ matchTopline }}
-                </p>
+              <div v-else class="mt-4 flex min-h-0 flex-1 flex-col">
+                <div v-if="matchIsRunning" class="mb-2 flex items-center justify-between gap-2 text-sm font-medium tabular-nums text-slate-600 dark:text-slate-300">
+                  <span>{{ matchTopline }}</span>
+                  <button type="button" class="rounded-lg border border-slate-300 px-3 py-1 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800" @click="restartMatchRun(); startMatch()">Restart</button>
+                </div>
                 <MatchStartScreen
                   v-if="!matchIsRunning"
                   class="flex-1"
@@ -1541,7 +1310,7 @@
 
                 <div
                   v-else
-                  class="grid auto-rows-[4rem] grid-cols-2 content-start gap-2 sm:flex-1 sm:auto-rows-fr sm:grid-cols-4"
+                  class="grid min-h-0 flex-1 grid-cols-4 auto-rows-fr gap-2"
                 >
                   <UButton
                     color="primary"
@@ -1550,7 +1319,7 @@
                     :key="tile.id"
                     type="button"
                     data-match-tile="true"
-                    class="relative min-h-16 w-full rounded-[var(--tracer-radius-control)] border p-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:min-h-20 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+                    class="relative min-h-0 w-full overflow-hidden rounded-[var(--tracer-radius-control)] border p-1 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                     :class="matchTileClass(tile)"
                     :disabled="matchTileDisabled(tile) || matchBusy"
                     @click.stop="onMatchTileClick(tile)"
@@ -1631,7 +1400,7 @@
                   replace
                 />
                 <StudyModeTile
-                  v-if="studyGuideSetId"
+                  v-if="set"
                   :to="studyGuideUrl"
                   :icon="studyGuideModeIcon"
                   :title="t('set.studyGuide')"
@@ -1655,9 +1424,11 @@
                 class="inline-flex h-14 min-w-0 items-center justify-center rounded-[var(--tracer-radius-control)] border bg-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:bg-slate-950"
                 :class="
                   item.active
-                    ? 'border-slate-500 bg-slate-300 dark:border-slate-500 dark:bg-slate-700'
+                    ? 'bg-slate-300 dark:bg-slate-700'
                     : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900'
                 "
+                :style="item.active ? { borderColor: studyModeOutlineColor(item.key), boxShadow: `inset 0 0 0 2px ${studyModeOutlineColor(item.key)}` } : undefined"
+                :aria-current="item.active ? 'page' : undefined"
                 :aria-label="item.title"
                 :title="item.title"
               >
@@ -2047,6 +1818,7 @@ import {
 import flashcardsModeIcon from "~/assets/icons/study-modes/flashcards.png"
 import studyGuideModeIcon from "~/assets/icons/study-modes/study-guide.png"
 import practiceModeIcon from "~/assets/icons/study-modes/practice.png"
+import { studyModeOutlineColor } from "~/src/composables/study-mode-colors"
 import matchModeIcon from "~/assets/icons/study-modes/match.png"
 import chatModeIcon from "~/assets/icons/study-modes/chat.png"
 import { lockGetStatus } from "~/src/composables/lock"
@@ -2268,7 +2040,7 @@ const mobileStudyModes = computed(() => {
       replace: true,
     },
   ]
-  if (studyGuideSetId.value) {
+  if (set.value) {
     items.push({
       key: "study-guide",
       to: studyGuideUrl.value,
@@ -2375,7 +2147,7 @@ function onAssignedPageHide() {
 const studyGuideSetId = ref<Uuid | null>(null)
 const studyGuideUrl = computed(
   () =>
-    `/study-guide/${studyGuideSetId.value}${isPublicSet.value ? "?published=1" : ""}`,
+    `/study-guide/${set.value?.id ?? studyGuideSetId.value}${isPublicSet.value ? "?published=1" : ""}`,
 )
 const linkedFolder = ref<LinkedFolder | null>(null)
 const linkedFolderBusy = ref(false)
@@ -2472,6 +2244,8 @@ async function loadSavedFlashcardProgress(setId: Uuid) {
   }
 }
 
+let flashcardProgressWrite = Promise.resolve()
+
 function persistFlashcardProgress(termId: Uuid) {
   const setId = set.value?.id as Uuid | undefined
   if (!setId) return
@@ -2481,7 +2255,7 @@ function persistFlashcardProgress(termId: Uuid) {
   const progress = {
     currentTermId: termId,
     correctTermIds,
-    masteryByTermId: masteryByTermId.value,
+    masteryByTermId: { ...masteryByTermId.value },
   }
   const signature = JSON.stringify(progress)
   if (savedFlashcardProgressSignature.value === signature) return
@@ -2492,8 +2266,11 @@ function persistFlashcardProgress(termId: Uuid) {
     saveWebFlashcardProgress(setId, progress)
     return
   }
-  void useTracerDb()
-    .then((db) => createFlashcardProgressRepo(db).save(setId, progress))
+  flashcardProgressWrite = flashcardProgressWrite
+    .then(async () => {
+      const db = await useTracerDb()
+      await createFlashcardProgressRepo(db).save(setId, progress)
+    })
     .catch(() => {})
 }
 
@@ -2805,6 +2582,7 @@ const matchTimerHandle = shallowRef<number | null>(null)
 const matchSelectedTileIds = ref<string[]>([])
 const matchMatchedPairIds = ref<Set<Uuid>>(new Set())
 const matchAttemptsCount = ref(0)
+const matchMissedCounts = ref<Record<string, number>>({})
 const matchCorrectAttemptsCount = ref(0)
 const matchMemoryMode = ref(false)
 
@@ -3163,9 +2941,7 @@ const {
     if (id) completedTermIds.value = new Set(completedTermIds.value).add(id)
   },
   onFinish: () => {
-    const id = order.value[cursorIndex.value]
-    if (id && !smartReviewEnabled.value)
-      completedTermIds.value = new Set(order.value)
+    completedTermIds.value = new Set(order.value)
   },
   isBusy: () => flashcardAnswerBusy.value,
 })
@@ -3232,6 +3008,7 @@ function resetMatchStateForRun() {
   matchBusy.value = false
   matchSelectedTileIds.value = []
   matchMatchedPairIds.value = new Set()
+  matchMissedCounts.value = {}
   matchAttemptsCount.value = 0
   matchCorrectAttemptsCount.value = 0
   matchStartedAtMs.value = null
@@ -3298,10 +3075,10 @@ function matchTileClass(tile: MatchTile) {
   const selected = matchSelectedTileIds.value.includes(tile.id)
   const revealed = matchIsTileRevealed(tile)
   if (matched) {
-    return "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100"
+    return "!border-emerald-600 !bg-emerald-50 !text-emerald-950 !opacity-100 ring-2 ring-emerald-200 dark:!border-emerald-500 dark:!bg-emerald-950/40 dark:!text-emerald-100"
   }
   if (selected && matchBusy.value) {
-    return "border-red-800 bg-red-100 text-red-950 ring-2 ring-red-500/70 dark:border-red-500 dark:bg-red-950/60 dark:text-red-50 dark:ring-red-700/80"
+    return "!border-red-600 !bg-red-50 !text-red-950 !opacity-100 ring-2 ring-red-200 dark:border-red-500 dark:bg-red-950/60 dark:text-red-50 dark:ring-red-700/80"
   }
   if (selected) {
     return "border-amber-500 bg-amber-50 text-slate-900 ring-1 ring-amber-200 dark:border-amber-600 dark:bg-amber-950/25 dark:text-slate-50 dark:ring-amber-900/60"
@@ -3353,11 +3130,15 @@ async function onMatchTileClick(tile: MatchTile) {
       matchMatchedPairIds.value.size >=
       Math.min(matchPairsTarget.value, Math.floor(matchTiles.value.length / 2))
     ) {
-      matchStop("completed")
+      matchBusy.value = true
+    await new Promise((resolve) => window.setTimeout(resolve, 450))
+    matchBusy.value = false
+    matchStop("completed")
     }
     return
   }
 
+  matchMissedCounts.value = { ...matchMissedCounts.value, [a.pairId]: (matchMissedCounts.value[a.pairId] ?? 0) + 1, [b.pairId]: (matchMissedCounts.value[b.pairId] ?? 0) + 1 }
   matchBusy.value = true
   await new Promise((r) => window.setTimeout(r, 550))
   matchBusy.value = false
@@ -3393,7 +3174,7 @@ const learnIsFinished = computed(() => {
 const learnRatioText = computed(() => {
   const total = learnQuestions.value.length
   if (total === 0) return "0/0"
-  return `${Math.min(learnAttemptedCount.value, total)}/${total}`
+  return `${Math.min(learnAttemptedCount.value + (learnIsFinished.value ? 0 : 1), total)}/${total}`
 })
 
 const learnAccuracyText = computed(() => {
@@ -3675,6 +3456,15 @@ async function retryPracticeWrittenAnswer() {
   await runPracticeWrittenGrade(input)
 }
 
+function handlePracticeEnter(event: KeyboardEvent) {
+  if (event.key !== 'Enter' || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return
+  if (practiceWrittenFeedback.value && !practiceAnswerBusy.value) {
+    if (event.target instanceof HTMLElement && event.target.closest('button,a,input,select')) return
+    event.preventDefault(); void continueAfterWrittenFeedback()
+  }
+  else if (event.target instanceof HTMLTextAreaElement && !practiceAnswerBusy.value) { event.preventDefault(); void answerLearnWritten(defaultModelId.value === 'builtin:auto') }
+}
+
 async function continueAfterWrittenFeedback() {
   const feedback = practiceWrittenFeedback.value
   if (!feedback || practiceAnswerBusy.value) return
@@ -3842,6 +3632,19 @@ function persistPracticeRun() {
   )
 }
 
+function reviewMissedPractice() {
+  const missed = learnQuestions.value.filter(question => learnAnswersByQuestionId.value[question.id] === false)
+  if (!missed.length) return
+  cancelPracticeAnswerFeedback()
+  clearPracticeTimer()
+  practiceTimedOut.value = false
+  learnQuestions.value = missed
+  learnAnswersByQuestionId.value = {}
+  learnCursorIndex.value = 0
+  practiceWrittenAnswer.value = ""
+  persistPracticeRun()
+}
+
 async function initializePracticeRun(options?: { forceNew?: boolean }) {
   const currentSet = set.value
   if (!currentSet) return
@@ -3851,7 +3654,8 @@ async function initializePracticeRun(options?: { forceNew?: boolean }) {
     !options?.forceNew &&
     saved &&
     (isWebPreview.value || saved.setUpdatedAt === currentSet.updatedAt) &&
-    saved.questions.length > 0
+    saved.questions.length > 0 &&
+    saved.questions.some(question => saved.answersByQuestionId[question.id] === undefined)
   ) {
     const questionIds = new Set(saved.questions.map((question) => question.id))
     learnQuestions.value = saved.questions
@@ -4013,6 +3817,7 @@ function selectFlashcardStudyFilter(filter: FlashcardStudyFilter) {
 }
 
 function restartAllFlashcards() {
+  cancelFlashcardMotion()
   flashcardStudyFilter.value = "all"
   starredOnly.value = false
   reviewFilter.value = "all"
@@ -4165,6 +3970,7 @@ function shouldIgnoreKey(e: KeyboardEvent) {
 }
 
 function onKeydown(e: KeyboardEvent) {
+  if (mode.value === "learn" && e.key === "Enter" && (practiceWrittenFeedback.value || (e.target instanceof HTMLTextAreaElement && e.target.id === "practice-written-answer"))) { handlePracticeEnter(e); return }
   if (e.key === "Escape" && flashcardSettingsOpen.value) {
     flashcardSettingsOpen.value = false
     flashcardSettingsButtonEl.value?.focus()
@@ -4844,6 +4650,9 @@ watch(
     }
     if (next === "chat") warmChatModel()
 
+    if (prev === "flashcards" && next !== "flashcards" && isFinished.value) {
+      restartAllFlashcards()
+    }
     if (next === "flashcards" && prev !== "flashcards") {
       startRun({
         resetCounter: true,
@@ -4855,6 +4664,7 @@ watch(
       await initializePracticeRun()
     }
     if (prev === "learn" && next !== "learn") {
+      if (learnIsFinished.value) await initializePracticeRun({ forceNew: true })
       clearPracticeTimer()
     }
     if (next === "match" && prev !== "match") {
@@ -4961,6 +4771,8 @@ onBeforeUnmount(() => {
   overflow: auto;
 }
 
+.study-panel--match { overflow: hidden; }
+
 .study-panel--chat {
   min-height: clamp(28rem, 68dvh, 46rem);
   max-height: none;
@@ -5038,6 +4850,8 @@ onBeforeUnmount(() => {
     overflow: visible;
   }
 
+  .study-panel--match { height: min(70dvh, 32rem); min-height: 20rem; overflow: hidden; }
+
   .study-panel--chat {
     min-height: clamp(24rem, 65dvh, 40rem);
   }
@@ -5093,41 +4907,17 @@ onBeforeUnmount(() => {
 }
 
 @keyframes cardSwipeLeft {
-  0% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  49% {
-    transform: translateX(-18%);
-    opacity: 0;
-  }
-  50% {
-    transform: translateX(18%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  0% { transform:translateX(0); opacity:1; }
+  45% { transform:translateX(-12%); opacity:.04; }
+  55% { transform:translateX(12%); opacity:.04; }
+  100% { transform:translateX(0); opacity:1; }
 }
 
 @keyframes cardSwipeRight {
-  0% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  49% {
-    transform: translateX(18%);
-    opacity: 0;
-  }
-  50% {
-    transform: translateX(-18%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  0% { transform:translateX(0); opacity:1; }
+  45% { transform:translateX(12%); opacity:.04; }
+  55% { transform:translateX(-12%); opacity:.04; }
+  100% { transform:translateX(0); opacity:1; }
 }
 
 .animate-card-swipe-left {
