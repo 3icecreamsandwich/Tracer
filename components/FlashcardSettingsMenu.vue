@@ -5,12 +5,13 @@
     <button type="button" role="menuitemcheckbox" :aria-checked="starred" :aria-label="starredLabel" :title="starredLabel" :disabled="starDisabled" class="settings-icon" @click="$emit('star')"><Star :size="16" :fill="starred ? 'currentColor' : 'none'" /></button>
   </div>
   <div class="border-t border-slate-200 py-1 dark:border-slate-800">
-    <button v-for="filter in filters" :key="filter.value" type="button" role="menuitemradio" :aria-checked="selected === filter.value" class="settings-row" @click="$emit('filter', filter.value)"><span>{{ filter.label }}</span><span aria-hidden="true">{{ selected === filter.value ? '✓' : '' }}</span></button>
+    <button v-for="filter in filters" :key="filter.value" type="button" role="menuitemradio" :aria-checked="selected === filter.value" class="settings-row" @click="$emit('filter', filter.value)"><span>{{ filter.label }}</span><Check v-if="selected === filter.value" :size="16" aria-hidden="true" /></button>
     <button type="button" role="menuitem" :disabled="restartDisabled" class="settings-row" @click="$emit('restart')">{{ restartLabel }}</button>
   </div>
-  <div class="border-t border-slate-200 py-1 dark:border-slate-800"><button type="button" role="menuitemcheckbox" :aria-checked="smartReview" class="settings-row" @click="$emit('smart')"><span>Smart Review</span><span aria-hidden="true">{{ smartReview ? '✓' : '' }}</span></button></div>
+  <div class="border-t border-slate-200 py-1 dark:border-slate-800"><button type="button" role="menuitemcheckbox" :aria-checked="smartReview" class="settings-row" @click="$emit('smart')"><span>Smart Review</span><Check v-if="smartReview" :size="16" aria-hidden="true" /></button></div>
 </template>
 <script setup lang="ts">
+import Check from "@lucide/vue/dist/esm/icons/check.mjs"
 import Shuffle from '@lucide/vue/dist/esm/icons/shuffle.mjs'
 import ArrowLeftRight from '@lucide/vue/dist/esm/icons/arrow-left-right.mjs'
 import Star from '@lucide/vue/dist/esm/icons/star.mjs'

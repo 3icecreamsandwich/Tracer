@@ -127,7 +127,7 @@
 
       <div v-else class="flex w-full max-w-5xl flex-col">
         <div
-          class="tracer-practice-card flex min-h-[clamp(20rem,55dvh,34rem)] flex-col p-6 sm:p-8"
+          class="tracer-practice-card relative flex min-h-[clamp(20rem,55dvh,34rem)] flex-col p-6 sm:p-8"
           :class="[
             practiceQuestionSurfaceClass(),
             {
@@ -135,6 +135,7 @@
             },
           ]"
         >
+          <button v-if="practiceAnswerFeedback && practiceAnswerFeedback.selected !== practiceAnswerFeedback.correct && !learnIsNavigating" type="button" class="absolute bottom-3 right-3 z-10 inline-flex h-10 w-11 items-center justify-center rounded-xl bg-slate-950 text-white shadow-lg hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500" aria-label="Next question" title="Next question" @click="continueAfterWrongChoice"><ArrowRight :size="20" /></button>
           <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
             {{ t("set.question") }}
           </p>
@@ -142,15 +143,15 @@
             class="mt-4 text-3xl font-medium text-slate-900 dark:text-slate-50"
           >
             <MarkdownRenderer
-              :markdown="learnCurrentQuestion.prompt"
+              :markdown="practiceQuestionPrompt(learnCurrentQuestion)"
               variant="flashcard"
             />
           </div>
 
           <div
-            class="mt-auto grid gap-3 pt-8"
+            class="mt-4 grid flex-1 gap-3"
             :class="
-              learnCurrentQuestion.kind === 'true_false' ? 'grid-cols-2' : ''
+              learnCurrentQuestion.kind === 'true_false' || learnCurrentQuestion.kind === 'multiple_choice' ? 'grid-cols-2' : ''
             "
           >
             <template v-if="learnCurrentQuestion.kind === 'true_false'">
@@ -163,7 +164,7 @@
                 :disabled="learnBusy || practiceAnswerBusy"
                 @click="answerLearnTrueFalse(true)"
               >
-                {{ t("common.true") }} <span v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && (practiceAnswerFeedback.correct === true || practiceAnswerFeedback.selected === true)" :aria-label="practiceAnswerFeedback.correct === true ? 'Correct answer' : 'Incorrect answer'">{{ practiceAnswerFeedback.correct === true ? '✓' : '×' }}</span>
+                {{ t("common.true") }} <component :is="practiceAnswerFeedback.correct === true ? Check : X" v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && practiceAnswerFeedback.selected === true" :class="practiceAnswerFeedback.correct === true ? 'text-emerald-600' : 'text-orange-600'" :size="28" :stroke-width="2.8" class="absolute left-3 top-3" aria-hidden="true" />
               </UButton>
               <UButton
                 color="primary"
@@ -174,7 +175,7 @@
                 :disabled="learnBusy || practiceAnswerBusy"
                 @click="answerLearnTrueFalse(false)"
               >
-                {{ t("common.false") }} <span v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && (practiceAnswerFeedback.correct === false || practiceAnswerFeedback.selected === false)" :aria-label="practiceAnswerFeedback.correct === false ? 'Correct answer' : 'Incorrect answer'">{{ practiceAnswerFeedback.correct === false ? '✓' : '×' }}</span>
+                {{ t("common.false") }} <component :is="practiceAnswerFeedback.correct === false ? Check : X" v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && practiceAnswerFeedback.selected === false" :class="practiceAnswerFeedback.correct === false ? 'text-emerald-600' : 'text-orange-600'" :size="28" :stroke-width="2.8" class="absolute left-3 top-3" aria-hidden="true" />
               </UButton>
             </template>
 
@@ -187,12 +188,12 @@
                 v-for="(opt, idx) in learnCurrentQuestion.options"
                 :key="`${learnCurrentQuestion.id}:${idx}`"
                 type="button"
-                class="tracer-practice-choice tracer-practice-choice--multiple-choice w-[min(100%,32rem)] justify-self-center"
+                class="tracer-practice-choice tracer-practice-choice--multiple-choice min-h-0 w-full"
                 :class="practiceMultipleChoiceClass(idx)"
                 :disabled="learnBusy || practiceAnswerBusy"
                 @click="answerLearnMultipleChoice(idx)"
               >
-                <MarkdownRenderer :markdown="opt" variant="compact" /><span v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && (practiceAnswerFeedback.correct === idx || practiceAnswerFeedback.selected === idx)" :aria-label="practiceAnswerFeedback.correct === idx ? 'Correct answer' : 'Incorrect answer'">{{ practiceAnswerFeedback.correct === idx ? '✓' : '×' }}</span>
+                <MarkdownRenderer :markdown="opt" variant="compact" /><component :is="practiceAnswerFeedback.correct === idx ? Check : X" v-if="practiceAnswerFeedback?.questionId === learnCurrentQuestion.id && practiceAnswerFeedback.selected === idx" :class="practiceAnswerFeedback.correct === idx ? 'text-emerald-600' : 'text-orange-600'" :size="28" :stroke-width="2.8" class="absolute left-3 top-3" aria-hidden="true" />
               </UButton>
             </template>
             <form
@@ -274,6 +275,9 @@
 </template>
 
 <script setup lang="ts">
+import Check from "@lucide/vue/dist/esm/icons/check.mjs"
+import X from "@lucide/vue/dist/esm/icons/x.mjs"
+import ArrowRight from "@lucide/vue/dist/esm/icons/arrow-right.mjs"
 import { recordStudySession } from "~/src/composables/study-insights"
 import {
   generatePracticeQuestionsText,
@@ -305,6 +309,7 @@ import {
 } from "~/src/composables/learn/generator"
 import {
   createPracticePresentation,
+  practiceQuestionPrompt,
   type PracticeChoiceFeedback,
   type PracticeChoiceValue,
 } from "~/src/composables/learn/presentation"
@@ -638,7 +643,8 @@ async function submitPracticeChoice(
   practiceAnswerFeedback.value = { questionId, selected, correct }
   practiceAnswerBusy.value = true
 
-  await waitForFeedback((isCorrect ? 1000 : 1800) - 250)
+  if (!isCorrect) return
+  await waitForFeedback(750)
   if (transitionId !== practiceAnswerTransitionId.value) return
 
   learnIsNavigating.value = true
@@ -646,6 +652,19 @@ async function submitPracticeChoice(
   if (transitionId !== practiceAnswerTransitionId.value) return
 
   learnMarkAnswered(questionId, isCorrect)
+  practiceAnswerFeedback.value = null
+  practiceAnswerBusy.value = false
+  learnIsNavigating.value = false
+}
+
+async function continueAfterWrongChoice() {
+  const feedback = practiceAnswerFeedback.value
+  if (!feedback || feedback.selected === feedback.correct || learnIsNavigating.value) return
+  const transitionId = practiceAnswerTransitionId.value
+  learnIsNavigating.value = true
+  await waitForFeedback(250)
+  if (transitionId !== practiceAnswerTransitionId.value) return
+  learnMarkAnswered(feedback.questionId, false)
   practiceAnswerFeedback.value = null
   practiceAnswerBusy.value = false
   learnIsNavigating.value = false
@@ -822,7 +841,7 @@ function parseLearnAugmentJson(raw: string): LearnQuestion[] {
       out.push({
         id: `ai:tf:${i}:${term}`,
         kind: "true_false",
-        prompt: `True or False: "${term}" means "${def}".`,
+        prompt: `${term}: ${def}`,
         answer: ans,
         termId: "ai" as Uuid,
       })
@@ -846,7 +865,7 @@ function parseLearnAugmentJson(raw: string): LearnQuestion[] {
       out.push({
         id: `ai:mc:${i}:${term}`,
         kind: "multiple_choice",
-        prompt: `What is the definition of "${term}"?`,
+        prompt: term,
         options: choices,
         answerIndex,
         termId: "ai" as Uuid,

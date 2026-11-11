@@ -9,18 +9,19 @@
     </div>
     <div class="mt-3 border-t border-slate-200 py-2 dark:border-slate-800">
       <p class="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Question types</p>
-      <button v-for="item in choices" :key="item.kind" type="button" class="settings-row" :aria-pressed="questionTypes[item.kind]" @click="$emit('toggleType', item.kind)"><span>{{ item.label }}</span><span class="text-slate-700 dark:text-slate-200" aria-hidden="true">{{ questionTypes[item.kind] ? '✓' : '' }}</span></button>
+      <button v-for="item in choices" :key="item.kind" type="button" class="settings-row" :aria-pressed="questionTypes[item.kind]" @click="$emit('toggleType', item.kind)"><span>{{ item.label }}</span><Check v-if="questionTypes[item.kind]" :size="16" aria-hidden="true" /></button>
     </div>
     <div class="border-t border-slate-200 py-2 dark:border-slate-800">
       <label class="settings-row"><span>Questions</span><input :value="questionCount" type="number" min="1" :max="questionLimit" class="w-16 rounded-md border border-slate-300 bg-white px-2 py-1 text-right dark:border-slate-700 dark:bg-slate-950" @input="$emit('update:questionCount', Number(($event.target as HTMLInputElement).value))" @change="$emit('clampCount')" /></label>
-      <button type="button" class="settings-row" :aria-pressed="shuffle" @click="$emit('update:shuffle', !shuffle)"><span>Shuffle questions</span><span aria-hidden="true">{{ shuffle ? '✓' : '' }}</span></button>
-      <button type="button" class="settings-row" :aria-pressed="timed" @click="$emit('update:timed', !timed)"><span>Time limit</span><span aria-hidden="true">{{ timed ? '✓' : '' }}</span></button>
+      <button type="button" class="settings-row" :aria-pressed="shuffle" @click="$emit('update:shuffle', !shuffle)"><span>Shuffle questions</span><Check v-if="shuffle" :size="16" aria-hidden="true" /></button>
+      <button type="button" class="settings-row" :aria-pressed="timed" @click="$emit('update:timed', !timed)"><span>Time limit</span><Check v-if="timed" :size="16" aria-hidden="true" /></button>
       <label v-if="timed" class="settings-row"><span>Minutes</span><input :value="minutes" type="number" min="1" max="60" class="w-16 rounded-md border border-slate-300 bg-white px-2 py-1 text-right dark:border-slate-700 dark:bg-slate-950" @input="$emit('update:minutes', Math.max(1, Math.min(60, Number(($event.target as HTMLInputElement).value) || 1)))" /></label>
     </div>
     <div class="border-t border-slate-200 p-3 dark:border-slate-800"><button type="button" class="w-full rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-600 dark:bg-white dark:text-slate-950 dark:disabled:bg-slate-800 dark:disabled:text-slate-400" :disabled="busy" @click="$emit('apply')">Restart {{ sessionMode }}</button></div>
   </div>
 </template>
 <script setup lang="ts">
+import Check from "@lucide/vue/dist/esm/icons/check.mjs"
 type QuestionKind = 'multiple_choice' | 'true_false' | 'written'
 defineProps<{ sessionMode: 'practice' | 'test'; choices: { kind: QuestionKind; label: string }[]; questionTypes: Record<QuestionKind, boolean>; questionCount: number; questionLimit: number; shuffle: boolean; timed: boolean; minutes: number; busy: boolean }>()
 defineEmits<{ close: []; apply: []; clampCount: []; toggleType: [kind: QuestionKind]; 'update:sessionMode': [value: 'practice' | 'test']; 'update:questionCount': [value: number]; 'update:shuffle': [value: boolean]; 'update:timed': [value: boolean]; 'update:minutes': [value: number] }>()

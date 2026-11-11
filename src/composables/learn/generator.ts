@@ -62,11 +62,11 @@ function normalizeCell(s: string) {
 }
 
 function formatTfPrompt(front: string, back: string) {
-  return `True or False: "${front}" means "${back}".`
+  return `${front}: ${back}`
 }
 
 function formatMcPrompt(front: string) {
-  return `What is the definition of "${front}"?`
+  return front
 }
 
 function uniqueBy<T>(items: T[], key: (t: T) => string) {

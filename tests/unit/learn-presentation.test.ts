@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { createPracticePresentation } from '../../src/composables/learn/presentation'
+import { createPracticePresentation, practiceQuestionPrompt } from '../../src/composables/learn/presentation'
 
 describe('practice presentation', () => {
+  it('displays only the term for saved multiple-choice prompts', () => {
+    expect(practiceQuestionPrompt({ kind: 'multiple_choice', prompt: 'What is the definition of "Triadic Colors"?' })).toBe('Triadic Colors')
+    expect(practiceQuestionPrompt({ kind: 'multiple_choice', prompt: 'Triadic Colors' })).toBe('Triadic Colors')
+    expect(practiceQuestionPrompt({ kind: 'written', prompt: 'Write the definition of "Triadic Colors".' })).toBe('Write the definition of "Triadic Colors".')
+  })
   it('exposes the same correct and selected answer states', () => {
     const presentation = createPracticePresentation({
       getQuestion: () => ({ id: 'question', kind: 'multiple_choice' }),
@@ -9,20 +14,20 @@ describe('practice presentation', () => {
       getWrittenFeedback: () => null
     })
 
-    expect(presentation.practiceMultipleChoiceClass(2)).toContain('border-emerald-600')
-    expect(presentation.practiceMultipleChoiceClass(1)).toContain('border-red-700')
-    expect(presentation.practiceMultipleChoiceClass(0)).toContain('border-slate-300')
+    expect(presentation.practiceMultipleChoiceClass(2).join(' ')).toContain('border-dashed')
+    expect(presentation.practiceMultipleChoiceClass(1).join(' ')).toContain('border-orange-600')
+    expect(presentation.practiceMultipleChoiceClass(0).join(' ')).toContain('border-slate-300')
   })
 
-  it('keeps choices neutral before an answer is submitted', () => {
+  it('tints true and false choices before an answer is submitted', () => {
     const presentation = createPracticePresentation({
       getQuestion: () => ({ id: 'question', kind: 'true_false' }),
       getChoiceFeedback: () => null,
       getWrittenFeedback: () => null
     })
 
-    expect(presentation.practiceTrueFalseChoiceClass(true)).toContain('border-slate-300')
-    expect(presentation.practiceTrueFalseChoiceClass(false)).toContain('border-slate-300')
+    expect(presentation.practiceTrueFalseChoiceClass(true).join(' ')).toContain('bg-emerald-100')
+    expect(presentation.practiceTrueFalseChoiceClass(false).join(' ')).toContain('bg-orange-100')
   })
 
   it('exposes written-answer correctness on the question surface', () => {
