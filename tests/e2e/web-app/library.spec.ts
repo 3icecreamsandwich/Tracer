@@ -350,6 +350,7 @@ test('account deletion requires typed confirmation and calls the self-delete RPC
 
   expect((await deletionRequest).postDataJSON()).toEqual({ confirmation: 'DELETE' })
   await expect(page.getByRole('heading', { name: 'Setup Tracer' })).toBeVisible()
+  expect(await page.evaluate(key => localStorage.getItem(key), `tracer:${basePath}:auth`)).toBeNull()
 })
 
 

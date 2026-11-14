@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import type { Session, User } from '@supabase/supabase-js'
 
 import { hasTauriRuntime } from '../tauri'
+import { browserStorageKey } from '../platform/web'
 import { clearSupabaseMemorySession, getSupabaseClient } from './client'
 import { normalizeAuthError } from './errors'
 
@@ -168,6 +169,9 @@ export async function clearAuthSession(options: { remote?: boolean } = {}): Prom
     try { await getSupabaseClient().auth.signOut({ scope: 'global' }) } catch {}
   }
   clearSupabaseMemorySession()
+  if (!hasTauriRuntime() && typeof window !== 'undefined') {
+    window.localStorage.removeItem(browserStorageKey('auth'))
+  }
   if (hasTauriRuntime()) {
     try { await invoke('auth_session_delete') } catch {}
   }
