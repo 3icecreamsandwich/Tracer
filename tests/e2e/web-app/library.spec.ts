@@ -20,9 +20,9 @@ async function signInFixture(context: BrowserContext, page: Page, userId = owner
   const token = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: userId, exp: expires, role: 'authenticated' })).toString('base64url')}.fixture`
   await context.addInitScript(({ user, token, expires, basePath }) => {
     const key = `tracer:${basePath}:auth`
-    if (!localStorage.getItem('fixture-initialized')) {
+    if (!sessionStorage.getItem('fixture-initialized')) {
       localStorage.setItem(key, JSON.stringify({ access_token: token, refresh_token: 'fixture-refresh', token_type: 'bearer', expires_at: expires, expires_in: 3600, user }))
-      localStorage.setItem('fixture-initialized', '1')
+      sessionStorage.setItem('fixture-initialized', '1')
     }
   }, { user, token, expires, basePath })
   if (userId !== owner) {

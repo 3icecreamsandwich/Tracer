@@ -23,8 +23,12 @@ async function fixture(context: BrowserContext, page: Page) {
   await page.goto('first-run')
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
   await page.goto('settings')
-  await expect(page.getByRole('region', { name: 'AI', exact: true })).toContainText('My API keys')
   await page.getByRole('button', { name: 'Configure', exact: true }).click()
+  const service = page.getByRole('combobox', { name: 'AI service' })
+  if ((await service.textContent())?.includes('Built-in AI')) {
+    await service.click()
+    await page.getByRole('option', { name: 'My API keys', exact: true }).click()
+  }
   const primary = page.getByRole('listitem').filter({ hasText: 'Ollama Cloud' }).getByRole('button', { name: 'Move model up' })
   await expect(primary).toBeVisible()
   if (await primary.isEnabled()) await primary.click()
