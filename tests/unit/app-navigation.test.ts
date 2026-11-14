@@ -12,6 +12,7 @@ import {
 function shortcut(
   overrides: Partial<Parameters<typeof resolveAppShortcut>[0]>,
   path = '/',
+  isDesktop = false,
 ) {
   return resolveAppShortcut(
     {
@@ -24,6 +25,7 @@ function shortcut(
       ...overrides,
     },
     path,
+    isDesktop,
   )
 }
 
@@ -61,7 +63,12 @@ describe('app navigation', () => {
     expect(shortcut({ key: ']' })).toEqual({ type: 'forward' })
     expect(shortcut({ key: 'ArrowRight' })).toEqual({ type: 'forward' })
     expect(shortcut({ key: ',' })).toEqual({ type: 'navigate', to: '/settings' })
-    expect(shortcut({ key: 'l' })).toEqual({ type: 'focus-search' })
+    expect(shortcut({ key: 'l' })).toBeNull()
+    expect(shortcut({ key: 'l' }, '/', true)).toEqual({ type: 'focus-search' })
+    expect(shortcut({ key: 'l', metaKey: false, ctrlKey: true }, '/', true)).toEqual({ type: 'focus-search' })
+    expect(shortcut({ key: '/', metaKey: false })).toEqual({ type: 'focus-search' })
+    expect(shortcut({ key: '/', metaKey: false }, '/', true)).toEqual({ type: 'focus-search' })
+    expect(shortcut({ key: '/', metaKey: true })).toBeNull()
     expect(shortcut({ key: 'r' })).toEqual({ type: 'reload' })
     expect(shortcut({ ctrlKey: true, key: 'R', metaKey: false })).toEqual({ type: 'reload' })
     for (const digit of ['1', '2', '3']) {

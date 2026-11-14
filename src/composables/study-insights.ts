@@ -47,7 +47,7 @@ async function syncSessions(local: StudySession[]): Promise<StudySession[]> {
 export async function recordStudySession(input: Omit<StudySession, 'id' | 'endedAt' | 'durationSeconds'>) {
   const endedAt = new Date()
   const elapsed = endedAt.getTime() - new Date(input.startedAt).getTime()
-  if (!Number.isFinite(elapsed) || elapsed < 1000) return
+  if (!Number.isFinite(elapsed) || (elapsed < 1000 && input.attempted <= 0)) return
   const session: StudySession = { ...input, id: crypto.randomUUID(), endedAt: endedAt.toISOString(), durationSeconds: Math.min(4 * 3600, activeStudySecondsSince(input.startedAt)), correct: Math.max(0, Math.min(input.correct, input.attempted)), attempted: Math.max(0, input.attempted) }
   void syncStudyTime()
   const db = await useTracerDb()

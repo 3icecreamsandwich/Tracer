@@ -1,6 +1,6 @@
 <template>
   <main class="min-h-[calc(100vh-4rem)] bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
-    <div class="tracer-page mx-auto max-w-[1180px] px-8 py-10">
+    <div class="tracer-page mx-auto max-w-[1180px] px-4 py-8 sm:px-8 sm:py-10">
       <header class="flex flex-wrap items-end justify-between gap-4">
         <div><h1 class="text-4xl font-semibold">Insights</h1></div>
         <AppButton variant="white" to="/library">Back to library</AppButton>
@@ -8,12 +8,12 @@
       <p v-if="error" class="mt-6 rounded-[var(--tracer-radius-control)] border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300" role="alert">{{ error }} <UButton color="primary" variant="soft" class="underline" @click="load">Retry</UButton></p>
       <LoadingSpinner v-if="loading" screen />
       <template v-else>
-        <section class="mt-8 flex flex-wrap items-end gap-4" aria-label="Insight filters">
-          <label class="grid gap-1 text-sm font-medium">Topic (folder)
-            <TracerSelect v-model="folderId" class="min-w-48 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-950"><option value="">All topics</option><option v-for="folder in folders" :key="folder.id" :value="folder.id">{{ folder.name }}</option></TracerSelect>
+        <section class="mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-4" aria-label="Insight filters">
+          <label class="grid min-w-0 gap-1 text-sm font-medium">Topic (folder)
+            <TracerSelect v-model="folderId" class="w-full sm:min-w-48 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-950"><option value="">All topics</option><option v-for="folder in folders" :key="folder.id" :value="folder.id">{{ folder.name }}</option></TracerSelect>
           </label>
-          <label class="grid gap-1 text-sm font-medium">Set
-            <TracerSelect v-model="setId" class="min-w-48 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-950"><option value="">All sets</option><option v-for="set in filteredSets" :key="set.id" :value="set.id">{{ set.title }}</option></TracerSelect>
+          <label class="grid min-w-0 gap-1 text-sm font-medium">Set
+            <TracerSelect v-model="setId" class="w-full sm:min-w-48 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-950"><option value="">All sets</option><option v-for="set in filteredSets" :key="set.id" :value="set.id">{{ set.title }}</option></TracerSelect>
           </label>
 
         </section>

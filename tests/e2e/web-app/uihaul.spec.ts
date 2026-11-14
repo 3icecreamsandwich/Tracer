@@ -86,16 +86,18 @@ test('creation drafts, switches, dialogs and library filters work through real c
   await page.mouse.move(1000, 600)
   await page.mouse.wheel(0,500)
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
-  await page.getByRole('link', { name: 'Basic', exact: true }).first().click()
+  await page.goto('/create/basic')
   await page.mouse.move(700, 80)
   await page.getByRole('button', { name: 'Delete all inputs', exact: true }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Delete all inputs', exact: true }).click()
   await expect(page.getByLabel('Title', { exact: true })).toHaveValue('')
+  await page.getByRole('button', { name: 'Open navigation' }).click()
   await page.getByRole('link', { name: 'Insights', exact: true }).click()
   await page.mouse.move(380, 80)
   await page.getByRole('combobox').first().click()
   await expect(page.getByRole('option', { name: 'All topics', exact: true })).toBeVisible()
   await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Open navigation' }).click()
   await page.getByRole('link', { name: 'Sets & Guides', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Sets & Guides', exact: true })).toBeVisible()
   expect(errors).toEqual([])
@@ -153,7 +155,7 @@ test('sidebar follows hover and cards stay consistent across separate library ro
   await page.setViewportSize({width:390,height:844})
   await page.getByRole('banner').getByRole('link',{name:'Home',exact:true}).click()
   await page.mouse.move(380, 80)
-  await expect(sidebar).toHaveCSS('width','68px')
+  await expect(page.getByRole('button', { name: 'Open navigation' })).toBeVisible()
   await expect(page.locator('main .library-card')).toHaveCount(6)
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
   await expect(page.locator('main').first()).toHaveCSS('opacity','1')
@@ -166,7 +168,7 @@ test('sign-in controls stay compact and centered with an invisible challenge', a
   await context.addInitScript(() => { (window as any).turnstile = { render: () => 'fixture', remove: () => {}, reset: () => {} } })
   await page.goto('/first-run')
   const password = page.getByLabel('Password', { exact:true })
-  const submit = page.getByRole('button', { name:'Sign in with email', exact:true })
+  const submit = page.getByRole('button', { name:'Sign in', exact:true })
   await expect(submit).toBeVisible()
   const passwordBox = await password.boundingBox()
   const submitBox = await submit.boundingBox()
@@ -199,7 +201,7 @@ test('class filters, search and actions share field height and padding', async (
 
 test('editor spacing, shared radii, original artwork and AI allowance are consistent', async ({context,page}) => {
   const errors = await seed(context,page)
-  await expect(page.getByRole('button',{name:'Chat with Tracer',exact:true}).locator('.study-mode-artwork')).toHaveAttribute('stroke-width','1.7')
+  await expect(page.getByRole('button',{name:'Chat with Tracer',exact:true}).locator('svg')).toHaveAttribute('viewBox','0 0 33 24')
   await page.getByRole('link',{name:'Settings',exact:true}).click()
   const allowance = page.getByRole('progressbar',{name:'Built-in AI actions remaining'})
   await expect(allowance).toHaveAttribute('aria-valuenow','65')
@@ -394,8 +396,8 @@ test('first-run uses a roomy form and unobtrusive secondary controls', async ({ 
   await page.goto('/first-run')
   await expect(page.getByRole('heading', { name: 'Setup Tracer' })).toBeVisible()
   await expect(page.getByLabel('Email or username')).toBeVisible()
-  const form = page.locator('main > .tracer-page')
-  expect((await form.boundingBox())!.width).toBeGreaterThan(500)
+  const form = page.locator('main > .auth-content')
+  expect((await form.boundingBox())!.width).toBeGreaterThan(400)
   await expect(page.getByRole('button', { name: 'Show password' })).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
   await expect(page.getByRole('button', { name: /Need an account/ })).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
 })
@@ -496,4 +498,51 @@ test('flashcard navigation slides out and back in on both study surfaces', async
     expect(frames.some(frame => frame.x > 5)).toBe(true)
     expect(Math.min(...frames.map(frame => frame.opacity))).toBeLessThan(0.2)
   }
+})
+
+test('mobile navigation sheet and dedicated search fit the viewport', async ({ context, page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const errors = await seed(context, page)
+  const menu = page.getByRole('button', { name: 'Open navigation' })
+  await expect(menu).toBeVisible()
+  await menu.click()
+  await expect(page.getByRole('complementary', { name: 'Study navigation' }).getByRole('link', { name: 'Synthesize' })).toBeVisible()
+  await page.getByRole('complementary', { name: 'Study navigation' }).getByRole('link', { name: 'Synthesize' }).click()
+  await expect(page).toHaveURL(/\/create\/synthesize/)
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.getByRole('banner').getByRole('searchbox', { name: 'Search' }).click()
+  await expect(page).toHaveURL(/\/search$/)
+  await page.getByRole('banner').getByRole('searchbox', { name: 'Search' }).fill('Biology')
+  await expect(page.getByRole('region', { name: /search results/i }).getByText('Biology 0')).toBeVisible()
+  await expect(page.getByText('Explore cells, genetics and the living world.')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Close search' }).click()
+  await expect(page).toHaveURL(/\/create\/synthesize$/)
+  expect(errors).toEqual([])
+})
+
+test('page navigation animates and respects reduced motion', async ({ context, page }) => {
+  await seed(context, page)
+  await page.evaluate(() => {
+    const seen: string[] = []
+    ;(window as any).__pageTransitions = seen
+    new MutationObserver(records => {
+      for (const record of records) {
+        if (record.target instanceof Element && /page-(enter|leave)-active/.test(record.target.className)) seen.push(record.target.className)
+      }
+    }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] })
+  })
+  await page.getByRole('link', { name: 'Sets & Guides', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Sets & Guides' })).toBeVisible()
+  await expect.poll(() => page.evaluate(() => (window as any).__pageTransitions.some((value: string) => value.includes('page-enter-active')))).toBe(true)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const duration = await page.evaluate(() => {
+    const element = document.createElement('div')
+    element.className = 'page-enter-active page-enter-from'
+    document.body.append(element)
+    const result = { duration: getComputedStyle(element).transitionDuration, opacity: getComputedStyle(element).opacity }
+    element.remove()
+    return result
+  })
+  expect(duration.duration).toBe('0s')
+  expect(duration.opacity).toBe('1')
 })

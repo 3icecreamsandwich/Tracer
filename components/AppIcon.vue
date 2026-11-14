@@ -1,5 +1,6 @@
 <template>
-  <component :is="icons[name]" :size="size" :stroke-width="strokeWidth" aria-hidden="true" class="shrink-0" />
+  <ChatGlyph v-if="name === 'chat'" :size="size" />
+  <component v-else :is="icons[name]" :size="size" :stroke-width="strokeWidth" aria-hidden="true" class="shrink-0" />
 </template>
 <script setup lang="ts">
 // Import only the icons we render; the barrel includes the entire library in Vite dev.
@@ -31,8 +32,14 @@ import Puzzle from '@lucide/vue/dist/esm/icons/puzzle.mjs'
 import ClipboardCheck from '@lucide/vue/dist/esm/icons/clipboard-check.mjs'
 import ChevronDown from '@lucide/vue/dist/esm/icons/chevron-down.mjs'
 import ImagePlus from '@lucide/vue/dist/esm/icons/image-plus.mjs'
+import ArrowLeft from '@lucide/vue/dist/esm/icons/arrow-left.mjs'
+import ArrowRight from '@lucide/vue/dist/esm/icons/arrow-right.mjs'
+import ArrowUp from '@lucide/vue/dist/esm/icons/arrow-up.mjs'
+import Check from '@lucide/vue/dist/esm/icons/check.mjs'
+import Plus from '@lucide/vue/dist/esm/icons/plus.mjs'
+import Flag from '@lucide/vue/dist/esm/icons/flag.mjs'
 withDefaults(defineProps<{
-  name: 'close' | 'copy' | 'download' | 'select' | 'publish' | 'filter' | 'dashboard' | 'insights' | 'edit' | 'share' | 'add-folder' | 'settings' | 'crown' | 'cards' | 'classes' | 'chat' | 'guide' | 'practice' | 'chevron' | 'grip' | 'trash' | 'fullscreen' | 'match' | 'test' | 'chevron-down' | 'image-plus' | 'file-input'
+  name: 'flag' | 'close' | 'copy' | 'download' | 'select' | 'publish' | 'filter' | 'dashboard' | 'insights' | 'edit' | 'share' | 'add-folder' | 'settings' | 'crown' | 'cards' | 'classes' | 'chat' | 'guide' | 'practice' | 'chevron' | 'grip' | 'trash' | 'fullscreen' | 'match' | 'test' | 'chevron-down' | 'image-plus' | 'file-input' | 'arrow-left' | 'arrow-right' | 'arrow-up' | 'check' | 'plus'
   size?: number
   strokeWidth?: number
 }>(), {
@@ -40,6 +47,12 @@ withDefaults(defineProps<{
   strokeWidth: 2,
 })
 const icons = {
+  flag: Flag,
+  'arrow-left': ArrowLeft,
+  'arrow-right': ArrowRight,
+  'arrow-up': ArrowUp,
+  check: Check,
+  plus: Plus,
   'chevron-down': ChevronDown,
   'image-plus': ImagePlus,
   'file-input': FileInput,

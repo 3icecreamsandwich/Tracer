@@ -29,9 +29,9 @@
         Synthesize requires the desktop app (Tauri) for vault + database access.
       </div>
 
-      <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div class="mt-6 grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <section
-          class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+          class="min-w-0 rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"
           aria-label="Choose source sets"
         >
           <div class="flex items-start justify-between gap-3">
@@ -84,12 +84,9 @@
               <li v-for="s in filteredSets" :key="s.id">
                 <div class="synth-source-row rounded-[var(--tracer-radius-surface)] bg-white p-4 dark:bg-slate-950">
                   <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-1">
                       <p class="truncate text-sm font-medium text-slate-900 dark:text-slate-50">
                         {{ s.title }}
-                      </p>
-                      <p v-if="s.description" class="mt-1 truncate text-sm text-slate-600 dark:text-slate-300">
-                        {{ translateAppGeneratedText(s.description) }}
                       </p>
                     </div>
 
@@ -240,7 +237,7 @@ import { filterSetSearch } from '~/src/composables/search/set-search'
 import { useAppLanguage } from '~/src/composables/language'
 
 const router = useRouter()
-const { t, translateAppGeneratedText } = useAppLanguage()
+const { t } = useAppLanguage()
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 
 const hasTauriInternals = hasTauriRuntime()

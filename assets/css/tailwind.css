@@ -82,7 +82,9 @@
 }
 @media (pointer: coarse) {
   button, [role='button'], a.tracer-button { touch-action: manipulation; }
-  button:not([tabindex='-1']), a.tracer-button { min-height: 44px; }
+  button:not([tabindex='-1']):not([role='switch']), a.tracer-button { min-height: 44px; }
+  button[role='switch'] { position: relative; }
+  button[role='switch']::before { content: ''; position: absolute; inset: -10px; }
 }
 
 .tracer-library-scroll {
@@ -492,4 +494,13 @@ html.dark button.flashcard-navigation:disabled {
 button.flashcard-navigation--previous {
   color: #ff7043 !important;
   border-color: transparent !important;
+}
+
+@media (max-width:767px) { .tracer-workspace-content.has-sidebar { padding-left:0; } }
+
+button.flashcard-navigation:not(.flashcard-navigation--previous) { border-color: transparent !important; box-shadow: none !important; }
+
+@media (max-width:767px) {
+  .tracer-back-control > button, .tracer-chat-control { height:44px; border-radius:var(--tracer-radius-control); }
+  .tracer-chat-control { width:44px; }
 }

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_FLASHCARD_STUDY_FILTER,
   isFlashcardGettingBetter,
+  flashcardStudyGroup,
+  sanitizeFlashcardMastery,
   sortTermsByFlashcardMastery,
   updateFlashcardMastery,
 } from '../../src/composables/cards/flashcard-mastery'
@@ -33,6 +35,17 @@ describe('flashcard mastery', () => {
     expect(isFlashcardGettingBetter(progress)).toBe(true)
     progress = updateFlashcardMastery(progress, 'incorrect')
     expect(isFlashcardGettingBetter(progress)).toBe(false)
+  })
+
+  it('places a correctly answered card in improving after saving and sorts it between learning and mastered', () => {
+    const saved = sanitizeFlashcardMastery({
+      improving: updateFlashcardMastery(undefined, 'correct'),
+      mastered: updateFlashcardMastery(updateFlashcardMastery(undefined, 'correct'), 'correct'),
+    })
+    expect(flashcardStudyGroup(saved.improving)).toBe('gettingBetter')
+    const terms = [{ id: 'mastered' }, { id: 'improving' }, { id: 'learning' }]
+    expect(sortTermsByFlashcardMastery(terms, saved).map(term => term.id)).toEqual(['learning', 'improving', 'mastered'])
+    expect(flashcardStudyGroup(updateFlashcardMastery(saved.improving, 'incorrect'))).toBe('learning')
   })
 
   it('sorts learning cards before cards getting better after persisted state is loaded', () => {

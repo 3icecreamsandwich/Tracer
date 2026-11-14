@@ -42,7 +42,7 @@
               :to="`/set/${set.id}/edit?published=1`"
               class=""
             >
-              Edit
+              <AppIcon name="edit" class="sm:hidden" /><span class="sr-only sm:not-sr-only">Edit</span>
             </UButton>
             <UButton
               color="primary"
@@ -51,7 +51,7 @@
               :to="`/report?set=${encodeURIComponent(set.id)}`"
               class=""
             >
-              Report
+              <AppIcon name="flag" class="sm:hidden" /><span class="sr-only sm:not-sr-only">Report</span>
             </UButton>
             <UButton
               color="primary"
@@ -186,7 +186,7 @@
                     class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                     title="Open fullscreen"
                   >
-                    ⛶
+                    <AppIcon name="fullscreen" :size="18" />
                   </NuxtLink>
                 </div>
 
@@ -221,7 +221,7 @@
                     class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                     title="Open fullscreen"
                   >
-                    ⛶
+                    <AppIcon name="fullscreen" :size="18" />
                   </NuxtLink>
                 </div>
 
@@ -241,7 +241,7 @@
                     class="inline-flex items-center rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
                     title="Open fullscreen"
                   >
-                    ⛶
+                    <AppIcon name="fullscreen" :size="18" />
                   </NuxtLink>
                 </div>
                 <NuxtLink
@@ -287,21 +287,7 @@
                       :aria-label="t('set.flashcardSettings')"
                       :title="t('set.flashcardSettings')"
                     >
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        class="h-6 w-6"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
-                        />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
+                      <AppIcon name="settings" :size="20" :stroke-width="1.8" />
                     </summary>
                     <div
                       class="flashcard-settings-menu absolute end-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
@@ -351,16 +337,7 @@
                     :title="t('set.fullscreen')"
                     @click="openFullscreenMode('flashcards')"
                   >
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      class="h-6 w-6"
-                    >
-                      <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
-                    </svg>
+                    <AppIcon name="fullscreen" :size="24" />
                   </UButton>
                 </div>
               </div>
@@ -493,7 +470,7 @@
                     :aria-label="t('set.previous')"
                     @click="goPrev"
                   >
-                    <span aria-hidden="true">←</span>
+                    <AppIcon name="arrow-left" :size="24" />
                   </UButton>
                   <UButton
                     color="primary"
@@ -506,7 +483,7 @@
                     :aria-label="t('set.next')"
                     @click="goNext"
                   >
-                    <span aria-hidden="true">→</span>
+                    <AppIcon name="arrow-right" :size="24" />
                   </UButton>
                   <UButton
                     color="primary"
@@ -517,7 +494,7 @@
                     :aria-label="t('set.missed')"
                     @click="markIncorrect"
                   >
-                    <span aria-hidden="true">×</span>
+                    <AppIcon name="close" :size="24" />
                   </UButton>
                   <UButton
                     color="primary"
@@ -528,7 +505,7 @@
                     :aria-label="t('set.gotIt')"
                     @click="markCorrect"
                   >
-                    <span aria-hidden="true">✓</span>
+                    <AppIcon name="check" :size="24" />
                   </UButton>
                 </div>
               </template>
@@ -570,21 +547,7 @@
                       aria-haspopup="menu"
                       @click="flashcardSettingsOpen = !flashcardSettingsOpen"
                     >
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        class="h-5 w-5"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
-                        />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
+                      <AppIcon name="settings" :size="20" :stroke-width="1.8" />
                     </button>
 
                     <div
@@ -794,7 +757,7 @@
                       "
                       @click="goPrev"
                     >
-                      ← {{ t("set.previous") }}
+                      <AppIcon name="arrow-left" :size="18" /> {{ t("set.previous") }}
                     </UButton>
 
                     <UButton
@@ -808,7 +771,7 @@
                       "
                       @click="goNext"
                     >
-                      {{ t("set.next") }} →
+                      {{ t("set.next") }} <AppIcon name="arrow-right" :size="18" />
                     </UButton>
                   </div>
 
@@ -865,21 +828,7 @@
                     @click="openPracticeSettings"
                     @keydown.esc="practiceSettingsOpen = false"
                   >
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      class="h-5 w-5"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M9.6 3.2h4.8l.6 2.1c.4.2.8.4 1.2.7l2.1-.6 2.4 4.2-1.5 1.5v1.8l1.5 1.5-2.4 4.2-2.1-.6c-.4.3-.8.5-1.2.7l-.6 2.1H9.6L9 18.5c-.4-.2-.8-.4-1.2-.7l-2.1.6-2.4-4.2 1.5-1.5v-1.8L3.3 9.4l2.4-4.2 2.1.6c.4-.3.8-.5 1.2-.7l.6-1.9Z"
-                      />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
+                    <AppIcon name="settings" :size="20" :stroke-width="1.8" />
                   </UButton>
                   <NuxtLink
                     v-if="set"
@@ -1235,18 +1184,7 @@
                   "
                   @click="sendChat"
                 >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    class="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M12 19V5M6 11l6-6 6 6" />
-                  </svg>
+                  <AppIcon name="arrow-up" :size="20" />
                 </UButton>
               </div>
 
@@ -1433,12 +1371,7 @@
                 :aria-label="item.title"
                 :title="item.title"
               >
-                <img
-                  :src="item.icon"
-                  alt=""
-                  class="max-h-7 max-w-8 object-contain"
-                  aria-hidden="true"
-                />
+                <StudyModeArtwork :name="item.key" :size="item.key === 'chat' ? 16 : 28" />
               </NuxtLink>
             </nav>
 
@@ -1467,20 +1400,7 @@
                       aria-haspopup="menu"
                       @click="termsFilterMenuOpen = !termsFilterMenuOpen"
                     >
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="h-5 w-5"
-                      >
-                        <path d="M4 6h16" />
-                        <path d="M7 12h10" />
-                        <path d="M10 18h4" />
-                      </svg>
+                      <AppIcon name="filter" :size="20" :stroke-width="1.8" />
                     </button>
 
                     <div
@@ -1705,17 +1625,17 @@
               color="primary"
               variant="soft"
               type="button"
-              class="w-full rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
+              class="chat-history-entry w-full rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-3 py-3 pr-12 text-left shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:focus-visible:ring-slate-500 dark:focus-visible:ring-offset-slate-950"
               :disabled="chatHistoryBusy || chatDeleteBusy"
               @click="openSavedChat(savedChat.id)"
             >
               <span
-                class="block truncate text-sm font-medium text-slate-900 dark:text-slate-50"
+                class="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 dark:text-slate-50"
               >
                 {{ savedChat.title }}
               </span>
               <span
-                class="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400"
+                class="min-w-0 truncate text-xs text-slate-500 dark:text-slate-400"
               >
                 {{ set?.title }} ·
                 {{ formatSavedChatDate(savedChat.lastOpenedAt) }}
@@ -1734,19 +1654,7 @@
               :disabled="chatDeleteBusy"
               @click.stop="requestDeleteChat(savedChat)"
             >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                class="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M3 6h18" />
-                <path d="M8 6V4h8v2" />
-                <path d="M19 6l-1 14H6L5 6" />
-                <path d="M10 11v5M14 11v5" />
-              </svg>
+              <AppIcon name="trash" :size="20" />
             </UButton>
           </li>
         </ul>
@@ -2103,7 +2011,7 @@ async function finishInlineAssignedMode(
   const startedAt = inlineInsightStartedAt
   inlineInsightStartedAt = ""
   if (startedAt) {
-    void recordStudySession({
+    await recordStudySession({
       setId: set.value.id,
       mode: active === "learn" ? "practice" : active,
       startedAt,
@@ -2111,7 +2019,7 @@ async function finishInlineAssignedMode(
       attempted: score.attempted,
     }).catch((error) => console.warn("Could not save study session", error))
   }
-  await completeAssignedAttempt({
+  void completeAssignedAttempt({
     assignmentId: assignedAssignmentId.value,
     setId: set.value.id,
     mode: active === "learn" ? "practice" : active,
@@ -2119,8 +2027,9 @@ async function finishInlineAssignedMode(
     scorePossible: score.attempted,
     durationMs: active === "match" ? options.durationMs : undefined,
     completed: active === "match" ? options.completed === true : true,
-  })
-  if (active === "match" && options.completed) await loadMatchLeaderboard()
+  }).then(() => {
+    if (active === "match" && options.completed) void loadMatchLeaderboard()
+  }).catch((error) => console.warn("Could not submit assigned attempt", error))
 }
 
 function beginInlineAssignedMode(nextMode: SetMode) {
@@ -4650,8 +4559,8 @@ watch(mode, (next, previous) => {
   beginInlineAssignedMode(next)
 })
 
-onBeforeRouteLeave(() => {
-  finishInlineAssignedMode()
+onBeforeRouteLeave(async () => {
+  await finishInlineAssignedMode()
 })
 
 watch(
@@ -5018,4 +4927,9 @@ onBeforeUnmount(() => {
     min-height: 324px;
   }
 }
+</style>
+
+<style scoped>
+.chat-history-entry[data-slot="base"] { display: flex; justify-content: space-between; gap: 1rem; padding-right: 3rem; text-align: left; }
+@media (max-width: 600px) { .chat-history-entry[data-slot="base"] { align-items: flex-start; flex-direction: column; gap: .25rem; } .chat-history-entry > span { max-width: 100%; } }
 </style>

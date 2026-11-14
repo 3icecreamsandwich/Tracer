@@ -1,14 +1,26 @@
 <template>
-  <main class="flex min-h-screen items-center justify-center bg-white text-neutral-950 dark:bg-slate-950 dark:text-slate-50">
-    <div class="tracer-page mx-auto w-full max-w-xl px-8 pb-12 pt-11">
+  <main class="auth-page relative isolate flex min-h-screen items-start justify-center overflow-hidden bg-white text-neutral-950 dark:bg-slate-950 dark:text-slate-50">
+    <div class="auth-decorations" aria-hidden="true">
+      <AppIcon name="cards" class="auth-decoration auth-decoration--one" :size="54" />
+      <AppIcon name="practice" class="auth-decoration auth-decoration--two" :size="46" />
+      <AppIcon name="match" class="auth-decoration auth-decoration--three" :size="58" />
+      <AppIcon name="test" class="auth-decoration auth-decoration--four" :size="48" />
+      <AppIcon name="guide" class="auth-decoration auth-decoration--five" :size="52" />
+      <AppIcon name="cards" class="auth-decoration auth-decoration--six" :size="42" />
+      <AppIcon name="match" class="auth-decoration auth-decoration--seven" :size="48" />
+      <AppIcon name="guide" class="auth-decoration auth-decoration--eight" :size="44" />
+      <AppIcon name="practice" class="auth-decoration auth-decoration--nine" :size="52" />
+      <AppIcon name="test" class="auth-decoration auth-decoration--ten" :size="46" />
+    </div>
+    <div class="auth-content relative z-10 mx-auto w-full max-w-xl px-6 pb-12 pt-12 sm:px-8 sm:pt-20" :class="{ 'auth-content--signup': stage === 'account' && mode === 'signup' }">
       <h1 v-if="stage !== 'finishing'" class="inline-block bg-gradient-to-r from-red-600 via-orange-500 to-orange-400
-               bg-clip-text text-[32px] font-bold leading-tight text-transparent">{{ t('auth.firstRunTitle') }}</h1>
+               bg-clip-text text-[36px] font-bold sm:text-[42px] leading-tight text-transparent">{{ t('auth.firstRunTitle') }}</h1>
 
       <template v-if="stage === 'account'">
 
         <div
           v-if="mode === 'signup'"
-          class="mt-4 grid h-10 grid-cols-2 rounded-[var(--tracer-radius-surface)] border border-neutral-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+          class="auth-roles mt-6 grid h-12 grid-cols-2 rounded-[var(--tracer-radius-surface)] border border-neutral-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
           role="group"
           :aria-label="t('auth.accountType')"
         >
@@ -42,7 +54,7 @@
 
         <UButton color="primary" variant="soft"
           type="button"
-          class="mt-[18px] flex h-11 w-full items-center justify-center rounded-[var(--tracer-radius-control)] border border-neutral-300 bg-white px-4 font-medium text-neutral-950 shadow-sm hover:bg-neutral-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:hover:bg-slate-800"
+          class="auth-google mt-5 flex h-12 w-full items-center justify-center rounded-[var(--tracer-radius-control)] border border-neutral-300 bg-white px-4 font-medium text-neutral-950 shadow-sm hover:bg-neutral-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:hover:bg-slate-800"
           :disabled="busy || !configured || (mode === 'signup' && !ageConfirmed)"
           @click="onGoogle"
         >
@@ -62,7 +74,7 @@
           <span class="h-px flex-1 bg-neutral-300 dark:bg-slate-700" />
         </div>
 
-        <form class="space-y-2" @submit.prevent="onEmail">
+        <form class="auth-form space-y-4" @submit.prevent="onEmail">
           <div v-if="mode === 'signup'">
             <label class="block text-sm font-medium" for="account-name">{{ t('auth.name') }}</label>
             <UInput id="account-name" v-model="name" autocomplete="name" class="w-full" />
@@ -83,7 +95,7 @@
               />
               <UButton color="primary" variant="soft"
                 type="button"
-                class="absolute bottom-0 right-0 !bg-transparent hover:!bg-transparent shadow-none flex h-10 w-11 items-center justify-center rounded-r-[10px] text-neutral-500 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-neutral-500 dark:text-slate-400 dark:hover:text-white"
+                class="auth-password-toggle absolute bottom-0 right-0 !bg-transparent hover:!bg-transparent shadow-none flex h-10 w-11 items-center justify-center rounded-r-[10px] text-neutral-500 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-neutral-500 dark:text-slate-400 dark:hover:text-white"
                 :aria-label="t(showAccountPassword ? 'auth.hidePassword' : 'auth.showPassword')"
                 :aria-pressed="showAccountPassword"
                 @click="showAccountPassword = !showAccountPassword"
@@ -125,7 +137,7 @@
             @expired="onCaptchaExpired"
             @error="onCaptchaError"
           />
-          <UButton color="primary" variant="solid" type="submit" class="auth-primary" :disabled="busy || !configured || (mode === 'signup' && !ageConfirmed) || (turnstileEnabled && !captchaToken)">
+          <UButton color="primary" variant="solid" type="submit" class="auth-primary" :disabled="busy || !configured">
             <LoadingSpinner v-if="busyProvider === 'email'" size="sm" />
             <template v-else>{{ mode === 'signup' ? t('auth.letsGo') : t('auth.signInEmail') }}</template>
           </UButton>
@@ -564,7 +576,34 @@ onMounted(async () => {
 
 <style scoped>
 @reference "~/assets/css/tailwind.css";
+.auth-content { max-width: 480px; }
+.auth-content--signup { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.auth-content--signup .auth-roles { margin-top: .75rem; }
+.auth-content--signup .auth-google { margin-top: .75rem; }
+.auth-content--signup .auth-form { row-gap: .5rem; }
+.auth-content--signup .auth-form :deep(input[data-slot="base"]) { height: 40px; }
+.auth-content--signup .auth-password-toggle[data-slot="base"] { height: 40px; }
+.auth-content--signup .auth-form > label { padding-top: .25rem; padding-bottom: .25rem; }
+.auth-decorations { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.auth-decoration { position: absolute; opacity: .16; }
+.auth-decoration--one { left: 5%; bottom: 13%; color: #ef4444; transform: rotate(-16deg); }
+.auth-decoration--two { left: 19%; bottom: 4%; color: #f97316; transform: rotate(14deg); }
+.auth-decoration--three { left: 33%; bottom: 9%; color: #3b82f6; transform: rotate(-12deg); }
+.auth-decoration--four { right: 31%; bottom: 3%; color: #ef4444; transform: rotate(13deg); }
+.auth-decoration--five { right: 16%; bottom: 11%; color: #f97316; transform: rotate(-12deg); }
+.auth-decoration--six { right: 4%; bottom: 5%; color: #3b82f6; transform: rotate(16deg); }
+.auth-decoration--seven { left: 9%; bottom: 35%; color: #3b82f6; transform: rotate(12deg); }
+.auth-decoration--eight { left: 25%; bottom: 24%; color: #ef4444; transform: rotate(-14deg); }
+.auth-decoration--nine { right: 24%; bottom: 29%; color: #f97316; transform: rotate(15deg); }
+.auth-decoration--ten { right: 7%; bottom: 39%; color: #ef4444; transform: rotate(-10deg); }
+.auth-form :deep(input[data-slot="base"]) { height: 48px; margin-top: 4px; background: var(--ui-bg); box-shadow: 0 2px 4px rgb(0 0 0 / 0.12), inset 0 0 0 1px var(--ui-border); }
+.auth-roles :deep(button[data-slot="base"]) { height: 100%; font-size: 1rem; }
+.auth-primary[data-slot="base"] { min-height: 54px; padding-block: 14px; }
+.auth-content--signup .auth-primary[data-slot="base"] { min-height: 46px; padding-block: 10px; }
+.auth-google[data-slot="base"] { min-height: 48px; font-size: 1rem; box-shadow: 0 2px 4px rgb(0 0 0 / 0.12); }
+.auth-password-toggle[data-slot="base"] { height: 48px; }
+@media (max-width: 640px) { .auth-decoration { opacity: .1; } .auth-content:not(.auth-content--signup) { padding-bottom: 6rem; } }
 .auth-input { @apply mt-0.5 h-10 w-full rounded-[10px] border border-neutral-300 bg-white px-3 text-neutral-950 shadow-sm outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50; }
 .auth-password-input { padding-right: 2.75rem; }
-.auth-primary { @apply h-10 w-full rounded-[10px] bg-neutral-800 px-4 text-lg font-medium text-white hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-offset-slate-950; }
+.auth-primary { @apply h-12 w-full rounded-[10px] bg-neutral-800 px-4 text-lg font-medium text-white hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:focus-visible:ring-offset-slate-950; }
 </style>

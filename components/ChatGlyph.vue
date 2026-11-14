@@ -1,0 +1,2 @@
+<template><svg :width="size * 33 / 24" :height="size" viewBox="0 0 33 24" fill="none" aria-hidden="true"><rect x="1" y="1" width="26.8536" height="16.977" rx="4" stroke="#FF910C" stroke-width="2"/><path d="M30.1456 19.9079C30.2848 20.3031 29.9052 20.684 29.5095 20.5462L24.5369 18.8137C24.189 18.6925 24.0872 18.2495 24.3472 17.9886L27.5703 14.7542C27.8303 14.4933 28.2736 14.5936 28.396 14.9411L30.1456 19.9079Z" fill="#FF920C"/></svg></template>
+<script setup lang="ts">withDefaults(defineProps<{ size?: number }>(), { size: 24 })</script>

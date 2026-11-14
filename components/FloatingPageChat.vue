@@ -148,7 +148,7 @@
             aria-label="Chat with Tracer"
             @click="togglePanel"
         >
-            <StudyModeArtwork name="chat" :size="24" />
+            <StudyModeArtwork name="chat" :size="18" />
         </button>
     </div>
 </template>

@@ -45,9 +45,10 @@
           />
         </form>
 
+        <button v-if="searchOpen" type="button" class="mobile-search-close" aria-label="Close search" @click="closeSearch">←</button>
         <div
           v-if="searchOpen"
-          class="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+          class="search-results absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
           role="region"
           :aria-label="t('nav.searchResults')"
         >
@@ -78,12 +79,6 @@
                     class="block truncate font-medium text-slate-900 dark:text-slate-50"
                   >
                     {{ searchResultTitle(item) }}
-                  </span>
-                  <span
-                    v-if="item.subtitle"
-                    class="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400"
-                  >
-                    {{ translateAppGeneratedText(item.subtitle) }}
                   </span>
                 </span>
                 <span
@@ -179,8 +174,11 @@ const updateIndicatorLabel = computed(() => {
     : `Downloading update: ${updateDownloadPercent.value}%`
 })
 
-const { language, t, translateAppGeneratedText } = useAppLanguage()
+const { language, t } = useAppLanguage()
 
+const router = useRouter()
+const route = useRoute()
+let searchReturnPath = "/library"
 const draft = ref("")
 const searchRootEl = ref<HTMLElement | null>(null)
 const searchInputEl = ref<{ inputRef: HTMLInputElement } | null>(null)
@@ -304,12 +302,14 @@ async function loadSearchItems() {
 }
 
 function openSearch() {
+  if (import.meta.client && window.matchMedia('(max-width: 767px)').matches && route.path !== '/search') { searchReturnPath = route.fullPath; void router.push('/search') }
   searchOpen.value = true
   loadSearchItems()
 }
 
 function closeSearch() {
   searchOpen.value = false
+  if (route.path === '/search') void router.push(searchReturnPath)
 }
 
 function invalidateSearchItems() {
@@ -318,10 +318,17 @@ function invalidateSearchItems() {
 }
 
 function selectSearchResult() {
-  closeSearch()
+  searchOpen.value = false
 }
 
 function onSubmit() {
+  const firstResult = searchResults.value[0]
+  if (!searchBusy.value && !searchError.value && firstResult) {
+    searchOpen.value = false
+    searchInputEl.value?.inputRef?.blur()
+    void router.push(topbarSearchItemTo(firstResult))
+    return
+  }
   openSearch()
 }
 
@@ -338,7 +345,7 @@ function focusSearch() {
 
 function onDocumentPointerDown(event: PointerEvent) {
   const root = searchRootEl.value
-  if (!root) return
+  if (!root || route.path === '/search') return
   const target = event.target
   if (target instanceof Node && root.contains(target)) return
   closeSearch()
@@ -376,7 +383,12 @@ async function loadAvatarText() {
   }
 }
 
+watch(() => route.path, (path) => {
+  if (path === '/search') { searchOpen.value = true; void loadSearchItems(); void nextTick(() => searchInputEl.value?.inputRef?.focus()) }
+  else searchOpen.value = false
+})
 onMounted(() => {
+  if (route.path === '/search') { searchOpen.value = true; void loadSearchItems(); void nextTick(() => searchInputEl.value?.inputRef?.focus()) }
   windowControlsClass.value = detectWindowControlsClass()
   document.addEventListener("pointerdown", onDocumentPointerDown)
   window.addEventListener("tracer:search-items-changed", invalidateSearchItems)
@@ -410,5 +422,18 @@ onBeforeUnmount(() => {
 
 .app-topbar--linux .native-window-controls-spacer-right {
   flex-basis: 20px;
+}
+</style>
+
+<style scoped>
+.mobile-search-close { display:none; }
+@media (max-width: 767px) {
+ .app-topbar:has(.search-results) { position:fixed; inset:0; height:100dvh; background:var(--ui-bg); }
+ .app-topbar:has(.search-results) > div { align-items:flex-start; padding-top:16px; }
+ .app-topbar:has(.search-results) > div > a, .app-topbar:has(.search-results) .native-window-controls-spacer { display:none; }
+ .app-topbar:has(.search-results) .relative.mx-auto { padding-left:44px; }
+ .mobile-search-close { display:block; position:absolute; left:0; top:2px; width:36px; height:36px; font-size:24px; }
+ .search-results { position:fixed; top:64px; bottom:0; left:0; right:0; margin:0; border:0; border-radius:0; box-shadow:none; }
+ .search-results ul { max-height:calc(100dvh - 64px); }
 }
 </style>

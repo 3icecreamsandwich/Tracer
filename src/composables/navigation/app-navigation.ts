@@ -74,6 +74,7 @@ export function shouldPreventFullscreenExit(event: ShortcutEvent): boolean {
 export function resolveAppShortcut(
   event: ShortcutEvent,
   path: string,
+  isDesktop = false,
 ): AppShortcutAction | null {
   const setId = flashcardSetIdFromPath(path)
 
@@ -96,6 +97,9 @@ export function resolveAppShortcut(
   }
 
   const primary = event.metaKey || event.ctrlKey
+  if (event.key === '/' && !primary && !event.altKey && !event.shiftKey) {
+    return { type: 'focus-search' }
+  }
   if (!primary) return null
 
   if (!event.altKey && !event.shiftKey && event.key.toLowerCase() === 'r') {
@@ -114,7 +118,7 @@ export function resolveAppShortcut(
     return { type: 'navigate', to: '/settings' }
   }
 
-  if (!event.altKey && !event.shiftKey && event.key.toLowerCase() === 'l') {
+  if (isDesktop && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'l') {
     return { type: 'focus-search' }
   }
 

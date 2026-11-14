@@ -1,6 +1,6 @@
 <template>
   <main class="min-h-[calc(100vh-4rem)] bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
-    <div class="tracer-page mx-auto max-w-[1180px] px-8 py-10">
+    <div class="tracer-page mx-auto max-w-[1180px] px-4 py-8 sm:px-8 sm:py-10">
       <LoadingSpinner v-if="loading" screen />
 
       <div v-else-if="loadError" class="rounded-[var(--tracer-radius-surface)] border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30">
@@ -42,7 +42,7 @@
           <TracerSelect
             id="dashboard-class"
             v-model="selectedClassId"
-            class="min-w-64 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950"
+            class="w-full sm:w-auto sm:min-w-64 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-950"
           >
             <option v-for="classroom in classes" :key="classroom.id" :value="classroom.id">{{ classroom.name }}</option>
           </TracerSelect>
@@ -60,29 +60,29 @@
           </div>
 
           <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <article class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+            <article class="dashboard-metric rounded-[var(--tracer-radius-surface)] p-5">
               <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('classroom.meanAccuracy') }}</p>
               <p class="mt-2 text-3xl font-semibold">{{ formatPercent(progressSummary.meanAccuracy) }}</p>
             </article>
-            <article class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+            <article class="dashboard-metric rounded-[var(--tracer-radius-surface)] p-5">
               <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('classroom.scoreSpread') }}</p>
               <p class="mt-2 text-3xl font-semibold">{{ formatPoints(progressSummary.spread) }}</p>
             </article>
-            <article class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+            <article class="dashboard-metric rounded-[var(--tracer-radius-surface)] p-5">
               <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('classroom.participation') }}</p>
               <p class="mt-2 text-3xl font-semibold">{{ progressSummary.completedCount }}/{{ progressSummary.expectedCount }}</p>
             </article>
           </div>
         </section>
 
-        <div class="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div class="mt-7 grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <section class="rounded-[var(--tracer-radius-surface)] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950" aria-labelledby="activity-title">
             <h2 id="activity-title" class="text-xl font-semibold">{{ t('classroom.recentActivity') }}</h2>
             <div v-if="recentProgress.length === 0" class="mt-5 rounded-[var(--tracer-radius-surface)] border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {{ t('classroom.noActivity') }}
             </div>
             <ul v-else class="mt-4 divide-y divide-slate-200 dark:divide-slate-800">
-              <li v-for="row in recentProgress" :key="row.attemptId" class="flex items-center justify-between gap-4 py-3">
+              <li v-for="row in recentProgress" :key="row.attemptId" class="flex flex-wrap items-center justify-between gap-2 py-3">
                 <div class="min-w-0">
                   <p class="truncate font-medium">{{ row.displayName }}</p>
                   <p class="truncate text-sm text-slate-500 dark:text-slate-400">{{ row.assignmentTitle }} · {{ modeLabel(row.mode) }}</p>
@@ -95,9 +95,9 @@
             </ul>
           </section>
 
-          <aside class="rounded-[var(--tracer-radius-control)] border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900" :aria-label="t('classroom.classActions')">
+          <aside class="flex flex-col rounded-[var(--tracer-radius-surface)] bg-slate-50 p-5 dark:bg-slate-900" :aria-label="t('classroom.classActions')">
             <h2 class="text-lg font-semibold">{{ t('classroom.classActions') }}</h2>
-            <div class="mt-4 grid gap-3">
+            <div class="mt-auto grid gap-3 pt-4">
               <AppButton v-if="selectedClass" block variant="white" :to="`/teacher/classes/${selectedClass.id}/assign`">{{ t('classroom.assignSet') }} <CreateChevron /></AppButton>
               <AppButton block variant="white" @click="openCode">{{ t('classroom.addStudents') }} <CreateChevron /></AppButton>
               <AppButton v-if="selectedClass" block :to="`/teacher/classes/${selectedClass.id}`">{{ t('classroom.detailedView') }} <CreateChevron /></AppButton>
@@ -340,3 +340,7 @@ function formatActivityDate(value: string | null) {
     : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
 </script>
+
+<style scoped>
+.tracer-page .dashboard-metric { background: var(--ui-bg); }
+</style>

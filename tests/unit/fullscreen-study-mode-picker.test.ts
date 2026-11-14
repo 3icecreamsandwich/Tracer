@@ -20,14 +20,14 @@ describe('fullscreen study mode picker', () => {
     }
   })
 
-  it('renders four icon-only choices and preserves the current query', () => {
+  it('renders responsive choices and preserves the current query', () => {
     const picker = source('../../components/FullscreenStudyModePicker.vue')
 
     expect(picker).toContain("'flashcards' | 'learn' | 'match' | 'test'")
     expect(picker).toContain("query: { ...route.query }")
-    expect(picker).toContain('role="menuitemradio"')
-    expect(picker).toContain(':aria-label="item.label"')
-    expect(picker).not.toContain('{{ item.label }}')
+    expect(picker).toContain('role="menuitem"')
+    expect(picker).toContain('class="desktop-modes"')
+    expect(picker).toContain('{{ currentLabel }}')
   })
 
   it('routes Test mode switches through the existing quit confirmation', () => {

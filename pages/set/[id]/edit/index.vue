@@ -20,7 +20,7 @@
         </div>
 
         <div class="flex shrink-0 flex-wrap items-center gap-2">
-          <UButton v-if="(publication || isPublishedEdit) && !isWebPreview" color="error" variant="soft" :disabled="busy || initialLoading" @click="unpublishOpen = true">Unpublish</UButton>
+          <UButton v-if="(publication || isPublishedEdit) && !isWebPreview" color="error" variant="soft" :disabled="busy || initialLoading" @click="unpublishOpen = true" aria-label="Unpublish"><AppIcon name="publish" class="sm:hidden" /><span class="hidden sm:inline">Unpublish</span></UButton>
           <UButton color="primary" variant="soft"
             v-if="!isPublishedEdit"
             type="button"
@@ -29,7 +29,7 @@
             @click="onFactCheck"
            size="md">
             <LoadingSpinner v-if="factCheckBusy" size="sm" :label="t('factCheck.loading')" />
-            <template v-else>{{ t('factCheck.title') }}</template>
+            <template v-else><AppIcon name="check" class="sm:hidden" /><span class="hidden sm:inline">{{ t('factCheck.title') }}</span><span class="sr-only sm:hidden">{{ t('factCheck.title') }}</span></template>
           </UButton>
           <UButton color="primary" variant="soft"
             v-if="!isPublishedEdit"
@@ -38,7 +38,7 @@
             :disabled="busy || factCheckBusy || !setId"
             @click="openDelete"
           >
-            {{ t('common.delete') }}
+            <AppIcon name="trash" class="sm:hidden" /><span class="hidden sm:inline">{{ t('common.delete') }}</span><span class="sr-only sm:hidden">{{ t('common.delete') }}</span>
           </UButton>
           <UButton color="primary" variant="solid"
             type="button"
@@ -47,7 +47,7 @@
             @click="onUpdate()"
            size="md">
             <LoadingSpinner v-if="busy" size="sm" />
-            <template v-else>{{ isPublishedEdit ? 'Publish changes' : t('common.update') }}</template>
+            <template v-else><AppIcon name="check" class="sm:hidden" /><span class="hidden sm:inline">{{ isPublishedEdit ? 'Publish changes' : t('common.update') }}</span><span class="sr-only sm:hidden">{{ isPublishedEdit ? 'Publish changes' : t('common.update') }}</span></template>
           </UButton>
         </div>
       </div>
@@ -106,13 +106,13 @@
               v-for="(option, index) in setIconOptions"
               :key="option.key"
               type="button"
-              class="aspect-square rounded-[var(--tracer-radius-control)] border-2 bg-white p-1.5 transition hover:-translate-y-0.5 hover:border-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:bg-slate-950"
+              class="flex w-full aspect-square items-center justify-center rounded-[var(--tracer-radius-control)] border-2 bg-white !p-1.5 transition hover:-translate-y-0.5 hover:border-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 dark:bg-slate-950"
               :class="iconKey === option.key ? 'border-orange-500 ring-2 ring-orange-100 dark:ring-orange-950' : 'border-transparent'"
               :aria-label="`Choose set icon ${index + 1}`"
               :aria-pressed="iconKey === option.key"
               @click="iconKey = option.key"
             >
-              <SetIcon :name="option.key" :tone="iconKey === option.key ? iconTone : 'original'" class="h-full w-full transition" />
+              <SetIcon :name="option.key" :tone="iconKey === option.key ? iconTone : 'original'" class="!h-10 !w-10 transition" />
             </UButton>
           </div>
         </fieldset>

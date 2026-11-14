@@ -75,8 +75,16 @@
    // still closes Tracer dialogs, menus, and other transient UI.
    if (shouldPreventFullscreenExit(event) && !document.querySelector('[data-dismissable-layer]')) event.preventDefault()
 
-   const action = resolveAppShortcut(event, route.path)
+   const action = resolveAppShortcut(event, route.path, isDesktop.value)
    if (!action) return
+
+   if (action.type === 'focus-search') {
+     if (hideNavbar.value || document.querySelector('[data-dismissable-layer]')) return
+     if (event.key === '/') {
+       const target = event.target
+       if (event.isComposing || (target instanceof Element && target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]'))) return
+     }
+   }
 
    event.preventDefault()
    event.stopPropagation()

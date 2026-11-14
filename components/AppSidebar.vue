@@ -1,8 +1,10 @@
 <template>
-  <aside :class="{ 'is-expanded': expanded }" class="tracer-sidebar" aria-label="Study navigation" @mouseenter="expanded = true" @mouseleave="expanded = false" @focusin="expanded = true" @focusout="expanded = false">
+  <div class="mobile-nav-toggle"><button type="button" :aria-expanded="mobileOpen" aria-controls="mobile-navigation" aria-label="Open navigation" @click="mobileOpen = !mobileOpen"><Menu :size="24" aria-hidden="true" /></button></div>
+  <div v-if="mobileOpen" class="mobile-nav-backdrop" @click="mobileOpen = false" />
+  <aside id="mobile-navigation" :class="{ 'mobile-open': mobileOpen, 'is-expanded': expanded }" class="tracer-sidebar" aria-label="Study navigation" @mouseenter="expanded = true" @mouseleave="expanded = false" @focusin="expanded = true" @focusout="expanded = false">
     <nav class="sidebar-nav">
       <div v-for="item in visibleLinks" :key="item.to" class="nav-entry">
-        <NuxtLink :to="item.to" :external="item.to.startsWith('https://')" :aria-label="item.to === '/' ? 'Home' : item.label" :aria-current="isActive(item.to) ? 'page' : undefined" class="nav-item" :class="[`nav-item-${item.tone}`, { 'nav-item-active': isActive(item.to) }]">
+        <NuxtLink :to="item.to" :external="item.to.startsWith('https://')" :aria-label="item.to === '/' ? 'Home' : item.label" :aria-current="isActive(item.to) ? 'page' : undefined" class="nav-item" @click="mobileOpen = false" :class="[`nav-item-${item.tone}`, { 'nav-item-active': isActive(item.to) }]">
           <span class="nav-icon"><SidebarGlyph :name="item.icon" /></span><span class="nav-label">{{ item.label }}</span>
         </NuxtLink>
         <div v-if="item.to === '/library' || item.to === '/classes'" class="recent-sets" :aria-hidden="!expanded">
@@ -13,6 +15,7 @@
   </aside>
 </template>
 <script setup lang="ts">
+import Menu from '@lucide/vue/dist/esm/icons/menu.mjs'
 import { createSetsRepo, useTracerDb } from '~/src/composables/db'
 import { listClassrooms, getAccountRole } from '~/src/composables/classrooms'
 import { useLockSession } from '~/src/composables/lock-session'
@@ -36,6 +39,11 @@ async function loadNavigation() {
 onMounted(loadNavigation)
 watch(unlockedThisSession, loadNavigation)
 const expanded = ref(false)
+const mobileOpen = ref(false)
+watch(() => route.fullPath, () => { mobileOpen.value = false })
+function onEscape(event: KeyboardEvent) { if (event.key === 'Escape') mobileOpen.value = false }
+onMounted(() => document.addEventListener('keydown', onEscape))
+onBeforeUnmount(() => document.removeEventListener('keydown', onEscape))
 const links = [
   { label: 'Sets & Guides', to: '/library', icon: 'cards', tone: 'yellow' },
   { label: 'Classes', to: '/classes', icon: 'classes', tone: 'yellow' },
@@ -284,8 +292,8 @@ const links = [
   }
 }
 
-.tracer-sidebar { --nav-yellow-bg: #fff1c2; --nav-yellow-text: #95600d; --nav-orange-bg: #fbe1d0; --nav-orange-text: #a84e28; --nav-purple-bg: #e5e0fa; --nav-purple-text: #51458a; }
-:global(.dark) .tracer-sidebar { --nav-yellow-bg: #39311c; --nav-yellow-text: #e5c16e; --nav-orange-bg: #3b2b26; --nav-orange-text: #e4aa88; --nav-purple-bg: #302d43; --nav-purple-text: #b9afe5; }
+.tracer-sidebar { --nav-yellow-bg: #fff1c2; --nav-yellow-text: #95600d; --nav-orange-bg: #fbe1d0; --nav-orange-text: #a84e28; --nav-purple-bg: #e5e0fa; --nav-purple-text: #51458a; --nav-green-bg: #d1fae5; --nav-green-text: #059669; --nav-green-hover: #d1fae5; }
+:global(.dark) .tracer-sidebar { --nav-yellow-bg: #39311c; --nav-yellow-text: #e5c16e; --nav-orange-bg: #3b2b26; --nav-orange-text: #e4aa88; --nav-purple-bg: #302d43; --nav-purple-text: #b9afe5; --nav-green-bg: #24483d; --nav-green-text: #8be0bb; --nav-green-hover: #1b352e; }
 :global(.dark) .nav-item-active { background:var(--ui-bg-elevated); color:var(--ui-text-highlighted); }
 @media(prefers-reduced-motion:reduce) { .tracer-sidebar, .tracer-sidebar * { transition:none !important; } }
 
@@ -300,9 +308,21 @@ const links = [
 
 <style scoped>
 
-.nav-item-green .nav-icon { background:#d1fae5; color:#059669; }
+.nav-item-green .nav-icon { background:var(--nav-green-bg); color:var(--nav-green-text); }
 .nav-item-green .nav-icon :deep(svg) { width:18px; height:18px; }
-:global(html.dark) .nav-item-green .nav-icon { background:#064e3b; color:#6ee7b7; }
-.nav-item-green:hover { background:#d1fae5; }
-:global(html.dark) .nav-item-green:hover { background:#064e3b; }
+.nav-item-green:hover { background:var(--nav-green-hover); }
+</style>
+
+<style scoped>
+.mobile-nav-toggle, .mobile-nav-backdrop { display:none; }
+@media (max-width: 767px) {
+ .mobile-nav-toggle { display:block; position:fixed; z-index:60; bottom:calc(1rem + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); }
+ .mobile-nav-toggle button { display:grid; place-items:center; width:44px; height:44px; padding:0; line-height:0; border-radius:var(--tracer-radius-control); background:var(--ui-bg); color:var(--ui-text-highlighted); box-shadow:0 3px 18px #0002; font-size:25px; }
+ .mobile-nav-backdrop { display:block; position:fixed; inset:0; z-index:49; background:#0006; }
+ .tracer-sidebar, .tracer-sidebar.is-expanded { display:none; position:fixed; top:auto; left:0; bottom:0; width:100%; max-height:80dvh; transform:none; border-radius:24px 24px 0 0; z-index:50; }
+ .tracer-sidebar.mobile-open { display:block; }
+ .sidebar-nav, .tracer-sidebar.is-expanded .sidebar-nav { max-height:80dvh; padding:20px 20px 90px; }
+ .nav-label { opacity:1; transform:none; font-size:15px; }
+ .recent-sets { display:none; }
+}
 </style>

@@ -2,7 +2,7 @@
   <main class="tracer-page library-page mx-auto max-w-6xl px-6 py-8">
     <header class="mb-6 flex flex-wrap items-center justify-between gap-4">
       <div class="flex min-w-0 items-center gap-3">
-        <NuxtLink v-if="isFolderPage" :to="activeLibraryKind === 'study-guide' ? '/library?kind=study-guide' : '/library'" class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" aria-label="Back to library"><span aria-hidden="true">←</span></NuxtLink>
+        <NuxtLink v-if="isFolderPage" :to="activeLibraryKind === 'study-guide' ? '/library?kind=study-guide' : '/library'" class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" aria-label="Back to library"><AppIcon name="arrow-left" :size="24" /></NuxtLink>
         <h1 class="truncate text-2xl font-bold">{{ isFolderPage ? (activeFolder?.name ?? 'Folder') : isClassesPage ? 'Classes' : 'Sets & Guides' }}</h1>
       </div>
       <div class="flex gap-2">
@@ -10,7 +10,7 @@
           <UButton v-if="accountRole === 'teacher' || accountRole === 'super'" to="/teacher" color="primary">Dashboard</UButton>
           <UButton color="primary" variant="soft" @click="joinOpen = true">{{ t('classroom.addClass') }}</UButton>
         </template>
-        <template v-else-if="!isFolderPage"><UButton color="primary" variant="soft" :disabled="busy || isWebPreviewRuntime()" @click="addFolder"><AppIcon name="add-folder" />{{ t('home.addFolder') }}</UButton><UButton to="/create/basic" color="primary">Create</UButton></template>
+        <template v-else-if="!isFolderPage"><UButton color="primary" variant="soft" :disabled="busy || isWebPreviewRuntime()" @click="addFolder"><AppIcon name="add-folder" /><span class="hidden sm:inline">{{ t('home.addFolder') }}</span><span class="sr-only sm:hidden">{{ t('home.addFolder') }}</span></UButton><UButton to="/create/basic" color="primary" aria-label="Create"><AppIcon name="plus" class="sm:hidden" /><span class="hidden sm:inline">Create</span></UButton></template>
       </div>
     </header>
     <nav v-if="!isClassesPage" aria-label="Library type" class="mb-5 flex gap-1">
@@ -40,9 +40,9 @@
                 <AppIcon name="chevron" class="folder-card__chevron"  />
               </button>
               <div class="folder-card__tools" @click.stop>
-                <UButton color="primary" variant="soft" square aria-label="Drag folder" class="cursor-grab" @pointerdown.stop.prevent="onFolderPointerDown(folder.id, $event)"><AppIcon name="grip" /></UButton>
-                <UButton color="primary" variant="soft" square aria-label="Edit folder name" @click.stop="beginFolderRename(folder)"><AppIcon name="edit" /></UButton>
-                <UButton color="primary" variant="soft" square aria-label="Delete folder" @click.stop="deleteFolder(folder)"><AppIcon name="trash" /></UButton>
+                <UButton color="primary" variant="ghost" square aria-label="Drag folder" class="cursor-grab" @pointerdown.stop.prevent="onFolderPointerDown(folder.id, $event)"><AppIcon name="grip" /></UButton>
+                <UButton color="primary" variant="ghost" square aria-label="Edit folder name" @click.stop="beginFolderRename(folder)"><AppIcon name="edit" /></UButton>
+                <UButton color="primary" variant="ghost" square aria-label="Delete folder" @click.stop="deleteFolder(folder)"><AppIcon name="trash" /></UButton>
               </div>
             </div>
             <div v-if="rootDropIndicator('folder', folder.id) === 'after'" class="drop-indicator" />

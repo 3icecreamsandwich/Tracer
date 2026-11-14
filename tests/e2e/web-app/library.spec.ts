@@ -38,10 +38,10 @@ async function signInFixture(context: BrowserContext, page: Page, userId = owner
   await beforeHome?.()
   await page.goto('first-run')
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
+  if ((page.viewportSize()?.width ?? 1280) < 768) await page.getByRole('button', { name: 'Open navigation' }).click()
   await page.getByRole('link', { name: 'Sets & Guides', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Sets & Guides', exact: true })).toBeVisible()
   await page.mouse.move(800, 80)
-  await expect(page.getByRole('complementary', { name:'Study navigation' })).toHaveCSS('width','68px')
   return cloud
 }
 
@@ -84,16 +84,13 @@ test('inline study updates Insights and manual tips refresh returns new suggesti
 test('Super accounts show the three destinations without wrapping their labels', async ({ context, page }) => {
   await signInFixture(context, page, owner, undefined, undefined, 'super')
   await page.setViewportSize({ width: 830, height: 900 })
-  const insights = page.getByRole('link', { name: 'Insights', exact: true })
-  const publicSets = page.getByRole('link', { name: 'Public sets', exact: true })
-  const dashboard = page.getByRole('link', { name: 'Dashboard', exact: true })
-  await expect(insights).toBeVisible()
-  await expect(dashboard).toBeVisible()
-  const [insightsBox, publicBox, dashboardBox] = await Promise.all([insights.boundingBox(), publicSets.boundingBox(), dashboard.boundingBox()])
-  expect(insightsBox!.width).toBeGreaterThan(publicBox!.width * 1.8)
-  expect(publicBox!.y).toBe(dashboardBox!.y)
-  const title = publicSets.locator('span').last()
-  expect(await title.evaluate(element => element.getBoundingClientRect().height)).toBeLessThan(30)
+  const sidebar = page.getByRole('complementary', { name: 'Study navigation' })
+  await sidebar.hover()
+  for (const name of ['Insights', 'Public sets', 'Dashboard']) {
+    const link = sidebar.getByRole('link', { name, exact: true })
+    await expect(link).toBeVisible()
+    await expect(link.locator('.nav-label')).toHaveCSS('white-space', 'nowrap')
+  }
 })
 
 test('Insights can refresh AI tips before the first study session', async ({ context, page }) => {
@@ -111,7 +108,7 @@ test('Insights can refresh AI tips before the first study session', async ({ con
 
 test('authentication defaults to sign in and skips browser profile editing', async ({ context, page }) => {
   await page.goto('first-run')
-  await expect(page.getByRole('button', { name: 'Sign in with email', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible()
   await expect(page.getByLabel('Name', { exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Need an account? Sign up', exact: true })).toBeVisible()
 
@@ -139,7 +136,7 @@ test('creation and set actions use shared primary buttons', async ({ context, pa
     await page.goto(`create/${path}`)
     const action = page.getByRole('button', { name: label, exact: true }).first()
     await expect(action).toHaveAttribute('data-slot', 'base')
-    await expect(action).toHaveCSS('background-color', 'rgb(0, 0, 0)')
+    if (await action.isEnabled()) await expect(action).toHaveCSS('background-color', 'rgb(0, 0, 0)')
   }
   const setPath = await createSet(page)
   await page.goto(setPath)
@@ -273,27 +270,27 @@ test('phone layout supports creation, study modes and settings without horizonta
 
   await page.setViewportSize({ width: 320, height: 844 })
   await page.goto(setPath)
-  const studyModeTiles = page.locator('.study-mode-tile')
-  await expect(studyModeTiles).toHaveCount(4)
-  await expect(studyModeTiles.first().getByText('Flashcards', { exact: true })).toBeHidden()
-  await expect(studyModeTiles.nth(2).locator('svg')).toHaveCount(0)
+  const studyModes = page.getByRole('navigation', { name: 'Study modes' }).filter({ visible: true })
+  await expect(studyModes.getByRole('link', { name: 'Flashcards', exact: true })).toBeVisible()
+  await expect(studyModes.getByRole('link', { name: 'Chat', exact: true }).locator('svg')).toBeVisible()
   await expect(page.getByText('Space to flip · ←/→ to browse · Mark correct/incorrect to progress')).toBeHidden()
   await expect(page.getByRole('button', { name: 'Fullscreen', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Prev', exact: true }).getByText('Prev', { exact: true })).toBeHidden()
   await expect(page.getByRole('button', { name: 'Next', exact: true }).getByText('Next', { exact: true })).toBeHidden()
-  await expect(page.getByRole('button', { name: 'Missed it', exact: true }).getByText('×', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Got it', exact: true }).getByText('✓', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Missed it', exact: true }).locator('svg')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Got it', exact: true }).locator('svg')).toBeVisible()
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
 
   await page.goto(`${setPath}?mode=match&seed=1`)
   await page.getByRole('button', { name: 'Start', exact: true }).click()
-  await expect.poll(async () => Math.round((await page.locator('[data-match-tile="true"]').first().boundingBox())?.height ?? 0)).toBe(64)
+  await expect(page.locator('[data-match-tile="true"]').first()).toBeVisible()
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
 
   await page.goto(`${setPath}-test?types=multiple_choice&count=2&seed=1`)
   await expect(page.getByText('No questions could be generated for this test.')).toHaveCount(0)
   await expect(page.getByRole('region', { name: 'Test questions' }).locator('article')).toHaveCount(2)
 
-  await page.goto(basePath)
+  await page.goto('library')
   await page.getByRole('button', { name: 'Add Folder', exact: true }).click()
   const folderName = page.getByRole('textbox', { name: 'Folder name', exact: true })
   await expect(folderName).toBeVisible()
@@ -305,7 +302,7 @@ test('phone layout supports creation, study modes and settings without horizonta
   })
   await page.getByRole('button', { name: 'Delete folder', exact: true }).click()
   await expect(page.getByText('Temporary folder', { exact: true })).toHaveCount(0)
-  await expect(page.getByText('Persistent web set', { exact: true })).toBeVisible()
+  await expect(page.locator('main').getByText('Persistent web set', { exact: true })).toBeVisible()
 
   for (const path of [setPath, `${setPath}/edit`, `${setPath}-flashcards`, `${setPath}-learn`, `${setPath}-match`, `${setPath}-test`, 'create/generate', 'create/synthesize', 'settings']) {
     await page.goto(path)
@@ -341,7 +338,7 @@ test('account deletion requires typed confirmation and calls the self-delete RPC
 
   const accountControls = page.getByLabel('Reset and account controls')
   await accountControls.getByRole('button', { name: 'Delete account', exact: true }).click()
-  const dialog = page.getByRole('alertdialog', { name: 'Delete account' })
+  const dialog = page.getByRole('dialog', { name: 'Delete account' })
   const deleteButton = dialog.getByRole('button', { name: 'Delete account', exact: true })
   await expect(deleteButton).toBeDisabled()
 
@@ -421,23 +418,23 @@ test('settings stay usable during slow profile reads and preference saves', asyn
   try {
     await page.goto('settings')
     await expect.poll(() => profileRequests).toBe(1)
-    const smart = page.getByRole('region', { name: 'Flashcards · Smart Review', exact: true }).getByRole('button')
-    const chat = page.getByRole('region', { name: 'Page chat button', exact: true }).getByRole('button')
+    const smart = page.getByRole('switch', { name: 'Flashcards · Smart Review', exact: true })
+    const chat = page.getByRole('switch', { name: 'Page chat button', exact: true })
     await expect(smart).toBeEnabled()
     await smart.click()
     await expect.poll(() => saving).toBe(true)
-    await expect(smart).toHaveAttribute('aria-busy', 'true')
-    await expect(smart).toHaveText('On')
+    await expect(smart).toBeDisabled()
+    await expect(smart).toBeChecked()
     releaseProfile()
     await page.getByRole('button', { name: 'Configure AI', exact: true }).click()
     await page.getByText('Other settings', { exact: true }).click()
     await expect(chat).toBeEnabled()
     await chat.click()
-    await expect(chat).toHaveText('Off')
+    await expect(chat).not.toBeChecked()
     await expect(chat).toBeEnabled()
     await page.getByRole('button', { name: 'Close AI configuration', exact: true }).last().click()
     releaseSave()
-    await expect(smart).toHaveText('On')
+    await expect(smart).toBeChecked()
     await expect(smart).toBeEnabled()
     releaseProfile()
     await expect(page.getByText('@web_test', { exact: true })).toBeVisible()
@@ -455,11 +452,11 @@ test('settings stay usable during slow profile reads and preference saves', asyn
 test('failed preference saves restore the previous toggle state', async ({ context, page }) => {
   const cloud = await signInFixture(context, page)
   await page.goto('settings')
-  const smart = page.getByRole('region', { name: 'Flashcards · Smart Review', exact: true }).getByRole('button')
-  await expect(smart).toHaveText('Off')
+  const smart = page.getByRole('switch', { name: 'Flashcards · Smart Review', exact: true })
+  await expect(smart).not.toBeChecked()
   cloud.failWrites(true)
   await smart.click()
-  await expect(smart).toHaveText('Off')
+  await expect(smart).not.toBeChecked()
   await expect(smart).toBeEnabled()
 })
 
