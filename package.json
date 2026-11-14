@@ -66,6 +66,7 @@
     "autoprefixer": "^10.5.5",
     "postcss": "^8.5.28",
     "tailwindcss": "^4",
+    "typescript": "~5.9.3",
     "vitest": "4.1.11",
     "webdriverio": "^9.31.6",
     "wrangler": "4.131.0"
