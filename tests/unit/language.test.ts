@@ -86,6 +86,19 @@ describe('app language', () => {
     }
   })
 
+  it('translates AI settings and preserves allowance placeholders in every locale', () => {
+    for (const option of languageOptions) {
+      const locale = messages[option.code]
+      for (const key of ['ai.configure', 'ai.builtin', 'ai.myKeys', 'ai.service', 'ai.monthlyAllowance', 'ai.description', 'ai.remaining', 'ai.used']) {
+        expect(locale[key], `${option.code}: ${key}`).toBeTruthy()
+        if (option.code !== 'en') expect(locale[key]).not.toBe(messages.en[key])
+      }
+      expect(locale['ai.remaining']).toContain('{remaining}')
+      expect(locale['ai.remaining']).toContain('{limit}')
+      expect(locale['ai.remaining']).toContain('{date}')
+    }
+  })
+
   it('distinguishes the global set-and-guide search from set-only search', () => {
     for (const option of languageOptions) {
       const localeMessages = messages[option.code]

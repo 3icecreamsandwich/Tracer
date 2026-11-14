@@ -61,9 +61,19 @@ export async function loadAccountProfileIdentity(): Promise<AccountProfileIdenti
   if (!request) {
     const previous = profileIdentities.get(owner)
     request = (async () => {
-      const { data, error } = await client.from('profiles').select('display_name,username').eq('id', owner)
-        .single().abortSignal(AbortSignal.timeout(8_000))
+      const readProfile = () => client.from('profiles').select('display_name,username').eq('id', owner)
+        .maybeSingle().abortSignal(AbortSignal.timeout(8_000))
+      let { data, error } = await readProfile()
       if (error) throw error
+      if (!data) {
+        const user = session.user
+        const name = displayNameFromUser(user) || user.email?.split('@')[0] || 'User'
+        const result = await client.from('profiles').upsert({ id: owner, display_name: name }, { onConflict: 'id', ignoreDuplicates: true }).abortSignal(AbortSignal.timeout(8_000))
+        if (result.error) throw result.error
+        ;({ data, error } = await readProfile())
+        if (error) throw error
+        if (!data) throw new Error('Your profile is still being prepared. Please retry.')
+      }
       const value = { displayName: data.display_name, username: data.username }
       const latest = profileIdentities.get(owner)
       if (latest !== previous && latest) return latest.value
@@ -190,7 +200,7 @@ export async function signUpWithEmail(input: {
 export async function initializeUserRole(role: SignupAccountRole): Promise<AccountRole> {
   const { data, error } = await getSupabaseClient().rpc('initialize_user_role', {
     requested_role: role,
-  })
+  }).abortSignal(AbortSignal.timeout(15_000))
   if (error) {
     console.error('[Tracer auth] Account role initialization failed', {
       code: error.code,
@@ -213,7 +223,8 @@ export async function waitForEmailVerification(pending: PendingEmailVerification
         if (event === 'SIGNED_IN' && session) {
           data.subscription.unsubscribe()
           browserVerificationSubscriptions.delete(pending)
-          resolve(session)
+          // Continue after Supabase releases its auth-state callback lock.
+          setTimeout(() => resolve(session), 0)
         }
       })
       browserVerificationSubscriptions.set(pending, () => data.subscription.unsubscribe())
@@ -327,7 +338,7 @@ export async function upsertAuthenticatedCloudProfile(input: {
     locale: input.language,
     timezone,
     updated_at: new Date().toISOString(),
-  }, { onConflict: 'id' })
+  }, { onConflict: 'id' }).abortSignal(AbortSignal.timeout(15_000))
   if (error) {
     console.error('[Tracer auth] Cloud profile upsert failed', {
       code: error.code,
@@ -340,7 +351,7 @@ export async function upsertAuthenticatedCloudProfile(input: {
   const { error: identityError } = await getSupabaseClient()
     .from('profiles')
     .update({ updated_at: new Date().toISOString() })
-    .eq('id', user.id)
+    .eq('id', user.id).abortSignal(AbortSignal.timeout(15_000))
   if (identityError) throw new TracerAuthError('profile_failed', identityError.message)
   return { displayName: displayName || email.split('@')[0], email }
 }

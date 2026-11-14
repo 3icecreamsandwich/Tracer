@@ -1,10 +1,10 @@
 import { beforeEach, expect, it, vi } from 'vitest'
-const state = vi.hoisted(() => ({ owner: '', getSession: vi.fn(), fetchProfile: vi.fn() }))
+const state = vi.hoisted(() => ({ owner: '', getSession: vi.fn(), fetchProfile: vi.fn(), createProfile: vi.fn() }))
 vi.mock('../../src/composables/auth/client', () => ({
   getSupabaseClient: () => ({
     auth: { getSession: state.getSession },
     from: () => {
-      const query = { select: () => query, eq: () => query, single: () => query, abortSignal: state.fetchProfile }
+      const query = { select: () => query, eq: () => query, maybeSingle: () => query, upsert: () => ({ abortSignal: state.createProfile }), abortSignal: state.fetchProfile }
       return query
     },
   }),
@@ -16,6 +16,7 @@ beforeEach(() => {
   state.owner = `profile-owner-${++sequence}`
   state.getSession.mockImplementation(async () => ({ data: { session: { user: { id: state.owner } } } }))
   state.fetchProfile.mockResolvedValue({ data: { display_name: 'Name', username: 'name' } })
+  state.createProfile.mockResolvedValue({ error: null })
 })
 it('coalesces profile reads, bounds the request, and reuses display data', async () => {
   const [first, second] = await Promise.all([loadAccountProfileIdentity(), loadAccountProfileIdentity()])
@@ -42,4 +43,11 @@ it('expires display data after one minute', async () => {
     await loadAccountProfileIdentity()
     expect(state.fetchProfile).toHaveBeenCalledTimes(2)
   } finally { now.mockRestore() }
+})
+
+it('creates and reloads a missing profile without overwriting a concurrent profile', async () => {
+  state.fetchProfile.mockResolvedValueOnce({ data: null, error: null })
+  await expect(loadAccountProfileIdentity()).resolves.toEqual({ displayName: 'Name', username: 'name' })
+  expect(state.createProfile).toHaveBeenCalledOnce()
+  expect(state.fetchProfile).toHaveBeenCalledTimes(2)
 })

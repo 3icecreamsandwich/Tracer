@@ -8,7 +8,7 @@ export default defineNuxtPlugin(() => {
   let owner: string | null = null
   getSupabaseClient().auth.onAuthStateChange((event, session) => {
     const nextOwner = session?.user.id ?? null
-    if (initialized && nextOwner !== owner) {
+    if (initialized && nextOwner !== owner && !(nextOwner && [appUrl('first-run'), appUrl('auth/callback'), appUrl('auth/handoff')].includes(window.location.pathname))) {
       // Includes changes from other tabs: never retain another account's UI/cache.
       // Account completion resumes on first-run after a document reload.
       window.location.replace(appUrl('first-run'))

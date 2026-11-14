@@ -10,7 +10,7 @@
       @retry="retryAiRequest"
     />
     <div class="tracer-page set-page mx-auto max-w-4xl p-3 sm:p-8">
-      <div class="bg-white p-4 sm:p-5 dark:bg-slate-950">
+      <div class="bg-white p-1 sm:p-5 dark:bg-slate-950">
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
             <h1 class="truncate text-3xl font-semibold sm:text-2xl">
@@ -383,11 +383,11 @@
                 {{ t("set.noCards") }}
               </div>
               <template v-else>
-                <div class="relative mt-5 min-h-0 flex-1">
+                <div class="relative mt-5 min-h-[22rem] flex-1">
                   <button
                     ref="mobileViewerButtonEl"
                     type="button"
-                    class="mobile-flashcard-card relative flex h-full w-full min-h-0 touch-pan-y flex-col items-center justify-center overflow-hidden rounded-[var(--tracer-radius-control)] px-5 py-10 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+                    class="mobile-flashcard-card absolute inset-0 flex h-full w-full min-h-0 touch-pan-y flex-col items-center justify-center overflow-hidden rounded-[var(--tracer-radius-control)] px-5 py-10 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
                     :class="[
                       flashcardSurfaceClass,
                       {
@@ -4754,9 +4754,7 @@ onBeforeUnmount(() => {
   opacity: 0.4;
 }
 
-.mobile-flashcard-card {
-  min-height: clamp(22rem, 57dvh, 38rem);
-}
+.mobile-flashcard-card { min-height: 0; }
 
 .dark .mobile-settings-item {
   color: rgb(248 250 252);

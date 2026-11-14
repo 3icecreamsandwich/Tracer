@@ -1,11 +1,11 @@
 <template>
-  <div class="mobile-nav-toggle"><button type="button" :aria-expanded="mobileOpen" aria-controls="mobile-navigation" aria-label="Open navigation" @click="mobileOpen = !mobileOpen"><Menu :size="24" aria-hidden="true" /></button></div>
+  <div class="mobile-nav-toggle"><button type="button" :aria-expanded="mobileOpen" aria-controls="mobile-navigation" :aria-label="t('nav.openNavigation')" @click="mobileOpen = !mobileOpen"><Menu :size="24" aria-hidden="true" /></button></div>
   <div v-if="mobileOpen" class="mobile-nav-backdrop" @click="mobileOpen = false" />
-  <aside id="mobile-navigation" :class="{ 'mobile-open': mobileOpen, 'is-expanded': expanded }" class="tracer-sidebar" aria-label="Study navigation" @mouseenter="expanded = true" @mouseleave="expanded = false" @focusin="expanded = true" @focusout="expanded = false">
+  <aside id="mobile-navigation" :class="{ 'mobile-open': mobileOpen, 'is-expanded': expanded }" class="tracer-sidebar" :aria-label="t('nav.studyNavigation')" @mouseenter="expanded = true" @mouseleave="expanded = false" @focusin="expanded = true" @focusout="expanded = false">
     <nav class="sidebar-nav">
       <div v-for="item in visibleLinks" :key="item.to" class="nav-entry">
-        <NuxtLink :to="item.to" :external="item.to.startsWith('https://')" :aria-label="item.to === '/' ? 'Home' : item.label" :aria-current="isActive(item.to) ? 'page' : undefined" class="nav-item" @click="mobileOpen = false" :class="[`nav-item-${item.tone}`, { 'nav-item-active': isActive(item.to) }]">
-          <span class="nav-icon"><SidebarGlyph :name="item.icon" /></span><span class="nav-label">{{ item.label }}</span>
+        <NuxtLink :to="item.to" :external="item.to.startsWith('https://')" :aria-label="t(item.label)" :aria-current="isActive(item.to) ? 'page' : undefined" class="nav-item" @click="mobileOpen = false" :class="[`nav-item-${item.tone}`, { 'nav-item-active': isActive(item.to) }]">
+          <span class="nav-icon"><SidebarGlyph :name="item.icon" /></span><span class="nav-label">{{ t(item.label) }}</span>
         </NuxtLink>
         <div v-if="item.to === '/library' || item.to === '/classes'" class="recent-sets" :aria-hidden="!expanded">
           <NuxtLink v-for="entry in item.to === '/classes' ? recentClasses : recentSets" :key="entry.to" :to="entry.to" :tabindex="expanded ? 0 : -1">{{ entry.title }}</NuxtLink>
@@ -15,10 +15,12 @@
   </aside>
 </template>
 <script setup lang="ts">
+import { useAppLanguage } from '~/src/composables/language'
 import Menu from '@lucide/vue/dist/esm/icons/menu.mjs'
 import { createSetsRepo, useTracerDb } from '~/src/composables/db'
 import { listClassrooms, getAccountRole } from '~/src/composables/classrooms'
 import { useLockSession } from '~/src/composables/lock-session'
+const { t } = useAppLanguage()
 const route = useRoute()
 const isActive = (path: string) => route.path === path || (path === '/library' && route.path.startsWith('/folder/'))
 const { unlockedThisSession } = useLockSession()
@@ -45,15 +47,15 @@ function onEscape(event: KeyboardEvent) { if (event.key === 'Escape') mobileOpen
 onMounted(() => document.addEventListener('keydown', onEscape))
 onBeforeUnmount(() => document.removeEventListener('keydown', onEscape))
 const links = [
-  { label: 'Sets & Guides', to: '/library', icon: 'cards', tone: 'yellow' },
-  { label: 'Classes', to: '/classes', icon: 'classes', tone: 'yellow' },
-  { label: 'Basic', to: '/create/basic', icon: 'basic', tone: 'orange' },
-  { label: 'Synthesize', to: '/create/synthesize', icon: 'synthesize', tone: 'orange' },
-  { label: 'Generate', to: '/create/generate', icon: 'generate', tone: 'orange' },
-  { label: 'Request a set', to: 'https://docs.google.com/forms/d/1CH-rdYNHYnsAdiDxbdfZIoAkVE6pYZ0tzP8t0fcyn00/', icon: 'request', tone: 'green' },
-  { label: 'Dashboard', to: '/teacher', icon: 'dashboard', tone: 'purple' },
-  { label: 'Insights', to: '/insights', icon: 'insights', tone: 'purple' },
-  { label: 'Public sets', to: '/public-sets', icon: 'public', tone: 'purple' },
+  { label: 'nav.library', to: '/library', icon: 'cards', tone: 'yellow' },
+  { label: 'nav.classes', to: '/classes', icon: 'classes', tone: 'yellow' },
+  { label: 'home.basic', to: '/create/basic', icon: 'basic', tone: 'orange' },
+  { label: 'home.synthesize', to: '/create/synthesize', icon: 'synthesize', tone: 'orange' },
+  { label: 'home.generate', to: '/create/generate', icon: 'generate', tone: 'orange' },
+  { label: 'nav.requestSet', to: 'https://docs.google.com/forms/d/1CH-rdYNHYnsAdiDxbdfZIoAkVE6pYZ0tzP8t0fcyn00/', icon: 'request', tone: 'green' },
+  { label: 'nav.dashboard', to: '/teacher', icon: 'dashboard', tone: 'purple' },
+  { label: 'nav.insights', to: '/insights', icon: 'insights', tone: 'purple' },
+  { label: 'nav.publicSets', to: '/public-sets', icon: 'public', tone: 'purple' },
 ] as const
 </script>
 <style scoped>
@@ -293,24 +295,25 @@ const links = [
 }
 
 .tracer-sidebar { --nav-yellow-bg: #fff1c2; --nav-yellow-text: #95600d; --nav-orange-bg: #fbe1d0; --nav-orange-text: #a84e28; --nav-purple-bg: #e5e0fa; --nav-purple-text: #51458a; --nav-green-bg: #d1fae5; --nav-green-text: #059669; --nav-green-hover: #d1fae5; }
-:global(.dark) .tracer-sidebar { --nav-yellow-bg: #39311c; --nav-yellow-text: #e5c16e; --nav-orange-bg: #3b2b26; --nav-orange-text: #e4aa88; --nav-purple-bg: #302d43; --nav-purple-text: #b9afe5; --nav-green-bg: #24483d; --nav-green-text: #8be0bb; --nav-green-hover: #1b352e; }
-:global(.dark) .nav-item-active { background:var(--ui-bg-elevated); color:var(--ui-text-highlighted); }
+:global(.dark .tracer-sidebar) { --nav-yellow-bg: #39311c; --nav-yellow-text: #e5c16e; --nav-orange-bg: #3b2b26; --nav-orange-text: #e4aa88; --nav-purple-bg: #302d43; --nav-purple-text: #b9afe5; --nav-green-bg: #24483d; --nav-green-text: #8be0bb; --nav-green-hover: #1b352e; }
+:global(.dark .nav-item-active) { background:var(--ui-bg-elevated); color:var(--ui-text-highlighted); }
 @media(prefers-reduced-motion:reduce) { .tracer-sidebar, .tracer-sidebar * { transition:none !important; } }
 
 </style>
 
 <style scoped>
-:global(.dark) .nav-item-yellow .nav-icon { background:#514321; color:#ffdf91; }
-:global(.dark) .nav-item-orange .nav-icon { background:#58382b; color:#ffc2a0; }
-:global(.dark) .nav-item-purple .nav-icon { background:#443b64; color:#d3c9ff; }
-:global(.dark) .nav-item-active { background:#393453; color:#f3efff; }
+:global(.dark .nav-item-yellow .nav-icon) { background:#514321; color:#ffdf91; }
+:global(.dark .nav-item-orange .nav-icon) { background:#58382b; color:#ffc2a0; }
+:global(.dark .nav-item-purple .nav-icon) { background:#443b64; color:#d3c9ff; }
+:global(.dark .nav-item-active) { background:#393453; color:#f3efff; }
 </style>
 
 <style scoped>
 
 .nav-item-green .nav-icon { background:var(--nav-green-bg); color:var(--nav-green-text); }
 .nav-item-green .nav-icon :deep(svg) { width:18px; height:18px; }
-.nav-item-green:hover { background:var(--nav-green-hover); }
+.nav-item-green:hover, .nav-item-green:focus-visible { background:var(--nav-green-hover); }
+:global(.dark .nav-item-green:hover), :global(.dark .nav-item-green:focus-visible) { background:#1b352e; color:#d5fbe9; }
 </style>
 
 <style scoped>

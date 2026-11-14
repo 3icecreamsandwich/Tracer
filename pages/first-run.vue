@@ -362,15 +362,16 @@ function acceptSession(
   activeSession.value = session
   activeAuthProvider.value = provider
   authenticatedEmail.value = session.user.email?.trim() ?? ''
-  name.value = displayNameFromUser(session.user, submittedName)
+  name.value = displayNameFromUser(session.user, submittedName) || authenticatedEmail.value.split('@')[0] || ''
   pendingSignupRole.value = signupRole
   pendingEmailPassword.value = provider === 'email' ? emailPassword : ''
   if (provider === 'google' && signupRole) acceptedTerms.value = false
   accountPassword.value = ''
   showAccountPassword.value = false
-  stage.value = hasTauriRuntime() ? 'local' : 'finishing'
+  const requiresGoogleConsent = provider === 'google' && Boolean(signupRole)
+  stage.value = hasTauriRuntime() || requiresGoogleConsent ? 'local' : 'finishing'
   clearError()
-  if (!hasTauriRuntime()) void onLocalSetup()
+  if (!hasTauriRuntime() && !requiresGoogleConsent) void onLocalSetup()
 }
 
 async function onGoogle() {
@@ -491,11 +492,10 @@ async function onLocalSetup() {
     if (pendingSignupRole.value) await initializeUserRole(pendingSignupRole.value)
     await saveAuthenticatedLocalProfile({ session: activeSession.value, ...prepared })
     await persistAuthSession(activeSession.value)
-    try {
-      await syncCloudProviderApiKeysToDevice()
-    } catch {
+    // Provider restoration is optional and must not hold account setup open.
+    if (hasTauriRuntime()) void syncCloudProviderApiKeysToDevice().catch(() => {
       console.error('[Tracer auth] Could not restore cloud provider API keys')
-    }
+    })
     localPassword.value = ''; localConfirm.value = ''; pendingEmailPassword.value = ''
     markUnlocked()
     if (!hasTauriRuntime()) {

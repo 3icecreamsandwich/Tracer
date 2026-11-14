@@ -43,18 +43,6 @@
         </div>
 
         <div class="shrink-0 flex flex-wrap items-center justify-end gap-2">
-          <UButton color="primary" variant="soft"
-            type="button"
-
-            :disabled="operationBusy || ingestBusy || isWebPreview"
-            @click="onLinkFolder"
-           size="md">
-            <LoadingSpinner v-if="linkBusy" size="sm" :label="t('create.linkingFolder')" />
-            <template v-else>
-              <AppIcon name="add-folder" class="mr-1.5" :size="17" />
-              {{ t('create.linkFolder') }}
-            </template>
-          </UButton>
           <UButton color="primary" variant="solid"
             type="button"
 

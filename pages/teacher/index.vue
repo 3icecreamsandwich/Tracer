@@ -110,20 +110,19 @@
           <p v-if="assignments.length === 0" class="mt-5 rounded-[var(--tracer-radius-control)] border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
             {{ t('classroom.noAssignedMaterials') }}
           </p>
-          <ul v-else class="mt-5 grid gap-3 sm:grid-cols-2">
-            <li v-for="assignment in assignments" :key="assignment.id">
+          <ul v-else class="mt-5 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+            <li v-for="assignment in assignments" :key="assignment.id" class="min-w-0">
               <UButton color="primary" variant="soft"
                 type="button"
-                class="group flex min-h-[86px] w-full items-center gap-4 rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-wait disabled:opacity-70 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                class="group flex min-h-[86px] w-full min-w-0 items-center gap-4 !text-left rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-wait disabled:opacity-70 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-slate-700 dark:hover:bg-slate-900"
                 :disabled="openingAssignmentId !== null"
                 @click="openAssignedMaterial(assignment)"
               >
                 <SetIcon :name="assignment.iconKey" :tone="assignment.iconTone" class="h-12 w-12" />
                 <span class="min-w-0 flex-1">
-                  <span class="block truncate font-semibold">{{ assignment.title }}</span>
+                  <span class="block truncate font-semibold"><template v-if="assignment.kind === 'study-guide'">{{ t('home.studyGuide') }} · </template>{{ assignment.kind === 'study-guide' ? assignment.title.replace(/^Study guide\s*[·:]\s*/i, '') : assignment.title }}</span>
                   <span class="mt-1 block truncate text-sm text-slate-500 dark:text-slate-400">
-                    {{ assignment.kind === 'study-guide' ? t('home.studyGuide') : t('classroom.cardCount', { count: assignment.cardCount }) }}
-                    <span aria-hidden="true"> · </span>{{ formatActivityDate(assignment.createdAt) }}
+                    {{ formatAssignmentDate(assignment.createdAt) }}
                   </span>
                 </span>
                 <span v-if="openingAssignmentId === assignment.id" class="shrink-0 text-lg" aria-hidden="true">…</span>
@@ -175,7 +174,7 @@ import {
 import { useAppLanguage } from '~/src/composables/language'
 
 const router = useRouter()
-const { t } = useAppLanguage()
+const { t, language } = useAppLanguage()
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const loadErrorCode = ref<ClassroomErrorCode | null>(null)
@@ -330,6 +329,12 @@ function modeLabel(mode: ClassroomProgressRow['mode']) {
   if (mode === 'match') return t('set.match')
   if (mode === 'test') return t('classroom.testMode')
   return t('common.none')
+}
+
+function formatAssignmentDate(value: string | null) {
+  if (!value) return t('common.none')
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? t('common.none') : new Intl.DateTimeFormat(language.value, { dateStyle: 'medium' }).format(date)
 }
 
 function formatActivityDate(value: string | null) {

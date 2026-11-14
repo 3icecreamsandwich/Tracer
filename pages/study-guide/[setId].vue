@@ -18,9 +18,10 @@
 
         <NuxtLink
           :to="linkedSetUrl"
-          class="inline-flex items-center gap-2 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+          :aria-label="t('studyGuide.goToSet')"
+          class="inline-flex shrink-0 items-center gap-2 rounded-[var(--tracer-radius-control)] border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
         >
-          {{ t('studyGuide.goToSet') }}
+          <span class="hidden sm:inline">{{ t('studyGuide.goToSet') }}</span>
           <svg aria-hidden="true" viewBox="0 0 20 20" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4h5v5M9 11l7-7M16 11v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h4" /></svg>
         </NuxtLink>
       </div>

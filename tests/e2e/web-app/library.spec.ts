@@ -426,7 +426,7 @@ test('settings stay usable during slow profile reads and preference saves', asyn
     await expect(smart).toBeDisabled()
     await expect(smart).toBeChecked()
     releaseProfile()
-    await page.getByRole('button', { name: 'Configure AI', exact: true }).click()
+    await page.getByRole('button', { name: 'Configure', exact: true }).click()
     await page.getByText('Other settings', { exact: true }).click()
     await expect(chat).toBeEnabled()
     await chat.click()
