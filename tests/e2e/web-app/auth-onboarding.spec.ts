@@ -62,3 +62,11 @@ test('new Google signup shows consent before completing setup', async ({ context
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible({ timeout: 20000 })
 })
+
+for (const path of ['/set/00000000-0000-4000-8000-000000000001', '/set/00000000-0000-4000-8000-000000000001-flashcards', '/set/00000000-0000-4000-8000-000000000001/edit', '/public-sets/00000000-0000-4000-8000-000000000001']) {
+  test(`signed-out visitors are redirected from ${path}`, async ({ page }) => {
+    await page.goto(path)
+    await expect(page).toHaveURL(/\/first-run$/)
+    await expect(page.getByRole('heading', { name: 'Setup Tracer' })).toBeVisible()
+  })
+}

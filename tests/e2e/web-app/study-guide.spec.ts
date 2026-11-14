@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('catalog guide opens without signing in and renders content after a code example', async ({ context, page }) => {
+test('public guide opens without signing in and renders content after a code example', async ({ context, page }) => {
   const id = '00000000-0000-4000-8000-000000000099'
   await context.route('**/rest/v1/published_sets?**', route => route.fulfill({ json: {
     id, title: 'Java guide fixture', description: null, publisher_name: 'Teacher',
@@ -9,8 +9,7 @@ test('catalog guide opens without signing in and renders content after a code ex
     created_at: '2026-01-01', updated_at: '2026-01-01', icon_key: null, icon_tone: null,
     study_guide_markdown: '# Complete guide\n\n```java\nSystem.out.println("Hello");\n```\n\n## Final summary\nThis content must remain visible.',
   } }))
-  await page.goto(`public-sets/${id}`)
-  await page.getByRole('link', { name: 'Study guide', exact: true }).first().click()
+  await page.goto(`/study-guide/${id}?published=1`)
   await expect(page).toHaveURL(new RegExp(`/study-guide/${id}\\?published=1`))
   await expect(page.getByRole('heading', { name: 'Final summary' })).toBeVisible()
   await expect(page.locator('pre code')).toContainText('System.out.println')
@@ -32,8 +31,7 @@ test('a public set without a guide still offers the generate screen', async ({ c
     terms: [{ id: 'card', front: 'Term', back: 'Definition' }], created_at: '2026-01-01', updated_at: '2026-01-01',
     icon_key: null, icon_tone: null, study_guide_markdown: null,
   } }))
-  await page.goto(`public-sets/${id}`)
-  await page.getByRole('link', { name: 'Study guide', exact: true }).first().click()
+  await page.goto(`/study-guide/${id}?published=1`)
   await expect(page.getByRole('heading', { name: 'No study guide yet' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Generate one' })).toBeVisible()
 })
