@@ -105,12 +105,6 @@
                     @touchcancel="flashcardSwipe.onTouchCancel"
                     @click="flashcardSwipe.onClick"
                 >
-                    <span
-                        v-if="isCurrentRetry"
-                        class="absolute top-4 right-4 rounded-[var(--tracer-radius-control)] border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100"
-                    >
-                        {{ t("set.tryAgain") }}
-                    </span>
                     <p
                         class="text-sm font-medium text-slate-500 dark:text-slate-400"
                     >
@@ -597,7 +591,7 @@ const termById = computed(() => {
 const attemptedCount = computed(() => answerAttemptsCount.value);
 const correctCount = computed(() => correctAttemptsCount.value);
 const isFinished = computed(() =>
-    order.value.length > 0 && order.value.every((id) => completedTermIds.value.has(id)),
+    order.value.length > 0 && cursorIndex.value >= order.value.length,
 );
 const hasIncorrectCards = computed(() => retryTermIds.value.size > 0);
 const ratioText = computed(() => {
@@ -649,14 +643,6 @@ const isCurrentStarred = computed(() => {
     return starredTermIds.value.has(t.id as Uuid);
 });
 
-const isCurrentRetry = computed(() => {
-    const t = currentTerm.value;
-    if (!t) return false;
-    const id = t.id as Uuid;
-    return (
-        retryTermIds.value.has(id) && answersByTermId.value[id] === "incorrect"
-    );
-});
 
 const accuracyText = computed(() => {
     const attempted = attemptedCount.value;
@@ -839,6 +825,7 @@ const {
     },
     onFinish: () => {
         completedTermIds.value = new Set(order.value);
+        cursorIndex.value = order.value.length;
     },
     isBusy: () => flashcardAnswerBusy.value,
 });
@@ -927,7 +914,12 @@ function onKeydown(e: KeyboardEvent) {
         markRating(Number(e.key) as 1 | 2 | 3 | 4 | 5);
         return;
     }
-    if (smartReviewEnabled.value && (e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
+    if (!e.repeat && (e.key === "," || e.key.toLowerCase() === "g" || e.key === "." || e.key.toLowerCase() === "m")) {
+      e.preventDefault()
+      if (e.key === "," || e.key.toLowerCase() === "g") markCorrect()
+      else markIncorrect()
+      return
+    }
     if (e.key === "ArrowLeft") {
         e.preventDefault();
         goPrev();

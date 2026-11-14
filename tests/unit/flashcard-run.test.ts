@@ -67,6 +67,36 @@ describe('flashcard run', () => {
       expect(answered).toHaveBeenLastCalledWith('correct', 'b', 5)
     } finally { vi.useRealTimers() }
   })
+  it('ends at the last card instead of wrapping to an earlier missed card', async () => {
+    vi.useFakeTimers()
+    try {
+      const { state, run } = createRun()
+      run.markIncorrect()
+      await vi.advanceTimersByTimeAsync(700)
+      expect(state.cursorIndex.value).toBe(1)
+      run.markCorrect()
+      await vi.advanceTimersByTimeAsync(700)
+      expect(state.cursorIndex.value).toBe(state.order.value.length)
+      expect(state.answersByTermId.value).toEqual({ a: 'incorrect', b: 'correct' })
+      run.resumeIncorrect()
+      expect(state.order.value).toEqual(['a'])
+      expect(state.answersByTermId.value).toEqual({ a: 'incorrect' })
+      expect(state.retryTermIds.value.has('a')).toBe(true)
+    } finally { vi.useRealTimers() }
+  })
+
+  it('does not wrap to an earlier unattempted card when the last card is sorted', async () => {
+    vi.useFakeTimers()
+    try {
+      const { state, run } = createRun()
+      state.cursorIndex.value = 1
+      run.markIncorrect()
+      await vi.advanceTimersByTimeAsync(700)
+      expect(state.cursorIndex.value).toBe(2)
+      expect(state.answersByTermId.value).toEqual({ b: 'incorrect' })
+    } finally { vi.useRealTimers() }
+  })
+
   it('keeps pass progress tied to the frozen session order', () => {
     const order = ['a', 'b', 'c']
     expect(flashcardPassProgress(order, { a: 'correct' })).toEqual({ completed: 1, total: 3 })

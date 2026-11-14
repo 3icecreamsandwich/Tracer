@@ -402,11 +402,6 @@
                     @touchcancel="flashcardSwipe.onTouchCancel"
                     @click="flashcardSwipe.onClick"
                   >
-                    <span
-                      v-if="isCurrentRetry"
-                      class="absolute right-4 top-4 rounded-[var(--tracer-radius-control)] border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800"
-                      >{{ t("set.tryAgain") }}</span
-                    >
                     <p
                       class="absolute left-5 top-5 text-sm font-medium text-slate-500 dark:text-slate-400"
                     >
@@ -684,12 +679,6 @@
                     @touchcancel="flashcardSwipe.onTouchCancel"
                     @click="flashcardSwipe.onClick"
                   >
-                    <span
-                      v-if="isCurrentRetry"
-                      class="absolute top-3 right-3 rounded-[var(--tracer-radius-control)] border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100"
-                    >
-                      {{ t("set.tryAgain") }}
-                    </span>
                     <p
                       class="absolute top-6 left-6 text-xs font-medium text-slate-500 dark:text-slate-400"
                     >
@@ -1224,7 +1213,7 @@
                 v-if="matchIsFinished"
                 class="tracer-result-surface mt-4 flex flex-1 flex-col justify-center select-none p-5"
               >
-                <StudyResultOverview mode="match" :inline="true" :published="isPublicSet" :set-id="set?.id" :correct="matchCorrectAttemptsCount" :attempted="matchAttemptsCount" :total="matchAttemptsCount" :missed="(set?.terms ?? []).filter(term => matchMissedCounts[term.id]).sort((a, b) => (matchMissedCounts[b.id] ?? 0) - (matchMissedCounts[a.id] ?? 0))"  @restart="restartMatchRun" :time="matchTimeText" />
+                <StudyResultOverview mode="match" :inline="true" :published="isPublicSet" :set-id="set?.id" :correct="matchCorrectAttemptsCount" :attempted="matchAttemptsCount" :total="matchAttemptsCount + Math.max(0, matchPairsTarget - matchMatchedPairsCount)" :missed="(set?.terms ?? []).filter(term => matchMissedCounts[term.id]).sort((a, b) => (matchMissedCounts[b.id] ?? 0) - (matchMissedCounts[a.id] ?? 0))"  @restart="restartMatchRun" :time="matchTimeText" />
 
                 <MatchLeaderboard
                   :assignment-id="assignedAssignmentId"
@@ -2768,7 +2757,7 @@ const correctCount = computed(() => correctAttemptsCount.value)
 const isFinished = computed(
   () =>
     order.value.length > 0 &&
-    order.value.every((id) => completedTermIds.value.has(id)),
+    cursorIndex.value >= order.value.length,
 )
 const hasIncorrectCards = computed(() => retryTermIds.value.size > 0)
 const ratioText = computed(() => {
@@ -2820,12 +2809,6 @@ const isCurrentStarred = computed(() => {
   return starredTermIds.value.has(t.id as Uuid)
 })
 
-const isCurrentRetry = computed(() => {
-  const t = currentTerm.value
-  if (!t) return false
-  const id = t.id as Uuid
-  return retryTermIds.value.has(id) && answersByTermId.value[id] === "incorrect"
-})
 
 const accuracyText = computed(() => {
   const attempted = attemptedCount.value
@@ -2856,6 +2839,7 @@ const {
   },
   onFinish: () => {
     completedTermIds.value = new Set(order.value)
+    cursorIndex.value = order.value.length
   },
   isBusy: () => flashcardAnswerBusy.value,
 })
@@ -3939,11 +3923,12 @@ function onKeydown(e: KeyboardEvent) {
     markRating(Number(e.key) as 1 | 2 | 3 | 4 | 5)
     return
   }
-  if (
-    smartReviewEnabled.value &&
-    (e.key === "ArrowLeft" || e.key === "ArrowRight")
-  )
+  if (!e.repeat && (e.key === "," || e.key.toLowerCase() === "g" || e.key === "." || e.key.toLowerCase() === "m")) {
+    e.preventDefault()
+    if (e.key === "," || e.key.toLowerCase() === "g") markCorrect()
+    else markIncorrect()
     return
+  }
   if (e.key === "ArrowLeft") {
     e.preventDefault()
     goPrev()

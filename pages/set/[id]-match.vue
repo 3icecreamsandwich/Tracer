@@ -27,7 +27,7 @@
                 <div
                     class="flex flex-col items-center justify-center text-center"
                 >
-                    <StudyResultOverview mode="match" :set-id="set?.id" :published="isPublishedSet" :correct="matchCorrectAttemptsCount" :attempted="matchAttemptsCount" :total="matchAttemptsCount" :missed="(set?.terms ?? []).filter(term => matchMissedCounts[term.id]).sort((a, b) => (matchMissedCounts[b.id] ?? 0) - (matchMissedCounts[a.id] ?? 0))"  :back-to="backToSetPath" @restart="restartMatchRun" :time="matchTimeText" />
+                    <StudyResultOverview mode="match" :set-id="set?.id" :published="isPublishedSet" :correct="matchCorrectAttemptsCount" :attempted="matchAttemptsCount" :total="matchAttemptsCount + Math.max(0, matchPairsTarget - matchMatchedPairsCount)" :missed="(set?.terms ?? []).filter(term => matchMissedCounts[term.id]).sort((a, b) => (matchMissedCounts[b.id] ?? 0) - (matchMissedCounts[a.id] ?? 0))"  :back-to="backToSetPath" @restart="restartMatchRun" :time="matchTimeText" />
 
 
                     <MatchLeaderboard

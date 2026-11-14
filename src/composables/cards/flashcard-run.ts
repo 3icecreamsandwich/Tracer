@@ -142,17 +142,6 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     restartRun()
   }
 
-  function findNextUnattempted(fromIndex: number) {
-    const ids = state.order.value
-    if (ids.length === 0) return null
-    for (let step = 0; step < ids.length; step += 1) {
-      const index = (fromIndex + step) % ids.length
-      const id = ids[index]
-      if (id && state.answersByTermId.value[id] === undefined && !state.completedTermIds.value.has(id)) return index
-    }
-    return null
-  }
-
   function commitAnswer(answer: FlashcardAnswer, rating?: ReviewRating) {
     const id = options.getCurrentTermId()
     if (!id) return
@@ -172,8 +161,9 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     }
     state.retryTermIds.value = retries
     state.isFlipped.value = false
-    const next = findNextUnattempted(state.cursorIndex.value + 1)
-    if (next !== null) state.cursorIndex.value = next
+    // End the current pass at its final card. Missed cards are only revisited
+    // after the learner chooses Review missed on the results screen.
+    state.cursorIndex.value = Math.min(state.cursorIndex.value + 1, state.order.value.length)
   }
 
   function resumeIncorrect() {
@@ -182,9 +172,10 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     state.order.value = ids
     state.lastOrder.value = ids
     state.cursorIndex.value = 0
-    state.answersByTermId.value = {}
+    // A card remains missed until the learner explicitly marks it correct.
+    state.answersByTermId.value = Object.fromEntries(ids.map(id => [id, 'incorrect' as const]))
     state.completedTermIds.value = new Set()
-    state.retryTermIds.value = new Set()
+    state.retryTermIds.value = new Set(ids)
     state.isFlipped.value = false
     options.focusViewer()
   }
