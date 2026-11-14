@@ -16,13 +16,14 @@ async function fixture(context: BrowserContext, page: Page) {
   await context.route('**/api/web/credentials', route => route.fulfill({ json: { openai: false, anthropic: false, gemini: true, ollama_cloud: true, openai_compat: false } }))
   const rows = new Map<string, any>()
   rows.set(`${owner}:preferences:app`, { owner_id: owner, kind: 'preferences', id: 'app', revision: 1, deleted: false,
-    payload: { defaultModelId: 'ollama_cloud:gpt-oss:20b', fallbackModelIds: ['gemini:gemini-3.7-flash'] } })
+    payload: { aiMode: 'byok', defaultModelId: 'ollama_cloud:gpt-oss:20b', fallbackModelIds: ['gemini:gemini-3.7-flash'] } })
   rows.set(`${owner}:set:${setId}`, { owner_id: owner, kind: 'set', id: setId, revision: 1, deleted: false,
     payload: { id: setId, title: 'AI reliability fixture', description: '', terms: [{ id: 't1', front: 'Water', back: 'H2O' }], folderId: null, createdAt: '2026-01-01', updatedAt: '2026-01-01' } })
   await installCloudLibraryFixture(context, owner, rows)
   await page.goto('first-run')
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
   await page.goto('settings')
+  await expect(page.getByRole('region', { name: 'AI', exact: true })).toContainText('My API keys')
   await page.getByRole('button', { name: 'Configure', exact: true }).click()
   const primary = page.getByRole('listitem').filter({ hasText: 'Ollama Cloud' }).getByRole('button', { name: 'Move model up' })
   await expect(primary).toBeVisible()
@@ -46,6 +47,7 @@ test('configured models are tested individually and chat recovers from an exhaus
     return route.fulfill({ contentType: 'text/event-stream', body: `data: ${JSON.stringify(result)}\n\n` })
   })
   await page.goto('settings')
+  await expect(page.getByRole('region', { name: 'AI', exact: true })).toContainText('My API keys')
   await page.getByRole('button', { name: 'Configure', exact: true }).click()
   const models = page.getByRole('region', { name: 'AI models', exact: true })
   await expect(models.getByText('Configured', { exact: true })).toHaveCount(2)
