@@ -12,6 +12,8 @@ describe('built-in service configuration and input contracts',()=>{
  it('requires the feature flag and an explicit cohort',()=>{
   expect(gatewayConfig({...env,BUILTIN_AI_ENABLED:'0'},'user').enabled).toBe(false)
   expect(gatewayConfig({...env,BUILTIN_AI_COHORT:'other'},'user').enabled).toBe(false)
+  expect(gatewayConfig({...env,BUILTIN_AI_COHORT:'other',BUILTIN_AI_PUBLIC:'1'},'user').enabled).toBe(true)
+  expect(gatewayConfig({...env,BUILTIN_AI_ENABLED:'0',BUILTIN_AI_PUBLIC:'1'},'user').enabled).toBe(false)
   expect(gatewayConfig(env,'user').enabled).toBe(true)
  })
  it.each([{freeVerified:false},{verifiedUntil:'2020-01-01'},{verifiedUntil:'not-a-date'},{rpm:0},{rpd:-1},{model:'meta-llama/llama-prompt-guard-2-22m'}])('fails closed on invalid or unverified capacity %j',patch=>{

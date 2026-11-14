@@ -9,7 +9,7 @@ const providers: Record<string, { prefix: string; model: string }> = {
 }
 export function gatewayConfig(env: Record<string, any>, userId: string, now = Date.now()) {
   const cohort = String(env.BUILTIN_AI_COHORT || '').split(',').map(x => x.trim())
-  const enabled = env.BUILTIN_AI_ENABLED === '1' && (cohort.includes('*') || cohort.includes(userId))
+  const enabled = env.BUILTIN_AI_ENABLED === '1' && (env.BUILTIN_AI_PUBLIC === '1' || cohort.includes('*') || cohort.includes(userId))
   let manifest: any[] = []
   try { manifest = JSON.parse(env.BUILTIN_AI_CAPACITY || '[]') } catch { /* fail closed */ }
   if (!Array.isArray(manifest)) manifest = []
