@@ -621,3 +621,16 @@ for (const width of [390, 1440]) {
     }
   })
 }
+
+test('desktop flashcards retain their existing size and typography', async ({ context, page }) => {
+  await seed(context, page)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  for (const [path, size] of [['/set/demo', 24], ['/set/demo-flashcards', 36]] as const) {
+    await page.goto(path)
+    const content = page.locator('.flashcard-content-row:visible').first()
+    await expect(content).toBeVisible()
+    await expect.poll(() => content.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBe(size)
+    expect(await content.evaluate(el => (el as HTMLElement).style.fontSize)).toBe('')
+  }
+  await expect.poll(() => page.locator('.tracer-fullscreen-study .flashcard-content-row:visible').evaluate(el => Math.round(el.parentElement!.getBoundingClientRect().height))).toBe(540)
+})

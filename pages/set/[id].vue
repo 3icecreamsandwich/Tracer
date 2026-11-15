@@ -383,7 +383,7 @@
                 {{ t("set.noCards") }}
               </div>
               <template v-else>
-                <div class="relative mt-5 min-h-[22rem] flex-1">
+                <div class="relative mt-5 min-h-[26.4rem] flex-1">
                   <button
                     ref="mobileViewerButtonEl"
                     type="button"
@@ -412,7 +412,8 @@
                       }}
                     </p>
                     <div
-                      class="flashcard-content-row flex w-full items-center justify-center overflow-y-auto text-center text-[clamp(1.75rem,8vw,2.5rem)] font-medium text-slate-900 dark:text-slate-50"
+                      v-mobile-flashcard-fit="viewerText"
+                      class="flashcard-content-row mobile-flashcard-content flex w-full items-center justify-center overflow-y-auto text-center text-[clamp(1.75rem,8vw,2.5rem)] font-[400] text-slate-900 dark:text-slate-50"
                       :class="{
                         'flashcard-content-row--paired':
                           viewerImage && viewerHasText,
@@ -1815,6 +1816,7 @@ import {
   createFlashcardMotion,
   createFlashcardSwipe,
 } from "~/src/composables/cards/flashcard-motion"
+import { vMobileFlashcardFit } from '~/src/directives/mobile-flashcard-fit'
 import { recordStudySession } from "~/src/composables/study-insights"
 import { createFlashcardRun } from "~/src/composables/cards/flashcard-run"
 import {
@@ -4746,6 +4748,7 @@ onBeforeUnmount(() => {
 }
 
 .mobile-flashcard-card { min-height: 0; }
+.mobile-flashcard-content { min-height: 0; max-height: 100%; flex-shrink: 1; align-items: safe center; }
 
 .dark .mobile-settings-item {
   color: rgb(248 250 252);

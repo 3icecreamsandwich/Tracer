@@ -681,3 +681,45 @@ for (const fullscreen of [false, true]) {
     await expect(page.getByRole('button', { name: 'Term Browser', exact: true }).filter({ visible: true })).toBeVisible()
   })
 }
+
+for (const fullscreen of [false, true]) {
+  test(`mobile flashcards fit long content and retain the outgoing definition (${fullscreen ? 'fullscreen' : 'inline'})`, async ({ context, page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await signInFixture(context, page)
+    await page.goto('create/basic')
+    await page.getByLabel('Title', { exact: true }).fill('Long flashcards')
+    await page.locator('input[id^="term-"]').first().fill('First term')
+    const definition = 'Detailed information about this subject helps explain every important concept. '.repeat(6).trim()
+    await page.locator('textarea[id^="definition-"]').first().fill(definition)
+    await page.getByRole('button', { name: 'Add card', exact: true }).click()
+    await page.locator('input[id^="term-"]').nth(1).fill('Second term')
+    await page.locator('textarea[id^="definition-"]').nth(1).fill('Second definition')
+    await page.getByRole('button', { name: 'Create', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Long flashcards', exact: true })).toBeVisible()
+    if (fullscreen) {
+      await page.getByRole('button', { name: 'Fullscreen', exact: true }).click()
+      await expect(page).toHaveURL(/-flashcards$/)
+    }
+    const card = fullscreen ? page.locator('.tracer-fullscreen-study .flashcard-content-row:visible') : page.locator('.mobile-flashcard-content:visible')
+    const parent = card.locator('..')
+    await expect(card).toContainText('First term')
+    if (!fullscreen) await expect(card).toHaveCSS('font-weight', '400')
+    const initial = await card.evaluate(el => ({ size: parseFloat(getComputedStyle(el).fontSize), height: el.parentElement!.getBoundingClientRect().height }))
+    expect(initial.height).toBeGreaterThan(fullscreen ? 500 : 420)
+    await parent.click()
+    await expect(card).toContainText(definition)
+    await expect.poll(() => card.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeLessThan(initial.size)
+    const fitted = await card.evaluate(el => ({ size: parseFloat(getComputedStyle(el).fontSize), scrollHeight: el.scrollHeight, height: el.clientHeight, top: el.scrollTop }))
+    expect(fitted.size).toBeGreaterThanOrEqual(16)
+    expect(fitted.top).toBe(0)
+    if (fitted.scrollHeight > fitted.height + 1) {
+      expect(fitted.size).toBeLessThan(16.1)
+      expect(await card.evaluate(el => { el.scrollTop = el.scrollHeight; return el.scrollTop })).toBeGreaterThan(0)
+    }
+    await page.getByRole('button', { name: 'Got it', exact: true }).filter({ visible: true }).click()
+    await page.waitForTimeout(200)
+    await expect(card).toContainText(definition)
+    await expect(card).toContainText('Second term')
+    await expect(page.locator('.animate-card-swipe-left:visible')).toHaveCount(0)
+  })
+}

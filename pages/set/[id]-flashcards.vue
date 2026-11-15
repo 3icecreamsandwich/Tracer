@@ -92,7 +92,7 @@
 <button
                     ref="viewerButtonEl"
                     type="button"
-                    class="relative flex touch-pan-y flex-col items-center justify-center w-full min-h-64 h-[55dvh] sm:h-[60vh] rounded-[var(--tracer-radius-control)] px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                    class="relative flex touch-pan-y flex-col items-center justify-center w-full min-h-[19.2rem] h-[66dvh] sm:min-h-64 sm:h-[60vh] rounded-[var(--tracer-radius-control)] px-8 py-12 text-center shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
                     :class="[
                         flashcardSurfaceClass,
                         {
@@ -115,6 +115,7 @@
                         }}
                     </p>
                     <div
+                        v-mobile-flashcard-fit="viewerText"
                         class="flashcard-content-row mt-4 flex w-full flex-row items-center justify-center overflow-y-auto text-center text-4xl font-normal text-slate-900 dark:text-slate-50"
                         :class="{
                             'flashcard-content-row--paired':
@@ -294,6 +295,7 @@ import {
     saveWebFlashcardProgress,
     type SavedFlashcardProgress,
 } from "~/src/composables/cards/web-flashcard-state";
+import { vMobileFlashcardFit } from '~/src/directives/mobile-flashcard-fit';
 import { createFlashcardMotion, createFlashcardSwipe } from "~/src/composables/cards/flashcard-motion";
 import { createFlashcardRun } from "~/src/composables/cards/flashcard-run";
 import { getCardReviews, getGlobalSmartReviewEnabled, isFlashcardShuffleEnabled, recordCardReview, resolveSmartReviewEnabled, reviewBucket, saveFlashcardShuffleEnabled, saveGlobalSmartReviewEnabled, saveSmartReviewEnabled, type CardReview, type ReviewBucket } from "~/src/composables/cards/spaced-repetition";
@@ -1226,6 +1228,10 @@ onBeforeUnmount(() => {
 
 .flashcard-content-row {
     gap: 0;
+}
+
+@media (max-width: 639px) {
+    .flashcard-content-row { min-height: 0; max-height: 100%; flex-shrink: 1; align-items: safe center; }
 }
 
 .flashcard-content-row--paired {

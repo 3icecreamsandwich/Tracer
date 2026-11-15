@@ -185,7 +185,6 @@ export function createFlashcardRun(options: FlashcardRunOptions) {
     const transitionId = ++state.answerTransitionId.value
     state.answerFeedback.value = answer
     state.answerBusy.value = true
-    state.isFlipped.value = false
 
     await new Promise<void>((resolve) => setTimeout(resolve, 450))
     if (transitionId !== state.answerTransitionId.value) return

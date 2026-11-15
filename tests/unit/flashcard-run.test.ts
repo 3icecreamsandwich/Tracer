@@ -51,6 +51,20 @@ describe('flashcard run', () => {
       expect(state.answerBusy.value).toBe(false)
     } finally { vi.useRealTimers() }
   })
+  it('keeps the definition visible until the outgoing swipe reaches its midpoint', async () => {
+    vi.useFakeTimers()
+    try {
+      const { state, run } = createRun()
+      state.isFlipped.value = true
+      run.markCorrect()
+      await vi.advanceTimersByTimeAsync(450 + FLASHCARD_NAVIGATION_DURATION_MS / 2 - 1)
+      expect(state.isFlipped.value).toBe(true)
+      expect(state.cursorIndex.value).toBe(0)
+      await vi.advanceTimersByTimeAsync(1)
+      expect(state.isFlipped.value).toBe(false)
+      expect(state.cursorIndex.value).toBe(1)
+    } finally { vi.useRealTimers() }
+  })
   it('commits a grade once even when pressed repeatedly during feedback', async () => {
     vi.useFakeTimers()
     try {
