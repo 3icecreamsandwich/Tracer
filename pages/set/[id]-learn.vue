@@ -1,15 +1,15 @@
 <template>
-  <AiErrorModal
-    :open="aiErrorOpen"
-    :error="aiError"
-    :from="route.fullPath"
-    :show-retry="true"
-    @close="aiErrorOpen = false"
-    @retry="retryPracticeWrittenAnswer"
-  />
   <main
     class="tracer-fullscreen-study practice-fullscreen bg-white dark:bg-slate-950"
   >
+    <AiErrorModal
+      :open="aiErrorOpen"
+      :error="aiError"
+      :from="route.fullPath"
+      :show-retry="true"
+      @close="aiErrorOpen = false"
+      @retry="retryPracticeWrittenAnswer"
+    />
     <!-- Header with Back button and progress -->
     <div
       data-tauri-drag-region

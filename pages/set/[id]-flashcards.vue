@@ -436,10 +436,10 @@ async function loadSavedFlashcardProgress(setId: Uuid) {
 
 let flashcardProgressWrite = Promise.resolve()
 
-function persistFlashcardProgress(termId: Uuid) {
+function persistFlashcardProgress(termId: Uuid, resetRun = false) {
     const setId = set.value?.id as Uuid | undefined;
     if (!setId) return;
-    const correctTermIds = allStudyTermIds.value.filter(
+    const correctTermIds = resetRun ? [] : allStudyTermIds.value.filter(
         (id) => answersByTermId.value[id] === "correct",
     );
     const progress = {
@@ -916,7 +916,7 @@ function onKeydown(e: KeyboardEvent) {
     }
     if (!e.repeat && (e.key === "," || e.key.toLowerCase() === "g" || e.key === "." || e.key.toLowerCase() === "m")) {
       e.preventDefault()
-      if (e.key === "," || e.key.toLowerCase() === "g") markCorrect()
+      if (e.key === "." || e.key.toLowerCase() === "g") markCorrect()
       else markIncorrect()
       return
     }
@@ -956,6 +956,11 @@ watch(language, async () => {
     flashcardsDefinitionFirst.value = readWebFlashcardFrontPreference();
     await restoreSavedFlashcardRun(set.value.id);
 });
+
+watch(isFinished, (finished) => {
+    const firstId = allStudyTermIds.value[0];
+    if (finished && firstId) persistFlashcardProgress(firstId, true);
+}, { flush: "sync" });
 
 watch(
     () =>
@@ -1095,7 +1100,8 @@ onMounted(async () => {
     }
 });
 
-onBeforeRouteLeave(() => {
+onBeforeRouteLeave(async () => {
+    await flashcardProgressWrite;
     finishClassroomFlashcards();
 });
 

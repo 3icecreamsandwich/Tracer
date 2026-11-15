@@ -403,6 +403,10 @@ test('practice and match use the shared result overview', async ({ context, page
   await page.getByRole('button', { name: 'True', exact: true }).click()
   await expect(page.locator('.result-overview')).toBeVisible()
   await expect(page.locator('.result-overview').getByRole('img')).toHaveAttribute('aria-label', /^(1 correct, 0 incorrect|0 correct, 1 incorrect), 0 not tested$/)
+  await page.goto('/library')
+  await page.goto('/set/00000000-0000-4000-8000-000000000083-learn')
+  await expect(page.locator('.result-overview')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'True', exact: true })).toBeVisible()
   await page.goto('/set/00000000-0000-4000-8000-000000000084-match')
   await page.getByRole('button', { name: 'Start', exact: true }).click()
   const tiles = page.locator('[data-match-tile="true"]')
@@ -410,6 +414,9 @@ test('practice and match use the shared result overview', async ({ context, page
   await tiles.nth(0).click(); await tiles.nth(1).click()
   await expect(page.locator('.result-overview')).toBeVisible()
   await expect(page.locator('.result-overview').getByRole('img')).toHaveAttribute('aria-label', '1 correct, 0 incorrect, 0 not tested')
+  await page.goto('/library')
+  await page.goto('/set/00000000-0000-4000-8000-000000000084-match')
+  await expect(page.getByRole('button', { name: 'Start', exact: true })).toBeVisible()
 })
 
 test('submitted tests use the shared result overview', async ({ context, page }) => {
@@ -420,6 +427,10 @@ test('submitted tests use the shared result overview', async ({ context, page })
   await expect(page.locator('.result-overview')).toBeVisible()
   await expect(page.locator('.result-overview').getByRole('img')).toHaveAttribute('aria-label', /^(1 correct, 0 incorrect|0 correct, 1 incorrect), 0 not tested$/)
   await expect(page.getByRole('button', { name: 'Restart test' })).toBeVisible()
+  await page.goto('/library')
+  await page.goto('/set/00000000-0000-4000-8000-000000000085-test?types=true_false&count=1&seed=1')
+  await expect(page.locator('.result-overview')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'True', exact: true })).toBeVisible()
 })
 
 test('published set edit offers an owner-confirmed unpublish action', async ({ context, page }) => {
@@ -587,3 +598,26 @@ test('assigned materials fit a phone and use compact dates', async ({ context, p
   await expect(section).not.toContainText('9:51')
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
+
+for (const width of [390, 1440]) {
+  test(`fullscreen flashcard mode picker opens each study mode at ${width}px`, async ({ context, page }) => {
+    await seed(context, page)
+    await page.setViewportSize({ width, height: 844 })
+    for (const [label, suffix, control] of [['Practice', 'learn', 'Practice settings'], ['Match', 'match', 'Start'], ['Test', 'test', 'Test progress']] as const) {
+      await page.goto('/set/00000000-0000-4000-8000-000000000082')
+      if (width < 768) await page.getByRole('button', { name: 'Fullscreen', exact: true }).click()
+      else await page.getByRole('link', { name: 'Open Flashcards fullscreen' }).click()
+      await expect(page).toHaveURL(/-flashcards$/)
+      await expect(page.getByRole('button', { name: 'Flashcard settings', exact: true })).toBeVisible()
+      if (width < 768) {
+        await page.getByRole('button', { name: /Flashcards/ }).first().click()
+        await page.getByRole('menuitem', { name: label, exact: true }).click()
+      } else {
+        await page.getByRole('navigation', { name: 'Study modes' }).getByRole('button', { name: label, exact: true }).click()
+      }
+      await expect(page).toHaveURL(new RegExp(`-${suffix}$`))
+      await expect(page.getByRole(suffix === 'test' ? 'progressbar' : 'button', { name: control })).toBeVisible()
+      await expect(page.locator('main').first()).toHaveCSS('opacity', '1')
+    }
+  })
+}

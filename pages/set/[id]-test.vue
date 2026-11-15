@@ -1,13 +1,13 @@
 <template>
-    <AiErrorModal
-        :open="aiErrorOpen"
-        :error="aiError"
-        :from="route.fullPath"
-        :show-retry="true"
-        @close="aiErrorOpen = false"
-        @retry="retrySubmitTest"
-    />
     <main class="tracer-fullscreen-study bg-white text-slate-950 dark:bg-slate-950 dark:text-slate-50">
+      <AiErrorModal
+          :open="aiErrorOpen"
+          :error="aiError"
+          :from="route.fullPath"
+          :show-retry="true"
+          @close="aiErrorOpen = false"
+          @retry="retrySubmitTest"
+      />
         <header
             data-tauri-drag-region
             class="sticky top-0 z-30 bg-white/95 px-3 py-4 backdrop-blur dark:bg-slate-950/95 sm:px-6"

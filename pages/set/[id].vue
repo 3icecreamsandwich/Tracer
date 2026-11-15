@@ -2149,10 +2149,10 @@ async function loadSavedFlashcardProgress(setId: Uuid) {
 
 let flashcardProgressWrite = Promise.resolve()
 
-function persistFlashcardProgress(termId: Uuid) {
+function persistFlashcardProgress(termId: Uuid, resetRun = false) {
   const setId = set.value?.id as Uuid | undefined
   if (!setId) return
-  const correctTermIds = allStudyTermIds.value.filter(
+  const correctTermIds = resetRun ? [] : allStudyTermIds.value.filter(
     (id) => answersByTermId.value[id] === "correct",
   )
   const progress = {
@@ -3925,7 +3925,7 @@ function onKeydown(e: KeyboardEvent) {
   }
   if (!e.repeat && (e.key === "," || e.key.toLowerCase() === "g" || e.key === "." || e.key.toLowerCase() === "m")) {
     e.preventDefault()
-    if (e.key === "," || e.key.toLowerCase() === "g") markCorrect()
+    if (e.key === "." || e.key.toLowerCase() === "g") markCorrect()
     else markIncorrect()
     return
   }
@@ -4545,6 +4545,7 @@ watch(mode, (next, previous) => {
 })
 
 onBeforeRouteLeave(async () => {
+  await flashcardProgressWrite
   await finishInlineAssignedMode()
 })
 
@@ -4599,6 +4600,11 @@ watch(
   },
   { flush: "post" },
 )
+
+watch(isFinished, (finished) => {
+  const firstId = allStudyTermIds.value[0]
+  if (finished && firstId) persistFlashcardProgress(firstId, true)
+}, { flush: "sync" })
 
 watch(
   () =>
