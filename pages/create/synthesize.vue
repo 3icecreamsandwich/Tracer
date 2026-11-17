@@ -338,6 +338,15 @@ function buildInputTsv(sourceSets: FlashcardSet[]) {
   return [header, ...rows].join('\n')
 }
 
+function combineSourceTerms(sourceSets: FlashcardSet[]) {
+  return normalizeTerms(sourceSets.flatMap((set) => set.terms.map((term) => ({
+    front: term.front,
+    back: term.back,
+    frontImage: term.frontImage ?? null,
+    backImage: term.backImage ?? null
+  }))))
+}
+
 function synthesisTitle() {
   const t = theme.value.trim()
   if (t) return `Synthesis · ${t}`
@@ -426,41 +435,45 @@ async function onCreate() {
     const sourceSetsPromise = Promise.all(selectedIds.value.map((id) => setsRepo.get(id)))
 
     const settings = await settingsPromise
-    if (!settings.defaultModelId) {
-      aiError.value = aiErrorForMissingDefaultModel()
-      aiErrorOpen.value = true
-      return
-    }
-
-    const [{ resolveAiModel }, { generateText }] = await Promise.all([
-      import('~/src/composables/ai/registry'), import('ai')
-    ])
-    const modelPromise = resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
     const sourceSets = (await sourceSetsPromise).filter((s): s is FlashcardSet => !!s)
     if (sourceSets.length === 0) {
       throw new Error('Selected sets could not be loaded.')
     }
 
-    const inputTsv = buildInputTsv(sourceSets)
-    const prompt = buildPrompt({ theme: theme.value.trim() ? theme.value.trim() : null, inputTsv })
+    const selectedTheme = theme.value.trim()
+    let terms = combineSourceTerms(sourceSets)
 
-    const model = await modelPromise
-    const res = settings.defaultModelId === 'builtin:auto'
-      ? { text: await (await import('~/src/composables/ai/builtin/client')).builtinGenerate({ operation: 'synthesize', input: { inputTsv, theme: theme.value.trim() || undefined } }) }
-      : await generateText({ model, prompt })
-    const text = (res.text ?? '').trim()
+    if (selectedTheme) {
+      if (!settings.defaultModelId) {
+        aiError.value = aiErrorForMissingDefaultModel()
+        aiErrorOpen.value = true
+        return
+      }
 
-    rawOutput.value = res.text ?? ''
+      const inputTsv = buildInputTsv(sourceSets)
+      const prompt = buildPrompt({ theme: selectedTheme, inputTsv })
+      const [{ resolveAiModel }, { generateText }] = await Promise.all([
+        import('~/src/composables/ai/registry'), import('ai')
+      ])
+      const modelPromise = resolveAiModel([settings.defaultModelId, ...settings.fallbackModelIds])
+      const model = await modelPromise
+      const res = settings.defaultModelId === 'builtin:auto'
+        ? { text: await (await import('~/src/composables/ai/builtin/client')).builtinGenerate({ operation: 'synthesize', input: { inputTsv, theme: selectedTheme } }) }
+        : await generateText({ model, prompt })
+      const text = (res.text ?? '').trim()
 
-    let termInputs = parseTermsDelimited(text, {
-      delimiter: 'tab',
-      allowContinuationLines: true
-    })
-    termInputs = termInputs.map((t) => ({
-      front: t.front.split('\t').join(' ').trim(),
-      back: t.back.split('\t').join(' ').trim()
-    }))
-    const terms = normalizeTerms(termInputs)
+      rawOutput.value = res.text ?? ''
+
+      let termInputs = parseTermsDelimited(text, {
+        delimiter: 'tab',
+        allowContinuationLines: true
+      })
+      termInputs = termInputs.map((t) => ({
+        front: t.front.split('\t').join(' ').trim(),
+        back: t.back.split('\t').join(' ').trim()
+      }))
+      terms = normalizeTerms(termInputs)
+    }
 
     const id = crypto.randomUUID() as Uuid
     await setsRepo.create({
