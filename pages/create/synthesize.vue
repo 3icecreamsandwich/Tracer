@@ -328,11 +328,11 @@ function tsvCell(s: string) {
 }
 
 function buildInputTsv(sourceSets: FlashcardSet[]) {
-  const header = ['source', 'term', 'definition'].join('\t')
+  const header = ['term', 'definition'].join('\t')
   const rows: string[] = []
   for (const s of sourceSets) {
     for (const t of s.terms) {
-      rows.push([tsvCell(s.title), tsvCell(t.front), tsvCell(t.back)].join('\t'))
+      rows.push([tsvCell(t.front), tsvCell(t.back)].join('\t'))
     }
   }
   return [header, ...rows].join('\n')
@@ -355,7 +355,7 @@ function synthesisDescription(sourceSets: FlashcardSetListItem[]) {
 function buildPrompt(args: { theme: string | null; inputTsv: string }) {
   const themeLine = args.theme ? `Theme: ${args.theme}\n` : ''
   return [
-    'You are synthesizing flashcards from existing cards.',
+    'You are combining existing flashcards into one new set.',
     'Return ONLY TSV lines in the form: term<TAB>definition',
     'Rules:',
     '- Output TSV only. No prose, no markdown, no code fences.',
@@ -366,8 +366,9 @@ function buildPrompt(args: { theme: string | null; inputTsv: string }) {
     '- Do not include numbering or bullets.',
     '- Do not include tabs inside term or definition (use spaces instead).',
     '- For math/science expressions, use LaTeX delimiters like $...$ or $$...$$.',
+    '- Keep every supplied card. Do not turn a set title, category, or metadata into a card.',
     themeLine.trimEnd(),
-    'Input TSV (source<TAB>term<TAB>definition):',
+    'Input TSV (term<TAB>definition):',
     args.inputTsv
   ]
     .filter((x) => x.length > 0)
