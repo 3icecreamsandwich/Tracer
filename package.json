@@ -47,7 +47,7 @@
     "pdfjs-dist": "^6.3.289",
     "sql.js": "1.14.2",
     "tesseract.js": "^7.0.0",
-    "vue": "3.5.42",
+    "vue": "3.5.45",
     "zod": "4.3.6"
   },
   "devDependencies": {
