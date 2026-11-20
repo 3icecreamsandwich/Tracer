@@ -104,6 +104,13 @@
       </div>
 
       <NuxtLink
+        to="/pricing"
+        class="inline-flex h-10 shrink-0 items-center rounded-[var(--tracer-radius-control)] bg-[#fff1c9] px-3 text-[15px] font-semibold text-slate-950 shadow-sm transition-colors hover:bg-[#ffe4a3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e5ab40] focus-visible:ring-offset-2 dark:bg-[#fff1c9] dark:text-slate-950 dark:hover:bg-[#ffe4a3] dark:focus-visible:ring-offset-slate-950"
+      >
+        Upgrade
+      </NuxtLink>
+
+      <NuxtLink
         to="/settings"
         :aria-label="t('nav.settings')"
         class="inline-flex h-10 shrink-0 items-center gap-2.5 rounded-[var(--tracer-radius-control)] border border-slate-200 bg-white px-3 text-[15px] font-medium text-slate-950 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
