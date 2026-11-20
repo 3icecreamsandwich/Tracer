@@ -262,34 +262,6 @@
                 </div>
             </section>
 
-            <section class="tracer-panel mt-6 p-5" aria-label="Billing">
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-sm font-medium">Plan & billing</h2>
-                        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                            Upgrade your study plan, or manage an existing subscription.
-                        </p>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <NuxtLink
-                            to="/pricing"
-                            class="inline-flex items-center justify-center rounded-[var(--tracer-radius-control)] border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-                        >
-                            View plans
-                        </NuxtLink>
-                        <UButton color="primary" variant="soft"
-                            type="button"
-                            :disabled="billingBusy || !accountOnline"
-                            class="rounded-[var(--tracer-radius-control)] px-3 py-2 text-sm font-medium disabled:opacity-60"
-                            @click="onManageBilling"
-                        >
-                            {{ billingBusy ? 'Opening…' : 'Manage billing' }}
-                        </UButton>
-                    </div>
-                </div>
-                <p v-if="billingError" role="alert" class="mt-3 text-sm text-red-600 dark:text-red-300">{{ billingError }}</p>
-            </section>
-
             <AppUpdateSettings v-if="hasTauriInternals" />
 
             <section
@@ -1444,7 +1416,6 @@ import {
   useFloatingChatPreference
 } from '../src/composables/floating-chat'
 import AppUpdateSettings from '../components/AppUpdateSettings.vue'
-import { openBillingPortal } from '../src/composables/billing'
 
 
 const router = useRouter()
@@ -1454,20 +1425,6 @@ const { language, currentLanguageOption, t } = useAppLanguage()
 const hasTauriInternals = hasTauriRuntime()
 
 const isWebPreview = computed(() => isWebPreviewRuntime())
-const billingBusy = ref(false)
-const billingError = ref('')
-
-async function onManageBilling() {
-  billingError.value = ''
-  billingBusy.value = true
-  try {
-    await openBillingPortal()
-  } catch (cause) {
-    billingError.value = cause instanceof Error ? cause.message : 'Could not open billing management.'
-  } finally {
-    billingBusy.value = false
-  }
-}
 
 const { unlockedThisSession, markLocked, markUnlocked } = useLockSession()
 const { floatingChatEnabled } = useFloatingChatPreference()

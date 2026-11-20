@@ -46,7 +46,6 @@
     "ollama-ai-provider-v2": "^4.0.1",
     "pdfjs-dist": "^6.3.289",
     "sql.js": "1.14.2",
-    "stripe": "23.0.0",
     "tesseract.js": "^7.0.0",
     "vue": "3.5.42",
     "zod": "4.3.6"
