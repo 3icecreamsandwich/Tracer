@@ -36,7 +36,7 @@
         "@tauri-apps/api": "~2.12.4",
         "@tauri-apps/cli": "^2.11.4",
         "@tauri-apps/plugin-sql": "^2.4.1",
-        "@tauri-apps/plugin-stronghold": "^2.3.2",
+        "@tauri-apps/plugin-stronghold": "^2.4.0",
         "@types/markdown-it": "^14.2.0",
         "@types/sql.js": "1.4.11",
         "@wdio/cli": "^9.31.6",
@@ -679,7 +679,7 @@
 
     "@tauri-apps/plugin-sql": ["@tauri-apps/plugin-sql@2.4.1", "", { "dependencies": { "@tauri-apps/api": "^2.11.0" } }, "sha512-w9fImJ2XaCLFEj+kLbs8nO/Idq89mpjl//Bm37JZo8AugbaVzaW5iHTjjcozHjtLgjb0IAQjYromv0YpzDOFkA=="],
 
-    "@tauri-apps/plugin-stronghold": ["@tauri-apps/plugin-stronghold@2.3.2", "", { "dependencies": { "@tauri-apps/api": "^2.11.0" } }, "sha512-tl+dJCvwlY/MyO9yvu9jldrMLa03UeE087Bjmi8LKD+JmXVRX2rWMEvyekDGBRWGhvyjsOr1gUfhvfc+dXtRRQ=="],
+    "@tauri-apps/plugin-stronghold": ["@tauri-apps/plugin-stronghold@2.4.0", "", { "dependencies": { "@tauri-apps/api": "^2.12.0" } }, "sha512-5FIKueS+4xs66WtQ7kBmEI2clvc1xtX5V/2oGcZF39TBGZ+azHB0lYANV0YOFA/1zst9ILgq/j7Mzwt0NX4r1A=="],
 
     "@tauri-apps/plugin-updater": ["@tauri-apps/plugin-updater@2.13.1", "", { "dependencies": { "@tauri-apps/api": "^2.12.0" } }, "sha512-+STDzJ0sdQLImjc63zkv6Nncimqeo6jyCWoTQtbSwgGLNj1qbP9I6LC4p5R5ocBk3gNKAZs6i/AJz0jxysytiw=="],
 
@@ -2462,8 +2462,6 @@
     "@tauri-apps/plugin-http/@tauri-apps/api": ["@tauri-apps/api@2.11.1", "", {}, "sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA=="],
 
     "@tauri-apps/plugin-sql/@tauri-apps/api": ["@tauri-apps/api@2.11.1", "", {}, "sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA=="],
-
-    "@tauri-apps/plugin-stronghold/@tauri-apps/api": ["@tauri-apps/api@2.11.1", "", {}, "sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA=="],
 
     "@unhead/bundler/magic-string": ["magic-string@1.4.5", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.6.0" } }, "sha512-oLLC2+YvQUfAa+vxoufE/yc1icb87M9iXIRqAoR/2EhE/8cb3SF/+Gi0c2By1B+5Vz2e2vQtUvHiu1+63Znh+w=="],
 
